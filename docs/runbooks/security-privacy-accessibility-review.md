@@ -15,7 +15,7 @@
 | Payment webhook secret validation works | Yes | Webhook tests and provider-readiness docs | Ready for review | Engineering |
 | Audit events are written for business-critical operator actions | Yes | `audit_events` + `outbox_events` persistence and audit replay endpoint | Ready for review | Engineering |
 | Dependency audit has no high vulnerabilities | Yes | `pnpm audit --audit-level high` and GitHub Actions | Ready for review | Engineering |
-| Secret scanning is enabled in GitHub repository settings | Yes | GitHub settings screenshot or audit export | Open | Founder |
+| Secret scanning is enabled in GitHub repository settings | Yes | `docs/ops/github-security-settings.md` | Ready for review | Founder |
 | External security review completed | Public launch blocker | Review report and remediation log | Open | Founder + Engineering |
 
 ## Privacy

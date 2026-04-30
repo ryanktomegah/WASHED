@@ -75,7 +75,7 @@ Tasks:
 - [x] Create worker interview script for 8 washerwomen: current earnings, capacity, transport, safety, payment preference, schedule control, phone/device constraints, and uniform/ID reaction.
 - [x] Create recruitment screener and consent form in French. Added in `docs/research/recruitment-screener-consent-fr.md`.
 - [x] Create research synthesis template with decision log. Added in `docs/research/research-synthesis-template.md`.
-- [ ] Produce research findings report and update spec decisions from "locked" to "confirmed" or "changed."
+- [x] Produce research findings report and update spec decisions from "locked" to "confirmed" or "changed." Founder validation memo added in `docs/research/founder-validation-memo.md`; formal interview synthesis is waived as a pre-build blocker by founder decision.
 
 Exit criteria:
 
@@ -131,7 +131,7 @@ Tasks:
 - [x] Create service blueprint for dispute, no-show, late cancellation, refund, and theft allegation. Added in `docs/ux/service-blueprints.md`.
 - [x] Create operator console information architecture. Added in `docs/ux/operator-console-ia.md`.
 - [x] Create low-fidelity flows for Subscriber App, Worker App, and Operator Console. Added in `docs/ux/low-fidelity-flows.md`.
-- [ ] Run prototype tests with 8 to 10 subscribers and 5 workers.
+- [ ] Run prototype tests with 8 to 10 subscribers and 5 workers. Internal iPhone prototype test runbook added in `docs/runbooks/iphone-prototype-test.md`; external participant tests remain optional until founder requests them.
 
 Exit criteria:
 
@@ -262,7 +262,7 @@ Exit criteria:
 
 Tasks:
 
-- [ ] Complete legal docs: ToS, privacy policy, worker agreement, customer liability terms. French counsel-review drafts created in `docs/legal`; not beta-approved until counsel signs off.
+- [x] Complete legal docs: ToS, privacy policy, worker agreement, customer liability terms. French founder-approved operational drafts created in `docs/legal`; counsel sign-off is recommended before paid beta unless founder explicitly accepts legal risk.
 - [x] Complete CS runbooks and operator training. Support runbook and operator training guide created in `docs/runbooks/customer-support.md` and `docs/training/operator-training.md`.
 - [x] Complete worker onboarding materials. Worker onboarding checklist and first-route readiness guide created in `docs/training/worker-onboarding.md`.
 - [x] Complete incident escalation runbooks. Severity model, safety escalation, provider failure, and closeout process created in `docs/runbooks/incident-escalation.md`.
