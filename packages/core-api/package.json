@@ -1,0 +1,33 @@
+{
+  "name": "@washed/core-api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "node --enable-source-maps dist/main.js",
+    "migrate": "node --enable-source-maps dist/migrate.js",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@washed/core-domain": "workspace:*",
+    "@washed/shared": "workspace:*",
+    "fastify": "5.8.5",
+    "pg": "8.16.3"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "@types/pg": "8.16.0",
+    "typescript": "5.9.3",
+    "vitest": "4.0.14"
+  }
+}
