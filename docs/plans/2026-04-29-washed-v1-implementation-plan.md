@@ -90,10 +90,10 @@ Exit criteria:
 Tasks:
 
 - [ ] Compare CinetPay and PayDunya for T-Money/Flooz collection, recurring billing support, refunds, payout APIs, fees, KYC, settlement timing, dispute handling, webhook reliability, and sandbox quality. Diligence template created in `docs/ops/payment-provider-diligence.md`.
-- [ ] Compare Ecobank, Orabank, and UTB for collection, settlement, worker payouts, statement exports, multi-country WAEMU path, and operational support.
-- [ ] Build capital model v2 with line items for cloud, SMS, WhatsApp, LiveKit, transcription, translation, object storage, observability, legal, audits, devices, beta incentives, customer support, payment fees, and travel/ops.
-- [ ] Add conservative downside cases: slower acquisition, higher worker burden, provider downtime, refund/liability claims, and transport support.
-- [ ] Define beta budget and public-launch budget separately.
+- [ ] Compare Ecobank, Orabank, and UTB for collection, settlement, worker payouts, statement exports, multi-country WAEMU path, and operational support. Diligence template created in `docs/ops/banking-partner-diligence.md`; bank outreach and scoring remain open.
+- [x] Build capital model v2 with line items for cloud, SMS, WhatsApp, LiveKit, transcription, translation, object storage, observability, legal, audits, devices, beta incentives, customer support, payment fees, and travel/ops. Model script and generated report added in `research/capital_model_v2.py` and `research/2026-04-30-capital-model-v2.md`.
+- [x] Add conservative downside cases: slower acquisition, higher worker burden, provider downtime, refund/liability claims, and transport support.
+- [x] Define beta budget and public-launch budget separately.
 
 Exit criteria:
 
