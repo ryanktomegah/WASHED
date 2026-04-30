@@ -126,11 +126,11 @@ Exit criteria:
 
 Tasks:
 
-- [ ] Create service blueprint for signup to first visit.
-- [ ] Create service blueprint for worker day-of-route flow.
-- [ ] Create service blueprint for dispute, no-show, late cancellation, refund, and theft allegation.
-- [ ] Create operator console information architecture.
-- [ ] Create low-fidelity flows for Subscriber App, Worker App, and Operator Console.
+- [x] Create service blueprint for signup to first visit. Added in `docs/ux/service-blueprints.md`.
+- [x] Create service blueprint for worker day-of-route flow. Added in `docs/ux/service-blueprints.md`.
+- [x] Create service blueprint for dispute, no-show, late cancellation, refund, and theft allegation. Added in `docs/ux/service-blueprints.md`.
+- [x] Create operator console information architecture. Added in `docs/ux/operator-console-ia.md`.
+- [x] Create low-fidelity flows for Subscriber App, Worker App, and Operator Console. Added in `docs/ux/low-fidelity-flows.md`.
 - [ ] Run prototype tests with 8 to 10 subscribers and 5 workers.
 
 Exit criteria:
