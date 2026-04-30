@@ -2202,6 +2202,105 @@ describe('core api app', () => {
     });
   });
 
+  it('records operator subscriber privacy export and erasure requests with retention plan', async () => {
+    const repository = new InMemoryCoreRepository();
+    const app = createCoreApiApp({ repository });
+    apps.add(app);
+
+    const subscriptionResponse = await app.inject({
+      method: 'POST',
+      payload: validBody,
+      url: '/v1/subscriptions',
+    });
+    const subscription = subscriptionResponse.json() as { subscriptionId: string };
+    const assignmentResponse = await app.inject({
+      method: 'POST',
+      payload: {
+        anchorDate: '2026-05-05',
+        operatorUserId: '11111111-1111-4111-8111-111111111111',
+        workerId: '22222222-2222-4222-8222-222222222222',
+      },
+      url: `/v1/subscriptions/${subscription.subscriptionId}/assignment`,
+    });
+    const chargeResponse = await app.inject({
+      method: 'POST',
+      payload: {
+        chargedAt: '2026-05-01T08:00:00.000Z',
+        idempotencyKey: 'privacy-export-charge-1',
+        mockOutcome: 'succeeded',
+        operatorUserId: '11111111-1111-4111-8111-111111111111',
+      },
+      url: `/v1/subscriptions/${subscription.subscriptionId}/mock-charge`,
+    });
+    expect(assignmentResponse.statusCode).toBe(200);
+    expect(chargeResponse.statusCode).toBe(200);
+
+    const exportRequest = await app.inject({
+      method: 'POST',
+      payload: {
+        operatorUserId: '11111111-1111-4111-8111-111111111111',
+        reason: 'subscriber requested account data by phone support',
+        requestedAt: '2026-05-03T08:00:00.000Z',
+        requestType: 'export',
+      },
+      url: `/v1/operator/subscriptions/${subscription.subscriptionId}/privacy-requests`,
+    });
+    const erasureRequest = await app.inject({
+      method: 'POST',
+      payload: {
+        operatorUserId: '11111111-1111-4111-8111-111111111111',
+        reason: 'subscriber requested account deletion after cancellation',
+        requestedAt: '2026-05-04T08:00:00.000Z',
+        requestType: 'erasure',
+      },
+      url: `/v1/operator/subscriptions/${subscription.subscriptionId}/privacy-requests`,
+    });
+
+    expect(exportRequest.statusCode).toBe(201);
+    expect(exportRequest.json()).toMatchObject({
+      erasurePlan: {
+        immediateActions: [
+          'Generate export bundle and deliver it through an operator-approved support channel.',
+        ],
+      },
+      exportBundle: {
+        billingHistory: [{ itemType: 'charge', status: 'succeeded' }],
+        subscription: {
+          phoneNumber: '+22890123456',
+          subscriptionId: subscription.subscriptionId,
+        },
+      },
+      requestType: 'export',
+      subscriptionId: subscription.subscriptionId,
+    });
+    expect(erasureRequest.statusCode).toBe(201);
+    expect(erasureRequest.json()).toMatchObject({
+      erasurePlan: {
+        immediateActions: expect.arrayContaining([
+          'Revoke subscriber push devices and active auth sessions.',
+          'Preserve payment, audit, and safety records required by retention policy.',
+        ]),
+        retainedRecords: expect.arrayContaining([
+          expect.objectContaining({ recordType: 'audit_events' }),
+          expect.objectContaining({ recordType: 'payment_attempts_and_refunds' }),
+        ]),
+      },
+      events: [
+        expect.objectContaining({
+          actor: { role: 'operator', userId: '11111111-1111-4111-8111-111111111111' },
+          eventType: 'SubscriberPrivacyRequestRecorded',
+        }),
+      ],
+      requestType: 'erasure',
+    });
+    expect(repository.subscriberPrivacyRequests).toHaveLength(2);
+    expect(repository.subscriberPrivacyRequests[1]?.events[0]?.payload).toMatchObject({
+      billingItemCount: 1,
+      requestType: 'erasure',
+      subscriptionId: subscription.subscriptionId,
+    });
+  });
+
   it('lists pending subscriptions in the operator matching queue', async () => {
     const repository = new InMemoryCoreRepository();
     const app = createCoreApiApp({ repository });

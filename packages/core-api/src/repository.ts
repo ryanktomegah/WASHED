@@ -612,6 +612,46 @@ export interface AuditEventRecord {
   readonly traceId: string;
 }
 
+export type SubscriberPrivacyRequestType = 'erasure' | 'export';
+
+export interface CreateSubscriberPrivacyRequestInput {
+  readonly operatorUserId: string;
+  readonly reason: string;
+  readonly requestedAt: Date;
+  readonly requestType: SubscriberPrivacyRequestType;
+  readonly subscriptionId: string;
+  readonly traceId: string;
+}
+
+export interface SubscriberPrivacyExportBundle {
+  readonly auditEvents: readonly AuditEventRecord[];
+  readonly billingHistory: readonly SubscriptionBillingItemRecord[];
+  readonly disputes: readonly DisputeRecord[];
+  readonly notifications: readonly NotificationMessageRecord[];
+  readonly subscription: SubscriptionDetailRecord;
+}
+
+export interface SubscriberPrivacyErasurePlan {
+  readonly immediateActions: readonly string[];
+  readonly retainedRecords: readonly {
+    readonly reason: string;
+    readonly recordType: string;
+    readonly retention: string;
+  }[];
+}
+
+export interface SubscriberPrivacyRequestRecord {
+  readonly erasurePlan: SubscriberPrivacyErasurePlan;
+  readonly events: readonly DomainEvent[];
+  readonly exportBundle: SubscriberPrivacyExportBundle;
+  readonly operatorUserId: string;
+  readonly reason: string;
+  readonly requestedAt: Date;
+  readonly requestId: string;
+  readonly requestType: SubscriberPrivacyRequestType;
+  readonly subscriptionId: string;
+}
+
 export type NotificationChannel = 'in_app' | 'push' | 'sms' | 'whatsapp';
 export type NotificationRecipientRole = 'operator' | 'subscriber' | 'worker';
 export type NotificationStatus = 'failed' | 'pending' | 'sent' | 'suppressed_quiet_hours';
@@ -1141,6 +1181,9 @@ export interface CoreRepository {
   listMatchingQueue(input: ListMatchingQueueInput): Promise<readonly MatchingQueueItemRecord[]>;
   listOperatorDisputes(input: ListOperatorDisputesInput): Promise<readonly DisputeRecord[]>;
   listAuditEvents(input: ListAuditEventsInput): Promise<readonly AuditEventRecord[]>;
+  createSubscriberPrivacyRequest(
+    input: CreateSubscriberPrivacyRequestInput,
+  ): Promise<SubscriberPrivacyRequestRecord>;
   listPaymentAttempts(
     input: ListPaymentAttemptsInput,
   ): Promise<readonly PaymentAttemptSummaryRecord[]>;
@@ -1262,6 +1305,7 @@ export class InMemoryCoreRepository implements CoreRepository {
   public readonly visitPhotos: VisitPhotoRecord[] = [];
   public readonly subscriptions: CreatedSubscriptionRecord[] = [];
   public readonly notificationMessages: NotificationMessageRecord[] = [];
+  public readonly subscriberPrivacyRequests: SubscriberPrivacyRequestRecord[] = [];
   public readonly pushDevices: PushDeviceRecord[] = [];
   private readonly assignedSubscriptionIds = new Set<string>();
   private readonly subscriptionState = new Map<string, InMemorySubscriptionState>();
@@ -2678,6 +2722,41 @@ export class InMemoryCoreRepository implements CoreRepository {
           left.eventId.localeCompare(right.eventId),
       )
       .slice(0, input.limit);
+  }
+
+  public async createSubscriberPrivacyRequest(
+    input: CreateSubscriberPrivacyRequestInput,
+  ): Promise<SubscriberPrivacyRequestRecord> {
+    const detail = await this.getSubscriptionDetail({ subscriptionId: input.subscriptionId });
+    const billingHistory = await this.listSubscriptionBilling({
+      limit: 100,
+      subscriptionId: input.subscriptionId,
+    });
+    const disputes = (await this.listOperatorDisputes({ limit: 500 })).filter(
+      (dispute) => dispute.subscriptionId === input.subscriptionId,
+    );
+    const notifications = await this.listNotificationMessages({
+      aggregateId: input.subscriptionId,
+      countryCode: detail.countryCode,
+      limit: 100,
+    });
+    const auditEvents = await this.listAuditEvents({
+      aggregateId: input.subscriptionId,
+      aggregateType: 'subscription',
+      countryCode: detail.countryCode,
+      limit: 100,
+    });
+    const record = buildSubscriberPrivacyRequestRecord({
+      auditEvents,
+      billingHistory,
+      detail,
+      disputes,
+      input,
+      notifications,
+    });
+
+    this.subscriberPrivacyRequests.push(record);
+    return record;
   }
 
   public async listPaymentAttempts(
@@ -4217,6 +4296,85 @@ export function buildChangedSubscriptionTierRecord(input: {
     subscriptionId: input.input.subscriptionId,
     tierCode: tier.code,
     visitsPerCycle: tier.visitsPerCycle,
+  };
+}
+
+export function buildSubscriberPrivacyRequestRecord(input: {
+  readonly auditEvents: readonly AuditEventRecord[];
+  readonly billingHistory: readonly SubscriptionBillingItemRecord[];
+  readonly detail: SubscriptionDetailRecord;
+  readonly disputes: readonly DisputeRecord[];
+  readonly input: CreateSubscriberPrivacyRequestInput;
+  readonly notifications: readonly NotificationMessageRecord[];
+}): SubscriberPrivacyRequestRecord {
+  const requestId = randomUUID();
+  const retainedRecords = [
+    {
+      reason: 'Accounting, refund, and payment dispute defense.',
+      recordType: 'payment_attempts_and_refunds',
+      retention: 'Accounting/legal window from the retention schedule.',
+    },
+    {
+      reason: 'Safety, fraud, and dispute investigation integrity.',
+      recordType: 'support_disputes_safety_incidents_visit_evidence',
+      retention: 'Open dispute plus configured safety retention window.',
+    },
+    {
+      reason: 'Immutable audit trail for operator accountability.',
+      recordType: 'audit_events',
+      retention: 'Immutable audit retention window; personal payloads are minimized.',
+    },
+  ];
+  const immediateActions =
+    input.input.requestType === 'erasure'
+      ? [
+          'Verify requester identity before any destructive action.',
+          'Cancel or anonymize active subscriber-facing profile data after open visits close.',
+          'Revoke subscriber push devices and active auth sessions.',
+          'Queue object-storage deletion for expired photo evidence outside dispute/legal hold.',
+          'Preserve payment, audit, and safety records required by retention policy.',
+        ]
+      : ['Generate export bundle and deliver it through an operator-approved support channel.'];
+  const event = createDomainEvent({
+    actor: { role: 'operator', userId: input.input.operatorUserId },
+    aggregateId: input.input.subscriptionId,
+    aggregateType: 'subscription',
+    countryCode: input.detail.countryCode,
+    eventType: 'SubscriberPrivacyRequestRecorded',
+    payload: {
+      auditEventCount: input.auditEvents.length,
+      billingItemCount: input.billingHistory.length,
+      disputeCount: input.disputes.length,
+      notificationCount: input.notifications.length,
+      reason: input.input.reason,
+      requestId,
+      requestType: input.input.requestType,
+      retainedRecordTypes: retainedRecords.map((record) => record.recordType),
+      subscriberId: input.detail.subscriberId,
+      subscriptionId: input.input.subscriptionId,
+    },
+    traceId: input.input.traceId,
+  });
+
+  return {
+    erasurePlan: {
+      immediateActions,
+      retainedRecords,
+    },
+    events: [event],
+    exportBundle: {
+      auditEvents: input.auditEvents,
+      billingHistory: input.billingHistory,
+      disputes: input.disputes,
+      notifications: input.notifications,
+      subscription: input.detail,
+    },
+    operatorUserId: input.input.operatorUserId,
+    reason: input.input.reason,
+    requestedAt: input.input.requestedAt,
+    requestId,
+    requestType: input.input.requestType,
+    subscriptionId: input.input.subscriptionId,
   };
 }
 

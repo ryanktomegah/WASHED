@@ -13,6 +13,7 @@ import type {
   AdvanceWorkerOnboardingCaseInput,
   CreateWorkerMonthlyPayoutInput,
   CreateWorkerOnboardingCaseInput,
+  CreateSubscriberPrivacyRequestInput,
   CreateWorkerUnavailabilityInput,
   CreateWorkerAdvanceRequestInput,
   CreateSubscriptionInput,
@@ -193,6 +194,9 @@ const PUSH_DEVICE_ENVIRONMENT_VALUES = new Set<PushDeviceEnvironment>([
   'simulator',
 ]);
 const PUSH_DEVICE_STATUS_VALUES = new Set<PushDeviceStatus>(['active', 'revoked']);
+const SUBSCRIBER_PRIVACY_REQUEST_TYPE_VALUES = new Set<
+  CreateSubscriberPrivacyRequestInput['requestType']
+>(['erasure', 'export']);
 
 export function parseCreateSubscriptionBody(
   body: unknown,
@@ -1103,6 +1107,25 @@ export function parseListAuditEventsRequest(query: unknown): ListAuditEventsInpu
   };
 }
 
+export function parseCreateSubscriberPrivacyRequestBody(
+  body: unknown,
+  subscriptionId: string,
+  traceId: string,
+): CreateSubscriberPrivacyRequestInput {
+  if (!isRecord(body)) {
+    throw new Error('Request body must be an object.');
+  }
+
+  return {
+    operatorUserId: readUuid(body, 'operatorUserId'),
+    reason: readString(body, 'reason'),
+    requestedAt: body.requestedAt === undefined ? new Date() : readIsoDateTime(body, 'requestedAt'),
+    requestType: readLiteral(body, 'requestType', SUBSCRIBER_PRIVACY_REQUEST_TYPE_VALUES),
+    subscriptionId: parseUuid(subscriptionId, 'subscriptionId'),
+    traceId,
+  };
+}
+
 export function parseListPaymentAttemptsRequest(query: unknown): ListPaymentAttemptsInput {
   if (!isRecord(query)) {
     throw new Error('Query string must be an object.');
@@ -1731,6 +1754,10 @@ function assertSubscriptionVisitParams(subscriptionId: string, visitId: string):
 function readUuid(record: Record<string, unknown>, key: string): string {
   const value = readString(record, key);
 
+  return parseUuid(value, key);
+}
+
+function parseUuid(value: string, key: string): string {
   if (!isUuid(value)) {
     throw new Error(`${key} must be a UUID.`);
   }

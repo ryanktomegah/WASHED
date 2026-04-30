@@ -23,6 +23,25 @@ const REGISTERED_EVENT_CONTRACTS = new Map<
   }
 >([
   [
+    'SubscriberPrivacyRequestRecorded',
+    {
+      actorRole: 'operator',
+      aggregateType: 'subscription',
+      requiredPayloadKeys: [
+        'auditEventCount',
+        'billingItemCount',
+        'disputeCount',
+        'notificationCount',
+        'reason',
+        'requestId',
+        'requestType',
+        'retainedRecordTypes',
+        'subscriberId',
+        'subscriptionId',
+      ],
+    },
+  ],
+  [
     'PaymentReconciliationRunCompleted',
     {
       actorRole: 'operator',

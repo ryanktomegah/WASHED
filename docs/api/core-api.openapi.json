@@ -158,6 +158,27 @@
         }
       }
     },
+    "/v1/operator/subscriptions/{subscriptionId}/privacy-requests": {
+      "post": {
+        "operationId": "createOperatorSubscriberPrivacyRequest",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subscriptionId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Subscriber privacy export or erasure request recorded"
+          }
+        }
+      }
+    },
     "/v1/workers/{workerId}/route": {
       "get": {
         "operationId": "getWorkerRoute",
