@@ -12,19 +12,19 @@
 | Subscriber app shell | Ready locally | Signup, profile, GPS/address, tier/schedule, payment sandbox, visits, support, billing |
 | Worker app mode | Ready locally | Route cache, GPS check-in/out, photo evidence, issues, earnings, payout history |
 | Operator console | Ready locally | Matching, live ops, support, payments, workers, notifications, service cells, beta metrics |
-| CI pipeline | Green | GitHub Actions runs format, migration/OpenAPI checks, typecheck, tests, build, audit, beta load, beta dry-run |
+| CI pipeline | Green and protected | GitHub Actions runs format, migration/OpenAPI checks, typecheck, tests, build, audit, beta load, beta dry-run; `main` requires `verify` |
 | External sends/payments | Gated | SMS, payment, push, storage, observability real-send paths require explicit flags and credentials |
 
 ## Beta Blockers
 
 | Blocker | Owner | Required evidence | Repo support |
 |---|---|---|---|
-| Field research | Founder/operator | 12 subscriber interviews, 8 worker interviews, synthesis decision log | Scripts, screener, consent, synthesis template |
+| Founder validation | Founder | Founder-confirmed washer/customer conversations and validation memo | `docs/research/founder-validation-memo.md` |
 | Payment provider selection | Founder/operator | CinetPay/PayDunya or alternative scored and selected, sandbox proof for collection/refund/payout/webhooks | Provider abstraction, readiness endpoint, reconciliation |
-| Banking partner | Founder/operator | Account path, settlement/export workflow, transfer limits | Banking diligence checklist |
-| Legal/counsel sign-off | Founder + Togo counsel | Worker classification, liability, privacy, retention, ToS, worker agreement | Counsel drafts and gate log |
+| Banking partner | Founder/operator | Account path, settlement/export workflow, transfer limits before real paid beta | Banking diligence checklist |
+| Legal position | Founder + optional Togo counsel | Founder-approved drafts for internal testing; counsel or explicit founder risk acceptance before paid beta | Legal drafts, gate log, founder-approved legal status |
 | Capital approval | Founder | Approved beta reserve and launch runway | Capital model v2 |
-| Accessibility/security/privacy review | Founder + engineering | Real-device pass, secret-scanning evidence, counsel-approved retention, sign-off log | Review checklist and provider inventory |
+| Accessibility/security/privacy review | Founder + engineering | iPhone/internal device pass, retention review, sign-off log | Review checklist, iPhone test runbook, provider inventory, GitHub security settings |
 | Real onboarding | Operations | 10 workers and 30 paid subscribers selected/onboarded | Local beta dry-run support |
 
 ## Go/No-Go Rule
@@ -33,10 +33,10 @@ Closed beta can start only when all beta blockers above have written evidence an
 
 ## Immediate Founder Actions
 
-1. Schedule counsel review using `docs/ops/worker-classification-counsel-brief.md` and `docs/legal/*.md`.
+1. Run the iPhone prototype pass using `docs/runbooks/iphone-prototype-test.md`.
 2. Contact CinetPay and PayDunya using `docs/ops/payment-provider-diligence.md`.
-3. Contact Ecobank, Orabank, and UTB using `docs/ops/banking-partner-diligence.md`.
-4. Run field interviews using `docs/research/recruitment-screener-consent-fr.md`, `docs/research/subscriber-interview-script-fr.md`, and `docs/research/worker-interview-script-fr.md`.
+3. Contact Ecobank, Orabank, and UTB only when preparing real paid settlement.
+4. Decide whether to get counsel sign-off or explicitly accept founder legal risk before paid beta.
 5. Approve or adjust `research/2026-04-30-capital-model-v2.md`.
 
 ## Engineering Next Candidates
