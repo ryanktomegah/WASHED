@@ -266,7 +266,7 @@ Tasks:
 - [x] Complete CS runbooks and operator training. Support runbook and operator training guide created in `docs/runbooks/customer-support.md` and `docs/training/operator-training.md`.
 - [x] Complete worker onboarding materials. Worker onboarding checklist and first-route readiness guide created in `docs/training/worker-onboarding.md`.
 - [x] Complete incident escalation runbooks. Severity model, safety escalation, provider failure, and closeout process created in `docs/runbooks/incident-escalation.md`.
-- [ ] Complete accessibility, security, and privacy review. Review checklist created in `docs/runbooks/security-privacy-accessibility-review.md`; real-device accessibility pass and counsel-approved retention schedule remain open.
+- [ ] Complete accessibility, security, and privacy review. Beta review checklist and sign-off log created in `docs/runbooks/security-privacy-accessibility-review.md`; real-device accessibility pass, GitHub secret-scanning settings evidence, provider data-sharing list, and counsel-approved retention schedule remain open.
 - [x] Run load test at beta scale. `pnpm load:beta` covers 30 subscribers, 10 workers, subscription detail reads, and assignment operations locally.
 - [x] Run disaster and provider-failure tabletop exercises. Tabletop scenarios documented in `docs/runbooks/provider-failure-tabletop.md`; live execution in staging remains a launch gate.
 
