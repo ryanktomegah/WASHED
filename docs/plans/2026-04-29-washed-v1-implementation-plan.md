@@ -107,13 +107,13 @@ Exit criteria:
 
 Tasks:
 
-- [ ] Add gate table to the spec.
-- [ ] Revise auto-rating behavior to preserve unrated state.
-- [ ] Add privacy and retention schedule for IDs, references, police clearance, photos, GPS, calls, transcripts, payment data, and audit events.
-- [ ] Add worker-safety policy, unsafe-client flow, emergency escalation, and operator runbook.
-- [ ] Re-scope ML dispatch as operator-first scoring plus training-data capture, with auto-dispatch behind later measured thresholds.
-- [ ] Add Lome service-cell model even if the user-facing launch geography remains all of Lome.
-- [ ] Define v1 beta scope versus post-v1 scope for EWE/MINA automatic transcription and translation.
+- [x] Add gate table to the spec.
+- [x] Revise auto-rating behavior to preserve unrated state.
+- [x] Add privacy and retention schedule for IDs, references, police clearance, photos, GPS, calls, transcripts, payment data, and audit events.
+- [x] Add worker-safety policy, unsafe-client flow, emergency escalation, and operator runbook.
+- [x] Re-scope ML dispatch as operator-first scoring plus training-data capture, with auto-dispatch behind later measured thresholds.
+- [x] Add Lome service-cell model even if the user-facing launch geography remains all of Lome.
+- [x] Define v1 beta scope versus post-v1 scope for EWE/MINA automatic transcription and translation.
 
 Exit criteria:
 

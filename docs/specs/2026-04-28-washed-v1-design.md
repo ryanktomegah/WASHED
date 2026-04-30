@@ -1,7 +1,7 @@
 # Washed — v1 Product & System Design
 
 **Date:** 2026-04-28
-**Status:** Design — reviewed; implementation planning active
+**Status:** Corrected design — implementation active; paid beta and launch gated
 **Working name:** Washed (subject to legal/trademark check before launch)
 **Authors:** Founder + Claude (CTO autonomy mode)
 
@@ -29,13 +29,33 @@ The founder lived in Togo and used the informal washerwoman service personally. 
 Washed formalises the existing informal pattern into a subscription marketplace that gives both sides what they lack: workers get income stability; households get reliable scheduled service at a predictable monthly price.
 
 ### Validation status (2026-04-28)
+
 - Founder has personally used the informal service
 - Informal validation with family, friends, and one washerwoman in Lomé — friendly signal, treated as permission to proceed, not as proof of demand
 - No structured user interviews yet (planned in T8 research program)
 
 ---
 
-## 2. Decisions locked (with reasoning)
+## 1.1 Gate table
+
+These gates do not block local-first engineering, but they do block paid beta, public launch, provider promises, or permanent public brand spend.
+
+| Gate | Status | Blocks | Evidence required |
+|---|---|---|---|
+| Worker classification | Open | Worker onboarding, compensation launch model, contractor/employment promises | Written Togo counsel position on contractor risk, CNSS/INAM triggers, and mitigation plan |
+| Liability and insurance | Open | Paid beta, theft/damage reimbursement terms, worker injury process | Counsel-reviewed liability policy and selected insurance path |
+| Payment provider | Open | Real collection, refunds, payouts, payment promises in the app | Primary/fallback provider contracts or sandbox evidence for T-Money/Flooz, refunds, webhooks, reconciliation, and payouts |
+| Banking partner | Open | Subscriber fund custody, settlement reconciliation, payout operations | Account-opening path, settlement/export workflow, and transfer limits |
+| Trademark/domain | Open | Uniforms, app-store assets, public marketing, permanent domains | OAPI/Togo search and counsel-reviewed name/domain recommendation |
+| Field research | Open | Final onboarding copy, schedule windows, support/dispute UX, beta operating runbook | 12 subscriber interviews, 8 worker interviews, synthesis decision log |
+| Capital approval | Open | Paid cloud, devices, provider accounts, beta incentives, launch operations | Approved v2 beta and public-launch budget |
+| Security/privacy/accessibility review | Open | Paid beta and public launch | Completed checklist, real-device accessibility pass, and privacy retention review |
+
+Source tracking lives in `docs/ops/legal-gates.md`, `docs/ops/payment-provider-diligence.md`, `docs/ops/banking-partner-diligence.md`, and `research/2026-04-30-capital-model-v2.md`.
+
+---
+
+## 2. Product decisions and assumptions (with reasoning)
 
 ### 2.1 Target segment (Phase 1)
 - **Lower-middle-income + middle-income Lomé households**
@@ -74,12 +94,33 @@ Of all (pricing × worker model × subscriber mix × capacity) combinations test
 
 Full results in `/Users/tomegah/washed/research/2026-04-28-financial-model-results.md`.
 
-### 2.5 Operating rules (LOCKED)
+### 2.5 Operating rules
 
-- **Launch geography:** all of Lomé as a single zone. City small enough; no neighbourhood phasing.
+- **Launch geography:** subscriber-facing launch remains Lomé, but operations are divided into service cells for capacity, safety, and route density. No public neighbourhood phasing is promised until field research and beta metrics justify it.
 - **Payment rule (HARD):** **NO cash from subscribers, ever.** All client→platform payments via T-Money + Flooz mobile money in-app. Workers paid by the platform only — never by clients directly. This prevents revenue leakage, ensures revenue capture, protects workers from disputes.
 - **Build philosophy:** No "MVP" framing — production-quality v1 from day one, scope down not quality down.
 - **Quality bar:** European/American quality. No tradeoffs lowered because the market is African.
+
+### 2.5a Service-cell model
+
+Lomé is operated as a set of internal service cells even when the user-facing product says "available in Lomé." A service cell groups nearby neighborhoods that can be served by the same worker pool without creating unsafe or uneconomic travel.
+
+Each worker profile carries:
+
+- Preferred service cells
+- Maximum daily visit capacity
+- Transport constraints
+- Unsafe or blocked household flags
+- Active/unavailable dates
+
+Each subscriber address carries:
+
+- Neighborhood and landmark notes
+- GPS pin when available
+- Assigned service cell
+- Safety or access notes visible only to operators
+
+Assignment must reject a match when the worker has no remaining capacity in the service cell, the subscriber/worker relationship is blocked, or the route would exceed the operator-approved travel envelope.
 
 ### 2.6 Subscription mechanics
 
@@ -101,6 +142,17 @@ Five-layer trust stack required before first visit:
 5. In-app rating + 2-strike rule (theft/damage allegations = immediate suspension pending investigation)
 
 Sticky worker assignment: same worker every visit by default; auto-swap if assigned worker is unavailable.
+
+### 2.7a Worker safety and unsafe-client policy
+
+Worker safety is a beta-critical operating requirement, not a later feature.
+
+- Workers can report disrespect, harassment, unsafe access, non-payment pressure, missing supplies, aggressive behavior, or false accusation risk from the app.
+- Operators can mark a household as `watchlist`, `blocked_for_worker`, or `blocked_platform`.
+- A worker can stop a visit and request operator help when safety is at risk; completion metrics must not penalize safety stops.
+- Emergency escalation requires an operator callback, incident log, subscriber account hold when needed, and senior-ops review before future assignments.
+- Theft or serious misconduct allegations suspend the accused relationship while preserving both subscriber and worker statements in the audit trail.
+- Reassignment must respect worker-specific blocklists; the platform must never send the same worker back into a flagged unsafe household without senior approval.
 
 ### 2.8 Liability (pending counsel review)
 
@@ -168,11 +220,12 @@ Every existing West African laundry-app competitor is **pickup-and-delivery laun
 
 ### 3.4 Capital requirements (Model C, realistic ramp)
 
-- One-time setup: ~5,250,000 XOF (~$8,680 USD)
-- 9-month operating burn: ~7,000,000 XOF (~$11,600 USD)
-- **Total capital required at trough: ~12,300,000 XOF (~$20,400 USD)**
-- Add ~3-month safety buffer: **plan for ~$25-28k USD runway**
-- Cash-flow positive: month 10-12 under realistic ramp
+Current planning reference is `research/2026-04-30-capital-model-v2.md`, which separates closed-beta readiness from public-launch runway.
+
+- Closed-beta ready reserve: ~16,469,660 XOF (~$27,223 USD)
+- Beta plus public-launch runway: ~44,223,860 XOF (~$73,097 USD)
+- Includes explicit reserves for legal, insurance advice, trademark/domain work, device/data support, provider setup, security/privacy/accessibility review, travel/ops, support load, provider downtime, refund/liability claims, worker transport/data overrun, and slower acquisition.
+- Replace these numbers with actual provider, bank, counsel, insurance, device, and support quotes before paid beta.
 
 ### 3.5 Five-year revenue projection (realistic ramp scenario)
 
@@ -190,11 +243,20 @@ Full projections in `/Users/tomegah/washed/research/2026-04-28-projections-and-m
 
 ## 4. System architecture
 
-### 4.1 Approach: Sticky Routes (operator-mediated cold start, ML-mediated steady state)
+### 4.1 Approach: Sticky Routes (operator-first dispatch, measured automation later)
 
 A new subscriber's first match is made by a human dispatcher in the operator console. Once matched, the assignment is sticky for 12 months unless the subscriber requests a swap. New subscribers are added to existing worker routes when geographically close; new workers are hired when route density exceeds capacity.
 
-The dispatch service supports two execution modes from day one — operator-mediated and ML-auto — with a confidence-gated handoff. The ML model trains nightly on operator decisions + visit outcomes; mode switches per country are config flags. There is no "v2 algorithm rewrite later" — the algorithm is built now and switched on the moment it outperforms humans (likely month 3-4 in Lomé), not deferred to year 2.
+Dispatch is operator-first for closed beta. The system captures candidate scores, operator decisions, rejections, declines, visit outcomes, route duration, disputes, no-shows, and worker capacity data from day one so that future automation has clean training data.
+
+ML auto-dispatch is post-beta until all of these thresholds are met for the target service cells:
+
+- At least 500 completed visits with decision/outcome labels.
+- Operator-selected candidate rank agrees with the scoring model at a threshold approved in the weekly beta review.
+- Visit completion, dispute rate, worker satisfaction, and support load are not worse than operator-only dispatch.
+- Operators can override, audit, and roll back model decisions.
+
+Until those thresholds are met, scoring is advisory only and the operator remains accountable for assignment.
 
 ### 4.2 High-level architecture
 
@@ -233,10 +295,10 @@ The dispatch service supports two execution modes from day one — operator-medi
    │   │ - operator │    │  ordered per-aggregate│   │  Africa's      │  │
    │   │   matching │    │  retention 7 days    │   │  Talking SMS   │  │
    │   │   API      │    │                      │   │  WhatsApp BSP  │  │
-   │   │ - ML matcher│   └─────────────────────┘   │  outbound       │  │
-   │   │   (auto-on  │              │               └────────────────┘  │
-   │   │    when     │              │                                   │
-   │   │    confident)│             │              ┌────────────────┐   │
+   │   │ - scoring   │   └─────────────────────┘   │  outbound       │  │
+   │   │   + decision│              │               └────────────────┘  │
+   │   │   logging   │              │                                   │
+   │   │   (auto off)│             │              ┌────────────────┐   │
    │   └────────────┘              │               │ REALTIME COMMS │   │
    │                               │               │ S8: voice msgs │   │
    │   ┌────────────┐              │               │ + LiveKit calls│   │
@@ -273,10 +335,10 @@ Independent deployables from day one. Splits chosen based on differing reliabili
 | **Auth (S1)** | Phone+OTP, JWT, refresh, session, device trust | Different scaling profile (login spikes), different security perimeter |
 | **Core API (S2)** | Subscriptions, Visits, Workers, Routes, Ratings, Disputes | Product domain — clear boundaries |
 | **Payments (S3)** | CinetPay/PayDunya, idempotent retries, settlement, payouts | PCI surface, distinct reliability SLO, must isolate failures |
-| **Dispatch (S4)** | Operator matching API + ML matcher + zone health | CPU-heavy when ML on; scales independently |
+| **Dispatch (S4)** | Operator matching API + candidate scoring + zone health | Assignment reliability and route economics; ML auto-dispatch remains gated by beta evidence |
 | **Notification (S5)** | FCM + SMS + WhatsApp BSP | High-volume fan-out; failures must not block core flows |
 | **Audit / Event Store (S6)** | Append-only log of every domain event | Regulatory + dispute resolution + ML training requirements |
-| **Analytics / ML (S7)** | ClickHouse + PostHog + MLflow training pipeline | OLAP workload distinct from OLTP; cannot steal IO from primary |
+| **Analytics / ML (S7)** | ClickHouse + PostHog + future MLflow training pipeline | OLAP workload distinct from OLTP; model automation is post-beta |
 | **Realtime Communication (S8)** | Voice messages, LiveKit voice calls, Whisper transcription, NLLB translation | Real-time media has fundamentally different scaling/reliability needs |
 
 ### 4.4 Multi-tenancy / multi-country from day 1
@@ -295,11 +357,11 @@ Independent deployables from day one. Splits chosen based on differing reliabili
 | **Mobile** | Flutter 3 (single codebase iOS+Android+web); Riverpod; Freezed | One codebase, native compilation, offline-tolerant |
 | **Operator console** | Next.js 15 + React 19 + TypeScript + Tailwind + shadcn/ui + TanStack Table | Real product, not Retool scaffold |
 | **Real-time media** | LiveKit (self-hosted) + Coturn + Opus codec | Industry-standard WebRTC, full data sovereignty |
-| **Voice transcription** | Whisper-v3-large (self-hosted on GPU) | Multi-language, French native; Ewe/Mina viable |
-| **Translation** | NLLB-200-distilled (self-hosted CPU) | FR↔EWE↔MINA support |
+| **Voice transcription** | Post-beta Whisper-v3-large option | Manual callback and text support are beta defaults; GPU transcription waits for cost/research proof |
+| **Translation** | Post-beta NLLB-200 option | FR is beta-critical; EWE/MINA support starts as human-assisted/localized copy before automatic translation |
 | **Event bus** | Redpanda | Kafka-compatible, single-binary, simpler ops |
 | **Analytics warehouse** | ClickHouse | Sub-second OLAP queries on 100M+ rows |
-| **ML platform** | scikit-learn + LightGBM ranker; MLflow | Industry standard, sufficient for ranking task |
+| **ML platform** | scikit-learn + LightGBM ranker; MLflow after beta evidence | Industry standard, sufficient for future ranking task |
 | **Observability** | OpenTelemetry → Grafana Cloud | Unified traces/metrics/logs |
 | **Hosting** | Hetzner Cloud Frankfurt (primary); Helsinki (DR) | Best EU latency to Lomé; ~5× cheaper than AWS |
 | **Infra-as-code** | Terraform + Ansible | Reproducible infra; hosting-portable |
@@ -314,7 +376,7 @@ Independent deployables from day one. Splits chosen based on differing reliabili
 
 #### C1 — Subscriber App (Flutter)
 
-Mobile app for signup, subscription management, payment, schedule visibility, ratings, dispute filing, voice messaging, and voice calling.
+Mobile app for signup, subscription management, payment, schedule visibility, ratings, dispute filing, and support. Voice messaging and masked in-app calling are post-beta unless field research proves they are needed for safety or completion.
 
 **Surfaces:**
 - **Onboarding** — phone+OTP, address (GPS + landmark notes — Lomé addresses are descriptive), tier selection, schedule preference, payment-method linking
@@ -323,16 +385,16 @@ Mobile app for signup, subscription management, payment, schedule visibility, ra
 - **Worker profile** — assigned worker's photo/name/rating, request swap (rate-limited 2/quarter)
 - **Visit screen** — real-time worker ETA, completion confirmation with worker-uploaded photos, rating + tip
 - **Disputes** — structured complaint form with photo capture, status tracking
-- **Messaging** — in-app chat with assigned worker (templated FR↔EWE auto-translation; free-text supported)
-- **Voice messages** — long-press to record, tap to play, auto-transcribed below bubble
-- **Voice calls** — one-tap call to assigned worker, full-screen WhatsApp-style UI; phone numbers masked (caller sees "Akouvi (votre laveuse)" never real number)
+- **Messaging** — structured support messages and operator-mediated contact during beta; direct subscriber-worker free-text is post-beta.
+- **Voice messages** — post-beta; beta may use operator-approved manual voice evidence.
+- **Voice calls** — post-beta masked in-app calling; beta uses operator callback unless research changes the scope.
 - **Wallet/Billing** — monthly statement, mobile-money receipt, refund history
 
-**Tech:** Flutter 3, Riverpod, Freezed, Dio, FlutterSecureStorage, Firebase Cloud Messaging, sentry_flutter, easy_localization (FR/EN/EWE/MINA), `livekit_client` for calls, drift for offline storage.
+**Tech:** Flutter 3, Riverpod, Freezed, Dio, FlutterSecureStorage, Firebase Cloud Messaging, sentry_flutter, easy_localization (FR beta-critical; EN internal/admin; EWE/MINA after field benchmark), drift for offline storage. `livekit_client` is added only when masked calling becomes beta-critical or launch-critical.
 
 #### C2 — Worker App (Flutter, Android-first)
 
-Mobile app for daily route, visit check-in/out, earnings, payouts, operator messaging, and voice/call communication with subscribers.
+Mobile app for daily route, visit check-in/out, earnings, payouts, operator messaging, and safety escalation. Voice/call communication with subscribers is post-beta.
 
 **Surfaces:**
 - **Today's route** — ordered list of subscribers, addresses, GPS navigation handoff, time windows
@@ -341,7 +403,7 @@ Mobile app for daily route, visit check-in/out, earnings, payouts, operator mess
 - **Earnings** — running monthly total (floor + bonuses), payout history, mid-month advance request
 - **Profile** — rating trend, completion rate, dispute history, payout method
 - **Operator chat** — WhatsApp-style direct line to operations
-- **Voice messages + calls with subscribers** — same surfaces as C1; numbers masked
+- **Safety/support contact** — one-tap issue reporting and operator callback; direct voice messages/calls with subscribers remain post-beta.
 - **Offline mode** — today's route cached; check-ins queued; photos compressed and queued for sync
 
 **Tech:** Same Flutter stack as C1, plus drift for offline-first sqlite, image compression, geolocator, background_fetch.
@@ -375,7 +437,7 @@ Specifications in section 4.3. Each service:
 
 | Concern | Implementation |
 |---|---|
-| **i18n** | Every user-visible string is a key; FR + EN at launch; EWE + MINA in Lomé v1.1; TWI for Ghana phase |
+| **i18n** | Every user-visible string is a key; French is beta-critical, English is internal/admin support, EWE + MINA require field benchmark and human review before automatic translation |
 | **Multi-currency** | `(amount_minor BIGINT, currency_code CHAR(3))`; locale-aware formatting |
 | **Multi-country** | RLS-enforced isolation; multi-country operator access opt-in |
 | **Observability** | OTel SDK in every service; traces + metrics + logs unified in Grafana Cloud; every request traced; every error → Sentry |
@@ -383,6 +445,26 @@ Specifications in section 4.3. Each service:
 | **Security** | TLS everywhere; mTLS between services in private VPC; secrets in Vault; OWASP-ASVS Level 2 baseline |
 | **Rate limiting** | Cloudflare + per-service Redis sliding-window |
 | **GDPR-equivalent rights** | Export endpoint per user; right-to-erasure with anonymisation where audit retention required; applies to all users regardless of jurisdiction |
+
+### 5.4 Privacy and retention schedule
+
+Retention defaults must be reviewed by counsel before paid beta. Until counsel approves longer retention, keep only the minimum operational evidence needed for safety, disputes, accounting, and audit.
+
+| Data class | Purpose | Default retention | Deletion/anonymisation rule |
+|---|---|---:|---|
+| Account profile and phone | Auth, support, subscription service | Account life + 24 months | Anonymise after account deletion unless audit/payment law requires retention |
+| Address, GPS pin, landmark notes | Assignment, route planning, safety | Account life + 12 months | Remove exact pin on deletion; keep neighborhood-level anonymised route statistics |
+| Worker ID/reference/police-clearance metadata | Vetting and safety | Worker active period + 36 months | Delete document images after verification unless counsel requires longer; keep audit metadata |
+| Visit before/after photos | Quality proof and disputes | 90 days, or dispute close + 180 days | Auto-delete object storage evidence after retention window |
+| Check-in/out GPS events | Visit proof, worker safety, dispute evidence | 12 months | Aggregate/anonymise for route analytics after retention window |
+| Payment attempts, refunds, payouts | Accounting, reconciliation, fraud control | 7 years or local legal requirement | Never store card data; retain provider references and accounting records |
+| Support disputes and safety incidents | Claims, escalation, blocklists | 36 months | Redact free-text personal data where possible after closure |
+| Push/SMS notification logs | Delivery debugging, support | 90 days | Keep aggregate delivery metrics only after deletion |
+| Audio messages/call recordings | Support and safety when explicitly enabled | 30 days, or dispute close + 180 days | Delete audio blobs; keep redacted incident notes only |
+| Transcripts/translations | Support and accessibility | 180 days, or dispute close + 180 days | Do not keep indefinitely; redact after incident/support closure |
+| Audit events | Compliance, disputes, replay | Indefinite append-only metadata | Store minimal payload keys; anonymise actor/customer identifiers where legally possible |
+
+Export and erasure requests must preserve accounting, fraud, and safety records that the company is legally required to keep, but user-facing personal data should be anonymised wherever retention is not required.
 
 ---
 
@@ -418,7 +500,7 @@ Three independent, idempotent pipelines stitched together by domain events.
 - Worker check-in: GPS within 100m of subscriber pin (gating, not advisory)
 - Worker uploads before+after photo (mandatory; checkout cannot complete without)
 - Worker check-out: GPS proximity + ≥30 min after check-in
-- Subscriber rating prompted; auto-rated 4★ after 48h
+- Subscriber rating prompted after completion; unrated visits remain `unrated`. No automatic default rating is created because it would distort worker quality and dispute evidence.
 - Worker bonus accrues on `VisitCompleted` event
 
 #### F2c — Weekly worker payout (cron, Sunday 23:00 Lomé)
@@ -428,11 +510,14 @@ Three independent, idempotent pipelines stitched together by domain events.
 
 ### 6.3 F3 — Dispute lifecycle
 
-Subscriber files dispute → worker bonus held + visit state `disputed` → operator console queue → operator pulls full context (GPS + photos + comms history + prior disputes) → requests worker statement → makes decision (resolved-for-subscriber / resolved-for-worker / escalate) → all tracked in audit log. Theft allegations bypass standard queue → senior ops paged + worker auto-suspended within 60 seconds.
+Subscriber files dispute → worker bonus held + visit state `disputed` → operator console queue → operator pulls full context (GPS + photos + comms history + prior disputes) → requests worker statement → makes decision (resolved-for-subscriber / resolved-for-worker / escalate) → all tracked in audit log. Theft allegations bypass standard queue → senior ops paged + relationship suspended within 60 seconds; worker account suspension follows severity policy and senior review.
 
 ### 6.4 F4 — Voice messages and calls
 
 #### F4a — Voice call (subscriber → worker)
+
+Status: post-beta by default. Closed beta uses push notifications, operator callbacks, and structured support/dispute forms unless research proves masked in-app calling is required for safety or completion.
+
 - Subscriber app → Realtime Comms: initiate call
 - S8: verifies relationship active, quiet-hours rule (21:00-07:00 requires `urgent` flag), no concurrent call
 - S8 creates LiveKit room; issues caller token; pushes notify to worker
@@ -441,10 +526,13 @@ Subscriber files dispute → worker bonus held + visit state `disputed` → oper
 - "Demander de l'aide" button → operator joins as 3-way audio
 
 #### F4b — Voice message
+
+Status: post-beta by default. Beta support may collect manual voice evidence through an operator-approved process, but automatic transcription/translation is not a beta promise.
+
 - Record locally → upload encrypted to object store → enqueue Whisper transcription
 - Audio playable immediately; transcript async (1-5s typical)
-- Translation on demand (FR↔EWE↔MINA via NLLB-200)
-- 30-day audio retention; transcripts kept indefinitely
+- Translation on demand after field benchmark and human review; FR beta support remains the default
+- 30-day audio retention by default; transcripts follow the privacy retention schedule and are not kept indefinitely
 
 ### 6.5 F5 — Cross-cutting: transactional outbox for audit
 
@@ -492,15 +580,15 @@ Instrumented from day one; alerted on breach; regression bar for every release.
 - **GPS check-in rejected:** worker shown clear message; one-tap "address is wrong" flagged to ops; one-tap "GPS is wrong" falls back to 4-digit code shared verbally with subscriber
 - **Worker no-show:** automated detection at T+15/30/60 min; ops alerted; replacement dispatched if available within 30 min; subscriber gets credit + apology
 - **Photo upload fails:** queued in local sqlite; visit completable with photos pending; background sync; ops alerted if pending >6h
-- **Theft/damage allegations:** bypass standard dispute queue; senior ops paged; worker auto-suspended within 60s
-- **Voice call connect fails:** auto-fallback to async voice message in same screen; no context loss
+- **Theft/damage allegations:** bypass standard dispute queue; senior ops paged; relationship suspended within 60s; worker account suspension follows severity policy and senior review.
+- **Voice call connect fails:** post-beta masked calling falls back to operator callback or async voice message in the same support context.
 - **Both payment providers down:** status page updated <60s; new signups disabled; existing subscribers unaffected; SMS broadcast on resolution
 - **Postgres primary fails:** Patroni-orchestrated failover to streaming replica in second AZ; <60s; reads continue from replica during failover
 - **Region-wide Hetzner outage:** cold-standby in Helsinki; RPO 15 min; RTO 4 hours; DNS failover via Cloudflare
 
 ### 7.3 Localisation & cultural-fit error UX
 
-Every error message: respectful tone (formal "vous"), specificity (what + next action + escalation), native-speaker translation (not Google Translate), one-tap "Nous contacter" → WhatsApp Business or in-app voice call to operator.
+Every error message: respectful tone (formal "vous"), specificity (what + next action + escalation), native-speaker translation (not Google Translate), one-tap "Nous contacter" → operator callback or the active support channel.
 
 Examples:
 - ❌ "Payment failed (status: 402)"
@@ -558,7 +646,7 @@ k6 nightly against staging mirror:
 - Morning peak: 80% workers checking in within 1 hour
 - Billing day: 1k charges in 5 min via cron
 - Weekly payout: 40 payouts in 2 min
-- Voice-call surge: 50 concurrent calls
+- Voice-call surge: 50 concurrent calls after masked calling enters the active launch scope
 - Operator console live ops: 5 operators, 200 active visits
 
 Pass criteria: all p95 SLOs met; zero double-charges; reconciliation clean.
@@ -568,7 +656,7 @@ Pass criteria: all p95 SLOs met; zero double-charges; reconciliation clean.
 Monthly exercises in staging (later in production with feature flags):
 - Kill Postgres primary → measure failover
 - Block CinetPay outbound → verify reconciliation, no double-charges
-- Inject 10% packet loss to LiveKit → verify call-quality indicator
+- Inject 10% packet loss to LiveKit → verify call-quality indicator after masked calling enters the active launch scope
 - Kill 50% of Notification workers → verify queue drain
 - Rotate JWT signing key → verify hot-rotation
 - Fill ClickHouse disk → verify alerts, projections pause cleanly
@@ -587,11 +675,11 @@ Compliance baseline: OWASP ASVS Level 2 (annual); GDPR-equivalent rights for all
 
 WCAG 2.1 Level AA from launch. Automated (axe-core + Pa11y in CI; Flutter accessibility-checker); manual (TalkBack + VoiceOver every release); external audit pre-launch and annually (Deque or Level Access).
 
-Specific: tap targets ≥44pt; contrast ≥4.5:1; screen-reader navigation tested; voice messages have transcripts; high-contrast mode toggle; dynamic-type up to 200% scale without breakage.
+Specific: tap targets ≥44pt; contrast ≥4.5:1; screen-reader navigation tested; voice messages have transcripts once voice is active scope; high-contrast mode toggle; dynamic-type up to 200% scale without breakage.
 
 ### 8.7 Localisation & cultural-fit
 
-Native-speaker translators (FR formal Togolese register, EWE, MINA, EN — paid professionals, no Google Translate); translation memory in Lokalise; in-context review by Togolese team member; pseudo-localisation testing for layout breakage; cultural-fit visual review by Togolese designer; focus-group illustration testing (8-10 users).
+Native-speaker translators for FR formal Togolese register and any approved EWE/MINA/EN expansion copy; no Google Translate. Translation memory in Lokalise; in-context review by Togolese team member; pseudo-localisation testing for layout breakage; cultural-fit visual review by Togolese designer; focus-group illustration testing (8-10 users).
 
 ### 8.8 Usability research with real Togolese users
 
@@ -625,7 +713,7 @@ All required, no exceptions:
 
 ### 8.10 Production as continuous testing
 
-Synthetic monitoring every 60s from Frankfurt/Paris/Accra: OTP, signup, visit lifecycle, payment, voice call.
+Synthetic monitoring every 60s from Frankfurt/Paris/Accra: OTP, signup, visit lifecycle, payment, and voice call once voice is in active scope.
 
 Real-user monitoring: every session reports performance + errors + network conditions to ClickHouse; weekly eng review.
 
@@ -666,10 +754,10 @@ No feature-phone fallback by default. Lomé low-income and middle-income users h
 CinetPay and PayDunya both supported. Failover from one to the other is config + retry, not code. Pattern extends to Phase 4-6 anglophone payment rails (Paystack/Flutterwave for Ghana/Nigeria).
 
 ### 9.9 Number masking for all client-worker communication
-The worker entering a stranger's home should never see the subscriber's real phone number, and vice versa. All voice calls and SMS route through the platform via LiveKit + Africa's Talking shortcodes. Channel auto-closes when relationship ends.
+The worker entering a stranger's home should never see the subscriber's real phone number, and vice versa. During beta, operators mediate contact through push, support callbacks, and approved provider channels. If masked direct calls enter scope, they route through the platform via LiveKit or a selected telephony provider. Channel auto-closes when relationship ends.
 
 ### 9.10 First-class voice messaging and VoIP calling
-WhatsApp-style voice messages and in-app voice calls between matched subscriber-worker pairs. Real-time, transcribed, translation-on-demand, operator-escalation-capable, recording-opt-in for safety.
+Voice messages and in-app calls are post-beta unless research proves they are required for safety or completion. When activated, they must be masked, operator-escalation-capable, recording-opt-in for safety, and governed by the privacy retention schedule.
 
 ---
 
@@ -683,7 +771,7 @@ WhatsApp-style voice messages and in-app voice calls between matched subscriber-
 - Hire research coordinator in Lomé (part-time)
 - Reference device procurement
 - Design system (Figma) — Subscriber + Worker + Operator
-- Translator engagement (FR formal + EWE + MINA)
+- Translator engagement for FR formal launch copy; EWE/MINA benchmark and human-reviewed expansion plan before automatic translation is promised.
 
 ### 10.2 v1 build (weeks 4-N — duration determined in implementation plan)
 
@@ -711,17 +799,17 @@ Each phase: country-specific pen-test, regulatory pre-validation, native researc
 
 ---
 
-## 11. Open questions / dependencies before implementation planning
+## 11. Open questions / dependencies before paid beta and launch
 
-These do not block writing the implementation plan but must be resolved during build:
+These do not block local-first implementation, but they must be resolved before paid beta or launch promises:
 
 1. **Counsel review of liability terms** (section 2.8) — specifically: Togolese small claims process for damaged-clothing escalation; group accident insurance carrier selection (NSIA Togo vs Sanlam Togo)
 2. **CinetPay vs PayDunya as primary** — quote both, choose primary based on settlement reliability + integration quality + WAEMU coverage
-3. **LiveKit self-hosted GPU sizing for Whisper** — quote Hetzner GPU options (RTX A4000 vs A5000); decide based on per-user transcription cost target
+3. **Voice/LiveKit/Whisper scope** — keep post-beta by default; reopen only if research or beta support metrics show masked calls or transcription are necessary
 4. **Trademark check on "Washed"** — counsel to file in OAPI member states (Togo + WAEMU coverage)
 5. **Banking partner for collecting subscriber money + paying out workers** — Ecobank Togo vs Orabank vs UTB; decide based on WAEMU multi-country future support
 6. **Domain + brand assets** — washed.tg, washed.app, etc.
-7. **Capital plan** — confirm $25-28k USD runway available before starting build
+7. **Capital plan** — approve the v2 closed-beta reserve and public-launch runway in `research/2026-04-30-capital-model-v2.md`
 8. **Founder time commitment** — how is product ownership shared during build, beta operations, provider onboarding, research, and launch preparation?
 
 ---
@@ -740,10 +828,11 @@ All in `/Users/tomegah/washed/`:
 
 ## 13. Approval & next steps
 
-This design represents the complete v1 product and system specification. Once approved by the founder:
+This corrected design represents the current v1 product and system specification. The founder has approved local-first implementation; paid beta and launch remain gated by the table in section 1.1.
 
-1. Founder reviews this document and signals approval or requests revisions
-2. On approval, transition to **writing-plans** skill to produce the implementation plan
-3. Implementation plan will sequence: research → legal/setup → infra → backend services → mobile apps → operator console → integration testing → closed beta → open beta → public launch
+Next steps:
 
-**No code is written and no implementation skill is invoked until this spec is approved.**
+1. Keep local-first implementation moving through the open PR.
+2. Complete field research and provider/bank/counsel/capital gates.
+3. Update the spec decisions from assumption to confirmed/changed after research synthesis.
+4. Move to closed beta only after legal, payment, banking, security/privacy/accessibility, and capital gates are cleared.
