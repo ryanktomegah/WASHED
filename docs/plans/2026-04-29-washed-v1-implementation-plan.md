@@ -56,7 +56,7 @@ This plan supersedes the earlier foundation-first plan for sequencing. The earli
 Tasks:
 
 - [x] Create counsel brief for Togolese worker classification, contractor agreement, CNSS/INAM triggers, insurance, liability, theft/damage process, and worker injury exposure.
-- [ ] Create trademark/domain checklist for Washed, OAPI coverage, `washed.tg`, and `washed.app`.
+- [x] Create trademark/domain checklist for Washed, OAPI coverage, `washed.tg`, and `washed.app`. Checklist created in `docs/ops/trademark-domain-checklist.md`; counsel clearance remains a launch gate.
 - [x] Create legal gate log in `docs/ops/legal-gates.md`.
 - [x] Mark spec status as corrected after removing stale cross-project context.
 
@@ -73,8 +73,8 @@ Tasks:
 
 - [x] Create subscriber interview script for 12 households: current laundry habits, price sensitivity, trust, scheduling, mobile money, cancellation, and comfort with in-home worker visits.
 - [x] Create worker interview script for 8 washerwomen: current earnings, capacity, transport, safety, payment preference, schedule control, phone/device constraints, and uniform/ID reaction.
-- [ ] Create recruitment screener and consent form in French.
-- [ ] Create research synthesis template with decision log.
+- [x] Create recruitment screener and consent form in French. Added in `docs/research/recruitment-screener-consent-fr.md`.
+- [x] Create research synthesis template with decision log. Added in `docs/research/research-synthesis-template.md`.
 - [ ] Produce research findings report and update spec decisions from "locked" to "confirmed" or "changed."
 
 Exit criteria:
