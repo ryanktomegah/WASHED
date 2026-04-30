@@ -29,5 +29,7 @@ jobs:
       - run: pnpm test
       - run: pnpm build
       - run: pnpm audit --audit-level high
+      - run: pnpm exec playwright install --with-deps chromium webkit
+      - run: pnpm ui:smoke
       - run: pnpm load:beta
       - run: pnpm dry-run:beta
