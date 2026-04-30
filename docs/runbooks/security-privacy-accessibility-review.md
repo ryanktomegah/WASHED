@@ -27,7 +27,7 @@
 | Support/dispute evidence use is limited to service, safety, payment, and legal needs | Yes | Spec section 5.4 and legal drafts | Ready for counsel | Founder |
 | Retention schedule covers IDs, references, police clearance, photos, GPS, calls, transcripts, payment data, audit events | Yes | Spec section 5.4 | Ready for counsel | Founder |
 | Privacy policy matches actual data collection | Yes | `docs/legal/privacy-policy-fr.md` vs implementation review | Open | Founder + Counsel |
-| Account deletion/export behavior is defined | Public launch blocker | Export/erasure runbook or endpoint plan | Open | Engineering |
+| Account deletion/export behavior is defined | Public launch blocker | `docs/runbooks/privacy-export-erasure.md` and `POST /v1/operator/subscriptions/{subscriptionId}/privacy-requests` | Ready for review | Engineering |
 | Provider data sharing is documented | Yes | `docs/ops/provider-data-sharing-inventory.md` | Ready for counsel | Founder |
 | Counsel approves retention and privacy language | Yes | Written counsel sign-off | Open | Counsel |
 

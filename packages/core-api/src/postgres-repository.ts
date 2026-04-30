@@ -42,6 +42,7 @@ import type {
   CreateWorkerOnboardingCaseInput,
   CreateWorkerMonthlyPayoutInput,
   CreateWorkerAdvanceRequestInput,
+  CreateSubscriberPrivacyRequestInput,
   CreateWorkerUnavailabilityInput,
   CreateSubscriptionInput,
   CreateWorkerSwapRequestInput,
@@ -76,6 +77,7 @@ import type {
   PaymentAttemptSummaryRecord,
   PaymentRefundRecord,
   PaymentReconciliationRunRecord,
+  SubscriberPrivacyRequestRecord,
   SubscriptionBillingItemRecord,
   SubscriberSupportMatchRecord,
   NotificationMessageRecord,
@@ -145,6 +147,7 @@ import {
   buildWorkerUnavailabilityRecord,
   buildPaymentRefundRecord,
   buildPaymentReconciliationRunRecord,
+  buildSubscriberPrivacyRequestRecord,
 } from './repository.js';
 import type { PgClient, PgPoolLike } from './postgres-client.js';
 import { buildAssignedSubscriptionRecord } from './subscription-assignment.js';
@@ -2125,6 +2128,48 @@ export class PostgresCoreRepository implements CoreRepository {
       recordedAt: row.recorded_at,
       traceId: row.trace_id,
     }));
+  }
+
+  public async createSubscriberPrivacyRequest(
+    input: CreateSubscriberPrivacyRequestInput,
+  ): Promise<SubscriberPrivacyRequestRecord> {
+    const detail = await this.getSubscriptionDetail({ subscriptionId: input.subscriptionId });
+    const [billingHistory, disputes, notifications, auditEvents] = await Promise.all([
+      this.listSubscriptionBilling({ limit: 100, subscriptionId: input.subscriptionId }),
+      this.listOperatorDisputes({ limit: 500 }),
+      this.listNotificationMessages({
+        aggregateId: input.subscriptionId,
+        countryCode: detail.countryCode,
+        limit: 100,
+      }),
+      this.listAuditEvents({
+        aggregateId: input.subscriptionId,
+        aggregateType: 'subscription',
+        countryCode: detail.countryCode,
+        limit: 100,
+      }),
+    ]);
+    const record = buildSubscriberPrivacyRequestRecord({
+      auditEvents,
+      billingHistory,
+      detail,
+      disputes: disputes.filter((dispute) => dispute.subscriptionId === input.subscriptionId),
+      input,
+      notifications,
+    });
+    const client = await this.pool.connect();
+
+    try {
+      await client.query('BEGIN');
+      await insertOutboxEvents(client, record.events);
+      await client.query('COMMIT');
+      return record;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   public async listPaymentAttempts(

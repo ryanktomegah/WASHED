@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import { listLomeV1Tiers } from '@washed/core-domain';
-import type { Money } from '@washed/shared';
+import type { DomainEvent, Money } from '@washed/shared';
 import Fastify, { type FastifyInstance } from 'fastify';
 
 import { toIsoString, toMoneyDto } from './http-dto.js';
@@ -35,6 +35,7 @@ import {
   parseCreateVisitPhotoUploadBody,
   parseCreateDisputeBody,
   parseCreateSubscriptionBody,
+  parseCreateSubscriberPrivacyRequestBody,
   parseCreateWorkerSwapRequestBody,
   parseDeclineAssignmentCandidateBody,
   parseDeliverDueNotificationMessagesBody,
@@ -965,6 +966,34 @@ export function createCoreApiApp(options: CoreApiOptions = {}): FastifyInstance 
       });
     }
   });
+
+  app.post(
+    '/v1/operator/subscriptions/:subscriptionId/privacy-requests',
+    async (request, reply) => {
+      const traceId = request.headers['x-trace-id'];
+      const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
+      const params = request.params as { subscriptionId?: string };
+
+      try {
+        const input = parseCreateSubscriberPrivacyRequestBody(
+          request.body,
+          params.subscriptionId ?? '',
+          parsedTraceId,
+        );
+        const privacyRequest = await repository.createSubscriberPrivacyRequest(input);
+
+        return reply.code(201).send(toSubscriberPrivacyRequestDto(privacyRequest));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Invalid request.';
+
+        return reply.code(400).send({
+          code: 'core.operator_privacy_request.invalid_request',
+          message,
+          traceId: parsedTraceId,
+        });
+      }
+    },
+  );
 
   app.get('/v1/operator/push-devices', async (request, reply) => {
     const traceId = request.headers['x-trace-id'];
@@ -2007,6 +2036,62 @@ function toSubscriptionDetailDto(detail: {
     tierCode: detail.tierCode,
     upcomingVisits: detail.upcomingVisits,
     visitsPerCycle: detail.visitsPerCycle,
+  };
+}
+
+function toSubscriberPrivacyRequestDto(request: {
+  readonly erasurePlan: {
+    readonly immediateActions: readonly string[];
+    readonly retainedRecords: readonly {
+      readonly reason: string;
+      readonly recordType: string;
+      readonly retention: string;
+    }[];
+  };
+  readonly exportBundle: {
+    readonly auditEvents: readonly Parameters<typeof toAuditEventDto>[0][];
+    readonly billingHistory: readonly Parameters<typeof toSubscriptionBillingItemDto>[0][];
+    readonly disputes: readonly Parameters<typeof toDisputeDto>[0][];
+    readonly notifications: readonly Parameters<typeof toNotificationMessageDto>[0][];
+    readonly subscription: Parameters<typeof toSubscriptionDetailDto>[0];
+  };
+  readonly events: readonly DomainEvent[];
+  readonly operatorUserId: string;
+  readonly reason: string;
+  readonly requestedAt: Date;
+  readonly requestId: string;
+  readonly requestType: string;
+  readonly subscriptionId: string;
+}): Record<string, unknown> {
+  return {
+    erasurePlan: request.erasurePlan,
+    events: request.events.map((event) =>
+      toAuditEventDto({
+        actor: event.actor,
+        aggregateId: event.aggregateId,
+        aggregateType: event.aggregateType,
+        countryCode: event.countryCode,
+        eventId: event.eventId,
+        eventType: event.eventType,
+        occurredAt: event.occurredAt,
+        payload: event.payload,
+        recordedAt: event.occurredAt,
+        traceId: event.traceId,
+      }),
+    ),
+    exportBundle: {
+      auditEvents: request.exportBundle.auditEvents.map(toAuditEventDto),
+      billingHistory: request.exportBundle.billingHistory.map(toSubscriptionBillingItemDto),
+      disputes: request.exportBundle.disputes.map(toDisputeDto),
+      notifications: request.exportBundle.notifications.map(toNotificationMessageDto),
+      subscription: toSubscriptionDetailDto(request.exportBundle.subscription),
+    },
+    operatorUserId: request.operatorUserId,
+    reason: request.reason,
+    requestedAt: toIsoString(request.requestedAt),
+    requestId: request.requestId,
+    requestType: request.requestType,
+    subscriptionId: request.subscriptionId,
   };
 }
 
