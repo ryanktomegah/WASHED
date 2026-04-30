@@ -1,0 +1,32 @@
+{
+  "name": "washed",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.33.2",
+  "engines": {
+    "node": ">=22.11.0 <25",
+    "pnpm": ">=10.33.0"
+  },
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "format": "prettier --check .",
+    "format:write": "prettier --write .",
+    "lint": "turbo lint",
+    "migrations:check": "node scripts/check-migrations.mjs",
+    "openapi:check": "node scripts/check-openapi.mjs",
+    "dry-run:beta": "pnpm --filter @washed/core-api build && node scripts/closed-beta-dry-run.mjs",
+    "load:beta": "pnpm --filter @washed/core-api build && node scripts/beta-load-test.mjs",
+    "test": "turbo test",
+    "test:coverage": "turbo test:coverage",
+    "typecheck": "turbo typecheck"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "fast-check": "4.3.0",
+    "prettier": "3.6.2",
+    "turbo": "2.6.1",
+    "typescript": "5.9.3",
+    "vitest": "4.0.14"
+  }
+}

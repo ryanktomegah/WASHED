@@ -1,0 +1,288 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Washed Core API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "Service health"
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "operationId": "getReadiness",
+        "responses": {
+          "200": {
+            "description": "Repository readiness"
+          }
+        }
+      }
+    },
+    "/v1/auth/otp/start": {
+      "post": {
+        "operationId": "startOtpChallenge",
+        "responses": {
+          "201": {
+            "description": "OTP challenge started"
+          }
+        }
+      }
+    },
+    "/v1/auth/otp/verify": {
+      "post": {
+        "operationId": "verifyOtpChallenge",
+        "responses": {
+          "200": {
+            "description": "Auth session issued"
+          }
+        }
+      }
+    },
+    "/v1/pricing/lome": {
+      "get": {
+        "operationId": "listLomePricing",
+        "responses": {
+          "200": {
+            "description": "Lome launch pricing"
+          }
+        }
+      }
+    },
+    "/v1/subscriptions": {
+      "post": {
+        "operationId": "createSubscription",
+        "responses": {
+          "201": {
+            "description": "Subscription created"
+          }
+        }
+      }
+    },
+    "/v1/subscriptions/{subscriptionId}": {
+      "get": {
+        "operationId": "getSubscriptionDetail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subscriptionId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subscription detail"
+          }
+        }
+      }
+    },
+    "/v1/subscriptions/{subscriptionId}/assignment": {
+      "post": {
+        "operationId": "assignSubscriptionWorker",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subscriptionId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Worker assigned and visits generated"
+          }
+        }
+      }
+    },
+    "/v1/subscriptions/{subscriptionId}/mock-charge": {
+      "post": {
+        "operationId": "chargeSubscriptionMock",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subscriptionId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment attempt recorded"
+          }
+        }
+      }
+    },
+    "/v1/operator/beta-metrics": {
+      "get": {
+        "operationId": "getOperatorBetaMetrics",
+        "responses": {
+          "200": {
+            "description": "Closed beta operating metrics"
+          }
+        }
+      }
+    },
+    "/v1/operator/payment-attempts": {
+      "get": {
+        "operationId": "listOperatorPaymentAttempts",
+        "responses": {
+          "200": {
+            "description": "Payment attempts"
+          }
+        }
+      }
+    },
+    "/v1/operator/disputes": {
+      "get": {
+        "operationId": "listOperatorDisputes",
+        "responses": {
+          "200": {
+            "description": "Operator disputes"
+          }
+        }
+      }
+    },
+    "/v1/workers/{workerId}/route": {
+      "get": {
+        "operationId": "getWorkerRoute",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workerId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Worker daily route"
+          }
+        }
+      }
+    },
+    "/v1/workers/{workerId}/earnings": {
+      "get": {
+        "operationId": "getWorkerEarnings",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workerId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Worker monthly earnings"
+          }
+        }
+      }
+    },
+    "/v1/visits/{visitId}/check-in": {
+      "post": {
+        "operationId": "checkInVisit",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Visit checked in"
+          }
+        }
+      }
+    },
+    "/v1/visits/{visitId}/check-out": {
+      "post": {
+        "operationId": "checkOutVisit",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Visit completed"
+          }
+        }
+      }
+    },
+    "/v1/visits/{visitId}/photo-uploads": {
+      "post": {
+        "operationId": "createVisitPhotoUpload",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Signed photo upload target"
+          }
+        }
+      }
+    },
+    "/v1/visits/{visitId}/photos": {
+      "post": {
+        "operationId": "recordVisitPhoto",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Visit photo metadata recorded"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,78 @@
+name: washed-dev
+
+services:
+  postgres:
+    image: postgres:16.4-alpine
+    environment:
+      POSTGRES_DB: washed
+      POSTGRES_PASSWORD: washed
+      POSTGRES_USER: washed
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U washed -d washed']
+      interval: 5s
+      retries: 5
+      timeout: 5s
+    ports:
+      - '5432:5432'
+    volumes:
+      - washed_pg:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7.4-alpine
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      retries: 5
+      timeout: 5s
+    ports:
+      - '16379:6379'
+    volumes:
+      - washed_redis:/data
+
+  redpanda:
+    image: redpandadata/redpanda:v24.2.7
+    command:
+      - redpanda
+      - start
+      - --overprovisioned
+      - --smp
+      - '1'
+      - --memory
+      - 512M
+      - --reserve-memory
+      - 0M
+      - --node-id
+      - '0'
+      - --check=false
+      - --kafka-addr
+      - PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr
+      - PLAINTEXT://localhost:19092
+    healthcheck:
+      test: ['CMD-SHELL', "rpk cluster health | grep -q 'Healthy:.*true'"]
+      interval: 10s
+      retries: 10
+      timeout: 5s
+    ports:
+      - '19092:9092'
+      - '19644:9644'
+    volumes:
+      - washed_redpanda:/var/lib/redpanda/data
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_PASSWORD: washed-local-secret
+      MINIO_ROOT_USER: washed
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - washed_minio:/data
+
+volumes:
+  washed_minio:
+  washed_pg:
+  washed_redis:
+  washed_redpanda:
