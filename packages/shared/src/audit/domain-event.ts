@@ -20,8 +20,9 @@ export interface DomainEventInput<TPayload extends Record<string, unknown>> {
   readonly occurredAt?: Date;
 }
 
-export interface DomainEvent<TPayload extends Record<string, unknown> = Record<string, unknown>>
-  extends DomainEventInput<TPayload> {
+export interface DomainEvent<
+  TPayload extends Record<string, unknown> = Record<string, unknown>,
+> extends DomainEventInput<TPayload> {
   readonly eventId: string;
   readonly occurredAt: Date;
 }
