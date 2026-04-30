@@ -6,6 +6,8 @@
 
 This test is an internal usability and rendering pass. It does not replace real closed-beta testing, payment-provider verification, or legal review.
 
+Automated browser smoke coverage runs through `pnpm ui:smoke`. That check uses Playwright's iPhone viewport for the subscriber flow and a desktop viewport for the operator console. The manual iPhone pass below is still useful because Safari chrome, touch behavior, and physical readability can differ from browser automation.
+
 ## Setup
 
 1. Start the local web apps from the repo.

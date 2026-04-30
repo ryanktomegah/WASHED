@@ -2,8 +2,6 @@ const STORAGE_KEY = 'washed.ops-web.v1';
 const app = document.querySelector('#app');
 const VISIT_PHOTO_TYPES = ['before', 'after'];
 
-const state = loadState();
-
 const demoWorkers = [
   {
     displayName: 'Akouvi Koffi',
@@ -24,6 +22,8 @@ const demoWorkers = [
     workerId: '44444444-4444-4444-8444-444444444444',
   },
 ];
+
+const state = loadState();
 
 render();
 
