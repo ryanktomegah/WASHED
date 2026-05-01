@@ -13,8 +13,55 @@ body {
   box-sizing: border-box;
 }
 
+button {
+  font: inherit;
+}
+
 .worker-frame {
   min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.status-spacer {
+  height: env(safe-area-inset-top);
+}
+
+.worker-topbar {
+  position: sticky;
+  z-index: 3;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 12px 16px 8px;
+  background: color-mix(in srgb, var(--washed-background) 94%, transparent);
+  backdrop-filter: blur(18px);
+}
+
+.worker-brand {
+  display: grid;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--washed-foreground);
+  cursor: pointer;
+  text-align: left;
+}
+
+.worker-brand strong {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.worker-brand span {
+  color: var(--washed-muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
 }
 
 .worker-shell {
@@ -22,45 +69,66 @@ body {
   gap: 16px;
   max-width: 640px;
   margin: 0 auto;
-  padding: calc(16px + env(safe-area-inset-top)) 16px 88px;
+  padding: 12px 16px 96px;
 }
 
-.worker-header,
-.card-header {
+.worker-summary,
+.card-header,
+.section-title,
+.sync-alert-body {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
 }
 
-.worker-header h1,
-.card-header h2 {
+.worker-summary h1,
+.section-title h1,
+.card-header h2,
+.sos-sheet h2 {
   margin: 0;
 }
 
-.worker-header h1 {
-  margin-top: 10px;
-  font-size: 34px;
+.worker-summary h1,
+.section-title h1 {
+  margin-top: 8px;
+  font-size: 30px;
   line-height: 1;
 }
 
-.worker-header p {
+.worker-summary p,
+.sos-sheet p {
+  margin: 8px 0 0;
   color: var(--washed-muted);
+  line-height: 1.4;
 }
 
 .sos-button {
-  min-width: 86px;
+  min-width: 82px;
+}
+
+.eyebrow {
+  color: var(--washed-muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
 }
 
 .route-steps,
-.surface-grid {
+.surface-grid,
+.availability-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
   gap: 8px;
 }
 
+.route-steps {
+  margin: 12px 0;
+}
+
 .route-step,
-.surface-grid span {
+.surface-grid span,
+.availability-grid button {
   display: grid;
   gap: 8px;
   min-height: 68px;
@@ -68,6 +136,18 @@ body {
   border-radius: 12px;
   padding: 10px;
   background: var(--washed-surface);
+  color: var(--washed-foreground);
+  text-align: left;
+}
+
+.route-step {
+  cursor: pointer;
+}
+
+.route-step[aria-pressed='true'] {
+  border-color: var(--washed-primary);
+  background: var(--washed-primary-soft);
+  color: var(--washed-primary);
 }
 
 .route-step span {
@@ -81,6 +161,16 @@ body {
   font-weight: 900;
 }
 
+.route-list,
+.visit-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.visit-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .surface-grid {
   margin-top: 14px;
 }
@@ -91,9 +181,77 @@ body {
   font-weight: 800;
 }
 
+.availability-grid {
+  margin: 14px 0;
+}
+
+.availability-grid button {
+  cursor: pointer;
+}
+
+.availability-grid span,
+.metric span {
+  color: var(--washed-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.metric {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  border-bottom: 1px solid var(--washed-border);
+}
+
+.metric strong {
+  font-size: 18px;
+}
+
+.sheet-backdrop {
+  position: fixed;
+  z-index: 6;
+  inset: 0;
+  display: grid;
+  align-items: end;
+  padding: 16px;
+  background: rgba(14, 26, 18, 0.42);
+}
+
+.sos-sheet {
+  display: grid;
+  max-width: 640px;
+  width: 100%;
+  gap: 12px;
+  margin: 0 auto;
+}
+
+.sheet-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.bottom-nav {
+  position: fixed;
+  z-index: 4;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 @media (max-width: 520px) {
-  .worker-header {
+  .worker-summary,
+  .section-title,
+  .sync-alert-body {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .route-steps,
+  .availability-grid,
+  .visit-actions {
+    grid-template-columns: 1fr;
   }
 }
