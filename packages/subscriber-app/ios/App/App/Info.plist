@@ -26,6 +26,8 @@
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Washed uses your location to confirm your service address and show visit progress while the worker is heading to you.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Washed does not track you across apps or websites.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

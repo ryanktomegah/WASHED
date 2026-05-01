@@ -24,6 +24,16 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Washed Worker uses the camera to capture before and after visit photos required for service proof.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Washed Worker uses location during an active route to confirm arrival, checkout, and bounded en-route tracking for the assigned subscriber.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Washed Worker uses your location while you work to confirm visit arrival and checkout within the assigned service area.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Washed Worker may save visit photos you capture for service proof and offline retry.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Washed Worker does not track you across apps or websites.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
