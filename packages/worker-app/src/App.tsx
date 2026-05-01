@@ -177,14 +177,13 @@ function TodayScreen({
           title={t.action.heading}
         />
         <VisitLifecycle dispatch={dispatch} t={t} workerState={workerState} />
+        <VisitWorkstation
+          dispatch={dispatch}
+          onRouteChange={onRouteChange}
+          t={t}
+          workerState={workerState}
+        />
         <div className="visit-actions">
-          <Button
-            aria-label={t.action.checkInNow}
-            fullWidth
-            onClick={() => dispatch({ step: 'checkIn', type: 'visit/setStep' })}
-          >
-            {t.visitStep.checkIn}
-          </Button>
           <Button fullWidth onClick={() => onRouteChange('planning')} variant="secondary">
             {t.planning.week}
           </Button>
@@ -237,6 +236,91 @@ function TodayScreen({
         </div>
       </Card>
     </>
+  );
+}
+
+function VisitWorkstation({
+  dispatch,
+  onRouteChange,
+  t,
+  workerState,
+}: {
+  readonly dispatch: Dispatch<WorkerAction>;
+  readonly onRouteChange: (route: WorkerRoute) => void;
+  readonly t: typeof workerCopy;
+  readonly workerState: WorkerState;
+}): ReactElement {
+  const stepConfig = {
+    afterPhoto: {
+      body: 'Vérifier les preuves, confirmer la sortie GPS et fermer la visite.',
+      label: t.action.checkOutNow,
+      onClick: () => dispatch({ step: 'checkOut', type: 'visit/setStep' }),
+      title: 'Photo après enregistrée',
+    },
+    beforePhoto: {
+      body: 'Photo avant en file hors ligne. Démarrer la prestation quand vous êtes prête.',
+      label: t.action.startVisit,
+      onClick: () => dispatch({ step: 'inVisit', type: 'visit/setStep' }),
+      title: 'Preuve avant capturée',
+    },
+    checkIn: {
+      body: 'GPS validé dans le rayon de 100 m. Capturer la photo avant maintenant.',
+      label: t.action.takeBeforePhoto,
+      onClick: () => dispatch({ step: 'beforePhoto', type: 'visit/setStep' }),
+      title: 'Arrivée pointée',
+    },
+    checkOut: {
+      body: 'Visite terminée. Les actions se synchronisent dès que le réseau revient.',
+      label: t.action.openSummary,
+      onClick: () => onRouteChange('daySummary'),
+      title: 'Sortie pointée',
+    },
+    heading: {
+      body: 'Le suivi encadré est visible côté abonnée seulement pendant ce trajet.',
+      label: t.action.checkInNow,
+      onClick: () => dispatch({ step: 'checkIn', type: 'visit/setStep' }),
+      title: 'En route vers Ama K.',
+    },
+    inVisit: {
+      body: 'La visite est en cours. Capturer la photo après avant de quitter le foyer.',
+      label: t.action.takeAfterPhoto,
+      onClick: () => dispatch({ step: 'afterPhoto', type: 'visit/setStep' }),
+      title: 'Visite en cours',
+    },
+  }[workerState.visit.step];
+
+  const proofItems = [
+    { done: true, label: 'Route reçue' },
+    { done: workerState.visit.step !== 'heading', label: 'Arrivée GPS' },
+    { done: workerState.visit.beforePhotoCaptured, label: 'Photo avant' },
+    {
+      done: workerState.visit.step === 'inVisit' || workerState.visit.afterPhotoCaptured,
+      label: 'Prestation',
+    },
+    { done: workerState.visit.afterPhotoCaptured, label: 'Photo après' },
+    { done: workerState.visit.step === 'checkOut', label: 'Sortie GPS' },
+  ];
+
+  return (
+    <div className="visit-workstation" aria-label="Guided visit workflow">
+      <div>
+        <span className="eyebrow">Étape terrain</span>
+        <h3>{stepConfig.title}</h3>
+        <p>{stepConfig.body}</p>
+      </div>
+
+      <div className="proof-grid" aria-label="Visit proof checklist">
+        {proofItems.map((item) => (
+          <span className="proof-item" data-complete={item.done} key={item.label}>
+            {item.label}
+          </span>
+        ))}
+      </div>
+
+      <Button fullWidth onClick={stepConfig.onClick}>
+        {stepConfig.label}
+      </Button>
+    </div>
   );
 }
 

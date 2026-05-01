@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { App } from './App.js';
@@ -12,6 +12,8 @@ describe('worker app', () => {
     expect(sosButton).toBeInTheDocument();
     expect(screen.getByText('3 actions en attente de synchronisation')).toBeInTheDocument();
     expect(screen.getByLabelText('Worker route lifecycle').children).toHaveLength(6);
+    expect(screen.getByLabelText('Guided visit workflow')).toBeInTheDocument();
+    expect(screen.getByText('En route vers Ama K.')).toBeInTheDocument();
     expect(screen.getByText('Activation du profil')).toBeInTheDocument();
   });
 
@@ -58,9 +60,25 @@ describe('worker app', () => {
       'aria-pressed',
       'true',
     );
+    expect(screen.getByText('Arrivée pointée')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Photo avant' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Prendre photo avant' }));
     expect(screen.getByText('Photo avant ajoutée à la file hors ligne.')).toBeInTheDocument();
+    expect(screen.getByText('Preuve avant capturée')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Démarrer la visite' }));
+    expect(screen.getByText('Visite marquée en cours.')).toBeInTheDocument();
+    expect(
+      within(screen.getByLabelText('Guided visit workflow')).getByText('Visite en cours'),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Prendre photo après' }));
+    expect(screen.getByText('Photo après ajoutée à la file hors ligne.')).toBeInTheDocument();
+    expect(screen.getByText('Photo après enregistrée')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Pointer la sortie' }));
+    expect(screen.getByText('Pointage de sortie ajouté à la file hors ligne.')).toBeInTheDocument();
+    expect(screen.getByText('Sortie pointée')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Signaler un problème' }));
     expect(screen.getByText('Signalement ajouté à la file hors ligne.')).toBeInTheDocument();

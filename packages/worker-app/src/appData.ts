@@ -8,15 +8,20 @@ export interface WorkerCopy {
     readonly advance: string;
     readonly cancel: string;
     readonly checkInNow: string;
+    readonly checkOutNow: string;
     readonly close: string;
     readonly confirmSos: string;
     readonly declareNoShow: string;
     readonly heading: string;
+    readonly openSummary: string;
     readonly requestErasure: string;
     readonly requestExport: string;
     readonly retrySync: string;
     readonly safetyReport: string;
+    readonly startVisit: string;
     readonly submitIssue: string;
+    readonly takeAfterPhoto: string;
+    readonly takeBeforePhoto: string;
   };
   readonly activation: {
     readonly agreement: string;
@@ -87,15 +92,20 @@ export const workerCopy = {
     advance: 'Demander une avance',
     cancel: 'Annuler',
     checkInNow: "Pointer l'arrivée",
+    checkOutNow: 'Pointer la sortie',
     close: 'Fermer',
     confirmSos: "Prévenir l'opérateur",
     declareNoShow: 'Déclarer absence foyer',
     heading: 'En route vers le foyer',
+    openSummary: 'Voir le résumé',
     requestErasure: "Demander l'effacement",
     requestExport: 'Exporter mes données',
     retrySync: 'Synchroniser maintenant',
     safetyReport: 'Signaler un problème',
+    startVisit: 'Démarrer la visite',
     submitIssue: 'Envoyer le signalement',
+    takeAfterPhoto: 'Prendre photo après',
+    takeBeforePhoto: 'Prendre photo avant',
   },
   activation: {
     agreement: 'Accord travailleuse',
