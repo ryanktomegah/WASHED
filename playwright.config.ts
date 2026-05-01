@@ -5,6 +5,7 @@ export default defineConfig({
     timeout: 5_000,
   },
   fullyParallel: false,
+  workers: 1,
   projects: [
     {
       name: 'subscriber-mobile',

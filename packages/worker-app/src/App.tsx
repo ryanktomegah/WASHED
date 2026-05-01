@@ -14,6 +14,7 @@ import {
   Banknote,
   CalendarDays,
   Camera,
+  Check,
   CircleAlert,
   Clock3,
   House,
@@ -588,6 +589,14 @@ function VisitWorkstation({
     { done: workerState.visit.afterPhotoCaptured, label: 'Photo après' },
     { done: workerState.visit.step === 'checkOut', label: 'Sortie GPS' },
   ];
+  const activeProofLabel = {
+    afterPhoto: 'Sortie GPS',
+    beforePhoto: 'Prestation',
+    checkIn: 'Photo avant',
+    checkOut: 'Sortie GPS',
+    heading: 'Arrivée GPS',
+    inVisit: 'Photo après',
+  }[workerState.visit.step];
 
   return (
     <div className="visit-workstation" aria-label="Guided visit workflow">
@@ -615,10 +624,18 @@ function VisitWorkstation({
         </div>
       ) : null}
 
-      <div className="proof-grid" aria-label="Visit proof checklist">
-        {proofItems.map((item) => (
-          <span className="proof-item" data-complete={item.done} key={item.label}>
-            {item.label}
+      <div className="field-proof-rail" aria-label="Visit proof checklist">
+        {proofItems.map((item, index) => (
+          <span
+            aria-current={item.label === activeProofLabel ? 'step' : undefined}
+            className="proof-item"
+            data-complete={item.done}
+            key={item.label}
+          >
+            <i aria-hidden="true">
+              {item.done ? <Check size={13} strokeWidth={3} /> : index + 1}
+            </i>
+            <small>{item.label}</small>
           </span>
         ))}
       </div>

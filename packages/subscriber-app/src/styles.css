@@ -39,7 +39,9 @@ input {
   width: min(100%, 430px);
   min-height: 100vh;
   min-height: 100dvh;
-  background: linear-gradient(180deg, #f9f6f0 0%, #faf7f2 34%, #fffdf8 100%);
+  background:
+    linear-gradient(180deg, rgba(35, 102, 111, 0.06), transparent 180px),
+    #fbf7f1;
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--washed-border) 60%, transparent);
 }
 
@@ -220,15 +222,18 @@ input {
 
 .home-hero-card {
   display: grid;
-  gap: 14px;
+  gap: 13px;
   overflow: hidden;
-  border: 1px solid rgba(35, 102, 111, 0.16);
-  border-radius: 18px;
+  border: 1px solid rgba(255, 253, 248, 0.08);
+  border-radius: 24px;
   background:
-    radial-gradient(circle at 92% 6%, rgba(35, 102, 111, 0.18), transparent 34%),
-    linear-gradient(180deg, #fffdf8 0%, #fff8f2 100%);
-  box-shadow: 0 14px 34px rgba(39, 28, 16, 0.08);
-  margin: 0 18px 18px;
+    radial-gradient(circle at 96% 0%, rgba(184, 135, 10, 0.34), transparent 34%),
+    radial-gradient(circle at 10% 18%, rgba(196, 98, 45, 0.38), transparent 32%),
+    linear-gradient(145deg, #1f1309 0%, #432414 58%, #5a2e19 100%);
+  box-shadow:
+    0 22px 42px rgba(40, 20, 8, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  margin: 0 16px 14px;
   padding: 18px;
 }
 
@@ -246,7 +251,7 @@ input {
 }
 
 .hero-card-topline > span {
-  color: var(--washed-muted);
+  color: rgba(255, 253, 248, 0.58);
   font-size: 12px;
   font-weight: 800;
 }
@@ -258,17 +263,17 @@ input {
 
 .hero-date-block h2 {
   margin: 0;
-  color: var(--washed-foreground);
-  font-size: 28px;
+  color: var(--washed-surface);
+  font-size: 31px;
   font-weight: 900;
   line-height: 1.05;
 }
 
 .hero-date-block span {
   gap: 6px;
-  color: var(--washed-muted);
-  font-size: 16px;
-  font-weight: 700;
+  color: rgba(255, 253, 248, 0.7);
+  font-size: 14px;
+  font-weight: 800;
 }
 
 .hero-worker-row {
@@ -276,6 +281,10 @@ input {
   grid-template-columns: 50px minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
+  border: 1px solid rgba(255, 253, 248, 0.1);
+  border-radius: 16px;
+  background: rgba(255, 253, 248, 0.08);
+  padding: 10px;
 }
 
 .worker-avatar {
@@ -292,16 +301,25 @@ input {
   text-align: center;
 }
 
+.home-hero-card .worker-avatar {
+  background: rgba(255, 253, 248, 0.14);
+  color: var(--washed-surface);
+}
+
+.home-hero-card .visit-assurance-grid svg {
+  color: var(--washed-surface);
+}
+
 .hero-worker-row strong {
   display: block;
-  color: var(--washed-foreground);
+  color: var(--washed-surface);
   font-size: 16px;
 }
 
 .hero-worker-row span:not(.ok-pill) {
   display: block;
   margin-top: 2px;
-  color: var(--washed-muted);
+  color: rgba(255, 253, 248, 0.62);
   font-size: 13px;
 }
 
@@ -311,8 +329,8 @@ input {
   align-items: center;
   gap: 4px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--washed-success) 18%, var(--washed-surface));
-  color: var(--washed-success);
+  background: rgba(223, 240, 218, 0.92);
+  color: #315a29;
   font-size: 11px;
   font-weight: 900;
   padding: 4px 8px;
@@ -328,10 +346,10 @@ input {
 .visit-assurance-grid span {
   min-width: 0;
   gap: 6px;
-  border: 1px solid rgba(35, 102, 111, 0.13);
+  border: 1px solid rgba(255, 253, 248, 0.08);
   border-radius: 12px;
-  background: var(--subscriber-trust-soft);
-  color: var(--subscriber-trust);
+  background: rgba(255, 253, 248, 0.08);
+  color: rgba(255, 253, 248, 0.78);
   font-size: 12px;
   font-weight: 750;
   padding: 10px;
@@ -339,16 +357,16 @@ input {
 
 .hero-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1.35fr 0.82fr 0.82fr;
   gap: 8px;
 }
 
 .hero-actions button {
   min-height: 40px;
-  border: 1px solid transparent;
+  border: 1px solid rgba(255, 253, 248, 0.12);
   border-radius: 12px;
-  background: #fff;
-  color: var(--washed-primary);
+  background: rgba(255, 253, 248, 0.1);
+  color: rgba(255, 253, 248, 0.86);
   cursor: pointer;
   font-size: 13px;
   font-weight: 850;
@@ -356,15 +374,15 @@ input {
 }
 
 .hero-actions .hero-action-primary {
-  background: var(--washed-primary);
-  color: var(--washed-surface);
-  box-shadow: 0 10px 20px rgba(196, 98, 45, 0.18);
+  background: var(--washed-surface);
+  color: var(--washed-primary);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
 }
 
 .hero-actions button:nth-child(2),
 .hero-actions button:nth-child(3) {
-  border-color: rgba(196, 98, 45, 0.18);
-  color: var(--washed-primary);
+  border-color: rgba(255, 253, 248, 0.14);
+  color: rgba(255, 253, 248, 0.86);
 }
 
 .mini-calendar,
@@ -374,7 +392,7 @@ input {
 .home-overview-grid {
   display: grid;
   gap: 10px;
-  margin: 0 16px 16px;
+  margin: 0 16px 12px;
 }
 
 .section-row {
@@ -407,10 +425,10 @@ input {
 
 .calendar-strip button {
   display: grid;
-  min-height: 72px;
+  min-height: 62px;
   gap: 2px;
   place-items: center;
-  border: 2px solid transparent;
+  border: 1px solid transparent;
   border-radius: 14px;
   background: var(--washed-surface);
   color: var(--washed-foreground);
@@ -483,7 +501,7 @@ input {
 
 .home-overview-grid button {
   display: grid;
-  min-height: 96px;
+  min-height: 76px;
   gap: 4px;
   align-content: start;
   border: 1px solid var(--washed-border);
@@ -504,7 +522,7 @@ input {
 
 .home-overview-grid strong {
   color: var(--washed-foreground);
-  font-size: 22px;
+  font-size: 19px;
   line-height: 1.1;
 }
 
@@ -517,10 +535,10 @@ input {
 
 .visit-status-card,
 .message-preview {
-  border: 1px solid var(--washed-border);
-  border-radius: 12px;
+  border: 1px solid rgba(35, 102, 111, 0.13);
+  border-radius: 16px;
   background: var(--washed-surface);
-  padding: 16px;
+  padding: 14px;
 }
 
 .visit-status-card p,

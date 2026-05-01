@@ -381,9 +381,9 @@ button {
 
 .route-steps {
   display: flex;
-  gap: 7px;
-  margin: 10px 0;
-  overflow-x: auto;
+  gap: 0;
+  margin: 0;
+  padding: 8px 12px 0;
 }
 
 .route-step,
@@ -401,9 +401,30 @@ button {
 }
 
 .route-step {
-  min-width: 88px;
-  min-height: 54px;
-  padding: 8px;
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  place-items: center;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0 2px;
+  text-align: center;
+}
+
+.route-step::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  right: 50%;
+  left: -50%;
+  height: 2px;
+  background: color-mix(in srgb, var(--washed-primary) 18%, var(--washed-border));
+}
+
+.route-step:first-child::before {
+  display: none;
 }
 
 .route-step {
@@ -411,20 +432,33 @@ button {
 }
 
 .route-step[aria-pressed='true'] {
-  border-color: var(--washed-primary);
-  background: var(--washed-primary-soft);
+  border-color: transparent;
+  background: transparent;
   color: var(--washed-primary);
 }
 
 .route-step span {
+  position: relative;
+  z-index: 1;
   display: inline-grid;
   place-items: center;
   width: 22px;
   height: 22px;
   border-radius: 999px;
-  background: var(--washed-primary-soft);
+  background: color-mix(in srgb, var(--washed-primary) 14%, var(--washed-surface));
   color: var(--washed-primary);
+  font-size: 11px;
   font-weight: 900;
+}
+
+.route-step[aria-pressed='true'] span {
+  background: var(--washed-primary);
+  color: var(--washed-surface);
+  box-shadow: 0 0 0 4px var(--washed-primary-soft);
+}
+
+.route-step strong {
+  display: none;
 }
 
 .route-list,
@@ -462,12 +496,18 @@ button {
 .active-visit-card {
   overflow: hidden;
   padding: 0 !important;
-  border: 2px solid var(--washed-primary) !important;
+  border: 1px solid color-mix(in srgb, var(--washed-primary) 24%, var(--washed-border)) !important;
+  border-radius: 22px !important;
+  box-shadow:
+    0 16px 36px rgba(13, 36, 22, 0.12),
+    0 1px 0 rgba(255, 255, 255, 0.75) inset !important;
 }
 
 .visit-card-main {
-  padding: 12px 14px;
-  background: var(--washed-surface);
+  padding: 14px;
+  background:
+    radial-gradient(circle at 94% 12%, rgba(212, 144, 14, 0.22), transparent 31%),
+    linear-gradient(145deg, #123c24, #0d2416);
 }
 
 .visit-card-topline {
@@ -479,7 +519,8 @@ button {
 }
 
 .visit-card-topline strong {
-  font-size: 15px;
+  color: var(--washed-surface);
+  font-size: 18px;
 }
 
 .visit-card-main p,
@@ -496,6 +537,8 @@ button {
   display: flex;
   align-items: center;
   gap: 6px;
+  color: rgba(255, 255, 255, 0.66);
+  font-weight: 750;
 }
 
 .active-visit-actions {
@@ -521,9 +564,22 @@ button {
   background: #fafafa;
 }
 
+.wire-route-card.is-done .visit-card-topline strong {
+  color: color-mix(in srgb, var(--washed-foreground) 76%, var(--washed-muted));
+}
+
+.wire-route-card.is-done p {
+  color: color-mix(in srgb, var(--washed-muted) 86%, var(--washed-foreground));
+}
+
 .wire-route-card.is-active {
   border: 2px solid var(--washed-primary);
   box-shadow: 0 4px 20px rgba(26, 92, 52, 0.15);
+}
+
+.wire-route-card.is-active .visit-card-topline strong,
+.wire-route-card.is-next .visit-card-topline strong {
+  color: var(--washed-foreground);
 }
 
 .wire-route-card.is-next {
@@ -590,12 +646,12 @@ button {
 
 .visit-workstation {
   display: grid;
-  gap: 12px;
+  gap: 13px;
   margin: 0 14px 12px;
-  border: 1px solid color-mix(in srgb, var(--washed-primary) 14%, var(--washed-border));
-  border-radius: 14px;
+  border: 1px solid var(--washed-border);
+  border-radius: 18px;
   padding: 14px;
-  background: color-mix(in srgb, var(--washed-primary-soft) 54%, var(--washed-surface));
+  background: var(--washed-surface);
 }
 
 .visit-map {
@@ -603,12 +659,12 @@ button {
   display: grid;
   gap: 4px;
   place-items: center;
-  min-height: 132px;
+  min-height: 104px;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--washed-primary) 18%, var(--washed-border));
-  border-radius: 12px;
+  border-radius: 14px;
   background:
-    radial-gradient(circle at 24% 28%, rgba(212, 144, 14, 0.18), transparent 28%),
+    radial-gradient(circle at 24% 28%, rgba(212, 144, 14, 0.22), transparent 28%),
     linear-gradient(145deg, #ecf6ef, #f7fbf8),
     repeating-linear-gradient(0deg, transparent 0 39px, rgba(26, 92, 52, 0.1) 39px 40px),
     repeating-linear-gradient(90deg, transparent 0 59px, rgba(26, 92, 52, 0.1) 59px 60px);
@@ -710,7 +766,7 @@ button {
 
 .visit-workstation h3 {
   margin-top: 4px;
-  font-size: 22px;
+  font-size: 21px;
   line-height: 1.1;
 }
 
@@ -719,28 +775,63 @@ button {
   line-height: 1.4;
 }
 
-.proof-grid {
+.field-proof-rail {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 5px;
 }
 
 .proof-item {
-  min-height: 54px;
-  border: 2px dashed var(--washed-border);
-  border-radius: 10px;
-  padding: 8px;
-  background: var(--washed-surface);
+  display: grid;
+  min-height: 58px;
+  gap: 5px;
+  justify-items: center;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 7px 4px;
+  background: color-mix(in srgb, var(--washed-primary-soft) 42%, var(--washed-surface));
   color: var(--washed-muted);
-  font-size: 12px;
+  text-align: center;
+}
+
+.proof-item i {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--washed-surface);
+  color: var(--washed-primary);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 950;
+}
+
+.proof-item small {
+  overflow: hidden;
+  max-width: 100%;
+  color: inherit;
+  font-size: 9.5px;
   font-weight: 900;
+  line-height: 1.08;
+  text-overflow: ellipsis;
 }
 
 .proof-item[data-complete='true'] {
   border-color: var(--washed-success);
-  border-style: solid;
   background: color-mix(in srgb, var(--washed-success) 16%, var(--washed-surface));
   color: var(--washed-success);
+}
+
+.proof-item[data-complete='true'] i {
+  background: var(--washed-success);
+  color: var(--washed-surface);
+}
+
+.proof-item[aria-current='step'] {
+  border-color: var(--washed-primary);
+  box-shadow: 0 0 0 3px var(--washed-primary-soft);
+  color: var(--washed-primary);
 }
 
 .gps-proof {
