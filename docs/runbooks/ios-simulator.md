@@ -33,7 +33,7 @@ open -a Simulator
 pnpm ios:sim:subscriber
 ```
 
-The script builds the React app, syncs Capacitor assets, builds the Xcode simulator target with signing disabled, installs the `.app` bundle on the booted simulator, and launches `app.washed.subscriber`.
+The script builds the React app, syncs Capacitor assets, builds the Xcode simulator target with signing disabled, terminates any already-running copy, installs the `.app` bundle on the booted simulator, and launches `app.washed.subscriber`.
 
 ## Launch Worker
 
@@ -43,6 +43,17 @@ pnpm ios:sim:worker
 ```
 
 This follows the same path and launches `app.washed.worker`.
+
+## Refresh Both Apps
+
+After frontend edits, run both native shells through the same build/sync/install/launch path on separate iPhone simulators:
+
+```sh
+open -a Simulator
+pnpm ios:sim:all
+```
+
+This boots two available iPhone simulators if needed, installs subscriber on the first, installs worker on the second, and launches both. If only one iPhone simulator exists, create another device in Xcode's Devices and Simulators window first.
 
 ## Manual Fallback
 

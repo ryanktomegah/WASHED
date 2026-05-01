@@ -17,6 +17,7 @@
     "openapi:check": "node scripts/check-openapi.mjs",
     "ios:sim:subscriber": "node scripts/launch-ios-simulator.mjs subscriber",
     "ios:sim:worker": "node scripts/launch-ios-simulator.mjs worker",
+    "ios:sim:all": "node scripts/launch-ios-simulator.mjs all",
     "ui:smoke": "playwright test",
     "dry-run:beta": "pnpm --filter @washed/core-api build && node scripts/closed-beta-dry-run.mjs",
     "load:beta": "pnpm --filter @washed/core-api build && node scripts/beta-load-test.mjs",
