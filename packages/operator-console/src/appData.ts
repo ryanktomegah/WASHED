@@ -1,4 +1,5 @@
 import { translate } from '@washed/i18n';
+import type { OperatorFeedback } from './operatorState.js';
 
 export type OperatorRoute =
   | 'audit'
@@ -30,6 +31,23 @@ export interface OpsVisit {
   readonly subscriber: string;
   readonly worker: string;
 }
+
+export const operatorFeedback = {
+  auditFiltered: 'Audit filter applied to money, privacy, and SOS events.',
+  blocklistAdded: 'Household relationship block added and audit logged.',
+  disputeEscalated: 'Dispute escalated for senior operator review.',
+  disputeResolved: 'Dispute resolved with audit event.',
+  forcedUpdateToggled: 'Forced-update flag changed for beta clients.',
+  matchAccepted: 'Matching decision accepted and audit logged.',
+  matchRejected: 'Matching candidate rejected with operator reason required.',
+  paymentRetryQueued: 'Mobile-money recovery retry queued.',
+  payoutBatchStarted: 'Worker payout batch started.',
+  payoutRetryQueued: 'Failed worker payout retry queued.',
+  providerReadinessChecked: 'Provider readiness check completed.',
+  refundIssued: 'Refund issued with reason and audit event.',
+  subscriberPrivacyHandled: 'Subscriber privacy request marked handled.',
+  workerPrivacyHandled: 'Worker privacy request marked handled.',
+} as const satisfies Record<OperatorFeedback, string>;
 
 export const navItems = [
   { label: 'Dashboard', route: 'dashboard' },

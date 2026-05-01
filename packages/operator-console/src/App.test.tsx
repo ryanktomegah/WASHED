@@ -22,7 +22,15 @@ describe('operator console', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'Accept' })[0]!);
 
     expect(screen.getByText('Accepted')).toBeInTheDocument();
+    expect(screen.getByText('Matching decision accepted and audit logged.')).toBeInTheDocument();
     expect(screen.getByText('Decision logging')).toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Reject' })[0]!);
+
+    expect(screen.getAllByText('Rejected').length).toBeGreaterThanOrEqual(2);
+    expect(
+      screen.getByText('Matching candidate rejected with operator reason required.'),
+    ).toBeInTheDocument();
   });
 
   it('renders the live ops map and active visits', () => {
@@ -35,18 +43,67 @@ describe('operator console', () => {
     expect(screen.getByText('Akouvi A. · ETA 09:12')).toBeInTheDocument();
   });
 
-  it('navigates to payments, audit, and settings surfaces', () => {
+  it('handles disputes, privacy, and blocklist actions', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Litiges' }));
+    expect(screen.getByRole('heading', { name: 'Dispute desk' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Resolve dispute' }));
+    expect(screen.getByText('Dispute resolved with audit event.')).toBeInTheDocument();
+    expect(screen.getByText('3 open')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Escalate safety case' }));
+    expect(screen.getByText('Dispute escalated for senior operator review.')).toBeInTheDocument();
+    expect(screen.getByText('1 escalated')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Profiles' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add relationship block' }));
+    expect(
+      screen.getByText('Household relationship block added and audit logged.'),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Handle subscriber privacy' }));
+    expect(screen.getByText('Subscriber privacy request marked handled.')).toBeInTheDocument();
+    expect(screen.getByText('Handled')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Handle worker privacy' }));
+    expect(screen.getByText('Worker privacy request marked handled.')).toBeInTheDocument();
+  });
+
+  it('navigates to payments, audit, and settings surfaces and records actions', () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Paiements' }));
     expect(screen.getByRole('heading', { name: 'Payments and payouts' })).toBeInTheDocument();
     expect(screen.getByText('Manual payment retry')).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Retry' })[0]!);
+    expect(screen.getByText('Mobile-money recovery retry queued.')).toBeInTheDocument();
+    expect(screen.getByText('3 exceptions')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Issue' }));
+    expect(screen.getByText('Refund issued with reason and audit event.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+    expect(screen.getByText('Worker payout batch started.')).toBeInTheDocument();
+    expect(screen.getByText('Started')).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Retry' })[1]!);
+    expect(screen.getByText('Failed worker payout retry queued.')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Audit' }));
     expect(screen.getByRole('heading', { name: 'Audit and governance' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Apply risk filter' }));
+    expect(
+      screen.getByText('Audit filter applied to money, privacy, and SOS events.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('money + privacy + SOS')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
     expect(screen.getByRole('heading', { name: 'Settings and readiness' })).toBeInTheDocument();
     expect(screen.getByText('Readiness checks')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Run readiness check' }));
+    expect(screen.getByText('Provider readiness check completed.')).toBeInTheDocument();
+    expect(screen.getByText('just now')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle forced update' }));
+    expect(screen.getByText('Forced-update flag changed for beta clients.')).toBeInTheDocument();
+    expect(screen.getByText('Forced')).toBeInTheDocument();
   });
 });

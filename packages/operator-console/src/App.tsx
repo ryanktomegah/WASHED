@@ -1,21 +1,28 @@
-import { useState } from 'react';
+import { useReducer, useState } from 'react';
 
 import { Alert, Badge, Button, Card, ListItem, Tabs, WashedThemeProvider } from '@washed/ui';
-import type { ReactElement, ReactNode } from 'react';
+import type { Dispatch, ReactElement } from 'react';
 
 import {
   liveVisits,
   matchingCandidates,
   navItems,
+  operatorFeedback,
   operatorSurfaces,
   queueMetrics,
   type MatchingCandidate,
   type OperatorRoute,
 } from './appData.js';
+import {
+  initialOperatorState,
+  operatorReducer,
+  type OperatorAction,
+  type OperatorState,
+} from './operatorState.js';
 
 export function App(): ReactElement {
   const [route, setRoute] = useState<OperatorRoute>('dashboard');
-  const [acceptedMatch, setAcceptedMatch] = useState<string | null>(null);
+  const [operatorState, dispatch] = useReducer(operatorReducer, initialOperatorState);
 
   return (
     <WashedThemeProvider className="operator-frame" theme="operator">
@@ -38,17 +45,32 @@ export function App(): ReactElement {
 
         <main className="operator-main">
           <OperatorHeader route={route} />
+          {operatorState.lastFeedback === null ? null : (
+            <Alert className="feedback-banner" tone="success">
+              {operatorFeedback[operatorState.lastFeedback]}
+            </Alert>
+          )}
 
-          {route === 'dashboard' ? <Dashboard onRouteChange={setRoute} /> : null}
+          {route === 'dashboard' ? (
+            <Dashboard operatorState={operatorState} onRouteChange={setRoute} />
+          ) : null}
           {route === 'matching' ? (
-            <Matching acceptedMatch={acceptedMatch} onAccept={setAcceptedMatch} />
+            <Matching dispatch={dispatch} operatorState={operatorState} />
           ) : null}
           {route === 'liveOps' ? <LiveOps /> : null}
-          {route === 'profiles' ? <Profiles /> : null}
-          {route === 'disputes' ? <Disputes /> : null}
-          {route === 'payments' ? <Payments /> : null}
-          {route === 'audit' ? <Audit /> : null}
-          {route === 'settings' ? <Settings /> : null}
+          {route === 'profiles' ? (
+            <Profiles dispatch={dispatch} operatorState={operatorState} />
+          ) : null}
+          {route === 'disputes' ? (
+            <Disputes dispatch={dispatch} operatorState={operatorState} />
+          ) : null}
+          {route === 'payments' ? (
+            <Payments dispatch={dispatch} operatorState={operatorState} />
+          ) : null}
+          {route === 'audit' ? <Audit dispatch={dispatch} operatorState={operatorState} /> : null}
+          {route === 'settings' ? (
+            <Settings dispatch={dispatch} operatorState={operatorState} />
+          ) : null}
         </main>
       </div>
     </WashedThemeProvider>
@@ -80,14 +102,28 @@ function OperatorHeader({ route }: { readonly route: OperatorRoute }): ReactElem
 }
 
 function Dashboard({
+  operatorState,
   onRouteChange,
 }: {
+  readonly operatorState: OperatorState;
   readonly onRouteChange: (route: OperatorRoute) => void;
 }): ReactElement {
+  const metrics = queueMetrics.map((metric) => {
+    if (metric.label === 'Payment exceptions') {
+      return { ...metric, value: String(operatorState.payments.exceptions) };
+    }
+
+    if (metric.label === 'SOS incidents') {
+      return { ...metric, value: String(operatorState.disputes.escalated) };
+    }
+
+    return metric;
+  });
+
   return (
     <>
       <section className="metric-grid" aria-label="Operator queue metrics">
-        {queueMetrics.map((metric) => (
+        {metrics.map((metric) => (
           <Card key={metric.label}>
             <span className="metric-label">{metric.label}</span>
             <strong className="metric-value">{metric.value}</strong>
@@ -129,11 +165,11 @@ function Dashboard({
 }
 
 function Matching({
-  acceptedMatch,
-  onAccept,
+  dispatch,
+  operatorState,
 }: {
-  readonly acceptedMatch: string | null;
-  readonly onAccept: (matchId: string) => void;
+  readonly dispatch: Dispatch<OperatorAction>;
+  readonly operatorState: OperatorState;
 }): ReactElement {
   return (
     <section className="console-grid">
@@ -147,10 +183,16 @@ function Matching({
         />
         {matchingCandidates.map((candidate) => (
           <CandidateRow
-            accepted={acceptedMatch === candidate.id}
             candidate={candidate}
+            dispatch={dispatch}
             key={candidate.id}
-            onAccept={onAccept}
+            status={
+              operatorState.matching.acceptedMatchId === candidate.id
+                ? 'accepted'
+                : operatorState.matching.rejectedMatchIds.includes(candidate.id)
+                  ? 'rejected'
+                  : 'pending'
+            }
           />
         ))}
       </Card>
@@ -200,7 +242,13 @@ function LiveOps(): ReactElement {
   );
 }
 
-function Profiles(): ReactElement {
+function Profiles({
+  dispatch,
+  operatorState,
+}: {
+  readonly dispatch: Dispatch<OperatorAction>;
+  readonly operatorState: OperatorState;
+}): ReactElement {
   return (
     <section className="console-grid">
       <Card elevated>
@@ -210,9 +258,13 @@ function Profiles(): ReactElement {
         </div>
         <ListItem description="Visits, ratings, payouts, advances, disputes" title="Akouvi A." />
         <ListItem
+          after={<Badge>{operatorState.blocklistCount}</Badge>}
           description="blocked_for_worker, watchlist, relationship block"
           title="Safety flags"
         />
+        <Button onClick={() => dispatch({ type: 'blocklist/add' })} variant="secondary">
+          Add relationship block
+        </Button>
       </Card>
       <Card>
         <div className="card-header">
@@ -224,43 +276,112 @@ function Profiles(): ReactElement {
           title="Afi Mensah"
         />
         <ListItem
+          after={
+            operatorState.privacy.subscriberHandled ? <Badge tone="success">Handled</Badge> : null
+          }
           description="Export, erasure, account deletion"
           title="Privacy request handling"
         />
+        <div className="operator-actions">
+          <Button onClick={() => dispatch({ type: 'privacy/handleSubscriber' })} size="sm">
+            Handle subscriber privacy
+          </Button>
+          <Button
+            onClick={() => dispatch({ type: 'privacy/handleWorker' })}
+            size="sm"
+            variant="secondary"
+          >
+            Handle worker privacy
+          </Button>
+        </div>
       </Card>
     </section>
   );
 }
 
-function Disputes(): ReactElement {
+function Disputes({
+  dispatch,
+  operatorState,
+}: {
+  readonly dispatch: Dispatch<OperatorAction>;
+  readonly operatorState: OperatorState;
+}): ReactElement {
   return (
-    <Panel
-      badge="4 open"
-      body="Missed visit, damaged clothes, late worker, and safety reports route here before refunds or worker sanctions."
-      title="Dispute triage"
-    />
+    <Card elevated>
+      <div className="card-header">
+        <h2>Dispute triage</h2>
+        <Badge>{operatorState.disputes.open} open</Badge>
+      </div>
+      <p>
+        Missed visit, damaged clothes, late worker, and safety reports route here before refunds or
+        worker sanctions.
+      </p>
+      <div className="operator-actions">
+        <Button onClick={() => dispatch({ type: 'dispute/resolve' })}>Resolve dispute</Button>
+        <Button onClick={() => dispatch({ type: 'dispute/escalate' })} variant="danger">
+          Escalate safety case
+        </Button>
+      </div>
+      <ListItem description={`${operatorState.disputes.resolved} resolved`} title="Resolved" />
+      <ListItem description={`${operatorState.disputes.escalated} escalated`} title="Escalated" />
+    </Card>
   );
 }
 
-function Payments(): ReactElement {
+function Payments({
+  dispatch,
+  operatorState,
+}: {
+  readonly dispatch: Dispatch<OperatorAction>;
+  readonly operatorState: OperatorState;
+}): ReactElement {
   return (
     <section className="console-grid">
       <Card elevated>
         <div className="card-header">
           <h2>Payment ops</h2>
-          <Badge tone="accent">4 exceptions</Badge>
+          <Badge tone="accent">{operatorState.payments.exceptions} exceptions</Badge>
         </div>
-        <ListItem description="Retry mobile-money recovery" title="Manual payment retry" />
-        <ListItem description="Reason, amount, audit event" title="Refund issuance" />
+        <ListItem
+          after={
+            <Button onClick={() => dispatch({ type: 'payments/retryRecovery' })} size="sm">
+              Retry
+            </Button>
+          }
+          description={`${operatorState.payments.retryQueued} queued`}
+          title="Manual payment retry"
+        />
+        <ListItem
+          after={
+            <Button onClick={() => dispatch({ type: 'payments/issueRefund' })} size="sm">
+              Issue
+            </Button>
+          }
+          description={`${operatorState.payments.refundsIssued} refunds issued`}
+          title="Refund issuance"
+        />
       </Card>
       <Card>
         <div className="card-header">
           <h2>Payouts</h2>
-          <Badge>May batch</Badge>
+          <Badge>{operatorState.payments.payoutBatchStarted ? 'Started' : 'May batch'}</Badge>
         </div>
-        <ListItem description="Worker floor, bonuses, advances" title="Batch initiation" />
         <ListItem
-          description="Retry failed payout with provider trace"
+          after={
+            <Button onClick={() => dispatch({ type: 'payments/startPayoutBatch' })} size="sm">
+              Start
+            </Button>
+          }
+          description="Worker floor, bonuses, advances"
+          title="Batch initiation"
+        />
+        <ListItem
+          after={
+            <Button onClick={() => dispatch({ type: 'payments/retryFailedPayout' })} size="sm">
+              Retry
+            </Button>
+          }
+          description={`${operatorState.payments.failedPayouts} failed payout`}
           title="Failed payout retry"
         />
       </Card>
@@ -268,17 +389,42 @@ function Payments(): ReactElement {
   );
 }
 
-function Audit(): ReactElement {
+function Audit({
+  dispatch,
+  operatorState,
+}: {
+  readonly dispatch: Dispatch<OperatorAction>;
+  readonly operatorState: OperatorState;
+}): ReactElement {
   return (
-    <Panel
-      badge="Immutable"
-      body="Search and filter matching decisions, refunds, privacy requests, SOS incidents, and blocklist changes."
-      title="Audit log"
-    />
+    <Card elevated>
+      <div className="card-header">
+        <h2>Audit log</h2>
+        <Badge>Immutable</Badge>
+      </div>
+      <p>
+        Search and filter matching decisions, refunds, privacy requests, SOS incidents, and
+        blocklist changes.
+      </p>
+      <ListItem
+        after={
+          <Badge>{operatorState.auditFilter === '' ? 'All' : operatorState.auditFilter}</Badge>
+        }
+        description="Operator id, event type, affected entity, timestamp"
+        title="Current filter"
+      />
+      <Button onClick={() => dispatch({ type: 'audit/filter' })}>Apply risk filter</Button>
+    </Card>
   );
 }
 
-function Settings(): ReactElement {
+function Settings({
+  dispatch,
+  operatorState,
+}: {
+  readonly dispatch: Dispatch<OperatorAction>;
+  readonly operatorState: OperatorState;
+}): ReactElement {
   return (
     <section className="console-grid">
       <Card elevated>
@@ -287,10 +433,30 @@ function Settings(): ReactElement {
           <Badge tone="success">Ready</Badge>
         </div>
         <ListItem
+          after={<Badge>{operatorState.readiness.lastChecked}</Badge>}
           description="OTP, push, payment, storage, observability"
           title="Readiness checks"
         />
-        <ListItem description="Quiet hours, beta mode, forced update" title="Feature flags" />
+        <ListItem
+          after={
+            <Badge tone={operatorState.readiness.forcedUpdateEnabled ? 'danger' : 'muted'}>
+              {operatorState.readiness.forcedUpdateEnabled ? 'Forced' : 'Normal'}
+            </Badge>
+          }
+          description="Quiet hours, beta mode, forced update"
+          title="Feature flags"
+        />
+        <div className="operator-actions">
+          <Button onClick={() => dispatch({ type: 'settings/checkReadiness' })}>
+            Run readiness check
+          </Button>
+          <Button
+            onClick={() => dispatch({ type: 'settings/toggleForcedUpdate' })}
+            variant="secondary"
+          >
+            Toggle forced update
+          </Button>
+        </div>
       </Card>
       <SurfaceInventory />
     </section>
@@ -298,23 +464,37 @@ function Settings(): ReactElement {
 }
 
 function CandidateRow({
-  accepted,
   candidate,
-  onAccept,
+  dispatch,
+  status,
 }: {
-  readonly accepted: boolean;
   readonly candidate: MatchingCandidate;
-  readonly onAccept: (matchId: string) => void;
+  readonly dispatch: Dispatch<OperatorAction>;
+  readonly status: 'accepted' | 'pending' | 'rejected';
 }): ReactElement {
   return (
     <ListItem
       after={
-        accepted ? (
+        status === 'accepted' ? (
           <Badge tone="success">Accepted</Badge>
+        ) : status === 'rejected' ? (
+          <Badge tone="danger">Rejected</Badge>
         ) : (
-          <Button onClick={() => onAccept(candidate.id)} size="sm">
-            Accept
-          </Button>
+          <div className="row-actions">
+            <Button
+              onClick={() => dispatch({ matchId: candidate.id, type: 'matching/accept' })}
+              size="sm"
+            >
+              Accept
+            </Button>
+            <Button
+              onClick={() => dispatch({ matchId: candidate.id, type: 'matching/reject' })}
+              size="sm"
+              variant="secondary"
+            >
+              Reject
+            </Button>
+          </div>
         )
       }
       description={`${candidate.worker} · ${candidate.cell}`}
@@ -339,26 +519,6 @@ function SurfaceInventory(): ReactElement {
           <span key={surface}>{surface}</span>
         ))}
       </div>
-    </Card>
-  );
-}
-
-function Panel({
-  badge,
-  body,
-  title,
-}: {
-  readonly badge: string;
-  readonly body: ReactNode;
-  readonly title: string;
-}): ReactElement {
-  return (
-    <Card elevated>
-      <div className="card-header">
-        <h2>{title}</h2>
-        <Badge>{badge}</Badge>
-      </div>
-      <Alert tone="primary">{body}</Alert>
     </Card>
   );
 }
