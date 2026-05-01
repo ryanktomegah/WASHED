@@ -15,15 +15,22 @@ import { formatVisitDate, formatXof, translate, type WashedLocale } from '@washe
 import {
   Banknote,
   Bell,
+  CalendarDays,
+  Camera,
   Check,
   ClipboardList,
   Clock3,
+  FileText,
   Home,
   House,
   Languages,
+  MapPinned,
   MessageCircle,
+  ReceiptText,
   ShieldCheck,
+  Star,
   UserRound,
+  WalletCards,
 } from 'lucide-react';
 import type { Dispatch, ReactElement, ReactNode } from 'react';
 
@@ -712,6 +719,7 @@ function SubscriptionScreen({
 }): ReactElement {
   const price = subscriberState.subscription.monthlyPriceXof;
   const tier = `${subscriberState.subscription.tier} · ${formatXof(price, locale)}`;
+  const isFrench = locale === 'fr';
 
   return (
     <ScreenFrame
@@ -720,71 +728,132 @@ function SubscriptionScreen({
           {t.action.openSupport}
         </Button>
       }
-      eyebrow="Billing"
+      eyebrow={isFrench ? 'Service' : 'Service'}
       title={t.subscription.title}
     >
-      <Card elevated>
-        <ListItem
-          after={<Badge>{formatXof(price, locale)}</Badge>}
-          description={t.subscription.priceNote}
-          title={tier}
-        />
-        <ActionGrid
-          items={[
-            {
-              label: t.action.changeTier,
-              onClick: () => dispatch({ type: 'subscription/changeTier' }),
-              tone: 'primary',
-            },
-            {
-              label: t.action.requestSwap,
-              note: `${subscriberState.subscription.swapCreditsRemaining} / 2`,
-              onClick: () => dispatch({ type: 'subscription/requestSwap' }),
-              tone: 'primary',
-            },
-            {
-              label: t.action.skipVisit,
-              note: `${subscriberState.subscription.skipCreditsRemaining} / 2`,
-              onClick: () => dispatch({ type: 'visit/skip' }),
-              tone: 'accent',
-            },
-            {
-              label: t.action.reschedule,
-              onClick: () => dispatch({ type: 'visit/reschedule' }),
-              tone: 'accent',
-            },
-          ]}
-        />
-      </Card>
+      <section className="subscription-command-card" aria-label={t.subscription.title}>
+        <div className="subscription-kicker">
+          <Badge tone="success">{subscriberState.subscription.tier}</Badge>
+          <span>{isFrench ? 'Renouvellement le 1 mai' : 'Renews May 1'}</span>
+        </div>
+        <h2>{isFrench ? '4 visites fiables par mois' : '4 reliable visits each month'}</h2>
+        <p>
+          {isFrench
+            ? 'Gardez le contrôle sur les reports, remplacements et paiements sans appeler le support.'
+            : 'Control reschedules, worker changes, and payments without calling support.'}
+        </p>
+        <div className="plan-metrics">
+          <button
+            aria-label={t.action.changeTier}
+            onClick={() => dispatch({ type: 'subscription/changeTier' })}
+            type="button"
+          >
+            <WalletCards aria-hidden="true" size={17} strokeWidth={2.35} />
+            <span>{t.action.changeTier}</span>
+            <strong>{tier}</strong>
+          </button>
+          <button
+            aria-label={isFrench ? 'Résumé des paiements' : 'Payment summary'}
+            onClick={() => onRouteChange('billing')}
+            type="button"
+          >
+            <ReceiptText aria-hidden="true" size={17} strokeWidth={2.35} />
+            <span>{t.nav.billing}</span>
+            <strong>{formatXof(price, locale)}</strong>
+          </button>
+        </div>
+      </section>
 
-      <Card>
-        <ListItem
-          description={`Mai 2026 · ${formatXof(price, locale)} · ${
-            t.paymentStatus[subscriberState.subscription.paymentStatus]
-          }`}
-          title={t.subscription.billing}
-        />
-        <ListItem description="Avant / après, note, réclamation" title={t.subscription.history} />
-        <Alert title={t.action.recoverPayment} tone="danger">
-          A failed payment opens a recovery screen before the next scheduled visit.
-        </Alert>
-        <Button fullWidth onClick={() => dispatch({ type: 'payment/recover' })} variant="secondary">
-          {t.action.recoverPayment}
-        </Button>
-        <Button fullWidth onClick={() => onRouteChange('billing')} variant="secondary">
-          {t.nav.billing}
-        </Button>
-        <Button fullWidth onClick={() => onRouteChange('paymentRecovery')} variant="secondary">
-          {t.nav.paymentRecovery}
-        </Button>
-        <Button
-          fullWidth
-          onClick={() => dispatch({ type: 'subscription/cancel' })}
-          variant="danger"
+      <section className="subscriber-control-stack" aria-label={t.home.visitControls}>
+        <button
+          aria-label={`${t.action.requestSwap} ${subscriberState.subscription.swapCreditsRemaining} / 2`}
+          onClick={() => dispatch({ type: 'subscription/requestSwap' })}
+          type="button"
         >
-          {t.subscription.cancel}
-        </Button>
-      </Card>
+          <div>
+            <strong>{t.action.requestSwap}</strong>
+            <span>
+              {isFrench
+                ? 'Raison obligatoire, validation opérateur, historique visible.'
+                : 'Reason required, operator review, visible history.'}
+            </span>
+          </div>
+          <Badge>{subscriberState.subscription.swapCreditsRemaining} / 2</Badge>
+        </button>
+        <button
+          aria-label={`${t.action.skipVisit} ${subscriberState.subscription.skipCreditsRemaining} / 2`}
+          onClick={() => dispatch({ type: 'visit/skip' })}
+          type="button"
+        >
+          <div>
+            <strong>{t.action.skipVisit}</strong>
+            <span>
+              {isFrench
+                ? 'Utilisez un crédit gratuit sans perdre votre créneau habituel.'
+                : 'Use a free credit without losing your usual schedule.'}
+            </span>
+          </div>
+          <Badge tone="accent">{subscriberState.subscription.skipCreditsRemaining} / 2</Badge>
+        </button>
+        <button
+          aria-label={t.action.reschedule}
+          onClick={() => dispatch({ type: 'visit/reschedule' })}
+          type="button"
+        >
+          <div>
+            <strong>{t.action.reschedule}</strong>
+            <span>
+              {isFrench
+                ? 'Disponible jusqu’à 24h avant la visite.'
+                : 'Available until 24h before the visit.'}
+            </span>
+          </div>
+          <CalendarDays aria-hidden="true" size={20} strokeWidth={2.35} />
+        </button>
+      </section>
+
+      <section className="subscription-ledger-card">
+        <div className="card-header">
+          <div>
+            <h2>{t.subscription.billing}</h2>
+            <p>
+              Mai 2026 · {formatXof(price, locale)} ·{' '}
+              {t.paymentStatus[subscriberState.subscription.paymentStatus]}
+            </p>
+          </div>
+          <Badge tone="danger">{t.paymentStatus[subscriberState.subscription.paymentStatus]}</Badge>
+        </div>
+        <div className="billing-recovery-strip">
+          <strong>{t.action.recoverPayment}</strong>
+          <span>
+            {isFrench
+              ? 'Une visite reste protégée pendant la tentative de régularisation.'
+              : 'One visit remains protected while payment recovery runs.'}
+          </span>
+          <Button
+            onClick={() => dispatch({ type: 'payment/recover' })}
+            size="sm"
+            variant="secondary"
+          >
+            {t.action.recoverPayment}
+          </Button>
+        </div>
+        <div className="subscription-secondary-actions">
+          <Button fullWidth onClick={() => onRouteChange('billing')} variant="secondary">
+            {t.nav.billing}
+          </Button>
+          <Button fullWidth onClick={() => onRouteChange('paymentRecovery')} variant="secondary">
+            {t.nav.paymentRecovery}
+          </Button>
+          <Button
+            fullWidth
+            onClick={() => dispatch({ type: 'subscription/cancel' })}
+            variant="danger"
+          >
+            {t.subscription.cancel}
+          </Button>
+        </div>
+      </section>
     </ScreenFrame>
   );
 }
@@ -940,6 +1009,7 @@ function VisitDetailScreen({
   readonly t: LocalizedCopy;
 }): ReactElement {
   const nextVisit = formatVisitDate(subscriberState.nextVisit.startsAt, locale);
+  const isFrench = locale === 'fr';
 
   return (
     <ScreenFrame
@@ -947,37 +1017,75 @@ function VisitDetailScreen({
       eyebrow="Visit"
       title={t.surfaces.visit.title}
     >
-      <Card className="visit-card" elevated>
-        <ListItem
-          after={<Badge tone="accent">{subscriberState.nextVisit.window}</Badge>}
-          description={`${subscriberState.nextVisit.workerName}, ${subscriberState.nextVisit.cell}`}
-          title={nextVisit}
-        />
-        <ListItem description={t.surfaces.visit.access} title="Adresse et accès" />
-        <ListItem description={t.surfaces.visit.photos} title="Avant / après" />
-        <ListItem
-          description={t.surfaces.visit.rating}
-          title={locale === 'fr' ? 'Note' : 'Rating'}
-        />
-        <div className="visit-actions" aria-label={t.home.visitControls}>
-          <Button onClick={() => dispatch({ type: 'visit/startTracking' })} size="sm">
-            {t.action.startTracking}
-          </Button>
-          <Button onClick={() => dispatch({ type: 'visit/skip' })} size="sm" variant="secondary">
-            {t.action.skipVisit}
-          </Button>
-          <Button
-            onClick={() => dispatch({ type: 'visit/reschedule' })}
-            size="sm"
-            variant="secondary"
-          >
-            {t.action.reschedule}
-          </Button>
+      <section className="visit-detail-hero" aria-label={t.surfaces.visit.title}>
+        <div className="visit-detail-topline">
+          <span>
+            <CalendarDays aria-hidden="true" size={16} strokeWidth={2.35} />
+            {nextVisit}
+          </span>
+          <Badge tone="accent">{subscriberState.nextVisit.window}</Badge>
         </div>
-        {subscriberState.nextVisit.stage === 'enRoute' ? (
-          <BoundedTrackingMap onArrive={() => dispatch({ type: 'visit/arrive' })} t={t} />
-        ) : null}
-      </Card>
+        <h2>
+          {isFrench ? 'Akouvi est confirmée pour votre foyer' : 'Akouvi is confirmed for your home'}
+        </h2>
+        <div className="visit-worker-profile">
+          <div className="worker-avatar" aria-hidden="true">
+            AK
+          </div>
+          <div>
+            <strong>{subscriberState.nextVisit.workerName}</strong>
+            <span>
+              {subscriberState.nextVisit.cell} · ★ 4.9 · {isFrench ? '18 visites' : '18 visits'}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section
+        className="visit-proof-grid"
+        aria-label={isFrench ? 'Preuves de visite' : 'Visit proofs'}
+      >
+        <div>
+          <MapPinned aria-hidden="true" size={18} strokeWidth={2.35} />
+          <strong>{isFrench ? 'Adresse et accès' : 'Address and access'}</strong>
+          <span>{t.surfaces.visit.access}</span>
+        </div>
+        <div>
+          <Camera aria-hidden="true" size={18} strokeWidth={2.35} />
+          <strong>{isFrench ? 'Avant / après' : 'Before / after'}</strong>
+          <span>{t.surfaces.visit.photos}</span>
+        </div>
+        <div>
+          <Star aria-hidden="true" size={18} strokeWidth={2.35} />
+          <strong>{isFrench ? 'Note' : 'Rating'}</strong>
+          <span>{t.surfaces.visit.rating}</span>
+        </div>
+      </section>
+
+      <section className="visit-command-bar" aria-label={t.home.visitControls}>
+        <Button onClick={() => dispatch({ type: 'visit/startTracking' })}>
+          {t.action.startTracking}
+        </Button>
+        <Button onClick={() => dispatch({ type: 'visit/skip' })} variant="secondary">
+          {t.action.skipVisit}
+        </Button>
+        <Button onClick={() => dispatch({ type: 'visit/reschedule' })} variant="secondary">
+          {t.action.reschedule}
+        </Button>
+      </section>
+
+      {subscriberState.nextVisit.stage === 'enRoute' ? (
+        <BoundedTrackingMap onArrive={() => dispatch({ type: 'visit/arrive' })} t={t} />
+      ) : (
+        <section className="visit-privacy-note">
+          <ShieldCheck aria-hidden="true" size={18} strokeWidth={2.35} />
+          <span>
+            {isFrench
+              ? "Le suivi GPS n'apparaît qu'après le départ d'Akouvi et s'arrête à l'arrivée."
+              : 'GPS tracking appears only after Akouvi starts traveling and stops on arrival.'}
+          </span>
+        </section>
+      )}
     </ScreenFrame>
   );
 }
@@ -995,14 +1103,21 @@ function InboxScreen({
       eyebrow="Inbox"
       title={t.surfaces.inbox.title}
     >
-      <Card elevated>
-        <ListItem description="T-24h · mardi 5 mai · 9-11" title={t.surfaces.inbox.reminder} />
-        <ListItem
-          description="Mobile money · prochaine tentative"
-          title={t.surfaces.inbox.payment}
-        />
-        <ListItem description={t.surfaces.inbox.outage} title={t.profile.maintenance} />
-      </Card>
+      <section className="inbox-stack" aria-label={t.surfaces.inbox.title}>
+        {[
+          [t.surfaces.inbox.reminder, 'T-24h · mardi 5 mai · 9-11', 'visit'],
+          [t.surfaces.inbox.payment, 'Mobile money · prochaine tentative', 'money'],
+          [t.profile.maintenance, t.surfaces.inbox.outage, 'system'],
+        ].map(([title, description, tone]) => (
+          <article className={`inbox-message inbox-message-${tone}`} key={title}>
+            <span />
+            <div>
+              <strong>{title}</strong>
+              <p>{description}</p>
+            </div>
+          </article>
+        ))}
+      </section>
     </ScreenFrame>
   );
 }
@@ -1026,19 +1141,33 @@ function BillingScreen({
       eyebrow="Billing"
       title={t.surfaces.billing.title}
     >
-      <Card elevated>
-        <ListItem
-          description={t.surfaces.billing.receipt}
-          title={formatXof(subscriberState.subscription.monthlyPriceXof, locale)}
-        />
-        <ListItem
-          description={t.surfaces.billing.refund}
-          title={t.surfaces.billing.supportCredit}
-        />
-        <Button fullWidth onClick={() => dispatch({ type: 'payment/recover' })} variant="secondary">
-          {t.action.recoverPayment}
-        </Button>
-      </Card>
+      <section className="billing-statement-card" aria-label={t.surfaces.billing.title}>
+        <div>
+          <span>{locale === 'fr' ? 'Solde mai' : 'May balance'}</span>
+          <strong>{formatXof(subscriberState.subscription.monthlyPriceXof, locale)}</strong>
+          <p>{t.surfaces.billing.receipt}</p>
+        </div>
+        <Badge tone="accent">{t.paymentStatus[subscriberState.subscription.paymentStatus]}</Badge>
+      </section>
+      <section className="receipt-list">
+        <article>
+          <ReceiptText aria-hidden="true" size={18} strokeWidth={2.35} />
+          <div>
+            <strong>{t.surfaces.billing.supportCredit}</strong>
+            <p>{t.surfaces.billing.refund}</p>
+          </div>
+        </article>
+        <article>
+          <FileText aria-hidden="true" size={18} strokeWidth={2.35} />
+          <div>
+            <strong>{locale === 'fr' ? 'Reçu disponible' : 'Receipt available'}</strong>
+            <p>PDF · Mai 2026 · T-Money</p>
+          </div>
+        </article>
+      </section>
+      <Button fullWidth onClick={() => dispatch({ type: 'payment/recover' })} variant="secondary">
+        {t.action.recoverPayment}
+      </Button>
     </ScreenFrame>
   );
 }

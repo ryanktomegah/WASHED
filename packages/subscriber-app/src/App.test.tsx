@@ -47,7 +47,7 @@ describe('subscriber app', () => {
     expect(screen.getByRole('heading', { name: "Gestion de l'abonnement" })).toBeInTheDocument();
     expect(screen.getByText('Demander un remplacement')).toBeInTheDocument();
     expect(screen.getAllByText('2 / 2')).toHaveLength(2);
-    expect(screen.getByText(/en retard/u)).toBeInTheDocument();
+    expect(screen.getAllByText(/en retard/u).length).toBeGreaterThanOrEqual(1);
   });
 
   it('applies subscription and payment actions through the reducer', () => {
@@ -72,7 +72,7 @@ describe('subscriber app', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Changer la formule' }));
 
-    expect(screen.getByText(/T3/u)).toBeInTheDocument();
+    expect(screen.getAllByText(/T3/u).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Changement de formule prévisualisé.')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Régulariser le paiement' }));

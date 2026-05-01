@@ -87,8 +87,7 @@ button {
   min-height: 100%;
   flex-direction: column;
   background:
-    radial-gradient(circle at top left, rgba(216, 207, 255, 0.12), transparent 34%),
-    var(--ops-dark);
+    radial-gradient(circle at top left, rgba(216, 207, 255, 0.12), transparent 34%), var(--ops-dark);
 }
 
 .sidebar-brand {
@@ -285,7 +284,7 @@ button {
   display: grid;
   gap: 6px;
   border: 1px solid var(--washed-border);
-  border-radius: 14px;
+  border-radius: 10px;
   background: var(--washed-surface);
   padding: 16px;
 }
@@ -303,10 +302,12 @@ button {
 
 .ops-metric-danger {
   border-color: color-mix(in srgb, var(--ops-red) 34%, var(--washed-border));
+  background: linear-gradient(180deg, #fff, color-mix(in srgb, var(--ops-red) 5%, #fff));
 }
 
 .ops-metric-accent {
   border-color: color-mix(in srgb, var(--ops-amber) 34%, var(--washed-border));
+  background: linear-gradient(180deg, #fff, color-mix(in srgb, var(--ops-amber) 8%, #fff));
 }
 
 .metric-label {
@@ -570,9 +571,21 @@ button {
   place-items: center;
   border: 1px solid var(--washed-border);
   border-radius: 12px;
-  background: #f5f8f6;
-  color: var(--washed-muted);
-  font-size: 10px;
+  background: var(--ops-purple-soft);
+  color: var(--ops-purple);
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.candidate-row:first-child .candidate-photo {
+  background: var(--ops-green);
+  color: #fff;
+}
+
+.candidate-row-rejected .candidate-photo {
+  background: var(--ops-red-soft);
+  color: var(--ops-red);
 }
 
 .candidate-info > div {
@@ -612,13 +625,23 @@ button {
   margin: 10px 0;
   border: 1.5px solid var(--washed-border);
   border-radius: 14px;
-  background: linear-gradient(145deg, #c8e8d4, #d4eeda);
+  background:
+    radial-gradient(circle at 28% 38%, rgba(59, 31, 122, 0.16), transparent 28%),
+    linear-gradient(90deg, rgba(42, 122, 72, 0.11) 1px, transparent 1px),
+    linear-gradient(rgba(42, 122, 72, 0.11) 1px, transparent 1px),
+    linear-gradient(145deg, #eef7f1, #f8faf8);
+  background-size:
+    auto,
+    34px 34px,
+    34px 34px,
+    auto;
   color: var(--washed-foreground);
   text-align: center;
 }
 
-.assignment-map span {
-  font-size: 24px;
+.assignment-map svg,
+.map-centerpiece svg {
+  color: var(--ops-purple);
 }
 
 .assignment-map p,
@@ -643,7 +666,10 @@ button {
     linear-gradient(90deg, rgba(42, 122, 72, 0.12) 1px, transparent 1px),
     linear-gradient(rgba(42, 122, 72, 0.12) 1px, transparent 1px),
     linear-gradient(145deg, #d8ede0, #e4f2ea);
-  background-size: 54px 54px, 54px 54px, auto;
+  background-size:
+    54px 54px,
+    54px 54px,
+    auto;
 }
 
 .live-kpis {
@@ -676,6 +702,48 @@ button {
   font-weight: 800;
 }
 
+.ops-state {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.ops-state::before,
+.ops-state-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  content: '';
+}
+
+.ops-state-green::before,
+.ops-state-dot-green {
+  background: var(--ops-green);
+}
+
+.ops-state-amber::before,
+.ops-state-dot-amber {
+  background: var(--ops-amber);
+}
+
+.ops-state-red::before,
+.ops-state-dot-red {
+  background: var(--ops-red);
+}
+
+.ops-state-neutral::before,
+.ops-state-dot-neutral {
+  border: 1px solid var(--washed-border);
+  background: #fff;
+}
+
+.ops-state-dark::before,
+.ops-state-dot-dark {
+  background: var(--ops-dark);
+}
+
 .live-kpis strong {
   display: block;
   margin-top: 2px;
@@ -692,10 +760,6 @@ button {
   transform: translate(-50%, -50%);
   color: var(--washed-foreground);
   text-align: center;
-}
-
-.map-centerpiece span {
-  font-size: 48px;
 }
 
 .map-centerpiece p,
@@ -749,6 +813,9 @@ button {
 }
 
 .map-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   font-size: 11px;
   font-weight: 700;
 }

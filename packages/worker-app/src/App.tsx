@@ -8,7 +8,6 @@ import {
   Card,
   EmptyState,
   ListItem,
-  Tabs,
   WashedThemeProvider,
 } from '@washed/ui';
 import {
@@ -724,21 +723,43 @@ function PlanningScreen({
   readonly t: typeof workerCopy;
   readonly workerState: WorkerState;
 }): ReactElement {
+  const dayPlan = [
+    ['Lun', '3 visites', 'Adidogomé'],
+    ['Mar', '4 visites', 'Agoè'],
+    ['Mer', '2 visites', 'Tokoin'],
+    ['Jeu', 'Repos', 'Indispo.'],
+  ] as const;
+
   return (
     <ScreenFrame eyebrow="Semaine" title={t.planning.title}>
+      <section className="planning-week-card" aria-label={t.planning.week}>
+        <div className="card-header">
+          <div>
+            <h2>{t.planning.week}</h2>
+            <p>11 visites · 3 quartiers · 1 créneau protégé</p>
+          </div>
+          <Badge tone={workerState.availabilityUnavailable ? 'accent' : 'success'}>
+            {workerState.availabilityUnavailable ? 'Indispo.' : 'Confirmé'}
+          </Badge>
+        </div>
+        <div className="planning-day-strip">
+          {dayPlan.map(([day, count, cell], index) => (
+            <button aria-current={index === 0 ? 'date' : undefined} key={day} type="button">
+              <strong>{day}</strong>
+              <span>{count}</span>
+              <small>{cell}</small>
+            </button>
+          ))}
+        </div>
+      </section>
+
       <Card elevated>
         <div className="card-header">
-          <h2>{t.planning.week}</h2>
-          <Badge tone="success">11 visites</Badge>
+          <div>
+            <h2>Disponibilité</h2>
+            <p>Bloquez un créneau avant validation opérateur.</p>
+          </div>
         </div>
-        <Tabs
-          tabs={[
-            { active: true, label: 'Lun' },
-            { label: 'Mar' },
-            { label: 'Mer' },
-            { label: 'Jeu' },
-          ]}
-        />
         <div className="availability-grid">
           {['Matin', 'Midi', 'Après-midi', 'Urgence'].map((slot) => (
             <button key={slot} type="button">
@@ -761,6 +782,19 @@ function PlanningScreen({
           {t.planning.markUnavailable}
         </Button>
       </Card>
+
+      <section className="planning-route-board" aria-label="Routes à venir">
+        {routeCards.map((card) => (
+          <article key={card.title}>
+            <span>{card.time}</span>
+            <div>
+              <strong>{card.title}</strong>
+              <p>{card.address}</p>
+            </div>
+            <Badge tone={card.status === 'Prochaine' ? 'success' : 'muted'}>{card.status}</Badge>
+          </article>
+        ))}
+      </section>
     </ScreenFrame>
   );
 }
@@ -790,7 +824,7 @@ function EarningsScreen({
         </div>
         <p>22 / 48 visites complétées · 26 restantes</p>
       </Card>
-      <Card className="payout-card">
+      <section className="payout-command-card">
         <div className="card-header">
           <div>
             <h2>Paiement dimanche 4 mai</h2>
@@ -798,8 +832,13 @@ function EarningsScreen({
           </div>
           <Badge tone="success">Programmé</Badge>
         </div>
-      </Card>
-      <Card className="advance-card">
+        <div className="payout-timeline" aria-label="Paiement travailleuse">
+          <span data-state="done">Visites validées</span>
+          <span data-state="active">Calcul bonus</span>
+          <span>Virement</span>
+        </div>
+      </section>
+      <section className="advance-card">
         <Alert title={t.earnings.advance} tone="accent">
           Jusqu&apos;à 50% du fixe · 1× par mois
         </Alert>
@@ -810,7 +849,7 @@ function EarningsScreen({
         >
           {t.action.advance}
         </Button>
-      </Card>
+      </section>
       <Card>
         <div className="card-header">
           <h2>Historique</h2>
@@ -845,14 +884,36 @@ function ProfileScreen({
 }): ReactElement {
   return (
     <ScreenFrame eyebrow="Compte" title={t.profile.title}>
+      <section className="worker-profile-hero" aria-label={t.profile.title}>
+        <div className="worker-profile-avatar" aria-hidden="true">
+          AA
+        </div>
+        <div>
+          <h2>Akouvi A.</h2>
+          <p>Adidogomé · Agoè · Tokoin</p>
+        </div>
+        <Badge tone="success">Active</Badge>
+      </section>
+
       <Card elevated>
-        <ListItem description="Akouvi A." title={t.profile.agreement} />
-        <ListItem description="+228 90 00 00 00" title={t.profile.payout} />
-        <ListItem
-          description="Export, effacement, politique de confidentialité"
-          title={t.profile.privacy}
-        />
-        <ListItem description="Assistance terrain et procédures" title={t.profile.help} />
+        <div className="profile-command-grid">
+          <span>
+            <strong>{t.profile.agreement}</strong>
+            <small>Accord travailleuse accepté</small>
+          </span>
+          <span>
+            <strong>{t.profile.payout}</strong>
+            <small>+228 90 00 00 00</small>
+          </span>
+          <span>
+            <strong>{t.profile.privacy}</strong>
+            <small>Export, effacement, politique de confidentialité</small>
+          </span>
+          <span>
+            <strong>{t.profile.help}</strong>
+            <small>Assistance terrain et procédures</small>
+          </span>
+        </div>
         <div className="profile-actions">
           <Button
             fullWidth
@@ -919,26 +980,33 @@ function ActivationScreen({
 }): ReactElement {
   return (
     <ScreenFrame eyebrow="Première connexion" title={t.activation.title}>
-      <Card elevated>
-        <ListItem
-          after={
-            <Badge tone={workerState.activation.agreementAccepted ? 'success' : 'accent'}>
-              {workerState.activation.agreementAccepted ? 'OK' : 'À faire'}
-            </Badge>
-          }
-          description="Consentement, règles de sécurité, confidentialité localisation."
-          title={t.activation.agreement}
-        />
-        <ListItem
-          after={<Badge tone="success">OK</Badge>}
-          description="+228 90 00 00 00"
-          title={t.activation.payout}
-        />
-        <ListItem
-          after={<Badge tone="success">OK</Badge>}
-          description="Adidogomé, Agoè, Tokoin"
-          title={t.activation.serviceCells}
-        />
+      <Card className="activation-checklist-card" elevated>
+        <div className="activation-row">
+          <span>1</span>
+          <div>
+            <strong>{t.activation.agreement}</strong>
+            <p>Consentement, règles de sécurité, confidentialité localisation.</p>
+          </div>
+          <Badge tone={workerState.activation.agreementAccepted ? 'success' : 'accent'}>
+            {workerState.activation.agreementAccepted ? 'OK' : 'À faire'}
+          </Badge>
+        </div>
+        <div className="activation-row">
+          <span>2</span>
+          <div>
+            <strong>{t.activation.payout}</strong>
+            <p>+228 90 00 00 00</p>
+          </div>
+          <Badge tone="success">OK</Badge>
+        </div>
+        <div className="activation-row">
+          <span>3</span>
+          <div>
+            <strong>{t.activation.serviceCells}</strong>
+            <p>Adidogomé, Agoè, Tokoin</p>
+          </div>
+          <Badge tone="success">OK</Badge>
+        </div>
         <Button fullWidth onClick={() => dispatch({ type: 'activation/complete' })}>
           {t.activation.complete}
         </Button>

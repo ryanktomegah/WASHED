@@ -630,6 +630,327 @@ input {
   gap: 12px;
 }
 
+.subscription-command-card,
+.subscription-ledger-card,
+.visit-detail-hero,
+.billing-statement-card,
+.visit-privacy-note {
+  display: grid;
+  gap: 12px;
+  margin: 0 16px 16px;
+  border: 1px solid rgba(35, 102, 111, 0.14);
+  border-radius: 18px;
+  background: var(--washed-surface);
+  box-shadow: 0 12px 30px rgba(39, 28, 16, 0.07);
+  padding: 16px;
+}
+
+.subscription-command-card {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 88% 0%, rgba(35, 102, 111, 0.18), transparent 34%),
+    linear-gradient(145deg, #fffdf8 0%, #f4fbf9 100%);
+}
+
+.subscription-command-card h2,
+.visit-detail-hero h2 {
+  margin: 0;
+  color: var(--washed-foreground);
+  font-size: 25px;
+  line-height: 1.05;
+}
+
+.subscription-command-card p,
+.subscription-ledger-card p,
+.billing-statement-card p {
+  margin: 0;
+  color: var(--washed-muted);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.subscription-kicker,
+.visit-detail-topline,
+.visit-worker-profile,
+.visit-privacy-note,
+.receipt-list article,
+.inbox-message,
+.subscriber-control-stack button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.subscription-kicker,
+.visit-detail-topline {
+  justify-content: space-between;
+}
+
+.subscription-kicker span,
+.visit-detail-topline span {
+  color: var(--washed-muted);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.visit-detail-topline span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.plan-metrics,
+.subscription-secondary-actions,
+.visit-proof-grid,
+.visit-command-bar {
+  display: grid;
+  gap: 9px;
+}
+
+.plan-metrics,
+.visit-proof-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.plan-metrics button {
+  display: grid;
+  min-width: 0;
+  min-height: 90px;
+  gap: 5px;
+  justify-items: start;
+  border: 1px solid rgba(35, 102, 111, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.66);
+  color: var(--washed-foreground);
+  cursor: pointer;
+  padding: 12px;
+  text-align: left;
+}
+
+.plan-metrics svg,
+.visit-proof-grid svg,
+.receipt-list svg,
+.visit-privacy-note svg {
+  color: var(--subscriber-trust);
+  flex: 0 0 auto;
+}
+
+.plan-metrics span {
+  color: var(--washed-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.plan-metrics strong {
+  font-size: 15px;
+  line-height: 1.15;
+}
+
+.subscriber-control-stack {
+  display: grid;
+  gap: 10px;
+  margin: 0 16px 16px;
+}
+
+.subscriber-control-stack button {
+  width: 100%;
+  min-height: 78px;
+  justify-content: space-between;
+  border: 1px solid var(--washed-border);
+  border-radius: 16px;
+  background: var(--washed-surface);
+  color: var(--washed-foreground);
+  cursor: pointer;
+  padding: 13px 14px;
+  text-align: left;
+}
+
+.subscriber-control-stack button div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.subscriber-control-stack strong {
+  font-size: 15px;
+}
+
+.subscriber-control-stack span {
+  color: var(--washed-muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.subscription-ledger-card {
+  box-shadow: none;
+}
+
+.billing-recovery-strip {
+  display: grid;
+  gap: 5px;
+  border: 1px solid color-mix(in srgb, var(--washed-danger) 22%, var(--washed-border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--washed-danger) 8%, var(--washed-surface));
+  padding: 12px;
+}
+
+.billing-recovery-strip strong {
+  color: var(--washed-danger);
+  font-size: 14px;
+}
+
+.billing-recovery-strip span {
+  color: var(--washed-muted);
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.subscription-secondary-actions,
+.visit-command-bar {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.visit-detail-hero {
+  background:
+    radial-gradient(circle at 12% 14%, rgba(196, 98, 45, 0.13), transparent 28%),
+    linear-gradient(145deg, #fffdf8, #fff7f0);
+}
+
+.visit-worker-profile {
+  border-top: 1px solid var(--washed-border);
+  padding-top: 12px;
+}
+
+.visit-worker-profile strong {
+  display: block;
+  font-size: 16px;
+}
+
+.visit-worker-profile span {
+  color: var(--washed-muted);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.visit-proof-grid {
+  margin: 0 16px 16px;
+}
+
+.visit-proof-grid div {
+  display: grid;
+  min-height: 122px;
+  gap: 7px;
+  align-content: start;
+  border: 1px solid var(--washed-border);
+  border-radius: 16px;
+  background: var(--washed-surface);
+  padding: 14px;
+}
+
+.visit-proof-grid div:first-child {
+  grid-column: 1 / -1;
+  min-height: 96px;
+  background: var(--subscriber-trust-soft);
+}
+
+.visit-proof-grid strong {
+  font-size: 14px;
+}
+
+.visit-proof-grid span {
+  color: var(--washed-muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.visit-command-bar {
+  margin: 0 16px 16px;
+}
+
+.visit-privacy-note {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  box-shadow: none;
+  background: var(--subscriber-trust-soft);
+  color: var(--subscriber-trust);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.inbox-stack,
+.receipt-list {
+  display: grid;
+  gap: 10px;
+  margin: 0 16px 16px;
+}
+
+.inbox-message,
+.receipt-list article {
+  min-height: 74px;
+  border: 1px solid var(--washed-border);
+  border-radius: 16px;
+  background: var(--washed-surface);
+  padding: 13px 14px;
+}
+
+.inbox-message > span {
+  width: 10px;
+  height: 46px;
+  border-radius: 999px;
+  background: var(--subscriber-trust);
+  flex: 0 0 auto;
+}
+
+.inbox-message-money > span {
+  background: var(--washed-primary);
+}
+
+.inbox-message-system > span {
+  background: var(--washed-accent);
+}
+
+.inbox-message strong,
+.receipt-list strong {
+  display: block;
+  font-size: 14px;
+}
+
+.inbox-message p,
+.receipt-list p {
+  margin: 3px 0 0;
+  color: var(--washed-muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.billing-statement-card {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  background:
+    radial-gradient(circle at 88% 12%, rgba(196, 98, 45, 0.16), transparent 32%),
+    var(--washed-surface);
+}
+
+.billing-statement-card span {
+  color: var(--washed-muted);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.billing-statement-card strong {
+  display: block;
+  margin: 4px 0 5px;
+  color: var(--washed-foreground);
+  font-size: 32px;
+  line-height: 1;
+}
+
 .visit-actions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1000,6 +1321,10 @@ input {
   }
 
   .visit-actions,
+  .plan-metrics,
+  .subscription-secondary-actions,
+  .visit-proof-grid,
+  .visit-command-bar,
   .progress-rail,
   .onboarding-progress,
   .choice-grid,

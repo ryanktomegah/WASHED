@@ -266,6 +266,119 @@ button {
   gap: 8px;
 }
 
+.planning-week-card,
+.planning-route-board,
+.payout-command-card,
+.worker-profile-hero {
+  display: grid;
+  gap: 12px;
+  border: 1px solid color-mix(in srgb, var(--washed-primary) 14%, var(--washed-border));
+  border-radius: 18px;
+  background: var(--washed-surface);
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.05),
+    0 6px 20px rgba(0, 0, 0, 0.05);
+  padding: 14px;
+}
+
+.planning-week-card {
+  background:
+    radial-gradient(circle at 90% 0%, rgba(212, 144, 14, 0.18), transparent 34%),
+    var(--washed-surface);
+}
+
+.planning-week-card h2,
+.payout-command-card h2,
+.worker-profile-hero h2 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.planning-week-card p,
+.payout-command-card p,
+.worker-profile-hero p {
+  margin: 3px 0 0;
+  color: var(--washed-muted);
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.planning-day-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.planning-day-strip button {
+  display: grid;
+  min-width: 0;
+  min-height: 78px;
+  gap: 2px;
+  align-content: center;
+  border: 1px solid var(--washed-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--washed-foreground);
+  cursor: pointer;
+  padding: 10px;
+  text-align: left;
+}
+
+.planning-day-strip button[aria-current='date'] {
+  border-color: var(--washed-primary);
+  background: var(--washed-primary-soft);
+}
+
+.planning-day-strip strong {
+  font-size: 18px;
+}
+
+.planning-day-strip span,
+.planning-day-strip small {
+  overflow: hidden;
+  color: var(--washed-muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.planning-route-board {
+  box-shadow: none;
+}
+
+.planning-route-board article {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--washed-border);
+  padding: 10px 0;
+}
+
+.planning-route-board article:last-child {
+  border-bottom: 0;
+}
+
+.planning-route-board article > span {
+  color: var(--washed-primary);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.planning-route-board strong {
+  font-size: 14px;
+}
+
+.planning-route-board p {
+  margin: 2px 0 0;
+  color: var(--washed-muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
 .route-steps {
   display: flex;
   gap: 7px;
@@ -751,6 +864,139 @@ button {
   background: color-mix(in srgb, var(--washed-accent) 13%, var(--washed-surface)) !important;
 }
 
+.advance-card {
+  display: grid;
+  gap: 12px;
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.payout-command-card {
+  box-shadow: none;
+}
+
+.payout-timeline {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.payout-timeline span {
+  display: grid;
+  min-height: 42px;
+  align-content: center;
+  border: 1px solid var(--washed-border);
+  border-radius: 12px;
+  background: var(--washed-background);
+  color: var(--washed-muted);
+  font-size: 11px;
+  font-weight: 900;
+  padding: 8px;
+  text-align: center;
+}
+
+.payout-timeline span[data-state='done'] {
+  border-color: var(--washed-success);
+  background: color-mix(in srgb, var(--washed-success) 14%, var(--washed-surface));
+  color: var(--washed-success);
+}
+
+.payout-timeline span[data-state='active'] {
+  border-color: var(--washed-primary);
+  background: var(--washed-primary-soft);
+  color: var(--washed-primary);
+}
+
+.worker-profile-hero {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  background:
+    radial-gradient(circle at 12% 12%, rgba(212, 144, 14, 0.14), transparent 30%),
+    var(--washed-surface);
+}
+
+.worker-profile-avatar {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border-radius: 18px;
+  background: var(--washed-primary-soft);
+  color: var(--washed-primary);
+  font-weight: 950;
+}
+
+.profile-command-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin-bottom: 12px;
+}
+
+.profile-command-grid span {
+  display: grid;
+  min-width: 0;
+  min-height: 86px;
+  gap: 4px;
+  align-content: start;
+  border: 1px solid var(--washed-border);
+  border-radius: 14px;
+  background: var(--washed-background);
+  padding: 12px;
+}
+
+.profile-command-grid strong {
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.profile-command-grid small {
+  color: var(--washed-muted);
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.activation-checklist-card {
+  display: grid;
+  gap: 12px;
+}
+
+.activation-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--washed-border);
+  border-radius: 14px;
+  background: var(--washed-background);
+  padding: 11px 12px;
+}
+
+.activation-row > span {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--washed-primary-soft);
+  color: var(--washed-primary);
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.activation-row strong {
+  font-size: 14px;
+}
+
+.activation-row p {
+  margin: 2px 0 0;
+  color: var(--washed-muted);
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
 .metric strong {
   font-size: 18px;
 }
@@ -832,6 +1078,10 @@ button {
   }
 
   .route-steps,
+  .planning-day-strip,
+  .planning-route-board article,
+  .payout-timeline,
+  .profile-command-grid,
   .availability-grid,
   .proof-grid,
   .visit-actions,

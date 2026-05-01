@@ -550,7 +550,7 @@ function Matching({
         </div>
 
         <div className="assignment-map" aria-label="Lomé candidate map">
-          <span>🗺</span>
+          <Map aria-hidden="true" size={34} strokeWidth={2.2} />
           <strong>Carte Lomé</strong>
           <p>Positions laveuses disponibles + quartier Essi</p>
         </div>
@@ -569,23 +569,21 @@ function LiveOps(): ReactElement {
       <div className="live-map" aria-label="Live operations map">
         <div className="live-kpis" aria-label="Live operations metrics">
           {[
-            ['12', 'En cours', '🟢'],
-            ['18', 'Planifiées', '⚪'],
-            ['8', 'Terminées', '⬛'],
-            ['1', 'Problèmes', '🔴'],
-            ['3', 'Non assignées', '🟡'],
-          ].map(([value, label, icon]) => (
+            ['12', 'En cours', 'green'],
+            ['18', 'Planifiées', 'neutral'],
+            ['8', 'Terminées', 'dark'],
+            ['1', 'Problèmes', 'red'],
+            ['3', 'Non assignées', 'amber'],
+          ].map(([value, label, tone]) => (
             <div key={label}>
-              <span>
-                {icon} {label}
-              </span>
+              <span className={`ops-state ops-state-${tone}`}>{label}</span>
               <strong>{value}</strong>
             </div>
           ))}
         </div>
 
         <div className="map-centerpiece">
-          <span>🗺</span>
+          <Map aria-hidden="true" size={54} strokeWidth={1.7} />
           <strong>Carte Lomé en temps réel</strong>
           <p>Laveuses + abonnés · sous-200ms</p>
         </div>
@@ -596,14 +594,15 @@ function LiveOps(): ReactElement {
 
         <div className="map-legend">
           {[
-            ['🟢', 'En route / en cours'],
-            ['🟡', 'Prochaine (< 1h)'],
-            ['⚪', 'Planifiée'],
-            ['🔴', 'Problème signalé'],
-            ['⬛', 'Terminée'],
-          ].map(([icon, label]) => (
+            ['green', 'En route / en cours'],
+            ['amber', 'Prochaine (< 1h)'],
+            ['neutral', 'Planifiée'],
+            ['red', 'Problème signalé'],
+            ['dark', 'Terminée'],
+          ].map(([tone, label]) => (
             <span key={label}>
-              {icon} {label}
+              <i className={`ops-state-dot ops-state-dot-${tone}`} aria-hidden="true" />
+              {label}
             </span>
           ))}
         </div>
@@ -615,14 +614,12 @@ function LiveOps(): ReactElement {
           <Badge tone="danger">3</Badge>
         </div>
         {[
-          ['🔴', 'Yao Agbeko · laveuse en retard 40 min', 'urgent'],
-          ['🟡', 'Ama Dossou · position GPS imprécise', 'warning'],
-          ['🟡', '3 abonnés non assignés', 'warning'],
-        ].map(([icon, title, tone]) => (
+          ['Yao Agbeko · laveuse en retard 40 min', 'urgent'],
+          ['Ama Dossou · position GPS imprécise', 'warning'],
+          ['3 abonnés non assignés', 'warning'],
+        ].map(([title, tone]) => (
           <div className={`live-alert live-alert-${tone}`} key={title}>
-            <strong>
-              {icon} {title}
-            </strong>
+            <strong>{title}</strong>
             <button type="button">Intervenir</button>
           </div>
         ))}
@@ -1022,9 +1019,16 @@ function CandidateRow({
   readonly dispatch: Dispatch<OperatorAction>;
   readonly status: 'accepted' | 'pending' | 'rejected';
 }): ReactElement {
+  const initials = candidate.worker
+    .split(' ')
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <div className={`candidate-row candidate-row-${status}`}>
-      <div className="candidate-photo">photo</div>
+      <div className="candidate-photo">{initials}</div>
       <div className="candidate-info">
         <div>
           <strong>{candidate.worker}</strong>

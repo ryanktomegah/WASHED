@@ -60,7 +60,7 @@ test('subscriber mobile exposes production routes and bounded tracking', async (
 
   await page.getByRole('button', { name: 'Abonnement' }).click();
   await expect(page.getByRole('heading', { name: "Gestion de l'abonnement" })).toBeVisible();
-  await page.getByRole('button', { name: 'Paiements' }).click();
+  await page.getByRole('button', { exact: true, name: 'Paiements' }).click();
   await expect(page.getByRole('heading', { name: 'Historique de paiement' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Abonnement' }).click();
