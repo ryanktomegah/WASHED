@@ -1,4 +1,9 @@
-import { DEMO_WORKER_APP_SNAPSHOT, type WorkerVisitStep } from '@washed/api-client';
+import {
+  DEMO_WORKER_APP_SNAPSHOT,
+  FRONTEND_OPERATION_IDS,
+  type CoreApiOperationId,
+  type WorkerVisitStep,
+} from '@washed/api-client';
 
 export type VisitStep = WorkerVisitStep;
 
@@ -20,6 +25,26 @@ export type WorkerFeedback =
   | 'unavailableMarked'
   | 'visitInProgress';
 
+export type WorkerOfflineActionKind =
+  | 'planning.unavailable'
+  | 'sos'
+  | 'visit.after_photo'
+  | 'visit.before_photo'
+  | 'visit.check_in'
+  | 'visit.check_out'
+  | 'visit.issue'
+  | 'visit.no_show';
+
+export interface WorkerOfflineQueueItem {
+  readonly createdAt: string;
+  readonly id: string;
+  readonly idempotencyKey: string;
+  readonly kind: WorkerOfflineActionKind;
+  readonly label: string;
+  readonly operationId: CoreApiOperationId;
+  readonly status: 'queued';
+}
+
 export interface WorkerState {
   readonly advanceRequested: boolean;
   readonly availabilityUnavailable: boolean;
@@ -31,6 +56,7 @@ export interface WorkerState {
   readonly dayComplete: boolean;
   readonly inboxUnread: number;
   readonly lastFeedback: WorkerFeedback | null;
+  readonly offlineQueue: readonly WorkerOfflineQueueItem[];
   readonly offlineQueueCount: number;
   readonly privacy: {
     readonly erasureRequested: boolean;
@@ -68,10 +94,56 @@ export type WorkerAction =
 export const initialWorkerState = {
   ...DEMO_WORKER_APP_SNAPSHOT,
   lastFeedback: null,
+  offlineQueue: createLegacyOfflineQueue(DEMO_WORKER_APP_SNAPSHOT.offlineQueueCount),
+  offlineQueueCount: DEMO_WORKER_APP_SNAPSHOT.offlineQueueCount,
 } as const satisfies WorkerState;
 
-function queueAction(state: WorkerState): number {
-  return state.offlineQueueCount + 1;
+export function createLegacyOfflineQueue(count: number): readonly WorkerOfflineQueueItem[] {
+  return Array.from({ length: count }, (_value, index) =>
+    createQueueItem(index + 1, {
+      kind: index % 2 === 0 ? 'visit.before_photo' : 'visit.issue',
+      label:
+        index === 0
+          ? 'Photo avant · Esi A.'
+          : index === 1
+            ? 'Signalement terrain · Esi A.'
+            : 'Pointage sortie · Mawuli B.',
+      operationId:
+        index === 2
+          ? FRONTEND_OPERATION_IDS.worker.checkOut
+          : index === 1
+            ? FRONTEND_OPERATION_IDS.worker.reportIssue
+            : FRONTEND_OPERATION_IDS.worker.recordPhoto,
+    }),
+  );
+}
+
+function queueAction(
+  state: WorkerState,
+  input: Omit<WorkerOfflineQueueItem, 'createdAt' | 'id' | 'idempotencyKey' | 'status'>,
+): Pick<WorkerState, 'offlineQueue' | 'offlineQueueCount'> {
+  const offlineQueue = [
+    ...state.offlineQueue,
+    createQueueItem(state.offlineQueue.length + 1, input),
+  ];
+
+  return {
+    offlineQueue,
+    offlineQueueCount: offlineQueue.length,
+  };
+}
+
+function createQueueItem(
+  sequence: number,
+  input: Omit<WorkerOfflineQueueItem, 'createdAt' | 'id' | 'idempotencyKey' | 'status'>,
+): WorkerOfflineQueueItem {
+  return {
+    ...input,
+    createdAt: new Date().toISOString(),
+    id: `worker-queue-${String(sequence).padStart(4, '0')}`,
+    idempotencyKey: `worker-akouvi:visit-ama-2026-05-05-0900:${input.kind}:${sequence}`,
+    status: 'queued',
+  };
 }
 
 export function workerReducer(state: WorkerState, action: WorkerAction): WorkerState {
@@ -80,7 +152,7 @@ export function workerReducer(state: WorkerState, action: WorkerAction): WorkerS
   }
 
   if (action.type === 'sync/complete') {
-    return { ...state, lastFeedback: 'syncComplete', offlineQueueCount: 0 };
+    return { ...state, lastFeedback: 'syncComplete', offlineQueue: [], offlineQueueCount: 0 };
   }
 
   if (action.type === 'activation/complete') {
@@ -97,19 +169,31 @@ export function workerReducer(state: WorkerState, action: WorkerAction): WorkerS
 
   if (action.type === 'visit/setStep') {
     if (action.step === 'checkIn') {
+      const queued = queueAction(state, {
+        kind: 'visit.check_in',
+        label: 'Pointage arrivée · Ama K.',
+        operationId: FRONTEND_OPERATION_IDS.worker.checkIn,
+      });
+
       return {
         ...state,
+        ...queued,
         lastFeedback: 'checkInQueued',
-        offlineQueueCount: queueAction(state),
         visit: { ...state.visit, step: 'checkIn' },
       };
     }
 
     if (action.step === 'beforePhoto') {
+      const queued = queueAction(state, {
+        kind: 'visit.before_photo',
+        label: 'Photo avant · Ama K.',
+        operationId: FRONTEND_OPERATION_IDS.worker.recordPhoto,
+      });
+
       return {
         ...state,
+        ...queued,
         lastFeedback: 'beforePhotoQueued',
-        offlineQueueCount: queueAction(state),
         visit: { ...state.visit, beforePhotoCaptured: true, step: 'beforePhoto' },
       };
     }
@@ -123,19 +207,31 @@ export function workerReducer(state: WorkerState, action: WorkerAction): WorkerS
     }
 
     if (action.step === 'afterPhoto') {
+      const queued = queueAction(state, {
+        kind: 'visit.after_photo',
+        label: 'Photo après · Ama K.',
+        operationId: FRONTEND_OPERATION_IDS.worker.recordPhoto,
+      });
+
       return {
         ...state,
+        ...queued,
         lastFeedback: 'afterPhotoQueued',
-        offlineQueueCount: queueAction(state),
         visit: { ...state.visit, afterPhotoCaptured: true, step: 'afterPhoto' },
       };
     }
 
     if (action.step === 'checkOut') {
+      const queued = queueAction(state, {
+        kind: 'visit.check_out',
+        label: 'Pointage sortie · Ama K.',
+        operationId: FRONTEND_OPERATION_IDS.worker.checkOut,
+      });
+
       return {
         ...state,
+        ...queued,
         lastFeedback: 'checkOutQueued',
-        offlineQueueCount: queueAction(state),
         visit: { ...state.visit, step: 'checkOut' },
       };
     }
@@ -144,19 +240,31 @@ export function workerReducer(state: WorkerState, action: WorkerAction): WorkerS
   }
 
   if (action.type === 'visit/declareNoShow') {
+    const queued = queueAction(state, {
+      kind: 'visit.no_show',
+      label: 'Absence foyer · Ama K.',
+      operationId: FRONTEND_OPERATION_IDS.worker.reportIssue,
+    });
+
     return {
       ...state,
+      ...queued,
       lastFeedback: 'noShowQueued',
-      offlineQueueCount: queueAction(state),
       visit: { ...state.visit, noShowDeclared: true },
     };
   }
 
   if (action.type === 'visit/reportIssue') {
+    const queued = queueAction(state, {
+      kind: 'visit.issue',
+      label: 'Signalement terrain · Ama K.',
+      operationId: FRONTEND_OPERATION_IDS.worker.reportIssue,
+    });
+
     return {
       ...state,
+      ...queued,
       lastFeedback: 'issueQueued',
-      offlineQueueCount: queueAction(state),
       visit: { ...state.visit, issueReported: true },
     };
   }
@@ -170,20 +278,32 @@ export function workerReducer(state: WorkerState, action: WorkerAction): WorkerS
   }
 
   if (action.type === 'sos/confirm') {
+    const queued = queueAction(state, {
+      kind: 'sos',
+      label: 'SOS terrain · Ama K.',
+      operationId: FRONTEND_OPERATION_IDS.worker.reportIssue,
+    });
+
     return {
       ...state,
+      ...queued,
       lastFeedback: 'sosSubmitted',
-      offlineQueueCount: queueAction(state),
       sos: { incidentLogged: true, open: false },
     };
   }
 
   if (action.type === 'planning/markUnavailable') {
+    const queued = queueAction(state, {
+      kind: 'planning.unavailable',
+      label: 'Indisponibilité planning · semaine du 4 mai',
+      operationId: FRONTEND_OPERATION_IDS.worker.createUnavailability,
+    });
+
     return {
       ...state,
+      ...queued,
       availabilityUnavailable: true,
       lastFeedback: 'unavailableMarked',
-      offlineQueueCount: queueAction(state),
     };
   }
 

@@ -1,7 +1,14 @@
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
 
-import { initialWorkerState, type WorkerState, type VisitStep } from './workerState.js';
+import {
+  createLegacyOfflineQueue,
+  initialWorkerState,
+  type WorkerOfflineActionKind,
+  type WorkerOfflineQueueItem,
+  type WorkerState,
+  type VisitStep,
+} from './workerState.js';
 
 const WORKER_STATE_STORAGE_KEY = 'washed.worker.local-state.v1';
 
@@ -66,6 +73,8 @@ function sanitizePersistedState(value: unknown): WorkerState | null {
     return null;
   }
 
+  const offlineQueue = readOfflineQueue(value);
+
   return {
     advanceRequested: readBoolean(value.advanceRequested, initialWorkerState.advanceRequested),
     availabilityUnavailable: readBoolean(
@@ -92,7 +101,8 @@ function sanitizePersistedState(value: unknown): WorkerState | null {
     dayComplete: readBoolean(value.dayComplete, initialWorkerState.dayComplete),
     inboxUnread: readNumber(value.inboxUnread, initialWorkerState.inboxUnread),
     lastFeedback: null,
-    offlineQueueCount: readNumber(value.offlineQueueCount, initialWorkerState.offlineQueueCount),
+    offlineQueue,
+    offlineQueueCount: offlineQueue.length,
     privacy: {
       erasureRequested: readNestedBoolean(
         value.privacy,
@@ -139,6 +149,48 @@ function sanitizePersistedState(value: unknown): WorkerState | null {
   };
 }
 
+function readOfflineQueue(value: Record<string, unknown>): readonly WorkerOfflineQueueItem[] {
+  if (!Array.isArray(value.offlineQueue)) {
+    return createLegacyOfflineQueue(
+      readNumber(value.offlineQueueCount, initialWorkerState.offlineQueueCount),
+    );
+  }
+
+  const queue = value.offlineQueue.flatMap((item, index): readonly WorkerOfflineQueueItem[] => {
+    if (!isRecord(item)) {
+      return [];
+    }
+
+    const kind = readOfflineActionKind(item.kind);
+    const operationId = typeof item.operationId === 'string' ? item.operationId : null;
+
+    if (kind === null || operationId === null) {
+      return [];
+    }
+
+    return [
+      {
+        createdAt: typeof item.createdAt === 'string' ? item.createdAt : new Date().toISOString(),
+        id: typeof item.id === 'string' ? item.id : `worker-queue-imported-${index + 1}`,
+        idempotencyKey:
+          typeof item.idempotencyKey === 'string'
+            ? item.idempotencyKey
+            : `worker-akouvi:imported:${kind}:${index + 1}`,
+        kind,
+        label: typeof item.label === 'string' ? item.label : kind,
+        operationId: operationId as WorkerOfflineQueueItem['operationId'],
+        status: 'queued',
+      },
+    ];
+  });
+
+  return queue.length === 0
+    ? createLegacyOfflineQueue(
+        readNumber(value.offlineQueueCount, initialWorkerState.offlineQueueCount),
+      )
+    : queue;
+}
+
 function readNestedBoolean(value: unknown, key: string, fallback: boolean): boolean {
   if (!isRecord(value)) {
     return fallback;
@@ -161,6 +213,23 @@ function readVisitStep(value: unknown): VisitStep {
   }
 
   return isVisitStep(value.step) ? value.step : initialWorkerState.visit.step;
+}
+
+function readOfflineActionKind(value: unknown): WorkerOfflineActionKind | null {
+  return isOfflineActionKind(value) ? value : null;
+}
+
+function isOfflineActionKind(value: unknown): value is WorkerOfflineActionKind {
+  return (
+    value === 'planning.unavailable' ||
+    value === 'sos' ||
+    value === 'visit.after_photo' ||
+    value === 'visit.before_photo' ||
+    value === 'visit.check_in' ||
+    value === 'visit.check_out' ||
+    value === 'visit.issue' ||
+    value === 'visit.no_show'
+  );
 }
 
 function isVisitStep(value: unknown): value is VisitStep {

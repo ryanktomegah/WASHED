@@ -8,6 +8,9 @@ test('worker mobile covers activation, offline visit actions, SOS, and daily sum
   await expect(page.getByRole('heading', { name: "Route d'aujourd'hui" })).toBeVisible();
   await expect(page.getByText(/actions en attente de synchronisation/u)).toBeVisible();
   await expect(page.getByLabel('Guided visit workflow')).toBeVisible();
+  await expect(page.getByLabel('Offline action ledger')).toContainText(
+    'worker-akouvi:visit-ama-2026-05-05-0900',
+  );
 
   await page.getByRole('button', { name: 'Activation' }).click();
   await expect(page.getByRole('heading', { name: 'Activation du profil' })).toBeVisible();
@@ -19,6 +22,7 @@ test('worker mobile covers activation, offline visit actions, SOS, and daily sum
   await expect(page.getByText("Pointage d'arrivée ajouté à la file hors ligne.")).toBeVisible();
   await expect(page.getByText('Arrivée pointée')).toBeVisible();
   await expect(page.getByLabel('Last GPS proof')).toContainText('GPS arrivée capturé');
+  await expect(page.getByLabel('Offline action ledger')).toContainText('checkInVisit');
   await page.getByRole('button', { name: 'Prendre photo avant' }).click();
   await expect(page.getByText('Photo avant ajoutée à la file hors ligne.')).toBeVisible();
   await page.getByRole('button', { name: 'Démarrer la visite' }).click();

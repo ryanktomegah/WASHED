@@ -178,6 +178,44 @@ button {
   background: var(--washed-primary-soft);
 }
 
+.offline-ledger {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--washed-border);
+  border-radius: 14px;
+  padding: 14px;
+  background: var(--washed-surface);
+}
+
+.offline-ledger h2 {
+  margin: 4px 0 0;
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.offline-ledger-list {
+  display: grid;
+  gap: 8px;
+}
+
+.offline-ledger-item {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  border: 1px solid var(--washed-border);
+  border-radius: 10px;
+  padding: 10px;
+  background: color-mix(in srgb, var(--washed-primary-soft) 58%, var(--washed-surface));
+}
+
+.offline-ledger-item span {
+  overflow-wrap: anywhere;
+  color: var(--washed-muted);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
 .visit-workstation h3,
 .visit-workstation p {
   margin: 0;

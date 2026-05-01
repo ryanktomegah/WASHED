@@ -25,6 +25,7 @@ import {
   initialWorkerState,
   workerReducer,
   type WorkerAction,
+  type WorkerOfflineQueueItem,
   type WorkerState,
 } from './workerState.js';
 import { captureVisitPhoto } from './nativeCamera.js';
@@ -203,7 +204,7 @@ function TodayScreen({
   readonly t: typeof workerCopy;
   readonly workerState: WorkerState;
 }): ReactElement {
-  const offlineCount = workerState.offlineQueueCount;
+  const offlineCount = workerState.offlineQueue.length;
 
   return (
     <>
@@ -241,6 +242,8 @@ function TodayScreen({
           </Button>
         </div>
       </Alert>
+
+      {offlineCount > 0 ? <OfflineQueueLedger queue={workerState.offlineQueue} /> : null}
 
       {workerState.activation.agreementAccepted ? null : (
         <Alert title={t.activation.title} tone="accent">
@@ -456,6 +459,36 @@ function VisitWorkstation({
       >
         {stepConfig.label}
       </Button>
+    </div>
+  );
+}
+
+function OfflineQueueLedger({
+  queue,
+}: {
+  readonly queue: readonly WorkerOfflineQueueItem[];
+}): ReactElement {
+  const visibleQueue = queue.slice(-4);
+
+  return (
+    <div aria-label="Offline action ledger" className="offline-ledger">
+      <div className="card-header">
+        <div>
+          <span className="eyebrow">File locale</span>
+          <h2>Actions en attente</h2>
+        </div>
+        <Badge>{queue.length}</Badge>
+      </div>
+      <div className="offline-ledger-list">
+        {visibleQueue.map((item) => (
+          <div className="offline-ledger-item" key={item.id}>
+            <strong>{item.label}</strong>
+            <span>
+              {item.operationId} · {item.idempotencyKey}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -734,7 +767,7 @@ function DaySummaryScreen({
     <ScreenFrame eyebrow="Fin journée" title={t.daySummary.title}>
       <Card elevated>
         <Metric label="Visites terminées" value="3 / 3" />
-        <Metric label="Actions hors ligne" value={String(workerState.offlineQueueCount)} />
+        <Metric label="Actions hors ligne" value={String(workerState.offlineQueue.length)} />
         <Metric label="Statut" value={workerState.dayComplete ? 'Clôturée' : 'Ouverte'} />
         <Button fullWidth onClick={() => dispatch({ type: 'day/complete' })}>
           {t.daySummary.complete}

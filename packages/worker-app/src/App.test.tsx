@@ -13,6 +13,9 @@ describe('worker app', () => {
     expect(screen.getByText('3 actions en attente de synchronisation')).toBeInTheDocument();
     expect(screen.getByLabelText('Worker route lifecycle').children).toHaveLength(6);
     expect(screen.getByLabelText('Guided visit workflow')).toBeInTheDocument();
+    expect(screen.getByLabelText('Offline action ledger')).toHaveTextContent(
+      'worker-akouvi:visit-ama-2026-05-05-0900',
+    );
     expect(screen.getByText('En route vers Ama K.')).toBeInTheDocument();
     expect(screen.getByText('Activation du profil')).toBeInTheDocument();
   });
@@ -64,6 +67,7 @@ describe('worker app', () => {
     );
     expect(screen.getByText('Arrivée pointée')).toBeInTheDocument();
     expect(screen.getByLabelText('Last GPS proof')).toHaveTextContent('GPS arrivée capturé');
+    expect(screen.getByLabelText('Offline action ledger')).toHaveTextContent('checkInVisit');
 
     fireEvent.click(screen.getByRole('button', { name: 'Prendre photo avant' }));
     expect(
@@ -168,7 +172,7 @@ describe('worker app', () => {
     await screen.findByText('Photo avant ajoutée à la file hors ligne.');
 
     await waitFor(() => {
-      expect(localStorage.getItem('washed.worker.local-state.v1')).toContain('beforePhoto');
+      expect(localStorage.getItem('washed.worker.local-state.v1')).toContain('visit.before_photo');
     });
 
     unmount();
