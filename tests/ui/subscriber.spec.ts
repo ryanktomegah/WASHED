@@ -24,8 +24,8 @@ test('subscriber mobile exposes production routes and bounded tracking', async (
   await expect(page.getByRole('textbox', { name: 'Quartier' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Continuer' }).click();
-  await page.getByRole('button', { name: /T3/u }).click();
-  await expect(page.getByRole('button', { name: /T3/u })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: /T1/u }).click();
+  await expect(page.getByRole('button', { name: /T1/u })).toHaveAttribute('aria-pressed', 'true');
 
   await page.getByRole('button', { name: 'Continuer' }).click();
   await page.getByRole('button', { name: /Jeudi/u }).click();

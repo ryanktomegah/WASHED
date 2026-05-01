@@ -30,10 +30,10 @@ button {
 
 .worker-shell {
   display: grid;
-  gap: 12px;
+  gap: 10px;
   max-width: 430px;
   margin: 0 auto;
-  padding: 0 14px 92px;
+  padding: 0 14px 82px;
 }
 
 .worker-summary,
@@ -48,9 +48,9 @@ button {
 
 .worker-summary {
   margin: 0 -14px;
-  padding: 16px 18px 18px;
+  padding: 14px 18px 15px;
   background:
-    radial-gradient(circle at 88% 12%, rgba(212, 144, 14, 0.26), transparent 32%),
+    radial-gradient(circle at 88% 12%, rgba(212, 144, 14, 0.16), transparent 32%),
     linear-gradient(145deg, #16482b 0%, #0d2416 74%);
   color: var(--washed-surface);
 }
@@ -105,7 +105,7 @@ button {
 .summary-progress {
   overflow: hidden;
   height: 5px;
-  margin: 12px 0 5px;
+  margin: 10px 0 5px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.15);
 }
@@ -141,8 +141,9 @@ button {
 .worker-summary h1,
 .section-title h1 {
   margin-top: 0;
-  font-size: 24px;
-  line-height: 1;
+  font-size: 22px;
+  letter-spacing: 0;
+  line-height: 1.03;
 }
 
 .worker-summary p,
@@ -172,12 +173,12 @@ button {
 
 .field-command-card {
   display: grid;
-  gap: 16px;
+  gap: 12px;
   margin-top: -6px;
   border: 1px solid color-mix(in srgb, var(--washed-primary) 18%, var(--washed-border));
-  border-radius: 22px;
+  border-radius: 18px;
   background: var(--washed-surface);
-  padding: 16px;
+  padding: 12px;
 }
 
 .field-command-top,
@@ -195,8 +196,8 @@ button {
 }
 
 .field-command-main h2 {
-  margin: 0 0 8px;
-  font-size: 26px;
+  margin: 0 0 6px;
+  font-size: 22px;
   line-height: 1;
 }
 
@@ -210,18 +211,18 @@ button {
 .sos-fab {
   display: grid;
   flex: 0 0 auto;
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   place-items: center;
   border: 0;
-  border-radius: 20px;
+  border-radius: 17px;
   background: var(--washed-danger);
   color: #fff;
   cursor: pointer;
   font-size: 12px;
   font-weight: 950;
   letter-spacing: 0;
-  box-shadow: 0 12px 24px rgba(190, 48, 48, 0.24);
+  box-shadow: 0 8px 18px rgba(190, 48, 48, 0.2);
 }
 
 .field-command-actions {
@@ -236,13 +237,13 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 46px;
+  min-height: 40px;
   border: 0;
-  border-radius: 14px;
+  border-radius: 12px;
   cursor: pointer;
   font-weight: 900;
   gap: 7px;
-  padding: 10px 12px;
+  padding: 8px 10px;
 }
 
 .field-command-actions .primary-field-action,
@@ -259,8 +260,7 @@ button {
 }
 
 .route-steps,
-.surface-grid,
-.availability-grid {
+.surface-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
   gap: 8px;
@@ -271,14 +271,14 @@ button {
 .payout-command-card,
 .worker-profile-hero {
   display: grid;
-  gap: 12px;
+  gap: 10px;
   border: 1px solid color-mix(in srgb, var(--washed-primary) 14%, var(--washed-border));
-  border-radius: 18px;
+  border-radius: 16px;
   background: var(--washed-surface);
   box-shadow:
     0 1px 4px rgba(0, 0, 0, 0.05),
     0 6px 20px rgba(0, 0, 0, 0.05);
-  padding: 14px;
+  padding: 12px;
 }
 
 .planning-week-card {
@@ -291,7 +291,7 @@ button {
 .payout-command-card h2,
 .worker-profile-hero h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: 18px;
   line-height: 1.1;
 }
 
@@ -300,7 +300,7 @@ button {
 .worker-profile-hero p {
   margin: 3px 0 0;
   color: var(--washed-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 750;
   line-height: 1.35;
 }
@@ -308,21 +308,21 @@ button {
 .planning-day-strip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  gap: 7px;
 }
 
 .planning-day-strip button {
   display: grid;
   min-width: 0;
-  min-height: 78px;
+  min-height: 48px;
   gap: 2px;
   align-content: center;
   border: 1px solid var(--washed-border);
-  border-radius: 14px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.72);
   color: var(--washed-foreground);
   cursor: pointer;
-  padding: 10px;
+  padding: 8px;
   text-align: left;
 }
 
@@ -332,7 +332,7 @@ button {
 }
 
 .planning-day-strip strong {
-  font-size: 18px;
+  font-size: 13px;
 }
 
 .planning-day-strip span,
@@ -347,15 +347,16 @@ button {
 
 .planning-route-board {
   box-shadow: none;
+  padding: 4px 12px;
 }
 
 .planning-route-board article {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr) auto;
+  grid-template-columns: 66px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   border-bottom: 1px solid var(--washed-border);
-  padding: 10px 0;
+  padding: 11px 0;
 }
 
 .planning-route-board article:last-child {
@@ -369,13 +370,13 @@ button {
 }
 
 .planning-route-board strong {
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .planning-route-board p {
   margin: 2px 0 0;
   color: var(--washed-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 750;
 }
 
@@ -387,8 +388,7 @@ button {
 }
 
 .route-step,
-.surface-grid span,
-.availability-grid button {
+.surface-grid span {
   display: grid;
   gap: 8px;
   min-height: 68px;
@@ -404,7 +404,7 @@ button {
   position: relative;
   flex: 1;
   min-width: 0;
-  min-height: 44px;
+  min-height: 36px;
   place-items: center;
   border: 0;
   border-radius: 0;
@@ -416,7 +416,7 @@ button {
 .route-step::before {
   content: '';
   position: absolute;
-  top: 12px;
+  top: 10px;
   right: 50%;
   left: -50%;
   height: 2px;
@@ -442,8 +442,8 @@ button {
   z-index: 1;
   display: inline-grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--washed-primary) 14%, var(--washed-surface));
   color: var(--washed-primary);
@@ -454,7 +454,7 @@ button {
 .route-step[aria-pressed='true'] span {
   background: var(--washed-primary);
   color: var(--washed-surface);
-  box-shadow: 0 0 0 4px var(--washed-primary-soft);
+  box-shadow: 0 0 0 3px var(--washed-primary-soft);
 }
 
 .route-step strong {
@@ -496,17 +496,17 @@ button {
 .active-visit-card {
   overflow: hidden;
   padding: 0 !important;
-  border: 1px solid color-mix(in srgb, var(--washed-primary) 24%, var(--washed-border)) !important;
-  border-radius: 22px !important;
+  border: 1px solid color-mix(in srgb, var(--washed-primary) 20%, var(--washed-border)) !important;
+  border-radius: 18px !important;
   box-shadow:
-    0 16px 36px rgba(13, 36, 22, 0.12),
+    0 8px 24px rgba(13, 36, 22, 0.09),
     0 1px 0 rgba(255, 255, 255, 0.75) inset !important;
 }
 
 .visit-card-main {
-  padding: 14px;
+  padding: 12px;
   background:
-    radial-gradient(circle at 94% 12%, rgba(212, 144, 14, 0.22), transparent 31%),
+    radial-gradient(circle at 94% 12%, rgba(212, 144, 14, 0.16), transparent 31%),
     linear-gradient(145deg, #123c24, #0d2416);
 }
 
@@ -520,7 +520,8 @@ button {
 
 .visit-card-topline strong {
   color: var(--washed-surface);
-  font-size: 18px;
+  font-size: 17px;
+  letter-spacing: 0;
 }
 
 .visit-card-main p,
@@ -542,7 +543,19 @@ button {
 }
 
 .active-visit-actions {
-  padding: 0 14px 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+
+.active-visit-actions button {
+  min-height: 38px !important;
+  font-size: 13px !important;
+  padding: 8px 9px !important;
+}
+
+.active-visit-actions button:last-child {
+  grid-column: 1 / -1;
 }
 
 .wire-route-list {
@@ -552,12 +565,12 @@ button {
 .wire-route-card {
   overflow: hidden;
   border: 1.5px solid var(--washed-border);
-  border-radius: 18px;
+  border-radius: 14px;
   background: var(--washed-surface);
 }
 
 .wire-route-card > div:first-child {
-  padding: 12px 14px;
+  padding: 11px 12px;
 }
 
 .wire-route-card.is-done {
@@ -573,8 +586,8 @@ button {
 }
 
 .wire-route-card.is-active {
-  border: 2px solid var(--washed-primary);
-  box-shadow: 0 4px 20px rgba(26, 92, 52, 0.15);
+  border: 1.5px solid var(--washed-primary);
+  box-shadow: 0 3px 14px rgba(26, 92, 52, 0.12);
 }
 
 .wire-route-card.is-active .visit-card-topline strong,
@@ -592,7 +605,7 @@ button {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
   gap: 8px;
-  padding: 10px 14px;
+  padding: 9px 12px;
 }
 
 .active-route-strip {
@@ -646,12 +659,19 @@ button {
 
 .visit-workstation {
   display: grid;
-  gap: 13px;
+  gap: 10px;
   margin: 0 14px 12px;
   border: 1px solid var(--washed-border);
-  border-radius: 18px;
-  padding: 14px;
+  border-radius: 16px;
+  padding: 12px;
   background: var(--washed-surface);
+}
+
+.step-primary-button {
+  min-height: 42px !important;
+  border-radius: 13px !important;
+  font-size: 14px !important;
+  padding: 9px 12px !important;
 }
 
 .visit-map {
@@ -659,7 +679,7 @@ button {
   display: grid;
   gap: 4px;
   place-items: center;
-  min-height: 104px;
+  min-height: 86px;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--washed-primary) 18%, var(--washed-border));
   border-radius: 14px;
@@ -677,11 +697,13 @@ button {
 
 .visit-map span {
   color: var(--washed-foreground);
+  font-size: 14px;
   font-weight: 800;
 }
 
 .visit-map small {
   color: var(--washed-muted);
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -766,29 +788,30 @@ button {
 
 .visit-workstation h3 {
   margin-top: 4px;
-  font-size: 21px;
+  font-size: 17px;
   line-height: 1.1;
 }
 
 .visit-workstation p {
   color: var(--washed-muted);
+  font-size: 13px;
   line-height: 1.4;
 }
 
 .field-proof-rail {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 5px;
+  gap: 4px;
 }
 
 .proof-item {
   display: grid;
-  min-height: 58px;
-  gap: 5px;
+  min-height: 42px;
+  gap: 3px;
   justify-items: center;
   border: 1px solid transparent;
-  border-radius: 12px;
-  padding: 7px 4px;
+  border-radius: 11px;
+  padding: 4px 2px;
   background: color-mix(in srgb, var(--washed-primary-soft) 42%, var(--washed-surface));
   color: var(--washed-muted);
   text-align: center;
@@ -796,8 +819,8 @@ button {
 
 .proof-item i {
   display: grid;
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   place-items: center;
   border-radius: 999px;
   background: var(--washed-surface);
@@ -811,7 +834,7 @@ button {
   overflow: hidden;
   max-width: 100%;
   color: inherit;
-  font-size: 9.5px;
+  font-size: 8.5px;
   font-weight: 900;
   line-height: 1.08;
   text-overflow: ellipsis;
@@ -839,14 +862,14 @@ button {
   gap: 4px;
   border: 1px solid var(--washed-success);
   border-radius: 12px;
-  padding: 10px 12px;
+  padding: 9px 10px;
   background: color-mix(in srgb, var(--washed-success) 14%, var(--washed-surface));
   color: var(--washed-success);
 }
 
 .gps-proof span {
   color: var(--washed-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
 }
 
@@ -863,6 +886,37 @@ button {
   margin-top: 14px;
 }
 
+.availability-card {
+  display: grid;
+  gap: 9px;
+  border-radius: 16px !important;
+  padding: 12px !important;
+  box-shadow: 0 4px 16px rgba(13, 36, 22, 0.06) !important;
+}
+
+.availability-card .card-header {
+  align-items: center;
+  margin-bottom: 0;
+}
+
+.availability-card .card-header h2 {
+  font-size: 18px;
+  line-height: 1.1;
+}
+
+.availability-card .card-header p {
+  margin: 3px 0 0;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.availability-card > button {
+  min-height: 38px !important;
+  border-radius: 12px !important;
+  font-size: 12px !important;
+  padding: 8px 10px !important;
+}
+
 .surface-grid span {
   min-height: 40px;
   color: var(--washed-foreground);
@@ -870,17 +924,49 @@ button {
 }
 
 .availability-grid {
-  margin: 14px 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin: 8px 0 10px;
 }
 
 .availability-grid button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 2px 8px;
+  align-items: center;
+  min-height: 40px;
+  border: 1px solid var(--washed-border);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--washed-primary-soft) 36%, var(--washed-surface));
+  color: var(--washed-foreground);
   cursor: pointer;
+  padding: 7px 9px;
+  text-align: left;
+}
+
+.availability-grid button svg {
+  grid-row: span 2;
+  color: var(--washed-primary);
+}
+
+.availability-grid button[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--washed-accent) 45%, var(--washed-border));
+  background: color-mix(in srgb, var(--washed-accent) 12%, var(--washed-surface));
+}
+
+.availability-grid button strong {
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .availability-grid span,
 .metric span {
   color: var(--washed-muted);
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 800;
 }
 
@@ -1150,13 +1236,22 @@ button {
   right: 0;
   bottom: 0;
   left: 0;
+  min-height: 58px !important;
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottom-nav button,
+.bottom-nav a {
+  min-height: 58px !important;
+  gap: 2px !important;
+  padding: 6px 4px !important;
+  font-size: 11px !important;
 }
 
 .bottom-nav span[aria-hidden='true'] {
   display: grid;
   place-items: center;
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1;
 }
 
@@ -1169,14 +1264,27 @@ button {
   }
 
   .route-steps,
-  .planning-day-strip,
   .planning-route-board article,
   .payout-timeline,
   .profile-command-grid,
-  .availability-grid,
-  .proof-grid,
   .visit-actions,
   .route-card-stack > .visit-actions {
     grid-template-columns: 1fr;
+  }
+
+  .planning-day-strip {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .availability-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .active-visit-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .active-visit-actions button:last-child {
+    grid-column: 1 / -1;
   }
 }

@@ -19,6 +19,10 @@ import {
   Clock3,
   House,
   MapPinned,
+  Moon,
+  Sun,
+  Sunrise,
+  Zap,
   ShieldAlert,
   UserRound,
 } from 'lucide-react';
@@ -606,15 +610,6 @@ function VisitWorkstation({
         <p>{stepConfig.body}</p>
       </div>
 
-      <Button
-        className="step-primary-button"
-        fullWidth
-        loading={'loading' in stepConfig ? stepConfig.loading : false}
-        onClick={stepConfig.onClick}
-      >
-        {stepConfig.label}
-      </Button>
-
       {workerState.visit.step === 'heading' ? (
         <div className="visit-map" aria-label="Worker GPS map">
           <MapPinned aria-hidden="true" size={30} strokeWidth={2.4} />
@@ -623,6 +618,15 @@ function VisitWorkstation({
           <em>85 m restants</em>
         </div>
       ) : null}
+
+      <Button
+        className="step-primary-button"
+        fullWidth
+        loading={'loading' in stepConfig ? stepConfig.loading : false}
+        onClick={stepConfig.onClick}
+      >
+        {stepConfig.label}
+      </Button>
 
       <div className="field-proof-rail" aria-label="Visit proof checklist">
         {proofItems.map((item, index) => (
@@ -758,6 +762,12 @@ function PlanningScreen({
     ['Mer', '2 visites', 'Tokoin'],
     ['Jeu', 'Repos', 'Indispo.'],
   ] as const;
+  const availabilitySlots = [
+    ['Matin', 'Disponible', <Sunrise aria-hidden="true" size={15} strokeWidth={2.35} />],
+    ['Midi', 'Disponible', <Sun aria-hidden="true" size={15} strokeWidth={2.35} />],
+    ['Après-midi', 'Disponible', <Moon aria-hidden="true" size={15} strokeWidth={2.35} />],
+    ['Urgence', 'Opérateur', <Zap aria-hidden="true" size={15} strokeWidth={2.35} />],
+  ] as const;
 
   return (
     <ScreenFrame eyebrow="Semaine" title={t.planning.title}>
@@ -782,7 +792,7 @@ function PlanningScreen({
         </div>
       </section>
 
-      <Card elevated>
+      <Card className="availability-card">
         <div className="card-header">
           <div>
             <h2>Disponibilité</h2>
@@ -790,15 +800,12 @@ function PlanningScreen({
           </div>
         </div>
         <div className="availability-grid">
-          {['Matin', 'Midi', 'Après-midi', 'Urgence'].map((slot) => (
-            <button key={slot} type="button">
+          {availabilitySlots.map(([slot, fallbackLabel, icon]) => (
+            <button aria-pressed={slot === 'Urgence'} key={slot} type="button">
+              {icon}
               <strong>{slot}</strong>
               <span>
-                {workerState.availabilityUnavailable
-                  ? 'Indisponible'
-                  : slot === 'Urgence'
-                    ? 'Réservé opérateur'
-                    : 'Disponible'}
+                {workerState.availabilityUnavailable ? 'Indisponible' : fallbackLabel}
               </span>
             </button>
           ))}

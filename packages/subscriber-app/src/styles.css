@@ -107,7 +107,7 @@ input {
   display: grid;
   align-content: start;
   gap: 0;
-  padding: calc(max(env(safe-area-inset-top), 58px) + 12px) 0 24px;
+  padding: calc(max(env(safe-area-inset-top), 46px) + 10px) 0 20px;
 }
 
 .subscriber-greeting,
@@ -142,12 +142,13 @@ input {
 
 .section-title h1 {
   margin-top: 4px;
-  font-size: 28px;
+  font-size: 22px;
+  letter-spacing: 0;
   line-height: 1.05;
 }
 
 .section-title {
-  padding: 0 20px 16px;
+  padding: 0 20px 10px;
 }
 
 .section-title > div {
@@ -156,6 +157,9 @@ input {
 
 .section-title button {
   flex: 0 0 auto;
+  min-height: 36px !important;
+  padding: 7px 10px !important;
+  font-size: 13px !important;
 }
 
 .subscriber-greeting-actions {
@@ -222,19 +226,18 @@ input {
 
 .home-hero-card {
   display: grid;
-  gap: 13px;
+  gap: 12px;
   overflow: hidden;
-  border: 1px solid rgba(255, 253, 248, 0.08);
-  border-radius: 24px;
+  border: 1px solid rgba(255, 253, 248, 0.1);
+  border-radius: 18px;
   background:
-    radial-gradient(circle at 96% 0%, rgba(184, 135, 10, 0.34), transparent 34%),
-    radial-gradient(circle at 10% 18%, rgba(196, 98, 45, 0.38), transparent 32%),
-    linear-gradient(145deg, #1f1309 0%, #432414 58%, #5a2e19 100%);
+    radial-gradient(circle at 98% 0%, rgba(184, 135, 10, 0.18), transparent 34%),
+    linear-gradient(145deg, #25170d 0%, #3a2418 62%, #4a2a19 100%);
   box-shadow:
-    0 22px 42px rgba(40, 20, 8, 0.18),
+    0 10px 28px rgba(40, 20, 8, 0.14),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  margin: 0 16px 14px;
-  padding: 18px;
+  margin: 0 16px 12px;
+  padding: 14px;
 }
 
 .hero-card-topline,
@@ -264,7 +267,7 @@ input {
 .hero-date-block h2 {
   margin: 0;
   color: var(--washed-surface);
-  font-size: 31px;
+  font-size: 26px;
   font-weight: 900;
   line-height: 1.05;
 }
@@ -278,19 +281,19 @@ input {
 
 .hero-worker-row {
   display: grid;
-  grid-template-columns: 50px minmax(0, 1fr) auto;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   border: 1px solid rgba(255, 253, 248, 0.1);
-  border-radius: 16px;
+  border-radius: 14px;
   background: rgba(255, 253, 248, 0.08);
-  padding: 10px;
+  padding: 9px;
 }
 
 .worker-avatar {
   display: grid;
-  width: 48px;
-  height: 48px;
+  width: 42px;
+  height: 42px;
   place-items: center;
   border-radius: 999px;
   background: var(--subscriber-trust-soft);
@@ -313,7 +316,7 @@ input {
 .hero-worker-row strong {
   display: block;
   color: var(--washed-surface);
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .hero-worker-row span:not(.ok-pill) {
@@ -352,7 +355,7 @@ input {
   color: rgba(255, 253, 248, 0.78);
   font-size: 12px;
   font-weight: 750;
-  padding: 10px;
+  padding: 9px;
 }
 
 .hero-actions {
@@ -362,13 +365,13 @@ input {
 }
 
 .hero-actions button {
-  min-height: 40px;
+  min-height: 38px;
   border: 1px solid rgba(255, 253, 248, 0.12);
   border-radius: 12px;
   background: rgba(255, 253, 248, 0.1);
   color: rgba(255, 253, 248, 0.86);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 850;
   padding: 8px 4px;
 }
@@ -376,7 +379,7 @@ input {
 .hero-actions .hero-action-primary {
   background: var(--washed-surface);
   color: var(--washed-primary);
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.14);
 }
 
 .hero-actions button:nth-child(2),
@@ -425,15 +428,15 @@ input {
 
 .calendar-strip button {
   display: grid;
-  min-height: 62px;
+  min-height: 54px;
   gap: 2px;
   place-items: center;
   border: 1px solid transparent;
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--washed-surface);
   color: var(--washed-foreground);
   cursor: pointer;
-  padding: 10px 4px;
+  padding: 8px 4px;
 }
 
 .calendar-strip button[aria-current='date'] {
@@ -501,7 +504,7 @@ input {
 
 .home-overview-grid button {
   display: grid;
-  min-height: 76px;
+  min-height: 64px;
   gap: 4px;
   align-content: start;
   border: 1px solid var(--washed-border);
@@ -509,7 +512,7 @@ input {
   background: var(--washed-surface);
   color: var(--washed-foreground);
   cursor: pointer;
-  padding: 14px;
+  padding: 11px;
   text-align: left;
 }
 
@@ -522,7 +525,7 @@ input {
 
 .home-overview-grid strong {
   color: var(--washed-foreground);
-  font-size: 19px;
+  font-size: 17px;
   line-height: 1.1;
 }
 
@@ -536,9 +539,9 @@ input {
 .visit-status-card,
 .message-preview {
   border: 1px solid rgba(35, 102, 111, 0.13);
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--washed-surface);
-  padding: 14px;
+  padding: 12px;
 }
 
 .visit-status-card p,
@@ -601,11 +604,11 @@ input {
   gap: 0 12px;
   align-items: center;
   border: 1px solid var(--washed-border);
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--washed-surface);
   color: var(--washed-foreground);
   cursor: pointer;
-  padding: 12px 14px;
+  padding: 10px 12px;
   text-align: left;
 }
 
@@ -648,7 +651,7 @@ input {
 
 .eyebrow {
   color: var(--washed-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 900;
   letter-spacing: 0;
   text-transform: uppercase;
@@ -666,19 +669,19 @@ input {
 .billing-statement-card,
 .visit-privacy-note {
   display: grid;
-  gap: 12px;
-  margin: 0 16px 16px;
-  border: 1px solid rgba(35, 102, 111, 0.14);
-  border-radius: 18px;
+  gap: 10px;
+  margin: 0 16px 12px;
+  border: 1px solid rgba(35, 102, 111, 0.12);
+  border-radius: 14px;
   background: var(--washed-surface);
-  box-shadow: 0 12px 30px rgba(39, 28, 16, 0.07);
-  padding: 16px;
+  box-shadow: 0 4px 16px rgba(39, 28, 16, 0.045);
+  padding: 12px;
 }
 
 .subscription-command-card {
   overflow: hidden;
   background:
-    radial-gradient(circle at 88% 0%, rgba(35, 102, 111, 0.18), transparent 34%),
+    radial-gradient(circle at 92% 0%, rgba(35, 102, 111, 0.07), transparent 31%),
     linear-gradient(145deg, #fffdf8 0%, #f4fbf9 100%);
 }
 
@@ -686,8 +689,9 @@ input {
 .visit-detail-hero h2 {
   margin: 0;
   color: var(--washed-foreground);
-  font-size: 25px;
-  line-height: 1.05;
+  font-size: 18px;
+  letter-spacing: 0;
+  line-height: 1.08;
 }
 
 .subscription-command-card p,
@@ -695,7 +699,7 @@ input {
 .billing-statement-card p {
   margin: 0;
   color: var(--washed-muted);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   line-height: 1.45;
 }
@@ -714,13 +718,19 @@ input {
 
 .subscription-kicker,
 .visit-detail-topline {
+  align-items: start;
   justify-content: space-between;
+}
+
+.subscription-kicker > div {
+  display: grid;
+  gap: 7px;
 }
 
 .subscription-kicker span,
 .visit-detail-topline span {
   color: var(--washed-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 850;
 }
 
@@ -735,7 +745,7 @@ input {
 .visit-proof-grid,
 .visit-command-bar {
   display: grid;
-  gap: 9px;
+  gap: 8px;
 }
 
 .plan-metrics,
@@ -745,16 +755,17 @@ input {
 
 .plan-metrics button {
   display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
   min-width: 0;
-  min-height: 90px;
-  gap: 5px;
-  justify-items: start;
+  min-height: 50px;
+  gap: 2px 8px;
   border: 1px solid rgba(35, 102, 111, 0.14);
-  border-radius: 14px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.66);
   color: var(--washed-foreground);
   cursor: pointer;
-  padding: 12px;
+  padding: 8px 9px;
   text-align: left;
 }
 
@@ -764,36 +775,46 @@ input {
 .visit-privacy-note svg {
   color: var(--subscriber-trust);
   flex: 0 0 auto;
+  grid-row: span 2;
 }
 
 .plan-metrics span {
   color: var(--washed-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
 }
 
 .plan-metrics strong {
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.15;
 }
 
 .subscriber-control-stack {
   display: grid;
-  gap: 10px;
-  margin: 0 16px 16px;
+  gap: 0;
+  overflow: hidden;
+  margin: 0 16px 12px;
+  border: 1px solid var(--washed-border);
+  border-radius: 14px;
+  background: var(--washed-surface);
 }
 
 .subscriber-control-stack button {
   width: 100%;
-  min-height: 78px;
+  min-height: 52px;
   justify-content: space-between;
-  border: 1px solid var(--washed-border);
-  border-radius: 16px;
-  background: var(--washed-surface);
+  border: 0;
+  border-bottom: 1px solid var(--washed-border);
+  border-radius: 0;
+  background: transparent;
   color: var(--washed-foreground);
   cursor: pointer;
-  padding: 13px 14px;
+  padding: 10px 12px;
   text-align: left;
+}
+
+.subscriber-control-stack button:last-child {
+  border-bottom: 0;
 }
 
 .subscriber-control-stack button div {
@@ -803,39 +824,65 @@ input {
 }
 
 .subscriber-control-stack strong {
-  font-size: 15px;
+  font-size: 13px;
 }
 
 .subscriber-control-stack span {
   color: var(--washed-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   line-height: 1.35;
 }
 
 .subscription-ledger-card {
+  border-color: var(--washed-border);
   box-shadow: none;
+}
+
+.subscription-billing-card {
+  background: var(--washed-surface);
+}
+
+.subscription-billing-card .card-header {
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.subscription-billing-card .card-header h2 {
+  font-size: 18px;
 }
 
 .billing-recovery-strip {
   display: grid;
-  gap: 5px;
-  border: 1px solid color-mix(in srgb, var(--washed-danger) 22%, var(--washed-border));
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--washed-danger) 8%, var(--washed-surface));
-  padding: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 3px 10px;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--washed-danger) 18%, var(--washed-border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--washed-danger) 5%, var(--washed-surface));
+  padding: 9px;
 }
 
 .billing-recovery-strip strong {
   color: var(--washed-danger);
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .billing-recovery-strip span {
+  grid-column: 1;
   color: var(--washed-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 750;
   line-height: 1.35;
+}
+
+.billing-recovery-strip button {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  min-height: 36px !important;
+  padding: 7px 10px !important;
+  font-size: 12px !important;
+  white-space: nowrap;
 }
 
 .subscription-secondary-actions,
@@ -843,62 +890,119 @@ input {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.subscription-secondary-actions button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  min-height: 42px;
+  gap: 8px;
+  border: 1px solid var(--washed-border);
+  border-radius: 12px;
+  background: var(--washed-surface);
+  color: var(--washed-primary);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.subscription-secondary-actions button svg {
+  color: currentColor;
+}
+
+.subscription-secondary-actions button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subscription-secondary-actions .subscription-cancel-action {
+  border-color: color-mix(in srgb, var(--washed-danger) 22%, var(--washed-border));
+  color: var(--washed-danger);
+}
+
 .visit-detail-hero {
   background:
-    radial-gradient(circle at 12% 14%, rgba(196, 98, 45, 0.13), transparent 28%),
+    radial-gradient(circle at 14% 10%, rgba(196, 98, 45, 0.055), transparent 28%),
     linear-gradient(145deg, #fffdf8, #fff7f0);
 }
 
 .visit-worker-profile {
   border-top: 1px solid var(--washed-border);
-  padding-top: 12px;
+  padding-top: 10px;
 }
 
 .visit-worker-profile strong {
   display: block;
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .visit-worker-profile span {
   color: var(--washed-muted);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 750;
 }
 
+.visit-quick-status {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.visit-quick-status span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--washed-muted);
+  font-size: 11px;
+  font-weight: 850;
+  padding: 5px 9px;
+}
+
 .visit-proof-grid {
-  margin: 0 16px 16px;
+  margin: 0 16px 14px;
 }
 
 .visit-proof-grid div {
   display: grid;
-  min-height: 122px;
-  gap: 7px;
+  min-height: 66px;
+  gap: 5px;
   align-content: start;
   border: 1px solid var(--washed-border);
-  border-radius: 16px;
+  border-radius: 12px;
   background: var(--washed-surface);
-  padding: 14px;
+  padding: 9px;
 }
 
 .visit-proof-grid div:first-child {
   grid-column: 1 / -1;
-  min-height: 96px;
+  min-height: 60px;
   background: var(--subscriber-trust-soft);
 }
 
 .visit-proof-grid strong {
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .visit-proof-grid span {
   color: var(--washed-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   line-height: 1.4;
 }
 
 .visit-command-bar {
-  margin: 0 16px 16px;
+  margin: 0 16px 14px;
+}
+
+.visit-command-bar button {
+  min-height: 38px !important;
+  padding: 8px 10px !important;
+  font-size: 12px !important;
 }
 
 .visit-privacy-note {
@@ -907,7 +1011,7 @@ input {
   box-shadow: none;
   background: var(--subscriber-trust-soft);
   color: var(--subscriber-trust);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   line-height: 1.35;
 }
@@ -1309,11 +1413,20 @@ input {
 .bottom-nav {
   position: relative;
   z-index: 4;
+  min-height: 58px !important;
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+.bottom-nav button,
+.bottom-nav a {
+  min-height: 58px !important;
+  gap: 2px !important;
+  padding: 6px 4px !important;
+  font-size: 11px !important;
+}
+
 .bottom-nav span[aria-hidden='true'] {
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1;
 }
 
@@ -1351,7 +1464,8 @@ input {
   }
 
   .section-title h1 {
-    font-size: 26px;
+    font-size: 21px;
+    line-height: 1.08;
   }
 
   .section-title button {
@@ -1361,10 +1475,20 @@ input {
     white-space: nowrap;
   }
 
+  .subscription-command-card,
+  .subscription-ledger-card,
+  .visit-detail-hero,
+  .billing-statement-card,
+  .visit-privacy-note {
+    margin-bottom: 10px;
+    padding: 12px;
+  }
+
+  .subscriber-control-stack {
+    margin-bottom: 10px;
+  }
+
   .visit-actions,
-  .plan-metrics,
-  .subscription-secondary-actions,
-  .visit-proof-grid,
   .visit-command-bar,
   .progress-rail,
   .onboarding-progress,
@@ -1372,6 +1496,20 @@ input {
   .onboarding-actions,
   .action-grid {
     grid-template-columns: 1fr;
+  }
+
+  .plan-metrics,
+  .subscription-secondary-actions,
+  .visit-proof-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .subscription-secondary-actions .subscription-cancel-action {
+    grid-column: 1 / -1;
+  }
+
+  .visit-proof-grid div:first-child {
+    grid-column: 1 / -1;
   }
 
   .onboarding-panel {

@@ -72,7 +72,7 @@ describe('subscriber app', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Changer la formule' }));
 
-    expect(screen.getAllByText(/T3/u).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/T1/u).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Changement de formule prévisualisé.')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Régulariser le paiement' }));
@@ -111,8 +111,8 @@ describe('subscriber app', () => {
     expect(screen.getByRole('textbox', { name: 'Quartier' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
-    fireEvent.click(screen.getByRole('button', { name: /T3/u }));
-    expect(screen.getByRole('button', { name: /T3/u, pressed: true })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /T1/u }));
+    expect(screen.getByRole('button', { name: /T1/u, pressed: true })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
     fireEvent.click(screen.getByRole('button', { name: /Jeudi/u }));

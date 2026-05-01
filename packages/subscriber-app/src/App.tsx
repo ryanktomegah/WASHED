@@ -18,6 +18,7 @@ import {
   CalendarDays,
   Camera,
   Check,
+  CircleAlert,
   ClipboardList,
   Clock3,
   FileText,
@@ -195,6 +196,14 @@ function HomeScreen({
   const trackingIsVisible = subscriberState.nextVisit.stage === 'enRoute';
   const isFrench = locale === 'fr';
   const nextVisitWindow = isFrench ? '9h00 - 11h00' : '9:00 - 11:00';
+  const subscriptionCadence =
+    subscriberState.subscription.tier === 'T2'
+      ? isFrench
+        ? '2 visites / mois'
+        : '2 visits / month'
+      : isFrench
+        ? '1 visite / mois'
+        : '1 visit / month';
 
   return (
     <>
@@ -314,8 +323,8 @@ function HomeScreen({
       >
         <button onClick={() => onRouteChange('subscription')} type="button">
           <span>{isFrench ? 'Formule' : 'Plan'}</span>
-          <strong>T2</strong>
-          <small>{isFrench ? '2 visites / mois' : '2 visits / month'}</small>
+          <strong>{subscriberState.subscription.tier}</strong>
+          <small>{subscriptionCadence}</small>
         </button>
         <button onClick={() => onRouteChange('billing')} type="button">
           <span>{isFrench ? 'Paiement' : 'Payment'}</span>
@@ -418,7 +427,7 @@ function OnboardingScreen({
   readonly t: LocalizedCopy;
 }): ReactElement {
   const [stepIndex, setStepIndex] = useState(0);
-  const [selectedTier, setSelectedTier] = useState<'T1' | 'T2' | 'T3'>('T2');
+  const [selectedTier, setSelectedTier] = useState<'T1' | 'T2'>('T2');
   const [selectedSchedule, setSelectedSchedule] = useState(
     locale === 'fr' ? 'Mardi · 9-11' : 'Tuesday · 9-11',
   );
@@ -613,15 +622,14 @@ function OnboardingScreen({
               <Alert tone="primary">{helperCopy.tierBody}</Alert>
               <div className="choice-grid" aria-label={t.onboarding.tier}>
                 {[
-                  ['T1', 2500, '2 visites / mois'],
-                  ['T2', 4500, '4 visites / mois'],
-                  ['T3', 6500, '6 visites / mois'],
+                  ['T1', 2500, '1 visite / mois'],
+                  ['T2', 4500, '2 visites / mois'],
                 ].map(([tier, price, cadence]) => (
                   <button
                     aria-pressed={tier === selectedTier}
                     className="choice-card"
                     key={tier}
-                    onClick={() => setSelectedTier(tier as 'T1' | 'T2' | 'T3')}
+                    onClick={() => setSelectedTier(tier as 'T1' | 'T2')}
                     type="button"
                   >
                     <strong>{tier}</strong>
@@ -720,12 +728,20 @@ function SubscriptionScreen({
   const price = subscriberState.subscription.monthlyPriceXof;
   const tier = `${subscriberState.subscription.tier} · ${formatXof(price, locale)}`;
   const isFrench = locale === 'fr';
+  const subscriptionCadence =
+    subscriberState.subscription.tier === 'T2'
+      ? isFrench
+        ? '2 visites / mois'
+        : '2 visits / month'
+      : isFrench
+        ? '1 visite / mois'
+        : '1 visit / month';
 
   return (
     <ScreenFrame
       action={
         <Button onClick={() => onRouteChange('support')} size="sm" variant="secondary">
-          {t.action.openSupport}
+          Support
         </Button>
       }
       eyebrow={isFrench ? 'Service' : 'Service'}
@@ -733,13 +749,15 @@ function SubscriptionScreen({
     >
       <section className="subscription-command-card" aria-label={t.subscription.title}>
         <div className="subscription-kicker">
-          <Badge tone="success">{subscriberState.subscription.tier}</Badge>
-          <span>{isFrench ? 'Renouvellement le 1 mai' : 'Renews May 1'}</span>
+          <div>
+            <Badge tone="success">{subscriberState.subscription.tier}</Badge>
+            <h2>{subscriptionCadence}</h2>
+          </div>
+          <span>{isFrench ? 'Renouvelle le 1 mai' : 'Renews May 1'}</span>
         </div>
-        <h2>{isFrench ? '4 visites fiables par mois' : '4 reliable visits each month'}</h2>
         <p>
           {isFrench
-            ? 'Gardez le contrôle sur les reports, remplacements et paiements sans appeler le support.'
+            ? 'Contrôlez les reports, remplacements et paiements sans appeler le support.'
             : 'Control reschedules, worker changes, and payments without calling support.'}
         </p>
         <div className="plan-metrics">
@@ -812,10 +830,10 @@ function SubscriptionScreen({
         </button>
       </section>
 
-      <section className="subscription-ledger-card">
+      <section className="subscription-ledger-card subscription-billing-card">
         <div className="card-header">
           <div>
-            <h2>{t.subscription.billing}</h2>
+            <h2>{isFrench ? 'Paiement' : 'Payment'}</h2>
             <p>
               Mai 2026 · {formatXof(price, locale)} ·{' '}
               {t.paymentStatus[subscriberState.subscription.paymentStatus]}
@@ -824,34 +842,38 @@ function SubscriptionScreen({
           <Badge tone="danger">{t.paymentStatus[subscriberState.subscription.paymentStatus]}</Badge>
         </div>
         <div className="billing-recovery-strip">
-          <strong>{t.action.recoverPayment}</strong>
+          <strong>{isFrench ? 'Paiement en attente' : 'Payment pending'}</strong>
           <span>
             {isFrench
               ? 'Une visite reste protégée pendant la tentative de régularisation.'
               : 'One visit remains protected while payment recovery runs.'}
           </span>
           <Button
+            aria-label={t.action.recoverPayment}
             onClick={() => dispatch({ type: 'payment/recover' })}
             size="sm"
             variant="secondary"
           >
-            {t.action.recoverPayment}
+            {isFrench ? 'Régler' : 'Settle'}
           </Button>
         </div>
         <div className="subscription-secondary-actions">
-          <Button fullWidth onClick={() => onRouteChange('billing')} variant="secondary">
-            {t.nav.billing}
-          </Button>
-          <Button fullWidth onClick={() => onRouteChange('paymentRecovery')} variant="secondary">
-            {t.nav.paymentRecovery}
-          </Button>
-          <Button
-            fullWidth
+          <button onClick={() => onRouteChange('billing')} type="button">
+            <ReceiptText aria-hidden="true" size={18} strokeWidth={2.35} />
+            <span>{t.nav.billing}</span>
+          </button>
+          <button onClick={() => onRouteChange('paymentRecovery')} type="button">
+            <WalletCards aria-hidden="true" size={18} strokeWidth={2.35} />
+            <span>{t.nav.paymentRecovery}</span>
+          </button>
+          <button
+            className="subscription-cancel-action"
             onClick={() => dispatch({ type: 'subscription/cancel' })}
-            variant="danger"
+            type="button"
           >
-            {t.subscription.cancel}
-          </Button>
+            <CircleAlert aria-hidden="true" size={18} strokeWidth={2.35} />
+            <span>{t.subscription.cancel}</span>
+          </button>
         </div>
       </section>
     </ScreenFrame>
@@ -1028,6 +1050,16 @@ function VisitDetailScreen({
         <h2>
           {isFrench ? 'Akouvi est confirmée pour votre foyer' : 'Akouvi is confirmed for your home'}
         </h2>
+        <div className="visit-quick-status">
+          <span>
+            <Clock3 aria-hidden="true" size={15} strokeWidth={2.35} />
+            {subscriberState.nextVisit.window}
+          </span>
+          <span>
+            <ShieldCheck aria-hidden="true" size={15} strokeWidth={2.35} />
+            {isFrench ? 'Suivi borné' : 'Bounded tracking'}
+          </span>
+        </div>
         <div className="visit-worker-profile">
           <div className="worker-avatar" aria-hidden="true">
             AK

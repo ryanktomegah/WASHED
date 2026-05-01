@@ -138,13 +138,15 @@ export function subscriberReducer(
   }
 
   if (action.type === 'subscription/changeTier') {
+    const nextTier = state.subscription.tier === 'T2' ? 'T1' : 'T2';
+
     return {
       ...state,
       lastFeedback: 'tierChanged',
       subscription: {
         ...state.subscription,
-        monthlyPriceXof: state.subscription.tier === 'T2' ? 6500 : 4500,
-        tier: state.subscription.tier === 'T2' ? 'T3' : 'T2',
+        monthlyPriceXof: nextTier === 'T2' ? 4500 : 2500,
+        tier: nextTier,
       },
     };
   }
