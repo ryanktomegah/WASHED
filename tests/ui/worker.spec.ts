@@ -1,0 +1,56 @@
+import { expect, test } from '@playwright/test';
+
+test('worker mobile covers activation, offline visit actions, SOS, and daily summary', async ({
+  page,
+}) => {
+  await page.goto('/');
+
+  await expect(page.getByRole('heading', { name: "Route d'aujourd'hui" })).toBeVisible();
+  await expect(page.getByText(/actions en attente de synchronisation/u)).toBeVisible();
+
+  await page.getByRole('button', { name: 'Activation' }).click();
+  await expect(page.getByRole('heading', { name: 'Activation du profil' })).toBeVisible();
+  await page.getByRole('button', { name: "Terminer l'activation" }).click();
+  await expect(page.getByText('Profil activé pour les routes terrain.')).toBeVisible();
+
+  await page.getByRole('button', { name: "Aujourd'hui" }).click();
+  await page.getByRole('button', { name: "Pointer l'arrivée" }).click();
+  await expect(page.getByText("Pointage d'arrivée ajouté à la file hors ligne.")).toBeVisible();
+
+  await page.getByRole('button', { name: 'Photos' }).click();
+  await expect(page.getByRole('heading', { name: 'Contrôle photo' })).toBeVisible();
+  await expect(page.getByLabel('Photo quality preview')).toBeVisible();
+  await page.getByRole('button', { name: 'Reprendre la photo' }).click();
+  await expect(page.getByText('Photo avant ajoutée à la file hors ligne.')).toBeVisible();
+
+  await page.getByRole('button', { name: "Aujourd'hui" }).click();
+  await page.getByRole('button', { name: 'Déclarer absence foyer' }).click();
+  await expect(
+    page.getByText('Absence foyer déclarée et ajoutée à la file hors ligne.'),
+  ).toBeVisible();
+
+  await page.getByRole('button', { name: 'SOS' }).first().click();
+  await expect(page.getByRole('dialog', { name: 'Aide immédiate' })).toBeVisible();
+  await page.getByRole('button', { name: "Prévenir l'opérateur" }).click();
+  await expect(page.getByText("Alerte SOS envoyée à l'opérateur.")).toBeVisible();
+
+  await page.getByRole('button', { name: 'Planning' }).click();
+  await expect(page.getByRole('heading', { name: 'Planning' })).toBeVisible();
+  await page.getByRole('button', { name: 'Marquer indisponible' }).click();
+  await expect(page.getByText('Indisponibilité envoyée à la planification.')).toBeVisible();
+
+  await page.getByRole('button', { name: "Aujourd'hui" }).click();
+  await page.getByRole('button', { name: 'Résumé' }).click();
+  await expect(page.getByRole('heading', { name: 'Résumé de fin de journée' })).toBeVisible();
+  await page.getByRole('button', { name: 'Clôturer la journée' }).click();
+  await expect(page.getByText('Résumé de fin de journée enregistré.')).toBeVisible();
+
+  await assertNoHorizontalOverflow(page);
+});
+
+async function assertNoHorizontalOverflow(page: import('@playwright/test').Page) {
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - window.innerWidth,
+  );
+  expect(overflow).toBeLessThanOrEqual(1);
+}

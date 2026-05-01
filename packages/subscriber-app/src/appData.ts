@@ -135,7 +135,7 @@ export const copy = {
       requestSwap: 'Request worker swap',
       reschedule: 'Reschedule',
       skipVisit: 'Skip visit',
-      startTracking: 'Start en-route demo',
+      startTracking: 'Start en-route tracking',
       stopTracking: 'Stop tracking',
     },
     feedback: {

@@ -1,37 +1,52 @@
 import { expect, test } from '@playwright/test';
 
-test('subscriber can complete the local signup flow on an iPhone-sized viewport', async ({
-  page,
-}) => {
-  const phoneNumber = `+22890${String(Date.now()).slice(-6)}`;
-
+test('subscriber mobile exposes production routes and bounded tracking', async ({ page }) => {
   await page.goto('/');
 
-  await expect(page.getByRole('heading', { name: 'Washed' })).toBeVisible();
-  await page.getByRole('button', { name: 'Commencer' }).click();
+  await expect(page.getByRole('heading', { name: /mai/u }).first()).toBeVisible();
+  await expect(page.getByText('Inventaire des écrans production')).toBeVisible();
+  await expect(page.getByText('35 surfaces')).toBeVisible();
 
-  await expect(page.getByRole('heading', { name: 'Votre numéro' })).toBeVisible();
-  await page.getByRole('textbox').fill(phoneNumber);
-  await page.getByRole('button', { name: 'Envoyer le code' }).click();
+  await page.getByRole('button', { name: "Démarrer l'inscription" }).click();
+  await expect(page.getByRole('heading', { name: 'Inscription abonnée' })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Téléphone' })).toBeVisible();
+  await expect(page.getByLabel('Onboarding steps').getByText('Paiement')).toBeVisible();
+  await page.getByRole('button', { name: 'Terminé' }).click();
 
-  await expect(page.getByRole('heading', { name: 'Code de vérification' })).toBeVisible();
-  await page.getByRole('button', { name: 'Confirmer' }).click();
+  await page.getByRole('button', { name: 'Démarrer le suivi' }).click();
+  await expect(page.getByLabel('Bounded live map')).toBeVisible();
+  await page.getByRole('button', { name: "Confirmer l'arrivée" }).click();
+  await expect(page.getByText("Arrivée confirmée; le suivi s'arrête.")).toBeVisible();
 
-  await expect(page.getByRole('heading', { name: 'Votre adresse' })).toBeVisible();
-  await page.locator('#neighborhood').fill('Tokoin');
-  await page.locator('#landmark').fill('Portail noir, près de la pharmacie');
-  await page.getByRole('button', { name: 'Continuer' }).click();
+  await page.getByRole('button', { name: 'Visite' }).click();
+  await expect(page.getByRole('heading', { name: 'Détail de visite' })).toBeVisible();
+  await page.getByRole('button', { name: 'Sauter la visite' }).click();
+  await expect(page.getByText('Crédit de saut utilisé pour la prochaine visite.')).toBeVisible();
 
-  await expect(page.getByRole('heading', { name: 'Votre formule' })).toBeVisible();
-  await page.locator('[data-tier="T2"]').click();
-  await page.getByRole('button', { name: 'Continuer' }).click();
+  await page.getByRole('button', { name: 'Support' }).click();
+  await expect(page.getByRole('heading', { name: 'Support' })).toBeVisible();
+  await page.getByRole('button', { name: 'Inbox' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Boîte de réception et notifications' }),
+  ).toBeVisible();
 
-  await expect(page.getByRole('heading', { name: 'Créneau habituel' })).toBeVisible();
-  await page.getByRole('button', { name: /Créer mon abonnement/u }).click();
+  await page.getByRole('button', { name: 'Abonnement' }).click();
+  await expect(page.getByRole('heading', { name: "Gestion de l'abonnement" })).toBeVisible();
+  await page.getByRole('button', { name: 'Paiements' }).click();
+  await expect(page.getByRole('heading', { name: 'Historique de paiement' })).toBeVisible();
 
-  await expect(page.getByText('Aucune visite planifiée')).toBeVisible();
-  await expect(page.getByText('Abonnement', { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Payer maintenant' })).toBeVisible();
+  await page.getByRole('button', { name: 'Abonnement' }).click();
+  await page.getByRole('button', { name: 'Paiement', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Régularisation du paiement' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Profil' }).click();
+  await expect(page.getByRole('heading', { name: 'Profil et confidentialité' })).toBeVisible();
+  await page.getByRole('button', { name: 'Legal' }).click();
+  await expect(page.getByRole('heading', { name: 'Conditions et confidentialité' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Profil' }).click();
+  await page.getByRole('button', { name: 'Récupération' }).click();
+  await expect(page.getByRole('heading', { name: 'Récupération du compte' })).toBeVisible();
 
   await assertNoHorizontalOverflow(page);
 });

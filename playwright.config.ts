@@ -11,14 +11,22 @@ export default defineConfig({
       testMatch: /subscriber\.spec\.ts/u,
       use: {
         ...devices['iPhone 13'],
-        baseURL: 'http://127.0.0.1:5173',
+        baseURL: 'http://127.0.0.1:6173',
       },
     },
     {
-      name: 'ops-desktop',
+      name: 'worker-mobile',
+      testMatch: /worker\.spec\.ts/u,
+      use: {
+        ...devices['Pixel 7'],
+        baseURL: 'http://127.0.0.1:6174',
+      },
+    },
+    {
+      name: 'operator-desktop',
       testMatch: /ops\.spec\.ts/u,
       use: {
-        baseURL: 'http://127.0.0.1:5174',
+        baseURL: 'http://127.0.0.1:6175',
         viewport: { height: 900, width: 1440 },
       },
     },
@@ -33,25 +41,22 @@ export default defineConfig({
   },
   webServer: [
     {
-      command:
-        'pnpm --filter @washed/core-api build && PORT=3000 HOST=127.0.0.1 pnpm --filter @washed/core-api dev',
-      reuseExistingServer: !process.env['CI'],
-      timeout: 120_000,
-      url: 'http://127.0.0.1:3000/ready',
-    },
-    {
-      command:
-        'PORT=5173 WASHED_CORE_API_URL=http://127.0.0.1:3000 pnpm --filter @washed/subscriber-web dev',
+      command: 'pnpm --filter @washed/subscriber-app exec vite --host 127.0.0.1 --port 6173',
       reuseExistingServer: !process.env['CI'],
       timeout: 30_000,
-      url: 'http://127.0.0.1:5173',
+      url: 'http://127.0.0.1:6173',
     },
     {
-      command:
-        'PORT=5174 WASHED_CORE_API_URL=http://127.0.0.1:3000 pnpm --filter @washed/ops-web dev',
+      command: 'pnpm --filter @washed/worker-app exec vite --host 127.0.0.1 --port 6174',
       reuseExistingServer: !process.env['CI'],
       timeout: 30_000,
-      url: 'http://127.0.0.1:5174',
+      url: 'http://127.0.0.1:6174',
+    },
+    {
+      command: 'pnpm --filter @washed/operator-console exec vite --host 127.0.0.1 --port 6175',
+      reuseExistingServer: !process.env['CI'],
+      timeout: 30_000,
+      url: 'http://127.0.0.1:6175',
     },
   ],
 });

@@ -582,7 +582,7 @@ function Reports({
         </Alert>
         <ListItem
           after={<Badge>{operatorState.reports.exportedAt ?? 'Not exported'}</Badge>}
-          description="CSV/PDF export placeholder wired to metrics state"
+          description="CSV/PDF export state wired to beta metrics"
           title="Latest export"
         />
         <Button onClick={() => dispatch({ type: 'reports/export' })}>Export report</Button>
