@@ -1,7 +1,13 @@
 import type { VisitStep, WorkerFeedback } from './workerState.js';
 
 export type PrimaryWorkerRoute = 'earnings' | 'planning' | 'profile' | 'today';
-export type WorkerRoute = PrimaryWorkerRoute | 'activation' | 'daySummary' | 'inbox' | 'photoRetry';
+export type WorkerRoute =
+  | PrimaryWorkerRoute
+  | 'activation'
+  | 'daySummary'
+  | 'inbox'
+  | 'photoRetry'
+  | 'visit';
 
 export interface WorkerCopy {
   readonly action: {
@@ -160,6 +166,7 @@ export const workerCopy = {
     planning: 'Planning',
     profile: 'Profil',
     today: "Aujourd'hui",
+    visit: 'Visite',
   },
   inbox: {
     advance: "Demande d'avance reçue par l'opérateur",
@@ -231,19 +238,22 @@ export const visitSteps = [
 
 export const routeCards = [
   {
+    address: 'Bè Kpota, près du marché',
     status: 'Prochaine',
-    time: '9:00',
-    title: workerCopy.today.subscriber,
+    time: '9h00-11h00',
+    title: 'Kofi Mensah',
   },
   {
+    address: 'Adidogomé, rue 42',
     status: 'Prévue',
-    time: '11:30',
-    title: 'Esi A., Agoè',
+    time: '11h30-13h30',
+    title: 'Ama Dossou',
   },
   {
+    address: 'Tokoin, derrière Total',
     status: 'Prévue',
-    time: '15:00',
-    title: 'Mawuli B., Tokoin',
+    time: '14h00-16h00',
+    title: 'Yao Agbeko',
   },
 ] as const;
 

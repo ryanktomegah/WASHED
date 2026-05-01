@@ -44,6 +44,13 @@ const navOrder = [
   'profile',
 ] as const satisfies readonly PrimaryWorkerRoute[];
 
+const navIcons = {
+  earnings: '💰',
+  planning: '📅',
+  profile: '👤',
+  today: '🗓',
+} as const satisfies Record<PrimaryWorkerRoute, string>;
+
 export function App(): ReactElement {
   const [route, setRoute] = useState<WorkerRoute>('today');
   const [workerState, dispatch] = useReducer(workerReducer, initialWorkerState);
@@ -135,19 +142,6 @@ export function App(): ReactElement {
   return (
     <WashedThemeProvider className="worker-frame" theme="worker">
       <div className="status-spacer" />
-      <header className="worker-topbar">
-        <button className="worker-brand" onClick={() => setRoute('today')} type="button">
-          <strong>Washed</strong>
-          <span>Travailleuse</span>
-        </button>
-        <Button
-          className="sos-button"
-          onClick={() => dispatch({ type: 'sos/open' })}
-          variant="danger"
-        >
-          {t.safety.panic}
-        </Button>
-      </header>
 
       <main className="worker-shell">
         {workerState.lastFeedback === null ? null : (
@@ -178,7 +172,9 @@ export function App(): ReactElement {
         {route === 'earnings' ? (
           <EarningsScreen dispatch={dispatch} workerState={workerState} t={t} />
         ) : null}
-        {route === 'profile' ? <ProfileScreen dispatch={dispatch} t={t} /> : null}
+        {route === 'profile' ? (
+          <ProfileScreen dispatch={dispatch} onRouteChange={setRoute} t={t} />
+        ) : null}
         {route === 'activation' ? (
           <ActivationScreen dispatch={dispatch} workerState={workerState} t={t} />
         ) : null}
@@ -188,6 +184,20 @@ export function App(): ReactElement {
             isCapturingPhoto={captureInProgress}
             onVisitPhotoCapture={captureProof}
             t={t}
+          />
+        ) : null}
+        {route === 'visit' ? (
+          <VisitDetailScreen
+            dispatch={dispatch}
+            isCapturingPhoto={captureInProgress}
+            locationCaptureCheckpoint={locationCheckpoint}
+            locationError={locationError}
+            locationProof={lastLocationProof}
+            onRouteChange={setRoute}
+            onVisitLocationCapture={captureLocationProof}
+            onVisitPhotoCapture={captureProof}
+            t={t}
+            workerState={workerState}
           />
         ) : null}
         {route === 'daySummary' ? (
@@ -201,6 +211,7 @@ export function App(): ReactElement {
         className="bottom-nav"
         items={navOrder.map((navRoute) => ({
           active: route === navRoute,
+          icon: navIcons[navRoute],
           label: t.nav[navRoute],
           onClick: () => setRoute(navRoute),
         }))}
@@ -243,130 +254,215 @@ function TodayScreen({
   return (
     <>
       <section className="worker-summary" aria-labelledby="worker-route-title">
-        <div>
-          <Badge tone="success">{t.today.routeActive}</Badge>
-          <h1 id="worker-route-title">{t.today.title}</h1>
-          <p>
-            {t.today.visitCount}
-            {offlineCount > 0 ? ` · ${offlineCount} actions hors ligne` : ''}
-          </p>
+        <div className="summary-copy">
+          <span className="summary-date">LUNDI 28 AVRIL</span>
+          <div className="summary-title-row">
+            <h1 id="worker-route-title">3 visites aujourd&apos;hui</h1>
+            <div className="summary-earnings">
+              <span>Ce mois</span>
+              <strong>43 400 XOF</strong>
+            </div>
+          </div>
+          <div className="summary-progress" aria-hidden="true">
+            <span />
+          </div>
+          <div className="summary-meta">
+            <span>1 / 3 visites complétées</span>
+            <Badge>
+              {offlineCount > 0 ? `● Hors ligne · ${offlineCount}` : t.today.routeActive}
+            </Badge>
+          </div>
         </div>
-        <Button onClick={() => dispatch({ type: 'sos/open' })} variant="danger">
-          {t.safety.panic}
-        </Button>
       </section>
 
-      <Alert
-        title={
-          offlineCount > 0 ? `${offlineCount} actions en attente de synchronisation` : t.sync.ready
-        }
-        tone={offlineCount > 0 ? 'accent' : 'success'}
-      >
-        <div className="sync-alert-body">
-          <span>{syncError ?? (offlineCount > 0 ? t.sync.offline : t.sync.complete)}</span>
-          <Button
-            disabled={offlineCount === 0 || isSyncingQueue}
-            onClick={onSyncQueue}
-            size="sm"
-            variant="secondary"
-          >
-            {t.action.retrySync}
-          </Button>
-        </div>
-      </Alert>
-
-      {offlineCount > 0 ? <OfflineQueueLedger queue={workerState.offlineQueue} /> : null}
-
-      {workerState.activation.agreementAccepted ? null : (
-        <Alert title={t.activation.title} tone="accent">
+      {offlineCount > 0 || syncError !== null ? (
+        <Alert
+          className="sync-card"
+          title={
+            offlineCount > 0
+              ? `${offlineCount} actions en attente de synchronisation`
+              : t.sync.ready
+          }
+          tone={offlineCount > 0 ? 'accent' : 'success'}
+        >
           <div className="sync-alert-body">
-            <span>{t.activation.agreement}</span>
-            <Button onClick={() => onRouteChange('activation')} size="sm" variant="secondary">
-              {t.nav.activation}
+            <span>{syncError ?? (offlineCount > 0 ? t.sync.offline : t.sync.complete)}</span>
+            <Button
+              disabled={offlineCount === 0 || isSyncingQueue}
+              onClick={onSyncQueue}
+              size="sm"
+              variant="secondary"
+            >
+              {t.action.retrySync}
             </Button>
           </div>
         </Alert>
-      )}
+      ) : null}
 
-      <Card elevated>
-        <div className="card-header">
-          <div>
-            <span className="eyebrow">Prochaine visite</span>
-            <h2>{t.today.subscriber}</h2>
-          </div>
-          <Badge>9:00</Badge>
-        </div>
-        <ListItem
-          after={<Badge tone="success">100 m GPS</Badge>}
-          description={t.today.addressHint}
-          title={t.action.heading}
-        />
-        <VisitLifecycle dispatch={dispatch} t={t} workerState={workerState} />
-        <VisitWorkstation
-          dispatch={dispatch}
-          isCapturingPhoto={isCapturingPhoto}
-          locationCaptureCheckpoint={locationCaptureCheckpoint}
-          locationError={locationError}
-          locationProof={locationProof}
-          onRouteChange={onRouteChange}
-          onVisitLocationCapture={onVisitLocationCapture}
-          onVisitPhotoCapture={onVisitPhotoCapture}
-          t={t}
-          workerState={workerState}
-        />
-        <div className="visit-actions">
-          <Button fullWidth onClick={() => onRouteChange('planning')} variant="secondary">
-            {t.planning.week}
-          </Button>
-          <Button
-            fullWidth
-            onClick={() => dispatch({ type: 'visit/reportIssue' })}
-            variant="secondary"
-          >
-            {t.action.safetyReport}
-          </Button>
-          <Button fullWidth onClick={() => onRouteChange('photoRetry')} variant="secondary">
-            {t.nav.photoRetry}
-          </Button>
-          <Button
-            fullWidth
-            onClick={() => dispatch({ type: 'visit/declareNoShow' })}
-            variant="danger"
-          >
-            {t.action.declareNoShow}
-          </Button>
-        </div>
-      </Card>
+      {offlineCount > 0 ? <OfflineQueueLedger queue={workerState.offlineQueue} /> : null}
 
-      <Card>
-        <div className="card-header">
-          <h2>Route</h2>
-          <Badge>{routeCards.length}</Badge>
-        </div>
-        <div className="route-list">
-          {routeCards.map((card) => (
-            <ListItem
-              after={
-                <Badge tone={card.status === 'Prochaine' ? 'success' : 'muted'}>
-                  {card.status}
-                </Badge>
-              }
-              description={t.today.addressHint}
+      <Card className="route-card-stack">
+        <div className="route-list wire-route-list">
+          {routeCards.map((card, index) => (
+            <div
+              className={`wire-route-card ${
+                index === 0 ? 'is-done' : index === 1 ? 'is-active' : 'is-next'
+              }`}
               key={`${card.time}-${card.title}`}
-              title={`${card.time} · ${card.title}`}
-            />
+            >
+              <div>
+                <div className="visit-card-topline">
+                  <strong>{card.title}</strong>
+                  <Badge
+                    tone={index === 1 ? 'primary' : index === 2 ? 'accent' : 'success'}
+                    style={
+                      index === 1
+                        ? { background: 'var(--washed-primary)', color: '#fff' }
+                        : undefined
+                    }
+                  >
+                    {index === 0 ? 'Complétée ✓' : index === 1 ? 'En cours ●' : 'Suivante'}
+                  </Badge>
+                </div>
+                <p>📍 {card.address}</p>
+                <p>🕐 {card.time}</p>
+              </div>
+              {index === 1 ? (
+                <div className="active-route-strip">
+                  <Button
+                    fullWidth
+                    onClick={() => onRouteChange('visit')}
+                    size="sm"
+                    variant="secondary"
+                  >
+                    📷 Photos + Check-out
+                  </Button>
+                  <Button
+                    onClick={() => dispatch({ type: 'visit/reportIssue' })}
+                    size="sm"
+                    variant="ghost"
+                  >
+                    ⚠ Signaler
+                  </Button>
+                </div>
+              ) : null}
+              {index === 2 ? (
+                <div className="next-route-actions">
+                  <Button
+                    fullWidth
+                    onClick={() => onRouteChange('planning')}
+                    size="sm"
+                    variant="secondary"
+                  >
+                    🗺 Itinéraire
+                  </Button>
+                  <Button
+                    fullWidth
+                    onClick={() => void onVisitLocationCapture('checkIn')}
+                    size="sm"
+                    variant="secondary"
+                  >
+                    Check-in GPS
+                  </Button>
+                </div>
+              ) : null}
+            </div>
           ))}
         </div>
-        <div className="visit-actions">
-          <Button fullWidth onClick={() => onRouteChange('inbox')} variant="secondary">
-            {t.nav.inbox}
-          </Button>
-          <Button fullWidth onClick={() => onRouteChange('daySummary')} variant="secondary">
-            {t.nav.daySummary}
-          </Button>
+        <div className="earnings-strip">
+          <strong className="earnings-strip-title">Salaire · Avril 2026</strong>
+          <span>
+            <small>Fixe garanti</small>
+            <strong>40 000 XOF</strong>
+          </span>
+          <span>
+            <small>Primes (×5)</small>
+            <strong>3 000 XOF</strong>
+          </span>
+          <span>
+            <small>Avance</small>
+            <strong>Disponible</strong>
+          </span>
         </div>
       </Card>
     </>
+  );
+}
+
+function VisitDetailScreen({
+  dispatch,
+  isCapturingPhoto,
+  locationCaptureCheckpoint,
+  locationError,
+  locationProof,
+  onRouteChange,
+  onVisitLocationCapture,
+  onVisitPhotoCapture,
+  t,
+  workerState,
+}: {
+  readonly dispatch: Dispatch<WorkerAction>;
+  readonly isCapturingPhoto: boolean;
+  readonly locationCaptureCheckpoint: VisitLocationCheckpoint | null;
+  readonly locationError: string | null;
+  readonly locationProof: NativeLocationResult | null;
+  readonly onRouteChange: (route: WorkerRoute) => void;
+  readonly onVisitLocationCapture: (checkpoint: VisitLocationCheckpoint) => Promise<void>;
+  readonly onVisitPhotoCapture: (kind: 'after' | 'before') => Promise<void>;
+  readonly t: typeof workerCopy;
+  readonly workerState: WorkerState;
+}): ReactElement {
+  return (
+    <Card className="active-visit-card" elevated>
+      <div className="visit-card-main">
+        <div>
+          <div className="visit-card-topline">
+            <strong>Ama Dossou</strong>
+            <Badge>En cours ●</Badge>
+          </div>
+          <p>📍 Adidogomé, rue 42</p>
+          <p>🕐 11h30-13h30 · {t.today.addressHint}</p>
+        </div>
+      </div>
+      <VisitLifecycle dispatch={dispatch} t={t} workerState={workerState} />
+      <VisitWorkstation
+        dispatch={dispatch}
+        isCapturingPhoto={isCapturingPhoto}
+        locationCaptureCheckpoint={locationCaptureCheckpoint}
+        locationError={locationError}
+        locationProof={locationProof}
+        onRouteChange={onRouteChange}
+        onVisitLocationCapture={onVisitLocationCapture}
+        onVisitPhotoCapture={onVisitPhotoCapture}
+        t={t}
+        workerState={workerState}
+      />
+      <div className="visit-actions active-visit-actions">
+        <Button fullWidth onClick={() => onRouteChange('planning')} variant="secondary">
+          Itinéraire
+        </Button>
+        <Button
+          fullWidth
+          onClick={() => dispatch({ type: 'visit/reportIssue' })}
+          variant="secondary"
+        >
+          {t.action.safetyReport}
+        </Button>
+        <Button fullWidth onClick={() => onRouteChange('photoRetry')} variant="secondary">
+          {t.nav.photoRetry}
+        </Button>
+        <Button
+          fullWidth
+          onClick={() => dispatch({ type: 'visit/declareNoShow' })}
+          variant="danger"
+        >
+          {t.action.declareNoShow}
+        </Button>
+        <Button fullWidth onClick={() => dispatch({ type: 'sos/open' })} variant="danger">
+          {t.safety.panic}
+        </Button>
+      </div>
+    </Card>
   );
 }
 
@@ -455,6 +551,15 @@ function VisitWorkstation({
         <h3>{stepConfig.title}</h3>
         <p>{stepConfig.body}</p>
       </div>
+
+      {workerState.visit.step === 'heading' ? (
+        <div className="visit-map" aria-label="Worker GPS map">
+          <strong>📍</strong>
+          <span>Adidogomé, rue 42</span>
+          <small>Vous êtes à 85 m de l&apos;adresse</small>
+          <em>85 m restants</em>
+        </div>
+      ) : null}
 
       <div className="proof-grid" aria-label="Visit proof checklist">
         {proofItems.map((item) => (
@@ -614,14 +719,32 @@ function EarningsScreen({
 }): ReactElement {
   return (
     <ScreenFrame eyebrow="Paiement" title={t.earnings.title}>
-      <Card elevated>
-        <Metric label={t.earnings.floor} value="40 000 FCFA" />
-        <Metric label={t.earnings.bonus} value="3 500 FCFA" />
-        <Metric label={t.earnings.nextPayout} value="31 mai" />
+      <Card className="earnings-hero-card" elevated>
+        <span>TOTAL DU MOIS</span>
+        <strong>
+          43 400<small> XOF</small>
+        </strong>
+        <div>
+          <Metric label="Fixe garanti" value="40 000" />
+          <Metric label="Primes (×5 vis.)" value="3 000" />
+        </div>
+        <div className="earnings-progress" aria-hidden="true">
+          <span />
+        </div>
+        <p>22 / 48 visites complétées · 26 restantes</p>
       </Card>
-      <Card>
+      <Card className="payout-card">
+        <div className="card-header">
+          <div>
+            <h2>Paiement dimanche 4 mai</h2>
+            <p>T-Money · +228 90 XX XX XX</p>
+          </div>
+          <Badge tone="success">Programmé</Badge>
+        </div>
+      </Card>
+      <Card className="advance-card">
         <Alert title={t.earnings.advance} tone="accent">
-          Les avances sont validées par opérateur et déduites du paiement mensuel.
+          Jusqu&apos;à 50% du fixe · 1× par mois
         </Alert>
         <Button
           disabled={workerState.advanceRequested}
@@ -631,15 +754,36 @@ function EarningsScreen({
           {t.action.advance}
         </Button>
       </Card>
+      <Card>
+        <div className="card-header">
+          <h2>Historique</h2>
+        </div>
+        <div className="route-list">
+          {[
+            ['Dim 27 avr', '7 200 XOF'],
+            ['Dim 20 avr', '8 400 XOF'],
+            ['Dim 13 avr', '6 000 XOF'],
+          ].map(([date, amount]) => (
+            <ListItem
+              after={<Badge tone="success">Payé</Badge>}
+              description="Virement hebdo"
+              key={date}
+              title={`${date} · ${amount}`}
+            />
+          ))}
+        </div>
+      </Card>
     </ScreenFrame>
   );
 }
 
 function ProfileScreen({
   dispatch,
+  onRouteChange,
   t,
 }: {
   readonly dispatch: Dispatch<WorkerAction>;
+  readonly onRouteChange: (route: WorkerRoute) => void;
   readonly t: typeof workerCopy;
 }): ReactElement {
   return (
@@ -659,6 +803,15 @@ function ProfileScreen({
             variant="secondary"
           >
             {t.activation.complete}
+          </Button>
+          <Button fullWidth onClick={() => onRouteChange('activation')} variant="secondary">
+            {t.nav.activation}
+          </Button>
+          <Button fullWidth onClick={() => onRouteChange('inbox')} variant="secondary">
+            {t.nav.inbox}
+          </Button>
+          <Button fullWidth onClick={() => onRouteChange('daySummary')} variant="secondary">
+            {t.nav.daySummary}
           </Button>
         </div>
       </Card>

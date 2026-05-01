@@ -7,25 +7,27 @@ describe('worker app', () => {
   it('renders route, offline, and safety surfaces', () => {
     render(<App />);
 
-    expect(screen.getByRole('heading', { name: "Route d'aujourd'hui" })).toBeInTheDocument();
-    const [sosButton] = screen.getAllByRole('button', { name: 'SOS' });
-    expect(sosButton).toBeInTheDocument();
-    expect(screen.getByText('3 actions en attente de synchronisation')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: "3 visites aujourd'hui" })).toBeInTheDocument();
+    expect(screen.getByText('Kofi Mensah')).toBeInTheDocument();
+    expect(screen.getByText('Ama Dossou')).toBeInTheDocument();
+    expect(screen.getByText('Yao Agbeko')).toBeInTheDocument();
+    expect(screen.getByText('Salaire · Avril 2026')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Offline action ledger')).not.toBeInTheDocument();
+    expect(screen.queryByText(/actions en attente de synchronisation/u)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Photos \+ Check-out/u }));
+
+    expect(screen.getByRole('button', { name: 'SOS' })).toBeInTheDocument();
     expect(screen.getByLabelText('Worker route lifecycle').children).toHaveLength(6);
     expect(screen.getByLabelText('Guided visit workflow')).toBeInTheDocument();
-    expect(screen.getByLabelText('Offline action ledger')).toHaveTextContent(
-      'worker-akouvi:visit-ama-2026-05-05-0900',
-    );
     expect(screen.getByText('En route vers Ama K.')).toBeInTheDocument();
-    expect(screen.getByText('Activation du profil')).toBeInTheDocument();
   });
 
   it('opens and closes the SOS sheet', () => {
     render(<App />);
 
-    const [sosButton] = screen.getAllByRole('button', { name: 'SOS' });
-    expect(sosButton).toBeDefined();
-    fireEvent.click(sosButton!);
+    fireEvent.click(screen.getByRole('button', { name: /Photos \+ Check-out/u }));
+    fireEvent.click(screen.getByRole('button', { name: 'SOS' }));
 
     expect(screen.getByRole('dialog', { name: 'Aide immédiate' })).toBeInTheDocument();
     expect(screen.getByText("Prévenir l'opérateur")).toBeInTheDocument();
@@ -38,36 +40,32 @@ describe('worker app', () => {
   it('records SOS confirmation through worker state', () => {
     render(<App />);
 
-    const [sosButton] = screen.getAllByRole('button', { name: 'SOS' });
-    expect(sosButton).toBeDefined();
-    fireEvent.click(sosButton!);
+    fireEvent.click(screen.getByRole('button', { name: /Photos \+ Check-out/u }));
+    fireEvent.click(screen.getByRole('button', { name: 'SOS' }));
     fireEvent.click(screen.getByRole('button', { name: "Prévenir l'opérateur" }));
 
     expect(screen.queryByRole('dialog', { name: 'Aide immédiate' })).not.toBeInTheDocument();
     expect(screen.getByText("Alerte SOS envoyée à l'opérateur.")).toBeInTheDocument();
-    expect(screen.getByText('4 actions en attente de synchronisation')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: "Aujourd'hui" }));
+    expect(screen.getByText('1 actions en attente de synchronisation')).toBeInTheDocument();
   });
 
   it('syncs offline actions and advances the visit lifecycle', async () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Synchroniser maintenant' }));
-
-    expect(await screen.findByText('Synchronisation prête')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Photos \+ Check-out/u }));
 
     fireEvent.click(screen.getByRole('button', { name: "Pointer l'arrivée" }));
 
     expect(
       await screen.findByText("Pointage d'arrivée ajouté à la file hors ligne."),
     ).toBeInTheDocument();
-    expect(screen.getByText('1 actions en attente de synchronisation')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Pointage arrivée' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
     expect(screen.getByText('Arrivée pointée')).toBeInTheDocument();
     expect(screen.getByLabelText('Last GPS proof')).toHaveTextContent('GPS arrivée capturé');
-    expect(screen.getByLabelText('Offline action ledger')).toHaveTextContent('checkInVisit');
 
     fireEvent.click(screen.getByRole('button', { name: 'Prendre photo avant' }));
     expect(
@@ -101,6 +99,10 @@ describe('worker app', () => {
     expect(
       screen.getByText('Absence foyer déclarée et ajoutée à la file hors ligne.'),
     ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: "Aujourd'hui" }));
+    expect(screen.getByText('6 actions en attente de synchronisation')).toBeInTheDocument();
+    expect(screen.getByLabelText('Offline action ledger')).toHaveTextContent('checkOutVisit');
   });
 
   it('navigates to planning, earnings, and profile and records worker actions', () => {
@@ -115,7 +117,9 @@ describe('worker app', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Gains' }));
     expect(screen.getByRole('heading', { name: 'Gains' })).toBeInTheDocument();
-    expect(screen.getByText('Plancher mensuel garanti: 40 000 FCFA')).toBeInTheDocument();
+    expect(screen.getByText('TOTAL DU MOIS')).toBeInTheDocument();
+    expect(screen.getByText('Fixe garanti')).toBeInTheDocument();
+    expect(screen.getByText('Paiement dimanche 4 mai')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Demander une avance' }));
     expect(screen.getByText("Demande d'avance envoyée à l'opérateur.")).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Demander une avance' })).toBeDisabled();
@@ -134,18 +138,20 @@ describe('worker app', () => {
   it('handles activation, inbox, photo retry, and day summary surfaces', async () => {
     render(<App />);
 
+    fireEvent.click(screen.getByRole('button', { name: 'Profil' }));
     fireEvent.click(screen.getByRole('button', { name: 'Activation' }));
     expect(screen.getByRole('heading', { name: 'Activation du profil' })).toBeInTheDocument();
     expect(screen.getByText('Accord travailleuse')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: "Terminer l'activation" }));
     expect(screen.getByText('Profil activé pour les routes terrain.')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: "Aujourd'hui" }));
+    fireEvent.click(screen.getByRole('button', { name: 'Profil' }));
     fireEvent.click(screen.getByRole('button', { name: 'Inbox' }));
     expect(screen.getByRole('heading', { name: 'Notifications' })).toBeInTheDocument();
     expect(screen.getByText('Route de demain confirmée')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: "Aujourd'hui" }));
+    fireEvent.click(screen.getByRole('button', { name: /Photos \+ Check-out/u }));
     fireEvent.click(screen.getByRole('button', { name: 'Photos' }));
     expect(screen.getByRole('heading', { name: 'Contrôle photo' })).toBeInTheDocument();
     expect(screen.getByLabelText('Photo quality preview')).toBeInTheDocument();
@@ -154,7 +160,7 @@ describe('worker app', () => {
       await screen.findByText('Photo avant ajoutée à la file hors ligne.'),
     ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: "Aujourd'hui" }));
+    fireEvent.click(screen.getByRole('button', { name: 'Profil' }));
     fireEvent.click(screen.getByRole('button', { name: 'Résumé' }));
     expect(screen.getByRole('heading', { name: 'Résumé de fin de journée' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Clôturer la journée' }));
@@ -165,7 +171,7 @@ describe('worker app', () => {
   it('restores queued worker state after an app restart', async () => {
     const { unmount } = render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Synchroniser maintenant' }));
+    fireEvent.click(screen.getByRole('button', { name: /Photos \+ Check-out/u }));
     fireEvent.click(screen.getByRole('button', { name: "Pointer l'arrivée" }));
     await screen.findByText("Pointage d'arrivée ajouté à la file hors ligne.");
     fireEvent.click(screen.getByRole('button', { name: 'Prendre photo avant' }));
@@ -178,8 +184,9 @@ describe('worker app', () => {
     unmount();
     render(<App />);
 
+    expect(await screen.findByText('2 actions en attente de synchronisation')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Photos \+ Check-out/u }));
     expect(await screen.findByText('Preuve avant capturée')).toBeInTheDocument();
-    expect(screen.getByText('2 actions en attente de synchronisation')).toBeInTheDocument();
     expect(screen.queryByRole('dialog', { name: 'Aide immédiate' })).not.toBeInTheDocument();
   });
 });

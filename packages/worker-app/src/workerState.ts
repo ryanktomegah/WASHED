@@ -121,8 +121,8 @@ export const WORKER_APP_DEMO_IDS = {
 export const initialWorkerState = {
   ...DEMO_WORKER_APP_SNAPSHOT,
   lastFeedback: null,
-  offlineQueue: createLegacyOfflineQueue(DEMO_WORKER_APP_SNAPSHOT.offlineQueueCount),
-  offlineQueueCount: DEMO_WORKER_APP_SNAPSHOT.offlineQueueCount,
+  offlineQueue: [],
+  offlineQueueCount: 0,
 } as const satisfies WorkerState;
 
 export function createLegacyOfflineQueue(count: number): readonly WorkerOfflineQueueItem[] {
