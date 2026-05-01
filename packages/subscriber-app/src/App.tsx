@@ -458,6 +458,40 @@ function OnboardingScreen({
           stepPrefix: 'Step',
           tierBody: 'The tier can be adjusted next cycle from Subscription.',
         };
+  const stepDescription = {
+    address:
+      locale === 'fr'
+        ? 'Ajoutez les repères qui évitent les appels le jour de la visite.'
+        : 'Add landmarks that prevent calls on visit day.',
+    confirm:
+      locale === 'fr'
+        ? 'Relisez les informations avant l’activation du foyer.'
+        : 'Review the details before the household is activated.',
+    language:
+      locale === 'fr'
+        ? 'Choisissez la langue principale du foyer.'
+        : 'Choose the household’s primary language.',
+    otp:
+      locale === 'fr'
+        ? 'Le code protège l’accès au compte sans mot de passe.'
+        : 'The code protects the account without a password.',
+    payment:
+      locale === 'fr'
+        ? 'Le numéro Mobile Money sert aux prélèvements mensuels.'
+        : 'The Mobile Money number is used for monthly collections.',
+    phone:
+      locale === 'fr'
+        ? 'Ce numéro recevra les rappels, codes et alertes importantes.'
+        : 'This number receives reminders, codes, and important alerts.',
+    schedule:
+      locale === 'fr'
+        ? 'Sélectionnez le créneau que le foyer peut tenir chaque semaine.'
+        : 'Pick the window the household can keep each week.',
+    tier:
+      locale === 'fr'
+        ? 'Comparez le rythme de visite et le prix mensuel.'
+        : 'Compare visit cadence and monthly price.',
+  } satisfies Record<(typeof onboardingSteps)[number], string>;
 
   const goNext = (): void => {
     if (isLastStep) {
@@ -484,10 +518,10 @@ function OnboardingScreen({
           {stepIndex + 1} / {onboardingSteps.length}
         </Badge>
       }
-      eyebrow="C1"
+      eyebrow={locale === 'fr' ? 'Inscription' : 'Signup'}
       title={t.onboarding.title}
     >
-      <Card elevated>
+      <Card className="onboarding-rail-card" elevated>
         <div className="onboarding-progress" aria-label="Onboarding steps">
           {onboardingSteps.map((step, index) => (
             <button
@@ -511,6 +545,7 @@ function OnboardingScreen({
               {helperCopy.stepPrefix} {stepIndex + 1}
             </span>
             <h2>{t.onboarding[currentStep]}</h2>
+            <p className="onboarding-step-copy">{stepDescription[currentStep]}</p>
           </div>
 
           {currentStep === 'language' ? (
@@ -642,8 +677,8 @@ function OnboardingScreen({
               <ListItem description="+228 90 00 00 00" title={t.onboarding.phone} />
               <Alert title={t.onboarding.confirm} tone="success">
                 {locale === 'fr'
-                  ? 'Le foyer est prêt pour validation opérateur et première attribution.'
-                  : 'The household is ready for operator validation and first assignment.'}
+                  ? 'Le foyer est prêt pour validation Washed et première attribution.'
+                  : 'The household is ready for Washed review and first assignment.'}
               </Alert>
             </div>
           ) : null}

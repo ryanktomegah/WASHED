@@ -122,7 +122,7 @@ describe('subscriber app', () => {
     expect(screen.getByRole('textbox', { name: 'Mobile Money' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
-    expect(screen.getByText(/Le foyer est prêt pour validation opérateur/u)).toBeInTheDocument();
+    expect(screen.getByText(/Le foyer est prêt pour validation Washed/u)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Terminé' }));
     fireEvent.click(

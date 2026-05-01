@@ -20,7 +20,7 @@ describe('worker app', () => {
     expect(screen.getByRole('button', { name: 'SOS' })).toBeInTheDocument();
     expect(screen.getByLabelText('Worker route lifecycle').children).toHaveLength(6);
     expect(screen.getByLabelText('Guided visit workflow')).toBeInTheDocument();
-    expect(screen.getByText('En route vers Ama K.')).toBeInTheDocument();
+    expect(screen.getByText('Trajet vers Ama Dossou')).toBeInTheDocument();
   });
 
   it('opens and closes the SOS sheet', () => {

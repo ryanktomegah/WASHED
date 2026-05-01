@@ -449,8 +449,14 @@ function VisitDetailScreen({
             <strong>Ama Dossou</strong>
             <Badge>En cours ●</Badge>
           </div>
-          <p>📍 Adidogomé, rue 42</p>
-          <p>🕐 11h30-13h30 · {t.today.addressHint}</p>
+          <p>
+            <MapPinned aria-hidden="true" size={14} strokeWidth={2.3} />
+            Adidogomé, rue 42
+          </p>
+          <p>
+            <Clock3 aria-hidden="true" size={14} strokeWidth={2.3} />
+            11h30-13h30 · {t.today.addressHint}
+          </p>
         </div>
       </div>
       <VisitLifecycle dispatch={dispatch} t={t} workerState={workerState} />
@@ -550,7 +556,7 @@ function VisitWorkstation({
       label: t.action.checkInNow,
       loading: locationCaptureCheckpoint === 'checkIn',
       onClick: () => void onVisitLocationCapture('checkIn'),
-      title: 'En route vers Ama K.',
+      title: 'Trajet vers Ama Dossou',
     },
     inVisit: {
       body: 'La visite est en cours. Capturer la photo après avant de quitter le foyer.',
@@ -583,7 +589,7 @@ function VisitWorkstation({
 
       {workerState.visit.step === 'heading' ? (
         <div className="visit-map" aria-label="Worker GPS map">
-          <strong>📍</strong>
+          <MapPinned aria-hidden="true" size={30} strokeWidth={2.4} />
           <span>Adidogomé, rue 42</span>
           <small>Vous êtes à 85 m de l&apos;adresse</small>
           <em>85 m restants</em>

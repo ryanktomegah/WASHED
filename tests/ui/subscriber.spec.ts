@@ -38,7 +38,7 @@ test('subscriber mobile exposes production routes and bounded tracking', async (
   await expect(page.getByRole('textbox', { name: 'Mobile Money' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Continuer' }).click();
-  await expect(page.getByText(/prêt pour validation opérateur/u)).toBeVisible();
+  await expect(page.getByText(/prêt pour validation Washed/u)).toBeVisible();
   await page.getByRole('button', { name: 'Terminé' }).click();
 
   await page.getByRole('button', { name: 'Voir la visite' }).click();

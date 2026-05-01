@@ -379,6 +379,12 @@ button {
   line-height: 1.35;
 }
 
+.visit-card-main p {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .active-visit-actions {
   padding: 0 14px 14px;
 }
@@ -471,31 +477,33 @@ button {
 
 .visit-workstation {
   display: grid;
-  gap: 14px;
+  gap: 12px;
   margin: 0 14px 12px;
-  border: 0;
-  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--washed-primary) 14%, var(--washed-border));
+  border-radius: 14px;
   padding: 14px;
-  background: var(--washed-primary-soft);
+  background: color-mix(in srgb, var(--washed-primary-soft) 54%, var(--washed-surface));
 }
 
 .visit-map {
   position: relative;
   display: grid;
+  gap: 4px;
   place-items: center;
-  min-height: 150px;
+  min-height: 132px;
   overflow: hidden;
-  border: 1.5px solid var(--washed-border);
-  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--washed-primary) 18%, var(--washed-border));
+  border-radius: 12px;
   background:
-    linear-gradient(145deg, #c8e8d4, #d4eeda),
+    radial-gradient(circle at 24% 28%, rgba(212, 144, 14, 0.18), transparent 28%),
+    linear-gradient(145deg, #ecf6ef, #f7fbf8),
     repeating-linear-gradient(0deg, transparent 0 39px, rgba(26, 92, 52, 0.1) 39px 40px),
     repeating-linear-gradient(90deg, transparent 0 59px, rgba(26, 92, 52, 0.1) 59px 60px);
   text-align: center;
 }
 
-.visit-map strong {
-  font-size: 28px;
+.visit-map svg {
+  color: var(--washed-primary);
 }
 
 .visit-map span {
