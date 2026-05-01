@@ -126,4 +126,48 @@ describe('subscriber app', () => {
       screen.getByText("Demande d'effacement mise en file pour revue opérateur."),
     ).toBeInTheDocument();
   });
+
+  it('opens first-class subscriber visit, inbox, and billing surfaces', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Visite' }));
+    expect(screen.getByRole('heading', { name: 'Détail de visite' })).toBeInTheDocument();
+    expect(screen.getByText('Photos avant/après et preuve de visite')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Démarrer le suivi' }));
+    expect(screen.getByLabelText('Bounded live map')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Support' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Inbox' }));
+    expect(
+      screen.getByRole('heading', { name: 'Boîte de réception et notifications' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Rappel visite mardi')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Abonnement' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Paiements' }));
+    expect(screen.getByRole('heading', { name: 'Historique de paiement' })).toBeInTheDocument();
+    expect(screen.getByText('Crédits support')).toBeInTheDocument();
+  });
+
+  it('opens payment recovery, legal, and account recovery surfaces', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Abonnement' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Paiement' }));
+    expect(screen.getByRole('heading', { name: 'Régularisation du paiement' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Régulariser le paiement' }));
+    expect(screen.getByText('Paiement marqué comme régularisé.')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Profil' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Legal' }));
+    expect(
+      screen.getByRole('heading', { name: 'Conditions et confidentialité' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Conditions d'utilisation")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Profil' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Récupération' }));
+    expect(screen.getByRole('heading', { name: 'Récupération du compte' })).toBeInTheDocument();
+    expect(screen.getByText("Contrôles d'identité")).toBeInTheDocument();
+  });
 });

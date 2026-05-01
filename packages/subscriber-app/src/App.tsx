@@ -22,6 +22,7 @@ import {
   visitTimeline,
   type AppRoute,
   type LocalizedCopy,
+  type PrimaryAppRoute,
 } from './appData.js';
 import {
   initialSubscriberState,
@@ -35,7 +36,7 @@ const navOrder = [
   'subscription',
   'support',
   'profile',
-] as const satisfies readonly AppRoute[];
+] as const satisfies readonly PrimaryAppRoute[];
 
 export function App(): ReactElement {
   const [locale, setLocale] = useState<WashedLocale>('fr');
@@ -104,6 +105,33 @@ export function App(): ReactElement {
         {route === 'profile' ? (
           <ProfileScreen dispatch={dispatch} locale={locale} onRouteChange={setRoute} t={t} />
         ) : null}
+        {route === 'visit' ? (
+          <VisitDetailScreen
+            dispatch={dispatch}
+            locale={locale}
+            subscriberState={subscriberState}
+            t={t}
+          />
+        ) : null}
+        {route === 'inbox' ? <InboxScreen subscriberState={subscriberState} t={t} /> : null}
+        {route === 'billing' ? (
+          <BillingScreen
+            dispatch={dispatch}
+            locale={locale}
+            subscriberState={subscriberState}
+            t={t}
+          />
+        ) : null}
+        {route === 'paymentRecovery' ? (
+          <PaymentRecoveryScreen
+            dispatch={dispatch}
+            locale={locale}
+            subscriberState={subscriberState}
+            t={t}
+          />
+        ) : null}
+        {route === 'legal' ? <LegalScreen dispatch={dispatch} t={t} /> : null}
+        {route === 'accountRecovery' ? <AccountRecoveryScreen t={t} /> : null}
       </main>
 
       <BottomNav
@@ -177,6 +205,9 @@ function HomeScreen({
         />
 
         <div className="visit-actions" aria-label={t.home.visitControls}>
+          <Button onClick={() => onRouteChange('visit')} size="sm" variant="primary">
+            {t.nav.visit}
+          </Button>
           <Button
             onClick={() => dispatch({ type: 'visit/startTracking' })}
             size="sm"
@@ -190,9 +221,6 @@ function HomeScreen({
             variant="ghost"
           >
             {t.action.stopTracking}
-          </Button>
-          <Button onClick={() => onRouteChange('support')} size="sm" variant="ghost">
-            {t.action.openSupport}
           </Button>
         </div>
 
@@ -386,6 +414,12 @@ function SubscriptionScreen({
         <Button fullWidth onClick={() => dispatch({ type: 'payment/recover' })} variant="secondary">
           {t.action.recoverPayment}
         </Button>
+        <Button fullWidth onClick={() => onRouteChange('billing')} variant="secondary">
+          {t.nav.billing}
+        </Button>
+        <Button fullWidth onClick={() => onRouteChange('paymentRecovery')} variant="secondary">
+          {t.nav.paymentRecovery}
+        </Button>
         <Button
           fullWidth
           onClick={() => dispatch({ type: 'subscription/cancel' })}
@@ -431,6 +465,9 @@ function SupportScreen({
           description="Push history, unread state, outage notices."
           title={t.support.notificationCenter}
         />
+        <Button onClick={() => onRouteChange('inbox')} variant="secondary">
+          {t.nav.inbox}
+        </Button>
       </Card>
 
       <EmptyState
@@ -471,6 +508,14 @@ function ProfileScreen({
           title={t.onboarding.language}
         />
         <ListItem description="ToS, Privacy Policy, Help / FAQ" title={t.profile.legal} />
+        <div className="inline-actions">
+          <Button onClick={() => onRouteChange('legal')} size="sm" variant="secondary">
+            {t.nav.legal}
+          </Button>
+          <Button onClick={() => onRouteChange('accountRecovery')} size="sm" variant="secondary">
+            {t.nav.accountRecovery}
+          </Button>
+        </div>
       </Card>
 
       <Card>
@@ -497,6 +542,209 @@ function ProfileScreen({
             },
             { label: t.profile.maintenance, tone: 'primary' },
           ]}
+        />
+      </Card>
+    </ScreenFrame>
+  );
+}
+
+function VisitDetailScreen({
+  dispatch,
+  locale,
+  subscriberState,
+  t,
+}: {
+  readonly dispatch: Dispatch<SubscriberAction>;
+  readonly locale: WashedLocale;
+  readonly subscriberState: SubscriberState;
+  readonly t: LocalizedCopy;
+}): ReactElement {
+  const nextVisit = formatVisitDate(subscriberState.nextVisit.startsAt, locale);
+
+  return (
+    <ScreenFrame
+      action={<Badge tone="success">{t.visitStage[subscriberState.nextVisit.stage]}</Badge>}
+      eyebrow="Visit"
+      title={t.surfaces.visit.title}
+    >
+      <Card className="visit-card" elevated>
+        <ListItem
+          after={<Badge tone="accent">{subscriberState.nextVisit.window}</Badge>}
+          description={`${subscriberState.nextVisit.workerName}, ${subscriberState.nextVisit.cell}`}
+          title={nextVisit}
+        />
+        <ListItem description={t.surfaces.visit.access} title="Adresse et accès" />
+        <ListItem description={t.surfaces.visit.photos} title="Avant / après" />
+        <ListItem description={t.surfaces.visit.rating} title="Rating" />
+        <div className="visit-actions" aria-label={t.home.visitControls}>
+          <Button onClick={() => dispatch({ type: 'visit/startTracking' })} size="sm">
+            {t.action.startTracking}
+          </Button>
+          <Button onClick={() => dispatch({ type: 'visit/skip' })} size="sm" variant="secondary">
+            {t.action.skipVisit}
+          </Button>
+          <Button
+            onClick={() => dispatch({ type: 'visit/reschedule' })}
+            size="sm"
+            variant="secondary"
+          >
+            {t.action.reschedule}
+          </Button>
+        </div>
+        {subscriberState.nextVisit.stage === 'enRoute' ? (
+          <BoundedTrackingMap onArrive={() => dispatch({ type: 'visit/arrive' })} t={t} />
+        ) : null}
+      </Card>
+    </ScreenFrame>
+  );
+}
+
+function InboxScreen({
+  subscriberState,
+  t,
+}: {
+  readonly subscriberState: SubscriberState;
+  readonly t: LocalizedCopy;
+}): ReactElement {
+  return (
+    <ScreenFrame
+      action={<Badge tone="success">{subscriberState.inboxUnread}</Badge>}
+      eyebrow="Inbox"
+      title={t.surfaces.inbox.title}
+    >
+      <Card elevated>
+        <ListItem description="T-24h · mardi 5 mai · 9-11" title={t.surfaces.inbox.reminder} />
+        <ListItem
+          description="Mobile money · prochaine tentative"
+          title={t.surfaces.inbox.payment}
+        />
+        <ListItem description={t.surfaces.inbox.outage} title={t.profile.maintenance} />
+      </Card>
+    </ScreenFrame>
+  );
+}
+
+function BillingScreen({
+  dispatch,
+  locale,
+  subscriberState,
+  t,
+}: {
+  readonly dispatch: Dispatch<SubscriberAction>;
+  readonly locale: WashedLocale;
+  readonly subscriberState: SubscriberState;
+  readonly t: LocalizedCopy;
+}): ReactElement {
+  return (
+    <ScreenFrame
+      action={
+        <Badge tone="accent">{t.paymentStatus[subscriberState.subscription.paymentStatus]}</Badge>
+      }
+      eyebrow="Billing"
+      title={t.surfaces.billing.title}
+    >
+      <Card elevated>
+        <ListItem
+          description={t.surfaces.billing.receipt}
+          title={formatXof(subscriberState.subscription.monthlyPriceXof, locale)}
+        />
+        <ListItem
+          description={t.surfaces.billing.refund}
+          title={t.surfaces.billing.supportCredit}
+        />
+        <Button fullWidth onClick={() => dispatch({ type: 'payment/recover' })} variant="secondary">
+          {t.action.recoverPayment}
+        </Button>
+      </Card>
+    </ScreenFrame>
+  );
+}
+
+function PaymentRecoveryScreen({
+  dispatch,
+  locale,
+  subscriberState,
+  t,
+}: {
+  readonly dispatch: Dispatch<SubscriberAction>;
+  readonly locale: WashedLocale;
+  readonly subscriberState: SubscriberState;
+  readonly t: LocalizedCopy;
+}): ReactElement {
+  return (
+    <ScreenFrame
+      action={
+        <Badge tone="danger">{t.paymentStatus[subscriberState.subscription.paymentStatus]}</Badge>
+      }
+      eyebrow="Payment"
+      title={t.surfaces.paymentRecovery.title}
+    >
+      <Card elevated>
+        <Alert
+          title={formatXof(subscriberState.subscription.monthlyPriceXof, locale)}
+          tone="danger"
+        >
+          {t.surfaces.paymentRecovery.body}
+        </Alert>
+        <Button fullWidth onClick={() => dispatch({ type: 'payment/recover' })}>
+          {t.action.recoverPayment}
+        </Button>
+      </Card>
+    </ScreenFrame>
+  );
+}
+
+function LegalScreen({
+  dispatch,
+  t,
+}: {
+  readonly dispatch: Dispatch<SubscriberAction>;
+  readonly t: LocalizedCopy;
+}): ReactElement {
+  return (
+    <ScreenFrame action={<Badge>GDPR</Badge>} eyebrow="Legal" title={t.surfaces.legal.title}>
+      <Card elevated>
+        <ListItem description="App Store / Play Store required" title={t.surfaces.legal.terms} />
+        <ListItem description="FR/EN launch copy" title={t.surfaces.legal.privacyPolicy} />
+        <ListItem description={t.surfaces.legal.export} title={t.profile.exportData} />
+        <ListItem description={t.surfaces.legal.erasure} title={t.profile.erasure} />
+        <div className="inline-actions">
+          <Button
+            onClick={() => dispatch({ type: 'privacy/export' })}
+            size="sm"
+            variant="secondary"
+          >
+            {t.profile.exportData}
+          </Button>
+          <Button
+            onClick={() => dispatch({ type: 'privacy/erasure' })}
+            size="sm"
+            variant="secondary"
+          >
+            {t.profile.erasure}
+          </Button>
+        </div>
+      </Card>
+    </ScreenFrame>
+  );
+}
+
+function AccountRecoveryScreen({ t }: { readonly t: LocalizedCopy }): ReactElement {
+  return (
+    <ScreenFrame
+      action={<Badge tone="accent">{t.surfaces.accountRecovery.operatorReview}</Badge>}
+      eyebrow="Recovery"
+      title={t.surfaces.accountRecovery.title}
+    >
+      <Card elevated>
+        <Alert tone="primary">{t.surfaces.accountRecovery.body}</Alert>
+        <ListItem
+          description="+228 phone ownership, last payment reference, household address"
+          title={t.surfaces.accountRecovery.identity}
+        />
+        <ListItem
+          description="Operators approve recovery; no self-service account takeover in v1."
+          title={t.surfaces.accountRecovery.operatorReview}
         />
       </Card>
     </ScreenFrame>

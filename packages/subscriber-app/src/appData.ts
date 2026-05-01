@@ -1,7 +1,16 @@
 import type { WashedLocale } from '@washed/i18n';
 import type { PaymentStatus, SubscriberFeedback, VisitStage } from './subscriberState.js';
 
-export type AppRoute = 'home' | 'onboarding' | 'profile' | 'subscription' | 'support';
+export type PrimaryAppRoute = 'home' | 'profile' | 'subscription' | 'support';
+export type AppRoute =
+  | PrimaryAppRoute
+  | 'accountRecovery'
+  | 'billing'
+  | 'inbox'
+  | 'legal'
+  | 'onboarding'
+  | 'paymentRecovery'
+  | 'visit';
 
 export interface LocalizedCopy {
   readonly action: {
@@ -70,6 +79,43 @@ export interface LocalizedCopy {
     readonly notificationCenter: string;
     readonly title: string;
   };
+  readonly surfaces: {
+    readonly accountRecovery: {
+      readonly body: string;
+      readonly identity: string;
+      readonly operatorReview: string;
+      readonly title: string;
+    };
+    readonly billing: {
+      readonly receipt: string;
+      readonly refund: string;
+      readonly supportCredit: string;
+      readonly title: string;
+    };
+    readonly inbox: {
+      readonly outage: string;
+      readonly payment: string;
+      readonly reminder: string;
+      readonly title: string;
+    };
+    readonly legal: {
+      readonly erasure: string;
+      readonly export: string;
+      readonly privacyPolicy: string;
+      readonly terms: string;
+      readonly title: string;
+    };
+    readonly paymentRecovery: {
+      readonly body: string;
+      readonly title: string;
+    };
+    readonly visit: {
+      readonly access: string;
+      readonly photos: string;
+      readonly rating: string;
+      readonly title: string;
+    };
+  };
   readonly visitStage: Record<VisitStage, string>;
 }
 
@@ -122,11 +168,17 @@ export const copy = {
       washerConfirmed: 'Washerwoman confirmed',
     },
     nav: {
+      accountRecovery: 'Recovery',
+      billing: 'Billing',
       home: 'Home',
+      inbox: 'Inbox',
+      legal: 'Legal',
       onboarding: 'Start',
+      paymentRecovery: 'Payment',
       profile: 'Profile',
       subscription: 'Plan',
       support: 'Support',
+      visit: 'Visit',
     },
     paymentStatus: {
       current: 'current',
@@ -170,6 +222,43 @@ export const copy = {
       messages: 'Operator-mediated messages',
       notificationCenter: 'Notification center',
       title: 'Support',
+    },
+    surfaces: {
+      accountRecovery: {
+        body: 'Phone-only auth needs an operator-reviewed path when a household changes SIM or loses access.',
+        identity: 'Identity checks',
+        operatorReview: 'Operator review',
+        title: 'Account recovery',
+      },
+      billing: {
+        receipt: 'May receipt · 4,500 XOF · overdue',
+        refund: 'Refund preview and support credit ledger',
+        supportCredit: 'Support credits',
+        title: 'Billing history',
+      },
+      inbox: {
+        outage: 'Maintenance and required update notices stay here after the push disappears.',
+        payment: 'Payment recovery reminder',
+        reminder: 'Tuesday visit reminder',
+        title: 'Inbox and notifications',
+      },
+      legal: {
+        erasure: 'Three-step erasure request with operator review',
+        export: 'Export request queued from profile',
+        privacyPolicy: 'Privacy policy',
+        terms: 'Terms of service',
+        title: 'Terms and privacy',
+      },
+      paymentRecovery: {
+        body: 'A failed mobile-money charge opens this screen before the next scheduled visit.',
+        title: 'Payment recovery',
+      },
+      visit: {
+        access: 'Landmark, access notes, and operator-visible watchlist status',
+        photos: 'Before/after photos and visit proof',
+        rating: 'Rating and dispute entry point',
+        title: 'Visit detail',
+      },
     },
     visitStage: {
       arrived: 'Arrived',
@@ -220,11 +309,17 @@ export const copy = {
       washerConfirmed: 'Washerwoman confirmée',
     },
     nav: {
+      accountRecovery: 'Récupération',
+      billing: 'Paiements',
       home: 'Accueil',
+      inbox: 'Inbox',
+      legal: 'Legal',
       onboarding: 'Départ',
+      paymentRecovery: 'Paiement',
       profile: 'Profil',
       subscription: 'Abonnement',
       support: 'Support',
+      visit: 'Visite',
     },
     paymentStatus: {
       current: 'à jour',
@@ -268,6 +363,44 @@ export const copy = {
       messages: 'Messages relayés par opérateur',
       notificationCenter: 'Centre de notifications',
       title: 'Support',
+    },
+    surfaces: {
+      accountRecovery: {
+        body: "L'authentification par téléphone exige un parcours revu par opérateur quand un foyer change de SIM ou perd l'accès.",
+        identity: "Contrôles d'identité",
+        operatorReview: 'Revue opérateur',
+        title: 'Récupération du compte',
+      },
+      billing: {
+        receipt: 'Reçu de mai · 4 500 FCFA · en retard',
+        refund: 'Prévisualisation remboursement et crédits support',
+        supportCredit: 'Crédits support',
+        title: 'Historique de paiement',
+      },
+      inbox: {
+        outage:
+          'Les avis de maintenance et de mise à jour obligatoire restent ici après la notification.',
+        payment: 'Rappel de régularisation',
+        reminder: 'Rappel visite mardi',
+        title: 'Boîte de réception et notifications',
+      },
+      legal: {
+        erasure: "Demande d'effacement en trois étapes avec revue opérateur",
+        export: 'Export demandé depuis le profil',
+        privacyPolicy: 'Politique de confidentialité',
+        terms: "Conditions d'utilisation",
+        title: 'Conditions et confidentialité',
+      },
+      paymentRecovery: {
+        body: 'Un échec de paiement mobile money ouvre cet écran avant la prochaine visite planifiée.',
+        title: 'Régularisation du paiement',
+      },
+      visit: {
+        access: "Repère, consignes d'accès et statut de vigilance visible par opérateur",
+        photos: 'Photos avant/après et preuve de visite',
+        rating: 'Note et point d’entrée réclamation',
+        title: 'Détail de visite',
+      },
     },
     visitStage: {
       arrived: 'Arrivée',

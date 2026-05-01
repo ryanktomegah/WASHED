@@ -157,6 +157,13 @@ input {
   gap: 8px;
 }
 
+.inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 .screen-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
