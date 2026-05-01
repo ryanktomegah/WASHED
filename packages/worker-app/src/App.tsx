@@ -27,6 +27,7 @@ import {
   type WorkerAction,
   type WorkerState,
 } from './workerState.js';
+import { captureVisitPhoto } from './nativeCamera.js';
 
 const navOrder = [
   'today',
@@ -38,7 +39,18 @@ const navOrder = [
 export function App(): ReactElement {
   const [route, setRoute] = useState<WorkerRoute>('today');
   const [workerState, dispatch] = useReducer(workerReducer, initialWorkerState);
+  const [captureInProgress, setCaptureInProgress] = useState(false);
   const t = workerCopy;
+
+  async function captureProof(kind: 'after' | 'before') {
+    setCaptureInProgress(true);
+    try {
+      await captureVisitPhoto(kind);
+      dispatch({ step: kind === 'before' ? 'beforePhoto' : 'afterPhoto', type: 'visit/setStep' });
+    } finally {
+      setCaptureInProgress(false);
+    }
+  }
 
   return (
     <WashedThemeProvider className="worker-frame" theme="worker">
@@ -66,7 +78,9 @@ export function App(): ReactElement {
         {route === 'today' ? (
           <TodayScreen
             dispatch={dispatch}
+            isCapturingPhoto={captureInProgress}
             onRouteChange={setRoute}
+            onVisitPhotoCapture={captureProof}
             t={t}
             workerState={workerState}
           />
@@ -82,7 +96,13 @@ export function App(): ReactElement {
           <ActivationScreen dispatch={dispatch} workerState={workerState} t={t} />
         ) : null}
         {route === 'inbox' ? <InboxScreen workerState={workerState} t={t} /> : null}
-        {route === 'photoRetry' ? <PhotoRetryScreen dispatch={dispatch} t={t} /> : null}
+        {route === 'photoRetry' ? (
+          <PhotoRetryScreen
+            isCapturingPhoto={captureInProgress}
+            onVisitPhotoCapture={captureProof}
+            t={t}
+          />
+        ) : null}
         {route === 'daySummary' ? (
           <DaySummaryScreen dispatch={dispatch} workerState={workerState} t={t} />
         ) : null}
@@ -104,12 +124,16 @@ export function App(): ReactElement {
 
 function TodayScreen({
   dispatch,
+  isCapturingPhoto,
   onRouteChange,
+  onVisitPhotoCapture,
   t,
   workerState,
 }: {
   readonly dispatch: Dispatch<WorkerAction>;
+  readonly isCapturingPhoto: boolean;
   readonly onRouteChange: (route: WorkerRoute) => void;
+  readonly onVisitPhotoCapture: (kind: 'after' | 'before') => Promise<void>;
   readonly t: typeof workerCopy;
   readonly workerState: WorkerState;
 }): ReactElement {
@@ -179,7 +203,9 @@ function TodayScreen({
         <VisitLifecycle dispatch={dispatch} t={t} workerState={workerState} />
         <VisitWorkstation
           dispatch={dispatch}
+          isCapturingPhoto={isCapturingPhoto}
           onRouteChange={onRouteChange}
+          onVisitPhotoCapture={onVisitPhotoCapture}
           t={t}
           workerState={workerState}
         />
@@ -241,12 +267,16 @@ function TodayScreen({
 
 function VisitWorkstation({
   dispatch,
+  isCapturingPhoto,
   onRouteChange,
+  onVisitPhotoCapture,
   t,
   workerState,
 }: {
   readonly dispatch: Dispatch<WorkerAction>;
+  readonly isCapturingPhoto: boolean;
   readonly onRouteChange: (route: WorkerRoute) => void;
+  readonly onVisitPhotoCapture: (kind: 'after' | 'before') => Promise<void>;
   readonly t: typeof workerCopy;
   readonly workerState: WorkerState;
 }): ReactElement {
@@ -266,7 +296,8 @@ function VisitWorkstation({
     checkIn: {
       body: 'GPS validé dans le rayon de 100 m. Capturer la photo avant maintenant.',
       label: t.action.takeBeforePhoto,
-      onClick: () => dispatch({ step: 'beforePhoto', type: 'visit/setStep' }),
+      loading: isCapturingPhoto,
+      onClick: () => void onVisitPhotoCapture('before'),
       title: 'Arrivée pointée',
     },
     checkOut: {
@@ -284,7 +315,8 @@ function VisitWorkstation({
     inVisit: {
       body: 'La visite est en cours. Capturer la photo après avant de quitter le foyer.',
       label: t.action.takeAfterPhoto,
-      onClick: () => dispatch({ step: 'afterPhoto', type: 'visit/setStep' }),
+      loading: isCapturingPhoto,
+      onClick: () => void onVisitPhotoCapture('after'),
       title: 'Visite en cours',
     },
   }[workerState.visit.step];
@@ -317,7 +349,11 @@ function VisitWorkstation({
         ))}
       </div>
 
-      <Button fullWidth onClick={stepConfig.onClick}>
+      <Button
+        fullWidth
+        loading={'loading' in stepConfig ? stepConfig.loading : false}
+        onClick={stepConfig.onClick}
+      >
         {stepConfig.label}
       </Button>
     </div>
@@ -556,10 +592,12 @@ function InboxScreen({
 }
 
 function PhotoRetryScreen({
-  dispatch,
+  isCapturingPhoto,
+  onVisitPhotoCapture,
   t,
 }: {
-  readonly dispatch: Dispatch<WorkerAction>;
+  readonly isCapturingPhoto: boolean;
+  readonly onVisitPhotoCapture: (kind: 'after' | 'before') => Promise<void>;
   readonly t: typeof workerCopy;
 }): ReactElement {
   return (
@@ -571,7 +609,11 @@ function PhotoRetryScreen({
         <div className="photo-preview" aria-label="Photo quality preview">
           <span />
         </div>
-        <Button fullWidth onClick={() => dispatch({ step: 'beforePhoto', type: 'visit/setStep' })}>
+        <Button
+          fullWidth
+          loading={isCapturingPhoto}
+          onClick={() => void onVisitPhotoCapture('before')}
+        >
           {t.photoRetry.retake}
         </Button>
       </Card>

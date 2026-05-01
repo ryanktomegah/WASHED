@@ -45,7 +45,7 @@ describe('worker app', () => {
     expect(screen.getByText('4 actions en attente de synchronisation')).toBeInTheDocument();
   });
 
-  it('syncs offline actions and advances the visit lifecycle', () => {
+  it('syncs offline actions and advances the visit lifecycle', async () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Synchroniser maintenant' }));
@@ -63,7 +63,9 @@ describe('worker app', () => {
     expect(screen.getByText('Arrivée pointée')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Prendre photo avant' }));
-    expect(screen.getByText('Photo avant ajoutée à la file hors ligne.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Photo avant ajoutée à la file hors ligne.'),
+    ).toBeInTheDocument();
     expect(screen.getByText('Preuve avant capturée')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Démarrer la visite' }));
@@ -73,7 +75,9 @@ describe('worker app', () => {
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Prendre photo après' }));
-    expect(screen.getByText('Photo après ajoutée à la file hors ligne.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Photo après ajoutée à la file hors ligne.'),
+    ).toBeInTheDocument();
     expect(screen.getByText('Photo après enregistrée')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Pointer la sortie' }));
@@ -117,7 +121,7 @@ describe('worker app', () => {
     ).toBeInTheDocument();
   });
 
-  it('handles activation, inbox, photo retry, and day summary surfaces', () => {
+  it('handles activation, inbox, photo retry, and day summary surfaces', async () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Activation' }));
@@ -136,7 +140,9 @@ describe('worker app', () => {
     expect(screen.getByRole('heading', { name: 'Contrôle photo' })).toBeInTheDocument();
     expect(screen.getByLabelText('Photo quality preview')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Reprendre la photo' }));
-    expect(screen.getByText('Photo avant ajoutée à la file hors ligne.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Photo avant ajoutée à la file hors ligne.'),
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: "Aujourd'hui" }));
     fireEvent.click(screen.getByRole('button', { name: 'Résumé' }));
