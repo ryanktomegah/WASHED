@@ -127,7 +127,8 @@ describe('worker app', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Profil' }));
     expect(screen.getByRole('heading', { name: 'Profil' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Worker app surfaces').children).toHaveLength(14);
+    expect(screen.getByText('Bouton SOS')).toBeInTheDocument();
+    expect(screen.queryByText('Surfaces')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Exporter mes données' }));
     expect(screen.getByText("Demande d'export des données enregistrée.")).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: "Demander l'effacement" }));

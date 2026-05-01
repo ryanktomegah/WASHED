@@ -6,7 +6,7 @@ body,
 }
 
 body {
-  background: var(--washed-background, #fbf7f1);
+  background: #f7f4ee;
 }
 
 * {
@@ -19,7 +19,10 @@ input {
 }
 
 .app-frame {
-  background: var(--washed-background) !important;
+  --subscriber-trust: #23666f;
+  --subscriber-trust-soft: #e7f2f0;
+  --subscriber-glow: rgba(35, 102, 111, 0.14);
+  background: #f7f4ee !important;
   display: grid;
   place-items: center;
   min-height: 100vh;
@@ -36,7 +39,7 @@ input {
   width: min(100%, 430px);
   min-height: 100vh;
   min-height: 100dvh;
-  background: var(--washed-background);
+  background: linear-gradient(180deg, #f9f6f0 0%, #faf7f2 34%, #fffdf8 100%);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--washed-border) 60%, transparent);
 }
 
@@ -120,7 +123,7 @@ input {
 }
 
 .subscriber-greeting {
-  padding: 0 20px 18px;
+  padding: 0 20px 16px;
 }
 
 .subscriber-greeting span {
@@ -165,8 +168,8 @@ input {
 .subscriber-greeting-actions button:first-child {
   width: 38px;
   height: 38px;
-  background: color-mix(in srgb, var(--washed-accent) 22%, var(--washed-surface));
-  color: var(--washed-accent);
+  background: var(--subscriber-trust-soft);
+  color: var(--subscriber-trust);
 }
 
 .subscriber-greeting-actions button:nth-child(2) {
@@ -205,16 +208,16 @@ input {
 
 .home-hero-card {
   display: grid;
-  gap: 18px;
+  gap: 14px;
   overflow: hidden;
-  border-radius: 22px;
-  background: var(--washed-foreground);
+  border: 1px solid rgba(35, 102, 111, 0.16);
+  border-radius: 18px;
   background:
-    radial-gradient(circle at 88% 16%, rgba(196, 98, 45, 0.24), transparent 30%),
-    linear-gradient(145deg, #261507 0%, #130b04 68%);
-  box-shadow: 0 20px 44px rgba(28, 18, 8, 0.18);
+    radial-gradient(circle at 92% 6%, rgba(35, 102, 111, 0.18), transparent 34%),
+    linear-gradient(180deg, #fffdf8 0%, #fff8f2 100%);
+  box-shadow: 0 14px 34px rgba(39, 28, 16, 0.08);
   margin: 0 18px 18px;
-  padding: 20px;
+  padding: 18px;
 }
 
 .hero-card-topline,
@@ -231,7 +234,7 @@ input {
 }
 
 .hero-card-topline > span {
-  color: rgba(255, 253, 248, 0.62);
+  color: var(--washed-muted);
   font-size: 12px;
   font-weight: 800;
 }
@@ -243,7 +246,7 @@ input {
 
 .hero-date-block h2 {
   margin: 0;
-  color: var(--washed-surface);
+  color: var(--washed-foreground);
   font-size: 28px;
   font-weight: 900;
   line-height: 1.05;
@@ -251,7 +254,7 @@ input {
 
 .hero-date-block span {
   gap: 6px;
-  color: rgba(255, 253, 248, 0.6);
+  color: var(--washed-muted);
   font-size: 16px;
   font-weight: 700;
 }
@@ -269,8 +272,8 @@ input {
   height: 48px;
   place-items: center;
   border-radius: 999px;
-  background: #f6e7bd;
-  color: #6f4b00;
+  background: var(--subscriber-trust-soft);
+  color: var(--subscriber-trust);
   font-size: 12px;
   font-weight: 900;
   line-height: 1.25;
@@ -279,14 +282,14 @@ input {
 
 .hero-worker-row strong {
   display: block;
-  color: var(--washed-surface);
+  color: var(--washed-foreground);
   font-size: 16px;
 }
 
 .hero-worker-row span:not(.ok-pill) {
   display: block;
   margin-top: 2px;
-  color: rgba(255, 253, 248, 0.48);
+  color: var(--washed-muted);
   font-size: 13px;
 }
 
@@ -313,10 +316,10 @@ input {
 .visit-assurance-grid span {
   min-width: 0;
   gap: 6px;
-  border: 1px solid rgba(255, 253, 248, 0.1);
-  border-radius: 14px;
-  background: rgba(255, 253, 248, 0.08);
-  color: rgba(255, 253, 248, 0.76);
+  border: 1px solid rgba(35, 102, 111, 0.13);
+  border-radius: 12px;
+  background: var(--subscriber-trust-soft);
+  color: var(--subscriber-trust);
   font-size: 12px;
   font-weight: 750;
   padding: 10px;
@@ -330,10 +333,10 @@ input {
 
 .hero-actions button {
   min-height: 40px;
-  border: 0;
-  border-radius: 11px;
-  background: rgba(255, 253, 248, 0.07);
-  color: rgba(255, 253, 248, 0.72);
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--washed-primary);
   cursor: pointer;
   font-size: 13px;
   font-weight: 850;
@@ -343,12 +346,12 @@ input {
 .hero-actions .hero-action-primary {
   background: var(--washed-primary);
   color: var(--washed-surface);
-  box-shadow: 0 10px 24px rgba(196, 98, 45, 0.24);
+  box-shadow: 0 10px 20px rgba(196, 98, 45, 0.18);
 }
 
 .hero-actions button:nth-child(2),
 .hero-actions button:nth-child(3) {
-  background: color-mix(in srgb, var(--washed-primary) 24%, var(--washed-surface));
+  border-color: rgba(196, 98, 45, 0.18);
   color: var(--washed-primary);
 }
 
@@ -396,7 +399,7 @@ input {
   gap: 2px;
   place-items: center;
   border: 2px solid transparent;
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--washed-surface);
   color: var(--washed-foreground);
   cursor: pointer;
@@ -432,7 +435,7 @@ input {
   justify-content: space-between;
   gap: 12px;
   border: 1px solid var(--washed-border);
-  border-radius: 16px;
+  border-radius: 12px;
   background: var(--washed-surface);
   color: var(--washed-foreground);
   cursor: pointer;
@@ -472,7 +475,7 @@ input {
   gap: 4px;
   align-content: start;
   border: 1px solid var(--washed-border);
-  border-radius: 16px;
+  border-radius: 12px;
   background: var(--washed-surface);
   color: var(--washed-foreground);
   cursor: pointer;
@@ -503,7 +506,7 @@ input {
 .visit-status-card,
 .message-preview {
   border: 1px solid var(--washed-border);
-  border-radius: 16px;
+  border-radius: 12px;
   background: var(--washed-surface);
   padding: 16px;
 }

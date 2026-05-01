@@ -28,7 +28,6 @@ import {
   routeCards,
   visitSteps,
   workerCopy,
-  workerSurfaces,
   type PrimaryWorkerRoute,
   type WorkerRoute,
 } from './appData.js';
@@ -317,7 +316,11 @@ function TodayScreen({
           </button>
         </div>
         <div className="field-command-actions">
-          <button className="primary-field-action" onClick={() => onRouteChange('visit')} type="button">
+          <button
+            className="primary-field-action"
+            onClick={() => onRouteChange('visit')}
+            type="button"
+          >
             <Camera aria-hidden="true" size={17} strokeWidth={2.4} />
             Ouvrir visite
           </button>
@@ -883,14 +886,17 @@ function ProfileScreen({
       </Card>
       <Card>
         <div className="card-header">
-          <h2>Surfaces</h2>
-          <Badge>{workerSurfaces.length}</Badge>
+          <h2>Sécurité</h2>
+          <Badge tone="success">Active</Badge>
         </div>
-        <div className="surface-grid" aria-label="Worker app surfaces">
-          {workerSurfaces.map((surface) => (
-            <span key={surface}>{surface}</span>
-          ))}
-        </div>
+        <ListItem
+          description="Disponible depuis chaque visite en cas de problème."
+          title="Bouton SOS"
+        />
+        <ListItem
+          description="Vos photos, pointages et signalements restent synchronisés dès que le réseau revient."
+          title="Mode hors ligne"
+        />
       </Card>
     </ScreenFrame>
   );

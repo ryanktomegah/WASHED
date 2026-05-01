@@ -40,7 +40,9 @@ test('operator console covers planning, matching, notifications, reports, and go
   await page.getByRole('button', { name: 'Rapports' }).click();
   await expect(page.getByRole('heading', { name: 'Reports and KPI exports' })).toBeVisible();
   await page.getByRole('button', { name: 'Export report' }).click();
-  await expect(page.getByText('Closed-beta report export prepared for review.')).toBeVisible();
+  await expect(
+    page.getByText('Weekly operations report export prepared for review.'),
+  ).toBeVisible();
 
   await page.getByRole('button', { name: 'Profiles' }).click();
   await expect(page.getByRole('heading', { name: 'Worker and subscriber profiles' })).toBeVisible();

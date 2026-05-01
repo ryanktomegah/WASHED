@@ -131,7 +131,7 @@ describe('operator console', () => {
     expect(screen.getByText('Provider readiness check completed.')).toBeInTheDocument();
     expect(screen.getAllByText('just now').length).toBeGreaterThanOrEqual(1);
     fireEvent.click(screen.getByRole('button', { name: 'Toggle forced update' }));
-    expect(screen.getByText('Forced-update flag changed for beta clients.')).toBeInTheDocument();
+    expect(screen.getByText('Forced-update flag changed for mobile clients.')).toBeInTheDocument();
     expect(screen.getByText('Forced')).toBeInTheDocument();
   });
 
@@ -167,7 +167,9 @@ describe('operator console', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Rapports' }));
     expect(screen.getByRole('heading', { name: 'Reports and KPI exports' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Export report' }));
-    expect(screen.getByText('Closed-beta report export prepared for review.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Weekly operations report export prepared for review.'),
+    ).toBeInTheDocument();
     expect(screen.getByText('just now')).toBeInTheDocument();
   });
 });

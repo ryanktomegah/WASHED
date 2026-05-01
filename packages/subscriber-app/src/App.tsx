@@ -240,7 +240,10 @@ function HomeScreen({
             {isFrench ? 'Confirmée' : 'Confirmed'}
           </span>
         </div>
-        <div className="visit-assurance-grid" aria-label={isFrench ? 'Préparation de la visite' : 'Visit readiness'}>
+        <div
+          className="visit-assurance-grid"
+          aria-label={isFrench ? 'Préparation de la visite' : 'Visit readiness'}
+        >
           <span>
             <ShieldCheck aria-hidden="true" size={15} strokeWidth={2.35} />
             {isFrench ? 'Affectation validée' : 'Assignment verified'}
@@ -251,7 +254,11 @@ function HomeScreen({
           </span>
         </div>
         <div className="hero-actions">
-          <button className="hero-action-primary" onClick={() => onRouteChange('visit')} type="button">
+          <button
+            className="hero-action-primary"
+            onClick={() => onRouteChange('visit')}
+            type="button"
+          >
             {isFrench ? 'Voir la visite' : 'View visit'}
           </button>
           <button onClick={() => dispatch({ type: 'visit/reschedule' })} type="button">
@@ -263,7 +270,10 @@ function HomeScreen({
         </div>
       </section>
 
-      <section className="mini-calendar" aria-label={isFrench ? 'Visites à venir' : 'Upcoming visits'}>
+      <section
+        className="mini-calendar"
+        aria-label={isFrench ? 'Visites à venir' : 'Upcoming visits'}
+      >
         <div className="section-row">
           <strong>{isFrench ? 'Visites à venir' : 'Upcoming visits'}</strong>
           <button onClick={() => onRouteChange('subscription')} type="button">
@@ -291,7 +301,10 @@ function HomeScreen({
         </div>
       </section>
 
-      <section className="home-overview-grid" aria-label={isFrench ? 'Résumé abonnement' : 'Plan summary'}>
+      <section
+        className="home-overview-grid"
+        aria-label={isFrench ? 'Résumé abonnement' : 'Plan summary'}
+      >
         <button onClick={() => onRouteChange('subscription')} type="button">
           <span>{isFrench ? 'Formule' : 'Plan'}</span>
           <strong>T2</strong>
@@ -420,9 +433,9 @@ function OnboardingScreen({
           languageBody: 'Le foyer pourra changer FR / EN plus tard depuis le profil.',
           momoHint: 'Numéro Mobile Money utilisé pour les prélèvements Washed.',
           momoLabel: 'Mobile Money',
-          otpHint: 'Code de test prérempli pour le simulateur.',
+          otpHint: 'Entrez le code reçu par SMS.',
           paymentBody:
-            'Le prélèvement démarre après validation opérateur. Les échecs ouvrent le parcours de régularisation.',
+            'Le prélèvement démarre après confirmation. En cas d’échec, vous pourrez régulariser depuis l’app.',
           phoneHint: 'Format Togo, utilisé pour OTP et support.',
           scheduleBody: 'Choisissez le créneau habituel; les reports restent possibles 24h avant.',
           stepPrefix: 'Étape',
@@ -437,9 +450,9 @@ function OnboardingScreen({
           languageBody: 'The household can switch FR / EN later from profile.',
           momoHint: 'Mobile Money number used for Washed collections.',
           momoLabel: 'Mobile Money',
-          otpHint: 'Simulator test code is prefilled.',
+          otpHint: 'Enter the code received by SMS.',
           paymentBody:
-            'Collection starts after operator validation. Failures open the payment recovery path.',
+            'Collection starts after confirmation. Failed payments can be fixed in the app.',
           phoneHint: 'Togo format, used for OTP and support.',
           scheduleBody: 'Pick the usual window; rescheduling stays available 24h before.',
           stepPrefix: 'Step',
@@ -750,6 +763,8 @@ function SupportScreen({
   readonly subscriberState: SubscriberState;
   readonly t: LocalizedCopy;
 }): ReactElement {
+  const isFrench = t.nav.home === 'Accueil';
+
   return (
     <ScreenFrame
       action={
@@ -763,15 +778,27 @@ function SupportScreen({
       <Card elevated>
         <ListItem
           after={<Badge tone="success">{subscriberState.inboxUnread}</Badge>}
-          description="Akouvi est confirmée pour mardi 9-11."
+          description={
+            isFrench
+              ? 'Akouvi est confirmée pour mardi 9-11.'
+              : 'Akouvi is confirmed for Tuesday 9-11.'
+          }
           title={t.support.inbox}
         />
         <ListItem
-          description="No direct chat in v1; operators mediate every thread."
+          description={
+            isFrench
+              ? 'Vos messages arrivent à l’équipe Washed pour garder un suivi clair.'
+              : 'Messages go to the Washed team so every case stays tracked.'
+          }
           title={t.support.messages}
         />
         <ListItem
-          description="Push history, unread state, outage notices."
+          description={
+            isFrench
+              ? 'Rappels de visite, paiements, changements de planning et alertes service.'
+              : 'Visit reminders, payments, schedule changes, and service alerts.'
+          }
           title={t.support.notificationCenter}
         />
         <Button onClick={() => onRouteChange('inbox')} variant="secondary">
@@ -781,7 +808,11 @@ function SupportScreen({
 
       <EmptyState
         action={<Button variant="danger">{t.support.dispute}</Button>}
-        description="Use for missed visit, damaged clothes, payment mismatch, or safety concerns."
+        description={
+          isFrench
+            ? 'À utiliser pour une visite manquée, un paiement, un vêtement abîmé ou une situation sensible.'
+            : 'Use this for a missed visit, payment issue, damaged clothing, or sensitive situation.'
+        }
         title={t.support.dispute}
       />
     </ScreenFrame>
@@ -799,6 +830,8 @@ function ProfileScreen({
   readonly onRouteChange: (route: AppRoute) => void;
   readonly t: LocalizedCopy;
 }): ReactElement {
+  const isFrench = locale === 'fr';
+
   return (
     <ScreenFrame
       action={
@@ -816,7 +849,10 @@ function ProfileScreen({
           description="FR / EN"
           title={t.onboarding.language}
         />
-        <ListItem description="ToS, Privacy Policy, Help / FAQ" title={t.profile.legal} />
+        <ListItem
+          description={isFrench ? 'Conditions, confidentialité, aide' : 'Terms, privacy, help'}
+          title={t.profile.legal}
+        />
         <div className="inline-actions">
           <Button onClick={() => onRouteChange('legal')} size="sm" variant="secondary">
             {t.nav.legal}
@@ -830,7 +866,7 @@ function ProfileScreen({
       <Card>
         <div className="card-header">
           <h2>{t.profile.privacy}</h2>
-          <Badge tone="muted">GDPR-ready</Badge>
+          <Badge tone="muted">Confidentiel</Badge>
         </div>
         <ActionGrid
           items={[
@@ -884,7 +920,10 @@ function VisitDetailScreen({
         />
         <ListItem description={t.surfaces.visit.access} title="Adresse et accès" />
         <ListItem description={t.surfaces.visit.photos} title="Avant / après" />
-        <ListItem description={t.surfaces.visit.rating} title="Rating" />
+        <ListItem
+          description={t.surfaces.visit.rating}
+          title={locale === 'fr' ? 'Note' : 'Rating'}
+        />
         <div className="visit-actions" aria-label={t.home.visitControls}>
           <Button onClick={() => dispatch({ type: 'visit/startTracking' })} size="sm">
             {t.action.startTracking}
@@ -1010,11 +1049,25 @@ function LegalScreen({
   readonly dispatch: Dispatch<SubscriberAction>;
   readonly t: LocalizedCopy;
 }): ReactElement {
+  const isFrench = t.nav.home === 'Accueil';
+
   return (
-    <ScreenFrame action={<Badge>GDPR</Badge>} eyebrow="Legal" title={t.surfaces.legal.title}>
+    <ScreenFrame action={<Badge>Documents</Badge>} eyebrow="Legal" title={t.surfaces.legal.title}>
       <Card elevated>
-        <ListItem description="App Store / Play Store required" title={t.surfaces.legal.terms} />
-        <ListItem description="FR/EN launch copy" title={t.surfaces.legal.privacyPolicy} />
+        <ListItem
+          description={
+            isFrench ? 'Conditions d’utilisation du service Washed' : 'Washed service terms'
+          }
+          title={t.surfaces.legal.terms}
+        />
+        <ListItem
+          description={
+            isFrench
+              ? 'Comment vos données et preuves de visite sont protégées'
+              : 'How your data and visit proofs are protected'
+          }
+          title={t.surfaces.legal.privacyPolicy}
+        />
         <ListItem description={t.surfaces.legal.export} title={t.profile.exportData} />
         <ListItem description={t.surfaces.legal.erasure} title={t.profile.erasure} />
         <div className="inline-actions">
@@ -1039,6 +1092,8 @@ function LegalScreen({
 }
 
 function AccountRecoveryScreen({ t }: { readonly t: LocalizedCopy }): ReactElement {
+  const isFrench = t.nav.home === 'Accueil';
+
   return (
     <ScreenFrame
       action={<Badge tone="accent">{t.surfaces.accountRecovery.operatorReview}</Badge>}
@@ -1048,11 +1103,19 @@ function AccountRecoveryScreen({ t }: { readonly t: LocalizedCopy }): ReactEleme
       <Card elevated>
         <Alert tone="primary">{t.surfaces.accountRecovery.body}</Alert>
         <ListItem
-          description="+228 phone ownership, last payment reference, household address"
+          description={
+            isFrench
+              ? 'Propriété du numéro +228, dernier paiement, adresse du foyer'
+              : '+228 phone ownership, last payment reference, household address'
+          }
           title={t.surfaces.accountRecovery.identity}
         />
         <ListItem
-          description="Operators approve recovery; no self-service account takeover in v1."
+          description={
+            isFrench
+              ? 'L’équipe Washed vérifie la demande avant de changer le numéro du compte.'
+              : 'The Washed team verifies the request before changing the account number.'
+          }
           title={t.surfaces.accountRecovery.operatorReview}
         />
       </Card>

@@ -217,8 +217,8 @@ function OperatorHeader({ route }: { readonly route: OperatorRoute }): ReactElem
       title: 'Audit and governance',
     },
     dashboard: {
-      badge: 'Closed beta console',
-      detail: 'Dense internal tooling for assignment, support, payments, safety, and governance.',
+      badge: 'Operations console',
+      detail: 'Assignment, support, payments, safety, and governance in one workspace.',
       title: 'Operations dashboard',
     },
     disputes: {
@@ -252,7 +252,7 @@ function OperatorHeader({ route }: { readonly route: OperatorRoute }): ReactElem
       title: 'Worker and subscriber profiles',
     },
     reports: {
-      badge: 'Beta metrics',
+      badge: 'Ops metrics',
       detail: 'Founder cadence exports for weekly operations review.',
       title: 'Reports and KPI exports',
     },
@@ -743,9 +743,7 @@ function Disputes({
 
         <div className="client-statement">
           <span>Description client</span>
-          <p>
-            "Ma robe bleue a été déchirée sur le côté. Elle était en bon état avant la visite."
-          </p>
+          <p>"Ma robe bleue a été déchirée sur le côté. Elle était en bon état avant la visite."</p>
         </div>
 
         <div className="proof-trail">
@@ -945,11 +943,11 @@ function Reports({
       <Card className="worklist" elevated>
         <div className="card-header">
           <h2>{operatorState.reports.kpiPeriod}</h2>
-          <Badge>Beta metrics</Badge>
+          <Badge>Ops metrics</Badge>
         </div>
         {reportCards.map((card) => (
           <ListItem
-            description="Read from beta metrics and operational queues"
+            description="Read from operational queues and finance events"
             key={card.label}
             title={`${card.label}: ${card.value}`}
           />
@@ -957,12 +955,11 @@ function Reports({
       </Card>
       <Card>
         <Alert title="Export discipline" tone="primary">
-          Reports are review artifacts for founder and ops cadence; they are not a public analytics
-          dashboard yet.
+          Reports are review artifacts for founder and operations cadence.
         </Alert>
         <ListItem
           after={<Badge>{operatorState.reports.exportedAt ?? 'Not exported'}</Badge>}
-          description="CSV/PDF export state wired to beta metrics"
+          description="CSV/PDF export state wired to operations metrics"
           title="Latest export"
         />
         <Button onClick={() => dispatch({ type: 'reports/export' })}>Export report</Button>
@@ -996,7 +993,7 @@ function Settings({
               {operatorState.readiness.forcedUpdateEnabled ? 'Forced' : 'Normal'}
             </Badge>
           }
-          description="Quiet hours, beta mode, forced update"
+          description="Quiet hours, mobile rollout mode, forced update"
           title="Feature flags"
         />
         <div className="operator-actions">
