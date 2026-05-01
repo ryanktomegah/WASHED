@@ -1,7 +1,7 @@
 # Washed Frontend Product Design and Architecture
 
 **Date:** 2026-04-30
-**Status:** Implementation design, supersedes the subscriber-only mobile draft for frontend architecture
+**Status:** Living implementation design; current frontend shell baseline is implemented and wireframe-aligned
 **Scope:** Subscriber app, worker app, and operator console
 **Decision owner:** Founder, with CTO autonomy delegated for technical execution
 
@@ -17,12 +17,31 @@ The backend is already comparatively mature. The frontend must now catch up with
 
 ## 2. Source Inputs
 
-The spec is grounded in four inputs:
+The spec is grounded in five inputs:
 
 - Product/system design: `docs/specs/2026-04-28-washed-v1-design.md`
 - UX flows and operations models: `docs/ux/low-fidelity-flows.md`, `docs/ux/operator-console-ia.md`, `docs/ux/service-blueprints.md`
-- Current implementation: `packages/subscriber-web`, `packages/ops-web`, `packages/core-api`, and `docs/api/core-api.openapi.json`
+- Current implementation: `packages/subscriber-app`, `packages/worker-app`, `packages/operator-console`, `packages/ui`, `packages/i18n`, `packages/api-client`, `packages/auth`, `packages/design-tokens`, `packages/frontend-config`, `packages/core-api`, and `docs/api/core-api.openapi.json`
+- Prototype shells retained only for reference/backward compatibility during transition: `packages/subscriber-web` and `packages/ops-web`
 - Claude design files: `/Users/tomegah/Downloads/WASHED/Washed - Subscriber App.html`, `/Users/tomegah/Downloads/WASHED/Washed - Worker & Ops.html`, and `/Users/tomegah/Downloads/WASHED/Washed Wireframes v2.html`
+
+## 2.1 Current Implementation Baseline
+
+The architecture is no longer theoretical. The repository now contains the three target frontend apps and shared packages:
+
+- `packages/subscriber-app`: React 19 + Vite + Capacitor subscriber shell, Savannah theme, FR/EN switcher, 35-surface inventory, bounded-tracking state, subscription/payment/privacy/support routes, and iOS/Android Capacitor scripts.
+- `packages/worker-app`: React 19 + Vite + Capacitor worker shell, Forest theme, route/visit lifecycle, offline queue ledger, photo retry, planning, earnings, profile, inbox, and SOS surfaces.
+- `packages/operator-console`: React 19 + Vite desktop console, Admin theme, dashboard, matching, live ops, route planning, profiles, disputes, payments, notifications, audit, reports, and settings surfaces.
+- `packages/ui`: shared React component primitives backed by `@washed/design-tokens`.
+- `packages/i18n`, `packages/auth`, `packages/api-client`, and `packages/frontend-config`: shared formatting, session, typed client, and config foundations.
+
+The latest visual baseline commits are:
+
+- `1f33e18 Align worker app with wireframes`
+- `78a0b6d Align operator console with wireframes`
+- `8ab4158 Align subscriber app with wireframes`
+
+This document therefore describes both the implemented shell baseline and the remaining production hardening needed before paid beta.
 
 ## 3. Locked Product Decisions
 
@@ -59,7 +78,7 @@ Washed will use bounded live tracking. The subscriber sees a moving map only aft
 
 ### 4.1 Package Shape
 
-Use Approach 1: three applications plus shared frontend core packages.
+Use Approach 1: three applications plus shared frontend core packages. This structure is now present in the repository.
 
 ```text
 packages/
@@ -67,41 +86,46 @@ packages/
   core-domain/              Existing domain logic
   shared/                   Existing shared primitives
 
-  design-tokens/            New frontend tokens by audience
-  ui/                       New shared React component library
-  icons/                    New icon wrapper and app icon set
-  api-client/               New typed client generated from OpenAPI
-  auth/                     New OTP/session helpers
-  i18n/                     New FR/EN message catalog and formatters
-  frontend-config/          New shared TS/Vite/test config
+  design-tokens/            Implemented audience themes
+  ui/                       Implemented shared React component library
+  api-client/               Implemented typed client facade; expand OpenAPI generation
+  auth/                     Implemented OTP/session helpers
+  i18n/                     Implemented FR/EN message catalog and formatters
+  frontend-config/          Implemented shared TS/Vite/test config
 
-  subscriber-app/           New React + Vite + Capacitor app
-  worker-app/               New React + Vite + Capacitor app
-  operator-console/         New React + Vite desktop web app
+  subscriber-app/           Implemented React + Vite + Capacitor app
+  worker-app/               Implemented React + Vite + Capacitor app
+  operator-console/         Implemented React + Vite desktop web app
 ```
 
-The current `subscriber-web` and `ops-web` packages remain useful as working prototypes and backend smoke clients. They are not the final app architecture. The implementation should replace them gradually, keeping the old shells alive until the new apps reach route parity.
+The current `subscriber-web` and `ops-web` packages remain useful as older prototypes and backend smoke clients. They are not the final app architecture. Keep them alive only until the new apps reach API-backed parity, then remove them to avoid duplicated frontend behavior.
 
 ### 4.2 Core Stack
+
+Implemented now:
 
 - React 19
 - TypeScript 5
 - Vite per app
-- Capacitor 8 for mobile shells
-- TanStack Router for typed routing
-- TanStack Query for server state
-- Zustand only for local UI/session state that is not server-owned
-- React Hook Form + Zod for forms
-- React Intl for i18n
-- Tailwind for styling tokens and layout utilities
-- Radix primitives for accessible overlays, dialogs, sheets, menus, tabs, and selects
-- Leaflet + OpenStreetMap for maps, avoiding Google Maps cost and account coupling in v1
-- Dexie for worker offline queue
-- Vitest, Testing Library, Playwright, and axe-core for verification
+- Capacitor 8 for subscriber and worker mobile shells
+- Shared workspace packages for UI, tokens, i18n, auth, API client, and frontend config
+- Vitest, Testing Library, and Playwright smoke coverage
+
+Production hardening still needed:
+
+- TanStack Router or an equivalent typed routing layer before route count grows further.
+- TanStack Query or an equivalent server-state layer before replacing fixtures with API calls.
+- React Hook Form + Zod or an equivalent typed form layer for payment, cancellation, worker activation, and operator destructive actions.
+- Radix primitives or equivalent accessible overlays for modals, sheets, menus, tabs, and selects.
+- Leaflet + OpenStreetMap for bounded live maps unless a field-tested local map provider proves better.
+- Dexie or equivalent typed IndexedDB persistence for the worker offline queue before real field use.
+- axe-core and manual VoiceOver/TalkBack passes before paid beta.
 
 ### 4.3 API Client
 
-`@washed/api-client` is generated from `docs/api/core-api.openapi.json`. The frontend must not maintain three hand-written client layers. API contract drift should fail at build time.
+`@washed/api-client` is the single client layer for all three apps. It must be generated from `docs/api/core-api.openapi.json` once the OpenAPI file covers the full backend route surface. The frontend must not maintain three hand-written client layers. API contract drift should fail at build time.
+
+Current status: the package exists, but OpenAPI coverage still has to be expanded before every production screen can rely on generated endpoint types.
 
 Every mutation must include idempotency support where the backend expects it. Transient failures use exponential backoff. User-facing retry copy must distinguish between offline, provider failure, validation error, and operator-required recovery.
 
@@ -216,52 +240,54 @@ Home | Subscription | Messages | Profile
 
 ### 6.3 Screen Inventory
 
-V1 subscriber inventory is approximately 35 screens or distinct surfaces.
+V1 subscriber inventory is 35 tracked screens or distinct surfaces in `packages/subscriber-app/src/appData.ts`.
 
-Core onboarding and active-use surfaces:
+Core onboarding:
 
 1. Splash
-2. Phone number
-3. OTP verification
-4. Address and GPS/landmark
-5. Tier selection
-6. Schedule preference
-7. Payment method / mobile-money link
-8. Subscription confirmation
-9. Home dashboard
-10. En-route bounded live map
-11. Visit completed and rating
-12. Dispute / report problem
-13. Voice call placeholder, disabled for beta unless research changes scope
-14. Subscription management
-15. Messages / operator-mediated support thread
-16. Profile
+2. Phone
+3. OTP
+4. Address
+5. Tier
+6. Schedule
+7. Payment
+8. Confirm
 
-Backend-driven additions:
+Visit and communication:
 
-17. Skip visit modal
-18. Reschedule visit modal
-19. Worker swap request, reason -> confirm -> submitted
-20. Tier change confirmation
-21. Cancel subscription, reason -> refund preview -> final confirm
-22. Visit history list
-23. Visit history detail with photos/rating/dispute entry
-24. Billing history
-25. Billing receipt/refund detail
-26. Notification priming before native prompt
+9. Home
+10. Visit detail
+11. En-route map
+12. Skip modal
+13. Reschedule modal
+14. Rating
+15. Visit history
+16. Dispute
+17. Messages
 
-Cross-cutting production surfaces:
+Subscription and billing:
 
-27. Terms of service
-28. Privacy policy
-29. Privacy export request
-30. Privacy erasure request
-31. Account deletion
-32. Payment recovery / overdue payment
-33. Forgot phone / change number recovery
-34. App update required
-35. Maintenance / outage / Help and FAQ
-36. Inbox / notification center
+18. Subscription
+19. Tier change
+20. Worker swap
+21. Billing history
+22. Payment recovery
+23. Cancel flow
+24. Receipts
+25. Support credits
+26. Notification priming
+
+Profile, legal, and recovery:
+
+27. Profile
+28. Terms
+29. Privacy policy
+30. Export request
+31. Erasure request
+32. Account deletion
+33. Change number
+34. Maintenance
+35. Help / FAQ
 
 If implementation pressure forces scoping, defer only non-critical informational polish, never payment recovery, privacy rights, cancellation, support, or visit issue flows.
 
@@ -307,45 +333,43 @@ Aujourd'hui | Planning | Gains | Profil
 
 ### 7.3 Screen Inventory
 
-V1 worker inventory is approximately 28 surfaces.
+Current worker shell inventory is 14 tracked top-level surfaces in `packages/worker-app/src/appData.ts`, plus six visit lifecycle steps. The v1 production target adds legal, recovery, and policy sub-surfaces before field use.
 
-Core flow:
+Tracked top-level surfaces:
 
-1. Splash
-2. Phone number
-3. OTP verification
-4. First-login agreement and profile completion
-5. Today's route
-6. Subscriber details bottom sheet
-7. Heading to subscriber
-8. Check-in GPS/fallback code
-9. Before photo capture and quality check
-10. Visit in progress with timer
-11. Issue/safety report bottom sheet
-12. After photo capture and quality check
-13. Check-out GPS/fallback code
-14. Day-end summary
-15. Planning weekly view
-16. Mark unavailability
-17. Earnings dashboard
-18. Advance request modal
-19. Payout history / failed payout reason
-20. Profile
-21. Push/device status
+1. Aujourd'hui
+2. Activation
+3. Planning
+4. Gains
+5. Profil
+6. Inbox
+7. SOS
+8. Offline queue
+9. Advance request
+10. Day summary
+11. No-show
+12. Photo retry
+13. Privacy
+14. Agreement
 
-Safety and recovery:
+Visit lifecycle steps:
 
-22. Panic / SOS full-screen action, reachable from any screen
-23. Worker issue thread / operator response
-24. Inbox / notification center
-25. Persistent offline queue indicator
-26. Forgot phone recovery
-27. App update required
-28. Maintenance / outage / Help and FAQ
-29. Contractor agreement
-30. Privacy policy / export / erasure
+1. Heading
+2. Check-in
+3. Before photo
+4. In-visit
+5. After photo
+6. Check-out
 
-The final count may compress legal surfaces into profile sub-routes, but each must exist and be testable.
+Production completion must add or harden:
+
+- Phone + OTP first launch, if not fully handled by shared auth.
+- Subscriber details bottom sheet with access notes and watchlist flags.
+- Persistent offline queue indicator on every route/visit screen.
+- Worker issue thread and operator response history.
+- Forgot-phone recovery.
+- App update required and maintenance/outage screens.
+- Contractor agreement, privacy policy, export, and erasure copy with operator-review behavior.
 
 ### 7.4 Offline Model
 
@@ -393,43 +417,41 @@ Use a desktop-first layout:
 
 ### 8.3 Surface Inventory
 
-V1 operator inventory is approximately 28 surfaces.
+Current operator shell inventory is 18 tracked surfaces in `packages/operator-console/src/appData.ts`.
 
-Primary areas:
+Tracked surfaces:
 
-1. Login
-2. Dashboard / home
-3. Matching queue
-4. Candidate detail and assignment decision
-5. Live Ops board
-6. Visit detail
-7. Daily route planning
-8. Service cells
-9. Worker list
-10. Worker profile detail
-11. Worker onboarding pipeline
-12. Worker issue / safety queue
-13. Worker privacy request handling
-14. Blocklist management
-15. Subscriber list / customer support
-16. Subscriber profile detail
-17. Support context
-18. Dispute desk
-19. Theft/damage senior review path
-20. Payments overview
-21. Payment attempts
-22. Refund issuance modal
-23. Manual payment retry
-24. Reconciliation runs
-25. Worker payout batch initiation
-26. Failed payout retry
-27. Advance request queue
-28. Push devices and notifications
-29. Notification failure queue
-30. Audit log search/filter
-31. Reports / KPI dashboard
-32. Settings / provider readiness / feature flags
-33. Maintenance/update notice surface
+1. Dashboard
+2. Login
+3. Matching
+4. Live Ops
+5. Daily route planning
+6. Worker profiles
+7. Subscriber profiles
+8. Visit detail
+9. Disputes
+10. Payments
+11. Payouts
+12. Refunds
+13. Notifications
+14. Audit
+15. Reports
+16. Settings
+17. Privacy requests
+18. Blocklist
+
+Production completion must add or harden:
+
+- Candidate detail and assignment decision history.
+- Service cell management.
+- Worker onboarding pipeline.
+- Worker issue / safety queue with SOS priority behavior.
+- Support context and operator-mediated message timeline.
+- Theft/damage senior review path.
+- Payment attempts, manual retry, reconciliation runs, and provider evidence.
+- Failed payout retry and advance-request queue.
+- Push device detail and notification failure queue.
+- Provider readiness, feature flags, forced-update state, and maintenance notices.
 
 Some items may share route shells, but the user journeys must be separately covered by tests.
 
@@ -511,41 +533,42 @@ Minimum bar:
 
 ## 10. Implementation Phases
 
-### Phase 1: Frontend Foundation
+### Phase 1: Frontend Foundation (implemented shell, hardening remaining)
 
-- Create shared packages: design tokens, UI, i18n, api client, auth, config.
-- Add Vite/React base app scaffolds.
-- Generate OpenAPI client and wire typed API calls.
-- Establish test and lint gates.
+- Implemented: shared packages for design tokens, UI, i18n, api client, auth, and config.
+- Implemented: Vite/React app scaffolds for subscriber, worker, and operator.
+- Implemented: Vitest and Playwright smoke gates.
+- Remaining: expand OpenAPI coverage and generate the full typed client.
+- Remaining: add typed routing, server-state, form-validation, accessibility, and telemetry hardening.
 
-### Phase 2: Subscriber Parity Plus Native Shell
+### Phase 2: Subscriber Parity Plus Native Shell (wireframe baseline implemented)
 
-- Build subscriber onboarding, home, subscription, messages, profile.
-- Port the Savannah visual language from design files.
-- Repoint existing iOS Capacitor wrapper to the new subscriber app.
-- Verify iOS simulator and Android emulator.
+- Implemented: Savannah visual language, wireframe-aligned Home, subscription, messages/support, profile, billing, legal/privacy, recovery, and bounded-tracking shell states.
+- Implemented: Capacitor iOS/Android scripts in `packages/subscriber-app`.
+- Remaining: replace fixture state with API-backed data, implement real OTP/payment/push/device flows, and complete App Store legal/privacy copy.
+- Remaining: verify Android emulator and physical low-end Android behavior.
 
-### Phase 3: Worker App
+### Phase 3: Worker App (wireframe baseline implemented)
 
-- Build route, check-in/out, photo capture, offline queue, earnings, profile.
-- Add bounded tracking and Android foreground-service support.
-- Add Panic/SOS and safety reporting.
-- Test on low-end Android profile and network throttling.
+- Implemented: Forest visual language, route, visit lifecycle, photo retry, offline queue ledger, planning, earnings, profile, inbox, and SOS shell states.
+- Remaining: replace fixture state with API-backed route/visit/photo data.
+- Remaining: implement real camera capture, Dexie persistence, background sync, GPS fallback code, bounded tracking, and Android foreground-service support.
+- Remaining: test on low-end Android profile and network throttling.
 
-### Phase 4: Operator Console
+### Phase 4: Operator Console (wireframe baseline implemented)
 
-- Build matching, live ops, support/disputes, workers, payments, notifications, audit, reports.
-- Add role-aware navigation and destructive action confirmations.
-- Use dense layouts optimized for repeated daily operation.
+- Implemented: Admin visual language, dashboard, matching, live ops, route planning, profiles, disputes, payments, notifications, audit, reports, and settings shell states.
+- Remaining: wire all queues to backend APIs, add WebSocket live ops, implement role-aware permission gating, and add destructive-action audit reason modals.
+- Remaining: add support context, worker onboarding, safety queue depth, payment evidence, reconciliation evidence, and provider-readiness drill-downs.
 
 ### Phase 5: Production Readiness
 
-- App Store / Play Store packaging
-- TestFlight and internal Android tracks
-- Playwright journey suite
-- Accessibility pass
-- Privacy/legal copy pass
-- Closed-beta operational rehearsal
+- App Store / Play Store packaging.
+- TestFlight and internal Android tracks.
+- Playwright journey suite expanded from smoke coverage to top production journeys.
+- Accessibility pass.
+- Privacy/legal copy pass.
+- Closed-beta operational rehearsal.
 
 ## 11. Acceptance Criteria
 
@@ -561,6 +584,21 @@ The frontend architecture is ready to replace the prototype shells when:
 - Panic/SOS is reachable from every worker screen.
 - Top 30 journeys have Playwright or equivalent E2E coverage.
 - Accessibility, security, and privacy gates are explicitly reviewed before paid beta.
+
+## 11.1 Current Verification
+
+The current shell baseline has been verified with:
+
+- `pnpm --filter @washed/subscriber-app typecheck`
+- `pnpm --filter @washed/subscriber-app test`
+- `pnpm --filter @washed/worker-app typecheck`
+- `pnpm --filter @washed/worker-app test`
+- `pnpm --filter @washed/operator-console typecheck`
+- `pnpm --filter @washed/operator-console test`
+- `pnpm ui:smoke`
+- `pnpm ios:sim:all` for separate subscriber and worker iOS simulator launches
+
+This proves route coverage, visual shell stability, and simulator launch viability. It does not yet prove production API integration, payment provider behavior, push delivery, camera/GPS capture on physical devices, accessibility compliance, or App Store readiness.
 
 ## 12. Explicit Deferrals
 
