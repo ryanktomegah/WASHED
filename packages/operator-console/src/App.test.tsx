@@ -25,14 +25,16 @@ describe('operator console', () => {
     expect(screen.getByRole('heading', { name: 'Operations dashboard' })).toBeInTheDocument();
   });
 
-  it('renders dashboard navigation, metrics, and surface inventory', () => {
+  it('renders dashboard navigation, metrics, and readiness state', () => {
     render(<App />);
     authenticateOperator();
 
     expect(screen.getByRole('navigation', { name: 'Operator navigation' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Operations dashboard' })).toBeInTheDocument();
     expect(screen.getByLabelText('Operator queue metrics').children).toHaveLength(4);
-    expect(screen.getByLabelText('Operator console surfaces').children).toHaveLength(18);
+    expect(screen.getByText('Risk and readiness')).toBeInTheDocument();
+    expect(screen.getByLabelText('Operator readiness state').children).toHaveLength(4);
+    expect(screen.getByLabelText('Latest audit events').children).toHaveLength(3);
   });
 
   it('accepts a matching candidate and keeps an audit-ready state visible', () => {
@@ -127,7 +129,7 @@ describe('operator console', () => {
     expect(screen.getByText('Readiness checks')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Run readiness check' }));
     expect(screen.getByText('Provider readiness check completed.')).toBeInTheDocument();
-    expect(screen.getByText('just now')).toBeInTheDocument();
+    expect(screen.getAllByText('just now').length).toBeGreaterThanOrEqual(1);
     fireEvent.click(screen.getByRole('button', { name: 'Toggle forced update' }));
     expect(screen.getByText('Forced-update flag changed for beta clients.')).toBeInTheDocument();
     expect(screen.getByText('Forced')).toBeInTheDocument();

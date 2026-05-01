@@ -12,8 +12,8 @@ test('operator console covers planning, matching, notifications, reports, and go
   await page.getByRole('button', { name: 'Verify OTP' }).click();
 
   await expect(page.getByRole('heading', { name: 'Operations dashboard' })).toBeVisible();
-  await expect(page.getByText('Operational coverage')).toBeVisible();
-  await expect(page.getByText('18 surfaces')).toBeVisible();
+  await expect(page.getByText('Risk and readiness')).toBeVisible();
+  await expect(page.getByLabel('Latest audit events')).toBeVisible();
 
   await page.getByRole('button', { name: 'Planning' }).click();
   await expect(page.getByRole('heading', { name: 'Daily route planning' })).toBeVisible();

@@ -10,6 +10,19 @@ import {
   TextField,
   WashedThemeProvider,
 } from '@washed/ui';
+import {
+  Bell,
+  ChartColumn,
+  ClipboardList,
+  CreditCard,
+  Gauge,
+  Map,
+  Scale,
+  Search,
+  Settings as SettingsIcon,
+  ShieldCheck,
+  UsersRound,
+} from 'lucide-react';
 import type { Dispatch, ReactElement } from 'react';
 
 import {
@@ -18,7 +31,6 @@ import {
   navItems,
   notificationRows,
   operatorFeedback,
-  operatorSurfaces,
   queueMetrics,
   reportCards,
   routePlanRows,
@@ -32,6 +44,20 @@ import {
   type OperatorState,
 } from './operatorState.js';
 
+const navIcons = {
+  audit: <ShieldCheck aria-hidden="true" size={17} strokeWidth={2.25} />,
+  dashboard: <Gauge aria-hidden="true" size={17} strokeWidth={2.25} />,
+  disputes: <Scale aria-hidden="true" size={17} strokeWidth={2.25} />,
+  liveOps: <Map aria-hidden="true" size={17} strokeWidth={2.25} />,
+  matching: <ClipboardList aria-hidden="true" size={17} strokeWidth={2.25} />,
+  notifications: <Bell aria-hidden="true" size={17} strokeWidth={2.25} />,
+  payments: <CreditCard aria-hidden="true" size={17} strokeWidth={2.25} />,
+  profiles: <UsersRound aria-hidden="true" size={17} strokeWidth={2.25} />,
+  reports: <ChartColumn aria-hidden="true" size={17} strokeWidth={2.25} />,
+  routePlanning: <ClipboardList aria-hidden="true" size={17} strokeWidth={2.25} />,
+  settings: <SettingsIcon aria-hidden="true" size={17} strokeWidth={2.25} />,
+} as const satisfies Record<OperatorRoute, ReactElement>;
+
 export function App(): ReactElement {
   const [route, setRoute] = useState<OperatorRoute>('dashboard');
   const [operatorState, dispatch] = useReducer(operatorReducer, initialOperatorState);
@@ -40,18 +66,11 @@ export function App(): ReactElement {
     <WashedThemeProvider className="operator-frame" theme="operator">
       {operatorState.login.verified ? (
         <div className="operator-browser">
-          <div className="browser-chrome" aria-hidden="true">
-            <span className="browser-dot browser-dot-red" />
-            <span className="browser-dot browser-dot-amber" />
-            <span className="browser-dot browser-dot-green" />
-            <div className="browser-address">console.washed.tg</div>
-          </div>
-
           <div className="operator-layout">
             <aside className="sidebar">
               <div className="sidebar-brand">
                 <strong className="brand">Washed</strong>
-                <span>Console Opérateur · Lomé</span>
+                <span>Ops Console · Lomé</span>
               </div>
               <nav aria-label="Operator navigation">
                 {navItems.map((item) => {
@@ -66,7 +85,7 @@ export function App(): ReactElement {
                       type="button"
                     >
                       <span aria-hidden="true" className="nav-icon">
-                        {item.icon}
+                        {navIcons[item.route]}
                       </span>
                       <span>{item.label}</span>
                       {badge === undefined ? null : <em>{badge}</em>}
@@ -265,7 +284,11 @@ function OperatorHeader({ route }: { readonly route: OperatorRoute }): ReactElem
         <p>{meta.detail}</p>
       </div>
       {route === 'matching' || route === 'liveOps' || route === 'disputes' ? null : (
-        <Button variant="secondary">Command palette</Button>
+        <button className="command-search" type="button">
+          <Search aria-hidden="true" size={15} strokeWidth={2.35} />
+          Command palette
+          <kbd>⌘K</kbd>
+        </button>
       )}
     </header>
   );
@@ -294,16 +317,16 @@ function Dashboard({
     <>
       <section className="metric-grid" aria-label="Operator queue metrics">
         {metrics.map((metric) => (
-          <Card key={metric.label}>
+          <div className={`ops-metric-card ops-metric-${metric.tone}`} key={metric.label}>
             <span className="metric-label">{metric.label}</span>
             <strong className="metric-value">{metric.value}</strong>
-            <Badge tone={metric.tone}>{metric.tone}</Badge>
-          </Card>
+            <em>{metric.tone}</em>
+          </div>
         ))}
       </section>
 
-      <section className="console-grid">
-        <Card className="worklist" elevated>
+      <section className="dashboard-command-grid">
+        <Card className="worklist priority-panel" elevated>
           <div className="card-header">
             <h2>Today priority</h2>
             <Badge tone="danger">2 risks</Badge>
@@ -326,9 +349,43 @@ function Dashboard({
             description={`${operatorState.notifications.due} due, ${operatorState.notifications.failedDevices} failed devices`}
             title="Notification queue"
           />
+          <ListItem
+            after={
+              <Button onClick={() => onRouteChange('matching')} size="sm" variant="secondary">
+                Assign
+              </Button>
+            }
+            description="3 pending households; oldest SLA has 1h12 remaining"
+            title="Matching backlog"
+          />
         </Card>
 
-        <SurfaceInventory />
+        <Card className="ops-health-panel">
+          <div className="card-header">
+            <h2>Live state</h2>
+            <Badge tone="success">Stable</Badge>
+          </div>
+          <div className="ops-health-grid">
+            <span>
+              <strong>42</strong>
+              Visits today
+            </span>
+            <span>
+              <strong>94%</strong>
+              Completion
+            </span>
+            <span>
+              <strong>31 mai</strong>
+              Payout batch
+            </span>
+            <span>
+              <strong>&lt; 4h</strong>
+              Matching SLA
+            </span>
+          </div>
+        </Card>
+
+        <ReadinessPanel operatorState={operatorState} />
       </section>
     </>
   );
@@ -954,7 +1011,7 @@ function Settings({
           </Button>
         </div>
       </Card>
-      <SurfaceInventory />
+      <ReadinessPanel operatorState={operatorState} />
     </section>
   );
 }
@@ -1011,20 +1068,45 @@ function CandidateRow({
   );
 }
 
-function SurfaceInventory(): ReactElement {
+function ReadinessPanel({
+  operatorState,
+}: {
+  readonly operatorState: OperatorState;
+}): ReactElement {
   return (
-    <Card>
+    <Card className="readiness-panel">
       <div className="card-header">
-        <h2>Operational coverage</h2>
-        <Badge>{operatorSurfaces.length} surfaces</Badge>
+        <h2>Risk and readiness</h2>
+        <Badge tone="success">Ready</Badge>
       </div>
-      <Alert title="Internal quality bar" tone="primary">
-        Visual polish can stay practical; auditability, permissions, privacy queues, and money
-        movement cannot be skipped.
-      </Alert>
-      <div className="surface-grid" aria-label="Operator console surfaces">
-        {operatorSurfaces.map((surface) => (
-          <span key={surface}>{surface}</span>
+      <div className="readiness-grid" aria-label="Operator readiness state">
+        <span>
+          <strong>{operatorState.readiness.lastChecked}</strong>
+          Provider readiness
+        </span>
+        <span>
+          <strong>{operatorState.payments.failedPayouts}</strong>
+          Failed payouts
+        </span>
+        <span>
+          <strong>{operatorState.privacy.subscriberHandled ? '0' : '1'}</strong>
+          Privacy queue
+        </span>
+        <span>
+          <strong>{operatorState.blocklistCount}</strong>
+          Blocklist flags
+        </span>
+      </div>
+      <div className="audit-preview" aria-label="Latest audit events">
+        {[
+          ['matching.accepted', 'Essi Agbodzan · Akouvi Koffi'],
+          ['payment.retryQueued', 'T-Money recovery · 4,500 FCFA'],
+          ['privacy.exportQueued', 'Subscriber data request'],
+        ].map(([event, detail]) => (
+          <span key={event}>
+            <strong>{event}</strong>
+            {detail}
+          </span>
         ))}
       </div>
     </Card>
