@@ -1,84 +1,111 @@
 # Frontend Architecture Spec Self-Review
 
 **Date:** 2026-04-30
-**Reviewed commit:** `81ff01a Define frontend architecture`
+**Reviewed spec commit:** `73bb1a8 Update frontend architecture spec baseline`
+**Reviewed implementation commits:** `1f33e18`, `78a0b6d`, `8ab4158`
 **Spec:** `docs/specs/2026-04-30-washed-frontend-architecture.md`
-**Reviewer stance:** critical self-review before implementation
+**Reviewer stance:** critical self-review after wireframe-aligned shell implementation
 
 ## Findings
 
-### High: Generated API client depends on an incomplete OpenAPI contract
+### High: The apps are still fixture-driven shells, not production service clients
 
-The spec says `@washed/api-client` should be generated from `docs/api/core-api.openapi.json` and that contract drift should fail at build time. The repository currently exposes about 65 Fastify routes in `packages/core-api/src/app.ts`, while `pnpm openapi:check` validates only 19 operations in the checked-in OpenAPI file. That means the planned client would omit many routes the spec requires, including worker swap resolution, worker issues, worker onboarding, unavailability, service cells, notifications, refunds, reconciliation, push devices, and support context.
+The spec now correctly says the three target apps exist and are wireframe-aligned. That is true visually, but the subscriber, worker, and operator flows still run primarily from local state and fixture data. The user can inspect believable surfaces, but real households, worker routes, visits, payments, push devices, privacy requests, and operator decisions are not yet backed by live API calls.
 
-**Impact:** Phase 1 could produce a generated client that is technically valid but unusable for the actual frontend surface inventory.
+**Impact:** A demo can look finished while production behavior is still absent. This is the largest gap between "looks like the wireframe" and "closed-beta product."
 
-**Required fix before serious UI build:** expand OpenAPI coverage to the full Fastify route surface, then generate `@washed/api-client` from that expanded contract. Treat missing OpenAPI paths as a build blocker for any screen that calls them.
+**Required fix:** replace fixtures route-by-route with `@washed/api-client` calls, starting with auth/session, subscriber subscription state, worker today's route, visit lifecycle mutations, and operator matching/live-ops queues. Each replacement needs a test that proves the app handles loading, success, validation failure, network failure, and stale/offline state.
 
-### High: Bounded live tracking is product-approved but not contract-designed
+### High: The generated API-client plan still depends on incomplete OpenAPI coverage
 
-The spec locks bounded tracking: worker taps "Heading to subscriber," subscriber sees the live map, tracking stops at check-in. Current backend routes cover visit check-in/out, but there is no explicit en-route transition, location sample ingestion, subscriber-readable tracking feed, retention policy, or operator intervention contract.
+The spec requires `@washed/api-client` to be generated from `docs/api/core-api.openapi.json` once the OpenAPI file covers the full backend route surface. That caveat is now explicit, but it remains a blocker. If we generate from the current partial contract, many frontend surfaces will be forced back into ad hoc fetch code.
 
-**Impact:** The frontend could build a map screen before the system has a safe way to start, stop, authorize, retain, and hide location data.
+**Impact:** API drift could return immediately, especially across worker operations, notifications, payment reconciliation, refunds, privacy queues, and safety flows.
 
-**Required fix:** add a bounded-tracking backend/API spec before implementing the map. Minimum endpoints/events: start en-route, ingest worker location sample, read active tracking state for subscriber, stop tracking, operator stop/override, retention/anonymization behavior, and notification side effects.
+**Required fix:** expand OpenAPI to cover every Fastify route needed by the three apps, then generate the client and forbid direct app-level `fetch` for backend calls except inside the generated client package.
 
-### High: Worker SOS is correctly required, but it lacks a dedicated backend and operator contract
+### High: Bounded live tracking has UI agreement but no complete backend contract
 
-The spec now requires Panic/SOS from every worker screen. Existing worker issue routes may cover ordinary reports, but SOS needs different semantics: immediate operator alert, active visit pause/flag, priority queue placement, audit event, and offline fallback behavior.
+The subscriber and worker shells now express bounded live tracking: worker taps en-route, subscriber sees the map, tracking stops at check-in. The missing piece is still the system contract for location samples, authorization, retention, subscriber read access, and operator override.
 
-**Impact:** Treating SOS as a normal issue report would bury safety incidents in a general queue and fail the worker-safety promise from the v1 product design.
+**Impact:** Implementing maps before the contract risks leaking worker location, retaining too much sensitive data, or showing stale/inaccurate tracking during a real visit.
 
-**Required fix:** define a dedicated safety incident contract or explicitly extend worker issues with `severity=sos`, queue priority, visit pause status, notification behavior, and operator resolution rules.
+**Required fix:** define and implement endpoints/events for `startEnRoute`, location sample ingestion, subscriber active tracking read, stop-at-check-in, manual stop, operator stop, retention/anonymization, and notification side effects. No production map should ship before that contract exists.
 
-### High: Operator role model is more granular than current auth
+### High: Worker SOS exists visually but must become a first-class safety system
 
-The frontend spec defines Dispatcher, Support lead, Finance operator, Worker coordinator, Founder/admin, and Viewer. Current auth claims support only `operator | subscriber | worker`, and route guards only check those broad roles.
+The worker app now has an SOS surface, and the operator console has safety-related queues. That is still not enough. SOS cannot be treated as a normal worker issue because the semantics are immediate safety escalation, active-visit pause/flag, operator attention, and auditability.
 
-**Impact:** The console could hide restricted actions in the UI, but the backend would still treat all operators as equal unless a separate permission layer is added. That is dangerous for refunds, payout actions, safety closure, and worker termination.
+**Impact:** A worker could believe she requested urgent help while the backend merely stores a low-priority issue. That would be worse than not showing the button.
 
-**Required fix:** add backend permission claims or operator-role lookup before implementing restricted console actions. Frontend role gating must mirror backend authorization, not replace it.
+**Required fix:** add a dedicated safety incident contract or extend worker issues with `severity=sos`, priority queueing, active visit flagging, offline fallback instructions, notification fanout, and explicit operator resolution states.
 
-### Medium: Screen inventory counts are inconsistent
+### High: Native capabilities are declared but not field-proven
 
-The subscriber section says "approximately 35" but enumerates 36 surfaces. Worker says approximately 28 but enumerates 30. Operator says approximately 28 but enumerates 33. The counts are directionally useful but not stable enough for planning or test coverage.
+The spec lists native push, secure storage, camera, geolocation, offline queueing, and Android foreground-service behavior. The app packages include Capacitor dependencies and iOS simulator launch support, but physical-device behavior is not proven. The worker app in particular needs cheap Android testing because battery savers and weak networks are central risks.
 
-**Impact:** Progress tracking, implementation slicing, and E2E coverage targets will drift.
+**Impact:** The worker app could pass browser and iOS simulator checks while failing in the exact low-end Android environment it depends on.
 
-**Required fix:** replace approximate counts with an authoritative route/surface table containing `id`, `surface`, `priority`, `backend dependency`, `v1/beta/deferred`, and `test journey`.
+**Required fix:** run the worker app on a low-end Android profile or physical Tecno/itel-class device with throttled 2G/3G, screen-off GPS, camera capture, offline queue persistence, app kill/restart, and sync replay. Add a foreground-service implementation only after this test proves the need and desired notification behavior.
 
-### Medium: FR/EN subscriber support needs legal-copy scope
+### High: Operator permissions are more detailed in the frontend than in auth
 
-The spec locks a French and English subscriber switcher, but existing legal drafts are French-only. Subscriber ToS, privacy policy, payment recovery, cancellation, refund, and account deletion copy will need English equivalents or a deliberate decision that legal surfaces remain French-only with English app UI.
+The spec defines Dispatcher, Support lead, Finance operator, Worker coordinator, Founder/admin, and Viewer. Current broad app roles are not enough for refunds, payouts, privacy handling, worker safety closure, blocklists, and destructive subscription actions.
 
-**Impact:** English subscriber UX could ship with untranslated legal or privacy flows, which would weaken App Store review and user trust.
+**Impact:** UI hiding would be cosmetic if the backend still treats every operator as equally privileged.
 
-**Required fix:** add legal-copy language requirements to the frontend implementation plan. At minimum, mark legal strings as blocking content dependencies for the English subscriber switcher.
+**Required fix:** implement backend permission claims or operator role lookup, then mirror those permissions in the console. Every money-moving, privacy-affecting, or safety-closing action needs backend authorization plus audit reason capture.
 
-### Medium: Resource-level authorization is not called out strongly enough
+### Medium: Surface inventory is now more honest but still needs testable IDs
 
-The spec says role checks are enforced by backend, but worker routes are currently role-guarded broadly as `worker`. A worker app must not be able to fetch another worker's route, payouts, advance requests, or profile by changing an ID.
+The updated spec corrected the earlier inconsistent counts: subscriber has 35 tracked surfaces, worker has 14 tracked top-level surfaces plus six visit steps, and operator has 18 tracked surfaces. That is better, but the lists are still prose-first rather than a testable route matrix.
 
-**Impact:** A polished worker app could still expose sensitive worker data if access checks stay role-only.
+**Impact:** Implementation progress can drift because a "surface" may be a route, modal, state variant, bottom sheet, or legal content page.
 
-**Required fix:** add resource ownership checks to the backend gate list and block production worker UI until `/v1/workers/:workerId/*` and `/v1/visits/:visitId/*` are ownership-scoped.
+**Required fix:** add a route/surface matrix with `id`, `app`, `route`, `type`, `priority`, `backend dependency`, `data state`, `legal/safety/payment flag`, and `test owner`.
 
-### Low: Implementation phases need smaller first tickets
+### Medium: English subscriber UX needs matching legal and payment copy
 
-The five implementation phases are directionally correct, but Phase 1 is too large to execute as one PR. It mixes design tokens, UI library, i18n, generated API client, auth, app scaffolds, and test gates.
+The subscriber app supports FR/EN, but existing legal drafts are French-first. If English is available in the subscriber UI, legal, payment recovery, cancellation, refund, privacy, and account deletion copy cannot silently fall back to French without a deliberate product decision.
 
-**Impact:** The first implementation PR could become too large to review safely.
+**Impact:** The English switcher could look complete while the highest-trust flows are untranslated or legally mismatched.
 
-**Required fix:** split Phase 1 into atomic tickets: workspace packages, tokens, UI primitives, Vite app shells, i18n catalog, OpenAPI expansion, generated client, auth adapter, and first subscriber route.
+**Required fix:** either translate and review English legal/payment copy for subscriber v1 or explicitly keep legal/payment surfaces French-only while explaining that decision in-product.
+
+### Medium: Prototype shell retirement is now a real cleanup item
+
+The spec says `subscriber-web` and `ops-web` are old prototypes. They still exist beside the new app packages.
+
+**Impact:** Engineers and future agents may accidentally fix or test the wrong frontend, causing visual and behavior drift.
+
+**Required fix:** mark old packages deprecated in their README/package scripts, remove them from default workflows once parity is reached, and delete them after the API-backed apps are validated.
+
+### Low: The implementation phase language is improved but the next backlog still needs slicing
+
+The updated spec separates "implemented" from "remaining," but the remaining work is still too large for one implementation push.
+
+**Impact:** The next PR could sprawl across API contracts, app state, native plugins, and UI polish.
+
+**Required fix:** slice the next backlog by critical production dependency: OpenAPI expansion, generated client, auth/session, subscriber API state, worker route/offline persistence, operator queues, native device proofs, then accessibility/legal gates.
 
 ## Positive Findings
 
-- The spec now reflects the actual strategic decision: React/TypeScript plus Capacitor, not Flutter.
-- It correctly treats subscriber, worker, and operator as separate apps with shared foundations.
-- It preserves the three audience palettes from the design files instead of flattening the brand into one color system.
-- It catches the previously missed safety, legal, privacy, outage, payment recovery, and notification surfaces.
-- It explicitly rejects all-day worker tracking and protects worker location outside the en-route window.
+- The spec now matches the actual repo shape: three React/Vite apps plus shared packages, not a hypothetical future stack.
+- The three audience themes from the design files are preserved instead of flattening subscriber, worker, and operator into one visual language.
+- The recent app commits materially improve wireframe fidelity for subscriber, worker, and operator.
+- Subscriber bottom navigation now follows the wireframe vocabulary: Home, Subscription, Messages, Profile.
+- Worker SOS, offline queue, planning, earnings, and profile surfaces are visible and test-covered at shell level.
+- Operator now has a denser desktop shell with dashboard, matching, live ops, route planning, profiles, disputes, payments, notifications, audit, reports, settings, privacy, and blocklist coverage.
+- `pnpm ui:smoke` covers all three app surfaces, which is the right baseline before deeper production E2E journeys.
 
 ## Recommended Next Step
 
-Before building UI screens, create a frontend implementation backlog document from this review. The first backend-adjacent task should be full OpenAPI coverage, because it unlocks the generated client and prevents the new frontend from hard-coding requests against undocumented routes.
+Do not add more visual surfaces next. The product now needs live data. The next implementation slice should be:
+
+1. Expand OpenAPI for the routes already needed by the three shells.
+2. Generate and enforce `@washed/api-client`.
+3. Replace subscriber fixture state with API-backed subscription, visit, billing, privacy, and support data.
+4. Repeat for worker route/offline visit lifecycle.
+5. Repeat for operator matching/live-ops/payment/safety queues.
+
+Visual fidelity is now good enough to move the bottleneck to real production behavior.
