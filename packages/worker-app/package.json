@@ -32,6 +32,7 @@
     "@washed/auth": "workspace:*",
     "@washed/i18n": "workspace:*",
     "@washed/ui": "workspace:*",
+    "lucide-react": "^1.14.0",
     "react": "19.2.5",
     "react-dom": "19.2.5"
   },

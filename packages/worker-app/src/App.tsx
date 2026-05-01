@@ -11,6 +11,17 @@ import {
   Tabs,
   WashedThemeProvider,
 } from '@washed/ui';
+import {
+  Banknote,
+  CalendarDays,
+  Camera,
+  CircleAlert,
+  Clock3,
+  House,
+  MapPinned,
+  ShieldAlert,
+  UserRound,
+} from 'lucide-react';
 import type { Dispatch, ReactElement, ReactNode } from 'react';
 
 import {
@@ -45,11 +56,11 @@ const navOrder = [
 ] as const satisfies readonly PrimaryWorkerRoute[];
 
 const navIcons = {
-  earnings: '💰',
-  planning: '📅',
-  profile: '👤',
-  today: '🗓',
-} as const satisfies Record<PrimaryWorkerRoute, string>;
+  earnings: <Banknote aria-hidden="true" size={18} strokeWidth={2.3} />,
+  planning: <CalendarDays aria-hidden="true" size={18} strokeWidth={2.3} />,
+  profile: <UserRound aria-hidden="true" size={18} strokeWidth={2.3} />,
+  today: <MapPinned aria-hidden="true" size={18} strokeWidth={2.3} />,
+} as const satisfies Record<PrimaryWorkerRoute, ReactNode>;
 
 export function App(): ReactElement {
   const [route, setRoute] = useState<WorkerRoute>('today');
@@ -250,6 +261,9 @@ function TodayScreen({
   readonly workerState: WorkerState;
 }): ReactElement {
   const offlineCount = workerState.offlineQueue.length;
+  const activeVisit = routeCards[1];
+  const completedVisits = workerState.visit.step === 'checkOut' ? 2 : 1;
+  const progressPercent = `${Math.round((completedVisits / routeCards.length) * 100)}%`;
 
   return (
     <>
@@ -264,14 +278,53 @@ function TodayScreen({
             </div>
           </div>
           <div className="summary-progress" aria-hidden="true">
-            <span />
+            <span style={{ width: progressPercent }} />
           </div>
           <div className="summary-meta">
-            <span>1 / 3 visites complétées</span>
+            <span>{completedVisits} / 3 visites complétées</span>
             <Badge>
               {offlineCount > 0 ? `● Hors ligne · ${offlineCount}` : t.today.routeActive}
             </Badge>
           </div>
+        </div>
+      </section>
+
+      <section className="field-command-card" aria-label="Visite en cours">
+        <div className="field-command-top">
+          <span className="eyebrow">Visite en cours</span>
+          <Badge tone="primary">11h30 - 13h30</Badge>
+        </div>
+        <div className="field-command-main">
+          <div>
+            <h2>Ama Dossou</h2>
+            <p>
+              <MapPinned aria-hidden="true" size={15} strokeWidth={2.35} />
+              {activeVisit.address}
+            </p>
+            <p>
+              <House aria-hidden="true" size={15} strokeWidth={2.35} />
+              {t.today.addressHint}
+            </p>
+          </div>
+          <button
+            aria-label={t.safety.panic}
+            className="sos-fab"
+            onClick={() => dispatch({ type: 'sos/open' })}
+            type="button"
+          >
+            <ShieldAlert aria-hidden="true" size={22} strokeWidth={2.6} />
+            SOS
+          </button>
+        </div>
+        <div className="field-command-actions">
+          <button className="primary-field-action" onClick={() => onRouteChange('visit')} type="button">
+            <Camera aria-hidden="true" size={17} strokeWidth={2.4} />
+            Ouvrir visite
+          </button>
+          <button onClick={() => dispatch({ type: 'visit/reportIssue' })} type="button">
+            <CircleAlert aria-hidden="true" size={17} strokeWidth={2.4} />
+            Signaler
+          </button>
         </div>
       </section>
 
@@ -301,7 +354,13 @@ function TodayScreen({
 
       {offlineCount > 0 ? <OfflineQueueLedger queue={workerState.offlineQueue} /> : null}
 
-      <Card className="route-card-stack">
+      <section className="route-card-stack">
+        <div className="route-section-header">
+          <strong>Route du jour</strong>
+          <button onClick={() => onRouteChange('planning')} type="button">
+            Voir planning
+          </button>
+        </div>
         <div className="route-list wire-route-list">
           {routeCards.map((card, index) => (
             <div
@@ -321,51 +380,18 @@ function TodayScreen({
                         : undefined
                     }
                   >
-                    {index === 0 ? 'Complétée ✓' : index === 1 ? 'En cours ●' : 'Suivante'}
+                    {index === 0 ? 'Complétée' : index === 1 ? 'En cours' : 'Suivante'}
                   </Badge>
                 </div>
-                <p>📍 {card.address}</p>
-                <p>🕐 {card.time}</p>
+                <p>
+                  <MapPinned aria-hidden="true" size={14} strokeWidth={2.3} />
+                  {card.address}
+                </p>
+                <p>
+                  <Clock3 aria-hidden="true" size={14} strokeWidth={2.3} />
+                  {card.time}
+                </p>
               </div>
-              {index === 1 ? (
-                <div className="active-route-strip">
-                  <Button
-                    fullWidth
-                    onClick={() => onRouteChange('visit')}
-                    size="sm"
-                    variant="secondary"
-                  >
-                    📷 Photos + Check-out
-                  </Button>
-                  <Button
-                    onClick={() => dispatch({ type: 'visit/reportIssue' })}
-                    size="sm"
-                    variant="ghost"
-                  >
-                    ⚠ Signaler
-                  </Button>
-                </div>
-              ) : null}
-              {index === 2 ? (
-                <div className="next-route-actions">
-                  <Button
-                    fullWidth
-                    onClick={() => onRouteChange('planning')}
-                    size="sm"
-                    variant="secondary"
-                  >
-                    🗺 Itinéraire
-                  </Button>
-                  <Button
-                    fullWidth
-                    onClick={() => void onVisitLocationCapture('checkIn')}
-                    size="sm"
-                    variant="secondary"
-                  >
-                    Check-in GPS
-                  </Button>
-                </div>
-              ) : null}
             </div>
           ))}
         </div>
@@ -384,7 +410,7 @@ function TodayScreen({
             <strong>Disponible</strong>
           </span>
         </div>
-      </Card>
+      </section>
     </>
   );
 }
