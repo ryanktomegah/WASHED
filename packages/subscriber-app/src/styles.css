@@ -6,7 +6,7 @@ body,
 }
 
 body {
-  background: #1c1208;
+  background: var(--washed-background, #fbf7f1);
 }
 
 * {
@@ -19,11 +19,12 @@ input {
 }
 
 .app-frame {
-  background: #111 !important;
+  background: var(--washed-background) !important;
   display: grid;
   place-items: center;
   min-height: 100vh;
-  padding: 20px;
+  min-height: 100dvh;
+  padding: 0;
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -31,18 +32,31 @@ input {
   position: relative;
   overflow: hidden;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
-  width: min(100%, 390px);
-  min-height: min(844px, calc(100vh - 40px));
-  max-height: calc(100vh - 40px);
-  border: 10px solid #0c0804;
-  border-radius: 42px;
+  grid-template-rows: minmax(0, 1fr) auto;
+  width: min(100%, 430px);
+  min-height: 100vh;
+  min-height: 100dvh;
   background: var(--washed-background);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.36);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--washed-border) 60%, transparent);
+}
+
+@media (min-width: 720px) {
+  .app-frame {
+    padding: 24px;
+  }
+
+  .phone-shell {
+    min-height: min(860px, calc(100vh - 48px));
+    min-height: min(860px, calc(100dvh - 48px));
+    border-radius: 32px;
+    box-shadow:
+      0 24px 80px rgba(28, 18, 8, 0.14),
+      0 0 0 1px color-mix(in srgb, var(--washed-border) 70%, transparent);
+  }
 }
 
 .status-bar {
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: space-between;
   min-height: 54px;
@@ -88,7 +102,7 @@ input {
   display: grid;
   align-content: start;
   gap: 0;
-  padding: 0 0 24px;
+  padding: calc(env(safe-area-inset-top) + 18px) 0 24px;
 }
 
 .subscriber-greeting,
@@ -106,7 +120,7 @@ input {
 }
 
 .subscriber-greeting {
-  padding: 2px 20px 16px;
+  padding: 0 20px 18px;
 }
 
 .subscriber-greeting span {
@@ -117,7 +131,7 @@ input {
 
 .subscriber-greeting h1 {
   margin-top: 2px;
-  font-size: 22px;
+  font-size: 24px;
   line-height: 1.05;
 }
 
@@ -134,6 +148,7 @@ input {
 }
 
 .subscriber-greeting-actions button {
+  position: relative;
   display: grid;
   width: 38px;
   height: 38px;
@@ -148,10 +163,38 @@ input {
 }
 
 .subscriber-greeting-actions button:first-child {
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   background: color-mix(in srgb, var(--washed-accent) 22%, var(--washed-surface));
   color: var(--washed-accent);
+}
+
+.subscriber-greeting-actions button:nth-child(2) {
+  grid-template-columns: auto auto;
+  gap: 4px;
+  padding: 0 10px;
+  width: auto;
+}
+
+.subscriber-greeting-actions button svg {
+  flex: 0 0 auto;
+}
+
+.notification-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  display: grid;
+  min-width: 17px;
+  height: 17px;
+  place-items: center;
+  border: 2px solid var(--washed-background);
+  border-radius: 999px;
+  background: var(--washed-primary);
+  color: var(--washed-surface) !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  line-height: 1;
 }
 
 .subscriber-greeting-actions button:last-child {
@@ -162,20 +205,55 @@ input {
 
 .home-hero-card {
   display: grid;
-  gap: 14px;
-  border-radius: 20px;
+  gap: 18px;
+  overflow: hidden;
+  border-radius: 24px;
   background: var(--washed-foreground);
-  box-shadow: var(--washed-shadow-card, 0 6px 20px rgba(0, 0, 0, 0.05));
+  background:
+    radial-gradient(circle at 88% 16%, rgba(196, 98, 45, 0.24), transparent 30%),
+    linear-gradient(145deg, #261507 0%, #130b04 68%);
+  box-shadow: 0 20px 44px rgba(28, 18, 8, 0.18);
   margin: 0 16px 16px;
   padding: 22px;
 }
 
-.home-hero-card h2 {
+.hero-card-topline,
+.hero-date-block span,
+.visit-assurance-grid,
+.visit-assurance-grid span {
+  display: flex;
+  align-items: center;
+}
+
+.hero-card-topline {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hero-card-topline > span {
+  color: rgba(255, 253, 248, 0.62);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.hero-date-block {
+  display: grid;
+  gap: 5px;
+}
+
+.hero-date-block h2 {
   margin: 0;
   color: var(--washed-surface);
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 900;
   line-height: 1.05;
+}
+
+.hero-date-block span {
+  gap: 6px;
+  color: rgba(255, 253, 248, 0.6);
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .hero-worker-row {
@@ -187,14 +265,14 @@ input {
 
 .worker-avatar {
   display: grid;
-  width: 50px;
-  height: 50px;
+  width: 48px;
+  height: 48px;
   place-items: center;
-  border-radius: 15px;
-  background: color-mix(in srgb, var(--washed-accent) 24%, var(--washed-surface));
-  color: var(--washed-muted);
-  font-size: 11px;
-  font-weight: 700;
+  border-radius: 999px;
+  background: #f6e7bd;
+  color: #6f4b00;
+  font-size: 12px;
+  font-weight: 900;
   line-height: 1.25;
   text-align: center;
 }
@@ -213,6 +291,10 @@ input {
 }
 
 .ok-pill {
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 4px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--washed-success) 18%, var(--washed-surface));
   color: var(--washed-success);
@@ -220,6 +302,24 @@ input {
   font-weight: 900;
   padding: 4px 8px;
   white-space: nowrap;
+}
+
+.visit-assurance-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.visit-assurance-grid span {
+  min-width: 0;
+  gap: 6px;
+  border: 1px solid rgba(255, 253, 248, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 253, 248, 0.08);
+  color: rgba(255, 253, 248, 0.76);
+  font-size: 12px;
+  font-weight: 750;
+  padding: 10px;
 }
 
 .hero-actions {
@@ -240,11 +340,13 @@ input {
   padding: 8px 4px;
 }
 
-.hero-actions button:nth-child(2) {
-  background: color-mix(in srgb, var(--washed-danger) 12%, var(--washed-surface));
-  color: var(--washed-danger);
+.hero-actions .hero-action-primary {
+  background: var(--washed-primary);
+  color: var(--washed-surface);
+  box-shadow: 0 10px 24px rgba(196, 98, 45, 0.24);
 }
 
+.hero-actions button:nth-child(2),
 .hero-actions button:nth-child(3) {
   background: color-mix(in srgb, var(--washed-primary) 24%, var(--washed-surface));
   color: var(--washed-primary);
@@ -252,7 +354,9 @@ input {
 
 .mini-calendar,
 .recent-activity,
-.home-visit-controls {
+.visit-status-card,
+.message-preview,
+.home-overview-grid {
   display: grid;
   gap: 10px;
   margin: 0 16px 16px;
@@ -358,6 +462,85 @@ input {
   white-space: nowrap;
 }
 
+.home-overview-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.home-overview-grid button {
+  display: grid;
+  min-height: 96px;
+  gap: 4px;
+  align-content: start;
+  border: 1px solid var(--washed-border);
+  border-radius: 16px;
+  background: var(--washed-surface);
+  color: var(--washed-foreground);
+  cursor: pointer;
+  padding: 14px;
+  text-align: left;
+}
+
+.home-overview-grid span,
+.message-preview span {
+  color: var(--washed-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.home-overview-grid strong {
+  color: var(--washed-foreground);
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+.home-overview-grid small {
+  color: var(--washed-muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.visit-status-card,
+.message-preview {
+  border: 1px solid var(--washed-border);
+  border-radius: 16px;
+  background: var(--washed-surface);
+  padding: 16px;
+}
+
+.visit-status-card p,
+.message-preview p {
+  margin: 2px 0 0;
+  color: var(--washed-muted);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.message-preview {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+}
+
+.message-preview strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+.message-preview button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--washed-primary-soft);
+  color: var(--washed-primary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 900;
+  padding: 0 14px;
+}
+
 .production-actions {
   display: grid;
   gap: 10px;
@@ -402,6 +585,10 @@ input {
   border-radius: 10px;
   background: var(--washed-primary-soft);
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+}
+
+.recent-activity button span svg {
+  color: var(--washed-primary);
 }
 
 .recent-activity button strong {

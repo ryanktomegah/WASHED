@@ -4,16 +4,17 @@ import { describe, expect, it } from 'vitest';
 import { App } from './App.js';
 
 describe('subscriber app', () => {
-  it('renders the production subscriber home surface inventory', () => {
+  it('renders the product subscriber home surface', () => {
     render(<App />);
 
-    expect(screen.getByRole('button', { name: 'WashedBeta Lomé' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Essi Agbodzan 👋', level: 1 })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'mardi 5 mai', level: 2 })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Essi Agbodzan', level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /mardi 5 mai/u, level: 2 })).toBeInTheDocument();
     expect(screen.getByText('PROCHAINE VISITE')).toBeInTheDocument();
-    expect(screen.getByText('Visites · Formule T2')).toBeInTheDocument();
-    expect(screen.getByText('Suivi encadré')).toBeInTheDocument();
-    expect(screen.getByText('35 surfaces')).toBeInTheDocument();
+    expect(screen.getByText('Visites à venir')).toBeInTheDocument();
+    expect(screen.getByText('Tout est prêt')).toBeInTheDocument();
+    expect(screen.getByText('Dernier message')).toBeInTheDocument();
+    expect(screen.queryByText('35 surfaces')).not.toBeInTheDocument();
+    expect(screen.queryByText('Inventaire des écrans production')).not.toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Primary' })).toBeInTheDocument();
   });
 
@@ -22,7 +23,7 @@ describe('subscriber app', () => {
 
     expect(screen.queryByLabelText('Bounded live map')).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Démarrer le suivi' }));
+    fireEvent.click(screen.getByRole('button', { name: 'En route' }));
 
     expect(screen.getByLabelText('Bounded live map')).toBeInTheDocument();
     expect(screen.getByText('Akouvi · 12 min')).toBeInTheDocument();
@@ -30,7 +31,7 @@ describe('subscriber app', () => {
     fireEvent.click(screen.getByRole('button', { name: "Confirmer l'arrivée" }));
 
     expect(screen.queryByLabelText('Bounded live map')).not.toBeInTheDocument();
-    expect(screen.getByText('Suivi encadré')).toBeInTheDocument();
+    expect(screen.getByText('Tout est prêt')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'En cours' }));
 
@@ -91,7 +92,8 @@ describe('subscriber app', () => {
   it('renders onboarding and support flows from primary actions', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: "Démarrer l'inscription" }));
+    fireEvent.click(screen.getByRole('button', { name: 'Profil' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Départ' }));
 
     expect(screen.getByRole('heading', { name: 'Inscription abonnée' })).toBeInTheDocument();
     expect(within(screen.getByLabelText('Onboarding steps')).getAllByText(/./u)).not.toHaveLength(
@@ -123,7 +125,11 @@ describe('subscriber app', () => {
     expect(screen.getByText(/Le foyer est prêt pour validation opérateur/u)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Terminé' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Messages' }));
+    fireEvent.click(
+      within(screen.getByRole('navigation', { name: 'Primary' })).getByRole('button', {
+        name: 'Messages',
+      }),
+    );
 
     expect(screen.getByRole('heading', { name: 'Support' })).toBeInTheDocument();
     expect(screen.getByText('Messages relayés par opérateur')).toBeInTheDocument();
@@ -134,8 +140,8 @@ describe('subscriber app', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Switch language' }));
 
-    expect(screen.getByText('Bounded tracking')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Start setup' })).toBeInTheDocument();
+    expect(screen.getByText('Everything is ready')).toBeInTheDocument();
+    expect(screen.getByText('Latest message')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Plan' })).toBeInTheDocument();
   });
 
@@ -157,13 +163,17 @@ describe('subscriber app', () => {
   it('opens first-class subscriber visit, inbox, and billing surfaces', () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Visite' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Voir la visite' }));
     expect(screen.getByRole('heading', { name: 'Détail de visite' })).toBeInTheDocument();
     expect(screen.getByText('Photos avant/après et preuve de visite')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Démarrer le suivi' }));
     expect(screen.getByLabelText('Bounded live map')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Messages' }));
+    fireEvent.click(
+      within(screen.getByRole('navigation', { name: 'Primary' })).getByRole('button', {
+        name: 'Messages',
+      }),
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Inbox' }));
     expect(
       screen.getByRole('heading', { name: 'Boîte de réception et notifications' }),

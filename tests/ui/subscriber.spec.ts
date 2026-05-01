@@ -3,11 +3,14 @@ import { expect, test } from '@playwright/test';
 test('subscriber mobile exposes production routes and bounded tracking', async ({ page }) => {
   await page.goto('/');
 
-  await expect(page.getByRole('heading', { name: /mai/u }).first()).toBeVisible();
-  await expect(page.getByText('Inventaire des écrans production')).toBeVisible();
-  await expect(page.getByText('35 surfaces')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Essi Agbodzan' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /mardi 5 mai/u })).toBeVisible();
+  await expect(page.getByText('Tout est prêt')).toBeVisible();
+  await expect(page.getByText('Dernier message')).toBeVisible();
+  await expect(page.getByText('Inventaire des écrans production')).toHaveCount(0);
 
-  await page.getByRole('button', { name: "Démarrer l'inscription" }).click();
+  await page.getByRole('button', { name: 'Profil', exact: true }).click();
+  await page.getByRole('button', { name: 'Départ' }).click();
   await expect(page.getByRole('heading', { name: 'Inscription abonnée' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Langue' })).toBeVisible();
 
@@ -38,12 +41,12 @@ test('subscriber mobile exposes production routes and bounded tracking', async (
   await expect(page.getByText(/prêt pour validation opérateur/u)).toBeVisible();
   await page.getByRole('button', { name: 'Terminé' }).click();
 
+  await page.getByRole('button', { name: 'Voir la visite' }).click();
   await page.getByRole('button', { name: 'Démarrer le suivi' }).click();
   await expect(page.getByLabel('Bounded live map')).toBeVisible();
   await page.getByRole('button', { name: "Confirmer l'arrivée" }).click();
   await expect(page.getByText("Arrivée confirmée; le suivi s'arrête.")).toBeVisible();
 
-  await page.getByRole('button', { name: 'Visite', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Détail de visite' })).toBeVisible();
   await page.getByRole('button', { name: 'Sauter la visite' }).click();
   await expect(page.getByText('Crédit de saut utilisé pour la prochaine visite.')).toBeVisible();
@@ -64,12 +67,12 @@ test('subscriber mobile exposes production routes and bounded tracking', async (
   await page.getByRole('button', { name: 'Paiement', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Régularisation du paiement' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Profil' }).click();
+  await page.getByRole('button', { name: 'Profil', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Profil et confidentialité' })).toBeVisible();
   await page.getByRole('button', { name: 'Legal' }).click();
   await expect(page.getByRole('heading', { name: 'Conditions et confidentialité' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Profil' }).click();
+  await page.getByRole('button', { name: 'Profil', exact: true }).click();
   await page.getByRole('button', { name: 'Récupération' }).click();
   await expect(page.getByRole('heading', { name: 'Récupération du compte' })).toBeVisible();
 

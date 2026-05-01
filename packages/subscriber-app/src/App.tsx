@@ -1,4 +1,4 @@
-import { useMemo, useReducer, useState } from 'react';
+import { useReducer, useState } from 'react';
 
 import {
   Alert,
@@ -8,17 +8,28 @@ import {
   Card,
   EmptyState,
   ListItem,
-  Tabs,
   TextField,
   WashedThemeProvider,
 } from '@washed/ui';
 import { formatVisitDate, formatXof, translate, type WashedLocale } from '@washed/i18n';
+import {
+  Banknote,
+  Bell,
+  Check,
+  ClipboardList,
+  Clock3,
+  Home,
+  House,
+  Languages,
+  MessageCircle,
+  ShieldCheck,
+  UserRound,
+} from 'lucide-react';
 import type { Dispatch, ReactElement, ReactNode } from 'react';
 
 import {
   copy,
   onboardingSteps,
-  subscriberSurfaceGroups,
   visitTimeline,
   type AppRoute,
   type LocalizedCopy,
@@ -39,25 +50,17 @@ const navOrder = [
 ] as const satisfies readonly PrimaryAppRoute[];
 
 const navIcons = {
-  home: '⌂',
-  profile: '👤',
-  subscription: '📋',
-  support: '💬',
-} as const satisfies Record<PrimaryAppRoute, string>;
+  home: <House aria-hidden="true" size={18} strokeWidth={2.25} />,
+  profile: <UserRound aria-hidden="true" size={18} strokeWidth={2.25} />,
+  subscription: <ClipboardList aria-hidden="true" size={18} strokeWidth={2.25} />,
+  support: <MessageCircle aria-hidden="true" size={18} strokeWidth={2.25} />,
+} as const satisfies Record<PrimaryAppRoute, ReactNode>;
 
 export function App(): ReactElement {
   const [locale, setLocale] = useState<WashedLocale>('fr');
   const [route, setRoute] = useState<AppRoute>('home');
-  const [activeGroup, setActiveGroup] = useState<string>(subscriberSurfaceGroups[0].label);
   const [subscriberState, dispatch] = useReducer(subscriberReducer, initialSubscriberState);
   const t = copy[locale];
-
-  const currentGroup = useMemo(
-    () =>
-      subscriberSurfaceGroups.find((group) => group.label === activeGroup) ??
-      subscriberSurfaceGroups[0],
-    [activeGroup],
-  );
 
   const toggleLocale = (): void => {
     setLocale((currentLocale) => (currentLocale === 'fr' ? 'en' : 'fr'));
@@ -66,12 +69,12 @@ export function App(): ReactElement {
   return (
     <WashedThemeProvider className="app-frame" theme="subscriber">
       <div className="phone-shell">
-        <div className="status-bar" aria-hidden="true">
+        <div className="status-bar" aria-hidden="true" hidden>
           <span>9:41</span>
           <span>●●● 5G ▰</span>
         </div>
 
-        <header className="app-header">
+        <header className="app-header" hidden>
           <button className="brand-button" onClick={() => setRoute('home')} type="button">
             <span>{translate('app.name', locale)}</span>
             <small>Beta Lomé</small>
@@ -89,11 +92,9 @@ export function App(): ReactElement {
           )}
           {route === 'home' ? (
             <HomeScreen
-              activeGroup={activeGroup}
-              currentGroup={currentGroup}
               dispatch={dispatch}
               locale={locale}
-              onGroupChange={setActiveGroup}
+              onLocaleToggle={toggleLocale}
               onRouteChange={setRoute}
               subscriberState={subscriberState}
               t={t}
@@ -161,20 +162,16 @@ export function App(): ReactElement {
 }
 
 function HomeScreen({
-  activeGroup,
-  currentGroup,
   dispatch,
   locale,
-  onGroupChange,
+  onLocaleToggle,
   onRouteChange,
   subscriberState,
   t,
 }: {
-  readonly activeGroup: string;
-  readonly currentGroup: (typeof subscriberSurfaceGroups)[number];
   readonly dispatch: Dispatch<SubscriberAction>;
   readonly locale: WashedLocale;
-  readonly onGroupChange: (group: string) => void;
+  readonly onLocaleToggle: () => void;
   readonly onRouteChange: (route: AppRoute) => void;
   readonly subscriberState: SubscriberState;
   readonly t: LocalizedCopy;
@@ -182,17 +179,23 @@ function HomeScreen({
   const nextVisit = formatVisitDate(subscriberState.nextVisit.startsAt, locale);
   const trackingIsVisible = subscriberState.nextVisit.stage === 'enRoute';
   const isFrench = locale === 'fr';
+  const nextVisitWindow = isFrench ? '9h00 - 11h00' : '9:00 - 11:00';
 
   return (
     <>
       <section className="subscriber-greeting" aria-labelledby="subscriber-home-title">
         <div>
           <span>{isFrench ? 'Bonjour,' : 'Hello,'}</span>
-          <h1 id="subscriber-home-title">Essi Agbodzan 👋</h1>
+          <h1 id="subscriber-home-title">Essi Agbodzan</h1>
         </div>
         <div className="subscriber-greeting-actions">
           <button aria-label={t.nav.inbox} onClick={() => onRouteChange('inbox')} type="button">
-            {subscriberState.inboxUnread}
+            <Bell aria-hidden="true" size={16} strokeWidth={2.35} />
+            <span className="notification-count">{subscriberState.inboxUnread}</span>
+          </button>
+          <button aria-label="Switch language" onClick={onLocaleToggle} type="button">
+            <Languages aria-hidden="true" size={15} strokeWidth={2.35} />
+            <span>{locale === 'fr' ? 'EN' : 'FR'}</span>
           </button>
           <button
             aria-label={isFrench ? 'Ouvrir le profil Essi' : 'Open Essi profile'}
@@ -205,32 +208,56 @@ function HomeScreen({
       </section>
 
       <section className="home-hero-card" aria-label={t.home.nextVisit}>
-        <Badge>{isFrench ? 'PROCHAINE VISITE' : 'NEXT VISIT'}</Badge>
-        <h2>{nextVisit}</h2>
+        <div className="hero-card-topline">
+          <Badge>{isFrench ? 'PROCHAINE VISITE' : 'NEXT VISIT'}</Badge>
+          <span>{isFrench ? 'Adidogomé' : 'Adidogome'}</span>
+        </div>
+        <div className="hero-date-block">
+          <h2>{nextVisit}</h2>
+          <span>
+            <Clock3 aria-hidden="true" size={15} strokeWidth={2.35} />
+            {nextVisitWindow}
+          </span>
+        </div>
         <div className="hero-worker-row">
-          <div className="worker-avatar">photo<br />AK</div>
+          <div className="worker-avatar" aria-hidden="true">
+            AK
+          </div>
           <div>
             <strong>Akouvi Koffi</strong>
             <span>{isFrench ? 'Votre laveuse' : 'Your washerwoman'} · ★ 4.9</span>
           </div>
-          <span className="ok-pill">{isFrench ? 'Confirmée ✓' : 'Confirmed ✓'}</span>
+          <span className="ok-pill">
+            <Check aria-hidden="true" size={12} strokeWidth={3} />
+            {isFrench ? 'Confirmée' : 'Confirmed'}
+          </span>
+        </div>
+        <div className="visit-assurance-grid" aria-label={isFrench ? 'Préparation de la visite' : 'Visit readiness'}>
+          <span>
+            <ShieldCheck aria-hidden="true" size={15} strokeWidth={2.35} />
+            {isFrench ? 'Affectation validée' : 'Assignment verified'}
+          </span>
+          <span>
+            <Home aria-hidden="true" size={15} strokeWidth={2.35} />
+            {isFrench ? 'Consignes envoyées' : 'Notes sent'}
+          </span>
         </div>
         <div className="hero-actions">
-          <button onClick={() => dispatch({ type: 'visit/reschedule' })} type="button">
-            {isFrench ? 'Reporter ↻' : 'Reschedule ↻'}
+          <button className="hero-action-primary" onClick={() => onRouteChange('visit')} type="button">
+            {isFrench ? 'Voir la visite' : 'View visit'}
           </button>
-          <button onClick={() => dispatch({ type: 'visit/skip' })} type="button">
-            {isFrench ? 'Sauter ✕' : 'Skip ✕'}
+          <button onClick={() => dispatch({ type: 'visit/reschedule' })} type="button">
+            {isFrench ? 'Reporter' : 'Reschedule'}
           </button>
           <button onClick={() => onRouteChange('support')} type="button">
-            {isFrench ? 'Appeler ☎' : 'Call ☎'}
+            {isFrench ? 'Messages' : 'Messages'}
           </button>
         </div>
       </section>
 
-      <section className="mini-calendar" aria-label={isFrench ? 'Visites · Formule T2' : 'Visits · T2 plan'}>
+      <section className="mini-calendar" aria-label={isFrench ? 'Visites à venir' : 'Upcoming visits'}>
         <div className="section-row">
-          <strong>{isFrench ? 'Visites · Formule T2' : 'Visits · T2 plan'}</strong>
+          <strong>{isFrench ? 'Visites à venir' : 'Upcoming visits'}</strong>
           <button onClick={() => onRouteChange('subscription')} type="button">
             {isFrench ? 'Tout voir →' : 'View all →'}
           </button>
@@ -256,35 +283,50 @@ function HomeScreen({
         </div>
       </section>
 
-      <button className="billing-teaser" onClick={() => onRouteChange('billing')} type="button">
-        <span>
-          {isFrench ? 'Prochain paiement' : 'Next payment'}
-          <strong>
-            {formatXof(subscriberState.subscription.monthlyPriceXof, locale)} · 1 mai
-          </strong>
-        </span>
-        <em>{isFrench ? 'Historique →' : 'History →'}</em>
-      </button>
+      <section className="home-overview-grid" aria-label={isFrench ? 'Résumé abonnement' : 'Plan summary'}>
+        <button onClick={() => onRouteChange('subscription')} type="button">
+          <span>{isFrench ? 'Formule' : 'Plan'}</span>
+          <strong>T2</strong>
+          <small>{isFrench ? '2 visites / mois' : '2 visits / month'}</small>
+        </button>
+        <button onClick={() => onRouteChange('billing')} type="button">
+          <span>{isFrench ? 'Paiement' : 'Payment'}</span>
+          <strong>{formatXof(subscriberState.subscription.monthlyPriceXof, locale)}</strong>
+          <small>{isFrench ? 'Prévu le 1 mai' : 'Due May 1'}</small>
+        </button>
+      </section>
 
-      <section className="home-visit-controls">
+      <section className="visit-status-card">
         {trackingIsVisible ? (
           <BoundedTrackingMap onArrive={() => dispatch({ type: 'visit/arrive' })} t={t} />
         ) : (
-          <Alert title={t.home.boundedTrackingTitle} tone="primary">
-            {t.home.boundedTrackingBody}
-          </Alert>
+          <>
+            <div className="section-row">
+              <strong>{isFrench ? 'Tout est prêt' : 'Everything is ready'}</strong>
+              <Badge tone="success">{t.visitStage[subscriberState.nextVisit.stage]}</Badge>
+            </div>
+            <p>
+              {isFrench
+                ? "Vous serez prévenue quand Akouvi démarre le trajet. Le suivi s'arrête automatiquement à son arrivée."
+                : 'You will be notified when Akouvi starts the trip. Tracking stops automatically when she arrives.'}
+            </p>
+          </>
         )}
-        <div className="visit-actions" aria-label={t.home.visitControls}>
-          <Button onClick={() => onRouteChange('visit')} size="sm" variant="primary">
-            {t.nav.visit}
-          </Button>
-          <Button onClick={() => dispatch({ type: 'visit/startTracking' })} size="sm" variant="secondary">
-            {t.action.startTracking}
-          </Button>
-          <Button onClick={() => dispatch({ type: 'visit/stopTracking' })} size="sm" variant="ghost">
-            {t.action.stopTracking}
-          </Button>
+      </section>
+
+      <section className="message-preview">
+        <div>
+          <span>{isFrench ? 'Dernier message' : 'Latest message'}</span>
+          <strong>{isFrench ? 'Rappel visite mardi' : 'Tuesday visit reminder'}</strong>
+          <p>
+            {isFrench
+              ? 'Akouvi est confirmée pour 9h00 - 11h00. Répondez ici si votre portail ou vos consignes changent.'
+              : 'Akouvi is confirmed for 9:00 - 11:00. Reply here if your gate or notes change.'}
+          </p>
         </div>
+        <button onClick={() => onRouteChange('support')} type="button">
+          {isFrench ? 'Ouvrir' : 'Open'}
+        </button>
       </section>
 
       <section className="recent-activity">
@@ -292,13 +334,13 @@ function HomeScreen({
         {[
           {
             body: isFrench ? 'Notée 5★ · Akouvi' : 'Rated 5★ · Akouvi',
-            icon: '✓',
+            icon: <Check aria-hidden="true" size={16} strokeWidth={2.5} />,
             route: 'visit' as const,
             title: isFrench ? 'Visite complétée — 15 avr' : 'Visit completed — Apr 15',
           },
           {
             body: 'T-Money · Reçu disponible',
-            icon: '💳',
+            icon: <Banknote aria-hidden="true" size={17} strokeWidth={2.35} />,
             route: 'billing' as const,
             title: `${formatXof(subscriberState.subscription.monthlyPriceXof, locale)} ${isFrench ? 'prélevé — 1 avr' : 'charged — Apr 1'}`,
           },
@@ -310,31 +352,6 @@ function HomeScreen({
           </button>
         ))}
       </section>
-
-      <Card className="production-inventory-card">
-        <div className="card-header">
-          <h2>{t.home.routeInventory}</h2>
-          <Badge>{t.home.surfaceCount}</Badge>
-        </div>
-        <div className="production-actions">
-          <p>{t.home.setupNote}</p>
-          <Button onClick={() => onRouteChange('onboarding')} size="sm" variant="secondary">
-            {t.onboarding.start}
-          </Button>
-        </div>
-        <Tabs
-          tabs={subscriberSurfaceGroups.map((group) => ({
-            active: group.label === activeGroup,
-            label: group.label,
-            onClick: () => onGroupChange(group.label),
-          }))}
-        />
-        <div className="screen-grid" aria-label="Subscriber screen inventory">
-          {currentGroup.screens.map((screen) => (
-            <span key={screen}>{screen}</span>
-          ))}
-        </div>
-      </Card>
 
       <div className="timeline sr-utility" aria-label={t.home.visitControls}>
         {visitTimeline.map((stage) => (
