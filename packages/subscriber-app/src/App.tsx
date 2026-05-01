@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useReducer, useState } from 'react';
 
 import {
   Alert,
@@ -13,7 +13,7 @@ import {
   WashedThemeProvider,
 } from '@washed/ui';
 import { formatVisitDate, formatXof, translate, type WashedLocale } from '@washed/i18n';
-import type { ReactElement, ReactNode } from 'react';
+import type { Dispatch, ReactElement, ReactNode } from 'react';
 
 import {
   copy,
@@ -21,8 +21,13 @@ import {
   subscriberSurfaceGroups,
   visitTimeline,
   type AppRoute,
-  type VisitStage,
 } from './appData.js';
+import {
+  initialSubscriberState,
+  subscriberReducer,
+  type SubscriberAction,
+  type SubscriberState,
+} from './subscriberState.js';
 
 const navOrder = [
   'home',
@@ -35,7 +40,7 @@ export function App(): ReactElement {
   const [locale, setLocale] = useState<WashedLocale>('fr');
   const [route, setRoute] = useState<AppRoute>('home');
   const [activeGroup, setActiveGroup] = useState<string>(subscriberSurfaceGroups[0].label);
-  const [visitStage, setVisitStage] = useState<VisitStage>('scheduled');
+  const [subscriberState, dispatch] = useReducer(subscriberReducer, initialSubscriberState);
   const t = copy[locale];
 
   const currentGroup = useMemo(
@@ -63,27 +68,40 @@ export function App(): ReactElement {
       </header>
 
       <main className="subscriber-shell">
+        {subscriberState.lastFeedback === null ? null : (
+          <Alert className="feedback-banner" tone="success">
+            {t.feedback[subscriberState.lastFeedback]}
+          </Alert>
+        )}
         {route === 'home' ? (
           <HomeScreen
             activeGroup={activeGroup}
             currentGroup={currentGroup}
+            dispatch={dispatch}
             locale={locale}
             onGroupChange={setActiveGroup}
             onRouteChange={setRoute}
-            onVisitStageChange={setVisitStage}
+            subscriberState={subscriberState}
             t={t}
-            visitStage={visitStage}
           />
         ) : null}
         {route === 'onboarding' ? (
           <OnboardingScreen locale={locale} onRouteChange={setRoute} t={t} />
         ) : null}
         {route === 'subscription' ? (
-          <SubscriptionScreen locale={locale} onRouteChange={setRoute} t={t} />
+          <SubscriptionScreen
+            dispatch={dispatch}
+            locale={locale}
+            onRouteChange={setRoute}
+            subscriberState={subscriberState}
+            t={t}
+          />
         ) : null}
-        {route === 'support' ? <SupportScreen onRouteChange={setRoute} t={t} /> : null}
+        {route === 'support' ? (
+          <SupportScreen onRouteChange={setRoute} subscriberState={subscriberState} t={t} />
+        ) : null}
         {route === 'profile' ? (
-          <ProfileScreen locale={locale} onRouteChange={setRoute} t={t} />
+          <ProfileScreen dispatch={dispatch} locale={locale} onRouteChange={setRoute} t={t} />
         ) : null}
       </main>
 
@@ -102,24 +120,24 @@ export function App(): ReactElement {
 function HomeScreen({
   activeGroup,
   currentGroup,
+  dispatch,
   locale,
   onGroupChange,
   onRouteChange,
-  onVisitStageChange,
+  subscriberState,
   t,
-  visitStage,
 }: {
   readonly activeGroup: string;
   readonly currentGroup: (typeof subscriberSurfaceGroups)[number];
+  readonly dispatch: Dispatch<SubscriberAction>;
   readonly locale: WashedLocale;
   readonly onGroupChange: (group: string) => void;
   readonly onRouteChange: (route: AppRoute) => void;
-  readonly onVisitStageChange: (stage: VisitStage) => void;
+  readonly subscriberState: SubscriberState;
   readonly t: (typeof copy)[WashedLocale];
-  readonly visitStage: VisitStage;
 }): ReactElement {
-  const nextVisit = formatVisitDate('2026-05-05T09:00:00.000Z', locale);
-  const trackingIsVisible = visitStage === 'enRoute';
+  const nextVisit = formatVisitDate(subscriberState.nextVisit.startsAt, locale);
+  const trackingIsVisible = subscriberState.nextVisit.stage === 'enRoute';
 
   return (
     <>
@@ -147,21 +165,29 @@ function HomeScreen({
         </div>
 
         <ListItem
-          after={<Badge tone="accent">9-11</Badge>}
-          description="Akouvi, Cellule Adidogomé"
+          after={<Badge tone="accent">{subscriberState.nextVisit.window}</Badge>}
+          description={`${subscriberState.nextVisit.workerName}, ${subscriberState.nextVisit.cell}`}
           title={t.home.washerConfirmed}
         />
         <ListItem
-          after={<Badge>{formatXof(4500, locale)}</Badge>}
+          after={<Badge>{formatXof(subscriberState.subscription.monthlyPriceXof, locale)}</Badge>}
           description={t.subscription.priceNote}
           title={t.home.price}
         />
 
         <div className="visit-actions" aria-label={t.home.visitControls}>
-          <Button onClick={() => onVisitStageChange('enRoute')} size="sm" variant="secondary">
+          <Button
+            onClick={() => dispatch({ type: 'visit/startTracking' })}
+            size="sm"
+            variant="secondary"
+          >
             {t.action.startTracking}
           </Button>
-          <Button onClick={() => onVisitStageChange('scheduled')} size="sm" variant="ghost">
+          <Button
+            onClick={() => dispatch({ type: 'visit/stopTracking' })}
+            size="sm"
+            variant="ghost"
+          >
             {t.action.stopTracking}
           </Button>
           <Button onClick={() => onRouteChange('support')} size="sm" variant="ghost">
@@ -170,7 +196,7 @@ function HomeScreen({
         </div>
 
         {trackingIsVisible ? (
-          <BoundedTrackingMap onArrive={() => onVisitStageChange('arrived')} t={t} />
+          <BoundedTrackingMap onArrive={() => dispatch({ type: 'visit/arrive' })} t={t} />
         ) : (
           <Alert title={t.home.boundedTrackingTitle} tone="primary">
             {t.home.boundedTrackingBody}
@@ -200,17 +226,28 @@ function HomeScreen({
       <Card>
         <div className="card-header">
           <h2>{t.home.visitControls}</h2>
-          <Badge tone={visitStage === 'scheduled' ? 'muted' : 'success'}>
-            {t.visitStage[visitStage]}
+          <Badge tone={subscriberState.nextVisit.stage === 'scheduled' ? 'muted' : 'success'}>
+            {t.visitStage[subscriberState.nextVisit.stage]}
           </Badge>
         </div>
         <div className="timeline">
           {visitTimeline.map((stage, index) => (
             <button
-              aria-pressed={stage === visitStage}
+              aria-label={t.visitStage[stage]}
+              aria-pressed={stage === subscriberState.nextVisit.stage}
               className="timeline-step"
               key={stage}
-              onClick={() => onVisitStageChange(stage)}
+              onClick={() =>
+                dispatch(
+                  stage === 'enRoute'
+                    ? { type: 'visit/startTracking' }
+                    : stage === 'arrived'
+                      ? { type: 'visit/arrive' }
+                      : stage === 'inProgress'
+                        ? { type: 'visit/startProgress' }
+                        : { type: 'visit/stopTracking' },
+                )
+              }
               type="button"
             >
               <span>{index + 1}</span>
@@ -275,14 +312,21 @@ function OnboardingScreen({
 }
 
 function SubscriptionScreen({
+  dispatch,
   locale,
   onRouteChange,
+  subscriberState,
   t,
 }: {
+  readonly dispatch: Dispatch<SubscriberAction>;
   readonly locale: WashedLocale;
   readonly onRouteChange: (route: AppRoute) => void;
+  readonly subscriberState: SubscriberState;
   readonly t: (typeof copy)[WashedLocale];
 }): ReactElement {
+  const price = subscriberState.subscription.monthlyPriceXof;
+  const tier = `${subscriberState.subscription.tier} · ${formatXof(price, locale)}`;
+
   return (
     <ScreenFrame
       action={
@@ -295,27 +339,57 @@ function SubscriptionScreen({
     >
       <Card elevated>
         <ListItem
-          after={<Badge>{formatXof(4500, locale)}</Badge>}
+          after={<Badge>{formatXof(price, locale)}</Badge>}
           description={t.subscription.priceNote}
-          title={t.subscription.tier}
+          title={tier}
         />
         <ActionGrid
           items={[
-            { label: t.action.changeTier, tone: 'primary' },
-            { label: t.action.requestSwap, note: t.subscription.swapLimit, tone: 'primary' },
-            { label: t.action.skipVisit, tone: 'accent' },
-            { label: t.action.reschedule, tone: 'accent' },
+            {
+              label: t.action.changeTier,
+              onClick: () => dispatch({ type: 'subscription/changeTier' }),
+              tone: 'primary',
+            },
+            {
+              label: t.action.requestSwap,
+              note: `${subscriberState.subscription.swapCreditsRemaining} / 2`,
+              onClick: () => dispatch({ type: 'subscription/requestSwap' }),
+              tone: 'primary',
+            },
+            {
+              label: t.action.skipVisit,
+              note: `${subscriberState.subscription.skipCreditsRemaining} / 2`,
+              onClick: () => dispatch({ type: 'visit/skip' }),
+              tone: 'accent',
+            },
+            {
+              label: t.action.reschedule,
+              onClick: () => dispatch({ type: 'visit/reschedule' }),
+              tone: 'accent',
+            },
           ]}
         />
       </Card>
 
       <Card>
-        <ListItem description="Mai 2026 · 4 500 FCFA" title={t.subscription.billing} />
+        <ListItem
+          description={`Mai 2026 · ${formatXof(price, locale)} · ${
+            t.paymentStatus[subscriberState.subscription.paymentStatus]
+          }`}
+          title={t.subscription.billing}
+        />
         <ListItem description="Avant / après, note, réclamation" title={t.subscription.history} />
         <Alert title={t.action.recoverPayment} tone="danger">
           A failed payment opens a recovery screen before the next scheduled visit.
         </Alert>
-        <Button fullWidth variant="danger">
+        <Button fullWidth onClick={() => dispatch({ type: 'payment/recover' })} variant="secondary">
+          {t.action.recoverPayment}
+        </Button>
+        <Button
+          fullWidth
+          onClick={() => dispatch({ type: 'subscription/cancel' })}
+          variant="danger"
+        >
           {t.subscription.cancel}
         </Button>
       </Card>
@@ -325,9 +399,11 @@ function SubscriptionScreen({
 
 function SupportScreen({
   onRouteChange,
+  subscriberState,
   t,
 }: {
   readonly onRouteChange: (route: AppRoute) => void;
+  readonly subscriberState: SubscriberState;
   readonly t: (typeof copy)[WashedLocale];
 }): ReactElement {
   return (
@@ -342,7 +418,7 @@ function SupportScreen({
     >
       <Card elevated>
         <ListItem
-          after={<Badge tone="success">2</Badge>}
+          after={<Badge tone="success">{subscriberState.inboxUnread}</Badge>}
           description="Akouvi est confirmée pour mardi 9-11."
           title={t.support.inbox}
         />
@@ -366,10 +442,12 @@ function SupportScreen({
 }
 
 function ProfileScreen({
+  dispatch,
   locale,
   onRouteChange,
   t,
 }: {
+  readonly dispatch: Dispatch<SubscriberAction>;
   readonly locale: WashedLocale;
   readonly onRouteChange: (route: AppRoute) => void;
   readonly t: (typeof copy)[WashedLocale];
@@ -401,9 +479,21 @@ function ProfileScreen({
         </div>
         <ActionGrid
           items={[
-            { label: t.profile.exportData, tone: 'primary' },
-            { label: t.profile.erasure, tone: 'accent' },
-            { label: t.profile.deleteAccount, tone: 'danger' },
+            {
+              label: t.profile.exportData,
+              onClick: () => dispatch({ type: 'privacy/export' }),
+              tone: 'primary',
+            },
+            {
+              label: t.profile.erasure,
+              onClick: () => dispatch({ type: 'privacy/erasure' }),
+              tone: 'accent',
+            },
+            {
+              label: t.profile.deleteAccount,
+              onClick: () => dispatch({ type: 'subscription/cancel' }),
+              tone: 'danger',
+            },
             { label: t.profile.maintenance, tone: 'primary' },
           ]}
         />
@@ -430,7 +520,12 @@ function BoundedTrackingMap({
         <Badge tone="success">{t.visitStage.enRoute}</Badge>
         <strong>Akouvi · 12 min</strong>
         <span>{t.home.boundedTrackingBody}</span>
-        <Button onClick={onArrive} size="sm" variant="secondary">
+        <Button
+          aria-label={t.action.confirmArrival}
+          onClick={onArrive}
+          size="sm"
+          variant="secondary"
+        >
           {t.visitStage.arrived}
         </Button>
       </div>
@@ -469,13 +564,20 @@ function ActionGrid({
   readonly items: readonly {
     readonly label: string;
     readonly note?: string;
+    readonly onClick?: () => void;
     readonly tone: 'accent' | 'danger' | 'primary';
   }[];
 }): ReactElement {
   return (
     <div className="action-grid">
       {items.map((item) => (
-        <button className={`action-tile action-tile-${item.tone}`} key={item.label} type="button">
+        <button
+          aria-label={item.note === undefined ? item.label : `${item.label} ${item.note}`}
+          className={`action-tile action-tile-${item.tone}`}
+          key={item.label}
+          onClick={item.onClick}
+          type="button"
+        >
           <strong>{item.label}</strong>
           {item.note === undefined ? null : <span>{item.note}</span>}
         </button>

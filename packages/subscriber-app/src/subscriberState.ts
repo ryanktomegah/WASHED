@@ -1,0 +1,196 @@
+export type SubscriptionStatus = 'active' | 'cancelled';
+export type PaymentStatus = 'current' | 'overdue' | 'recovered';
+export type VisitStatus = 'rescheduled' | 'scheduled' | 'skipped';
+export type VisitStage = 'arrived' | 'enRoute' | 'inProgress' | 'scheduled';
+
+export type SubscriberFeedback =
+  | 'cancelRequested'
+  | 'dataErasureRequested'
+  | 'dataExportRequested'
+  | 'paymentRecovered'
+  | 'rescheduled'
+  | 'skipUsed'
+  | 'tierChanged'
+  | 'trackingArrived'
+  | 'trackingStarted'
+  | 'trackingStopped'
+  | 'visitInProgress'
+  | 'workerSwapRequested';
+
+export interface SubscriberState {
+  readonly inboxUnread: number;
+  readonly lastFeedback: SubscriberFeedback | null;
+  readonly nextVisit: {
+    readonly cell: string;
+    readonly startsAt: string;
+    readonly status: VisitStatus;
+    readonly stage: VisitStage;
+    readonly window: string;
+    readonly workerName: string;
+  };
+  readonly privacy: {
+    readonly erasureRequested: boolean;
+    readonly exportRequested: boolean;
+  };
+  readonly subscription: {
+    readonly monthlyPriceXof: number;
+    readonly paymentStatus: PaymentStatus;
+    readonly skipCreditsRemaining: number;
+    readonly status: SubscriptionStatus;
+    readonly swapCreditsRemaining: number;
+    readonly tier: 'T1' | 'T2' | 'T3';
+  };
+}
+
+export type SubscriberAction =
+  | { readonly type: 'payment/recover' }
+  | { readonly type: 'privacy/erasure' }
+  | { readonly type: 'privacy/export' }
+  | { readonly type: 'subscription/cancel' }
+  | { readonly type: 'subscription/changeTier' }
+  | { readonly type: 'subscription/requestSwap' }
+  | { readonly type: 'visit/arrive' }
+  | { readonly type: 'visit/startProgress' }
+  | { readonly type: 'visit/reschedule' }
+  | { readonly type: 'visit/skip' }
+  | { readonly type: 'visit/startTracking' }
+  | { readonly type: 'visit/stopTracking' };
+
+export const initialSubscriberState = {
+  inboxUnread: 2,
+  lastFeedback: null,
+  nextVisit: {
+    cell: 'Cellule Adidogomé',
+    startsAt: '2026-05-05T09:00:00.000Z',
+    status: 'scheduled',
+    stage: 'scheduled',
+    window: '9-11',
+    workerName: 'Akouvi',
+  },
+  privacy: {
+    erasureRequested: false,
+    exportRequested: false,
+  },
+  subscription: {
+    monthlyPriceXof: 4500,
+    paymentStatus: 'overdue',
+    skipCreditsRemaining: 2,
+    status: 'active',
+    swapCreditsRemaining: 2,
+    tier: 'T2',
+  },
+} as const satisfies SubscriberState;
+
+export function subscriberReducer(
+  state: SubscriberState,
+  action: SubscriberAction,
+): SubscriberState {
+  if (action.type === 'visit/startTracking') {
+    return {
+      ...state,
+      lastFeedback: 'trackingStarted',
+      nextVisit: { ...state.nextVisit, stage: 'enRoute' },
+    };
+  }
+
+  if (action.type === 'visit/stopTracking') {
+    return {
+      ...state,
+      lastFeedback: 'trackingStopped',
+      nextVisit: { ...state.nextVisit, stage: 'scheduled' },
+    };
+  }
+
+  if (action.type === 'visit/arrive') {
+    return {
+      ...state,
+      lastFeedback: 'trackingArrived',
+      nextVisit: { ...state.nextVisit, stage: 'arrived' },
+    };
+  }
+
+  if (action.type === 'visit/startProgress') {
+    return {
+      ...state,
+      lastFeedback: 'visitInProgress',
+      nextVisit: { ...state.nextVisit, stage: 'inProgress' },
+    };
+  }
+
+  if (action.type === 'visit/skip') {
+    return {
+      ...state,
+      lastFeedback: 'skipUsed',
+      nextVisit: { ...state.nextVisit, status: 'skipped', stage: 'scheduled' },
+      subscription: {
+        ...state.subscription,
+        skipCreditsRemaining: Math.max(0, state.subscription.skipCreditsRemaining - 1),
+      },
+    };
+  }
+
+  if (action.type === 'visit/reschedule') {
+    return {
+      ...state,
+      lastFeedback: 'rescheduled',
+      nextVisit: { ...state.nextVisit, status: 'rescheduled', stage: 'scheduled' },
+    };
+  }
+
+  if (action.type === 'subscription/requestSwap') {
+    return {
+      ...state,
+      lastFeedback: 'workerSwapRequested',
+      subscription: {
+        ...state.subscription,
+        swapCreditsRemaining: Math.max(0, state.subscription.swapCreditsRemaining - 1),
+      },
+    };
+  }
+
+  if (action.type === 'subscription/changeTier') {
+    return {
+      ...state,
+      lastFeedback: 'tierChanged',
+      subscription: {
+        ...state.subscription,
+        monthlyPriceXof: state.subscription.tier === 'T2' ? 6500 : 4500,
+        tier: state.subscription.tier === 'T2' ? 'T3' : 'T2',
+      },
+    };
+  }
+
+  if (action.type === 'payment/recover') {
+    return {
+      ...state,
+      lastFeedback: 'paymentRecovered',
+      subscription: { ...state.subscription, paymentStatus: 'recovered' },
+    };
+  }
+
+  if (action.type === 'subscription/cancel') {
+    return {
+      ...state,
+      lastFeedback: 'cancelRequested',
+      subscription: { ...state.subscription, status: 'cancelled' },
+    };
+  }
+
+  if (action.type === 'privacy/export') {
+    return {
+      ...state,
+      lastFeedback: 'dataExportRequested',
+      privacy: { ...state.privacy, exportRequested: true },
+    };
+  }
+
+  if (action.type === 'privacy/erasure') {
+    return {
+      ...state,
+      lastFeedback: 'dataErasureRequested',
+      privacy: { ...state.privacy, erasureRequested: true },
+    };
+  }
+
+  return state;
+}

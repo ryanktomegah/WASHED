@@ -1,11 +1,12 @@
 import type { WashedLocale } from '@washed/i18n';
+import type { PaymentStatus, SubscriberFeedback, VisitStage } from './subscriberState.js';
 
 export type AppRoute = 'home' | 'onboarding' | 'profile' | 'subscription' | 'support';
-export type VisitStage = 'arrived' | 'enRoute' | 'inProgress' | 'scheduled';
 
 export interface LocalizedCopy {
   readonly action: {
     readonly changeTier: string;
+    readonly confirmArrival: string;
     readonly openSupport: string;
     readonly recoverPayment: string;
     readonly requestSwap: string;
@@ -14,6 +15,7 @@ export interface LocalizedCopy {
     readonly startTracking: string;
     readonly stopTracking: string;
   };
+  readonly feedback: Record<SubscriberFeedback, string>;
   readonly home: {
     readonly assigned: string;
     readonly boundedTrackingBody: string;
@@ -29,6 +31,7 @@ export interface LocalizedCopy {
     readonly washerConfirmed: string;
   };
   readonly nav: Record<AppRoute, string>;
+  readonly paymentStatus: Record<PaymentStatus, string>;
   readonly onboarding: {
     readonly address: string;
     readonly confirm: string;
@@ -80,6 +83,7 @@ export const copy = {
   en: {
     action: {
       changeTier: 'Change tier',
+      confirmArrival: 'Confirm arrival',
       openSupport: 'Open support',
       recoverPayment: 'Recover payment',
       requestSwap: 'Request worker swap',
@@ -87,6 +91,20 @@ export const copy = {
       skipVisit: 'Skip visit',
       startTracking: 'Start en-route demo',
       stopTracking: 'Stop tracking',
+    },
+    feedback: {
+      cancelRequested: 'Cancellation request recorded. Support will confirm the final date.',
+      dataErasureRequested: 'Erasure request queued for operator review.',
+      dataExportRequested: 'Privacy export request queued.',
+      paymentRecovered: 'Payment recovery marked as completed.',
+      rescheduled: 'Visit marked for rescheduling.',
+      skipUsed: 'Skip credit used for the next visit.',
+      tierChanged: 'Tier change preview applied.',
+      trackingArrived: 'Worker marked as arrived; tracking stopped.',
+      trackingStarted: 'Bounded tracking started for this visit.',
+      trackingStopped: 'Bounded tracking stopped.',
+      visitInProgress: 'Visit marked in progress.',
+      workerSwapRequested: 'Worker swap request queued for operator approval.',
     },
     home: {
       assigned: 'Assigned',
@@ -109,6 +127,11 @@ export const copy = {
       profile: 'Profile',
       subscription: 'Plan',
       support: 'Support',
+    },
+    paymentStatus: {
+      current: 'current',
+      overdue: 'overdue',
+      recovered: 'recovered',
     },
     onboarding: {
       address: 'Home address',
@@ -158,6 +181,7 @@ export const copy = {
   fr: {
     action: {
       changeTier: 'Changer la formule',
+      confirmArrival: "Confirmer l'arrivée",
       openSupport: 'Contacter le support',
       recoverPayment: 'Régulariser le paiement',
       requestSwap: 'Demander un remplacement',
@@ -165,6 +189,20 @@ export const copy = {
       skipVisit: 'Sauter la visite',
       startTracking: 'Démarrer le suivi',
       stopTracking: 'Arrêter le suivi',
+    },
+    feedback: {
+      cancelRequested: "Demande d'annulation enregistrée. Le support confirmera la date finale.",
+      dataErasureRequested: "Demande d'effacement mise en file pour revue opérateur.",
+      dataExportRequested: "Demande d'export confidentialité mise en file.",
+      paymentRecovered: 'Paiement marqué comme régularisé.',
+      rescheduled: 'Visite marquée pour reprogrammation.',
+      skipUsed: 'Crédit de saut utilisé pour la prochaine visite.',
+      tierChanged: 'Changement de formule prévisualisé.',
+      trackingArrived: "Arrivée confirmée; le suivi s'arrête.",
+      trackingStarted: 'Suivi encadré démarré pour cette visite.',
+      trackingStopped: 'Suivi encadré arrêté.',
+      visitInProgress: 'Visite marquée en cours.',
+      workerSwapRequested: 'Demande de remplacement envoyée pour validation opérateur.',
     },
     home: {
       assigned: 'Attribuée',
@@ -187,6 +225,11 @@ export const copy = {
       profile: 'Profil',
       subscription: 'Abonnement',
       support: 'Support',
+    },
+    paymentStatus: {
+      current: 'à jour',
+      overdue: 'en retard',
+      recovered: 'régularisé',
     },
     onboarding: {
       address: 'Adresse du foyer',

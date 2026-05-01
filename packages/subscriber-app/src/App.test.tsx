@@ -24,10 +24,15 @@ describe('subscriber app', () => {
     expect(screen.getByLabelText('Bounded live map')).toBeInTheDocument();
     expect(screen.getByText('Akouvi · 12 min')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Arrivée' }));
+    fireEvent.click(screen.getByRole('button', { name: "Confirmer l'arrivée" }));
 
     expect(screen.queryByLabelText('Bounded live map')).not.toBeInTheDocument();
     expect(screen.getByText('Suivi encadré')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'En cours' }));
+
+    expect(screen.getByText('Visite marquée en cours.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'En cours', pressed: true })).toBeInTheDocument();
   });
 
   it('navigates to subscription controls from the bottom nav', () => {
@@ -37,7 +42,47 @@ describe('subscriber app', () => {
 
     expect(screen.getByRole('heading', { name: "Gestion de l'abonnement" })).toBeInTheDocument();
     expect(screen.getByText('Demander un remplacement')).toBeInTheDocument();
-    expect(screen.getByText('2 remplacements restants ce trimestre')).toBeInTheDocument();
+    expect(screen.getAllByText('2 / 2')).toHaveLength(2);
+    expect(screen.getByText(/en retard/u)).toBeInTheDocument();
+  });
+
+  it('applies subscription and payment actions through the reducer', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Abonnement' }));
+    fireEvent.click(screen.getByRole('button', { name: /Demander un remplacement/u }));
+
+    expect(
+      screen.getByText('Demande de remplacement envoyée pour validation opérateur.'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Demander un remplacement 1 \/ 2/u }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Sauter la visite/u }));
+
+    expect(
+      screen.getByText('Crédit de saut utilisé pour la prochaine visite.'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Sauter la visite 1 \/ 2/u })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Changer la formule' }));
+
+    expect(screen.getByText(/T3/u)).toBeInTheDocument();
+    expect(screen.getByText('Changement de formule prévisualisé.')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Régulariser le paiement' }));
+
+    expect(screen.getByText('Paiement marqué comme régularisé.')).toBeInTheDocument();
+    expect(
+      screen.getByText((content) => content.includes('Mai 2026') && content.includes('régularisé')),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: "Annuler l'abonnement" }));
+
+    expect(
+      screen.getByText("Demande d'annulation enregistrée. Le support confirmera la date finale."),
+    ).toBeInTheDocument();
   });
 
   it('renders onboarding and support flows from primary actions', () => {
@@ -65,5 +110,20 @@ describe('subscriber app', () => {
     expect(screen.getByText('Bounded tracking')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Start setup' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Plan' })).toBeInTheDocument();
+  });
+
+  it('records subscriber privacy requests from the profile surface', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Profil' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Exporter mes données' }));
+
+    expect(screen.getByText("Demande d'export confidentialité mise en file.")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: "Demander l'effacement" }));
+
+    expect(
+      screen.getByText("Demande d'effacement mise en file pour revue opérateur."),
+    ).toBeInTheDocument();
   });
 });
