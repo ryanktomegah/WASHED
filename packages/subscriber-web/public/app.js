@@ -1018,7 +1018,7 @@ async function run(action) {
 
 async function api(path, options = {}) {
   const authToken = options.authToken ?? state.auth?.accessToken;
-  const response = await fetch(`/api${path}`, {
+  const response = await fetch(apiUrl(path), {
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
     headers: {
       'content-type': 'application/json',
@@ -1031,6 +1031,13 @@ async function api(path, options = {}) {
     throw new Error(data.message ?? `HTTP ${response.status}`);
   }
   return data;
+}
+
+function apiUrl(path) {
+  if (window.location.protocol === 'capacitor:') {
+    return `http://127.0.0.1:3000${path}`;
+  }
+  return `/api${path}`;
 }
 
 function formatDate(value) {

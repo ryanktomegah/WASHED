@@ -4,12 +4,24 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Washed · Abonné</title>
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <main class="shell" aria-live="polite">
       <section class="phone" id="app"></section>
     </main>
-    <script type="module" src="/app.js"></script>
+    <script>
+      window.addEventListener('error', (event) => {
+        const root = document.querySelector('#app');
+        if (!root) return;
+        root.innerHTML = `<section style="padding:24px;font-family:system-ui,sans-serif"><h1>Washed</h1><p>Erreur de chargement: ${event.message}</p></section>`;
+      });
+      window.addEventListener('unhandledrejection', (event) => {
+        const root = document.querySelector('#app');
+        if (!root) return;
+        root.innerHTML = `<section style="padding:24px;font-family:system-ui,sans-serif"><h1>Washed</h1><p>Erreur de chargement: ${event.reason?.message ?? event.reason}</p></section>`;
+      });
+    </script>
+    <script defer src="./app.js"></script>
   </body>
 </html>

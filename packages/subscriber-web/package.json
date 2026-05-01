@@ -6,6 +6,10 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "dev": "node src/dev-server.mjs",
+    "ios:add": "cap add ios",
+    "ios:open": "cap open ios",
+    "ios:run": "pnpm build && cap run ios",
+    "ios:sync": "pnpm build && cap sync ios",
     "test": "node scripts/check.mjs",
     "typecheck": "node scripts/check.mjs"
   }

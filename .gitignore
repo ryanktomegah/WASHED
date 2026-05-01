@@ -14,3 +14,6 @@ docs/.DS_Store
 .vscode/
 *.tsbuildinfo
 .pnpm-store/
+packages/subscriber-web/ios/DerivedData/
+packages/subscriber-web/ios/App/build/
+.superpowers/
