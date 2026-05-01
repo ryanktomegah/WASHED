@@ -29,7 +29,8 @@ test('worker mobile covers activation, offline visit actions, SOS, and daily sum
   await expect(page.getByText('Arrivée pointée')).toBeVisible();
   await expect(page.getByLabel('Last GPS proof')).toContainText('GPS arrivée capturé');
   await page.getByRole('button', { name: "Aujourd'hui" }).click();
-  await expect(page.getByLabel('Offline action ledger')).toContainText('checkInVisit');
+  await expect(page.getByLabel('Offline action ledger')).toContainText('Arrivée GPS');
+  await expect(page.getByLabel('Offline action ledger')).not.toContainText('checkInVisit');
   await page.getByRole('button', { name: /Ouvrir visite/u }).click();
   await page.getByRole('button', { name: 'Prendre photo avant' }).click();
   await expect(page.getByText('Photo avant ajoutée à la file hors ligne.')).toBeVisible();

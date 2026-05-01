@@ -1,4 +1,4 @@
-import { useReducer, useState } from 'react';
+import { useEffect, useReducer, useState } from 'react';
 
 import {
   Alert,
@@ -65,6 +65,14 @@ export function App(): ReactElement {
   const toggleLocale = (): void => {
     setLocale((currentLocale) => (currentLocale === 'fr' ? 'en' : 'fr'));
   };
+
+  useEffect(() => {
+    const shell = document.querySelector<HTMLElement>('.subscriber-shell');
+
+    if (shell !== null) {
+      shell.scrollTop = 0;
+    }
+  }, [route]);
 
   return (
     <WashedThemeProvider className="app-frame" theme="subscriber">

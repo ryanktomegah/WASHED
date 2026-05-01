@@ -632,6 +632,16 @@ function OfflineQueueLedger({
   readonly queue: readonly WorkerOfflineQueueItem[];
 }): ReactElement {
   const visibleQueue = queue.slice(-4);
+  const queueTone = {
+    'planning.unavailable': 'Planning',
+    sos: 'SOS',
+    'visit.after_photo': 'Photo après',
+    'visit.before_photo': 'Photo avant',
+    'visit.check_in': 'Arrivée GPS',
+    'visit.check_out': 'Sortie GPS',
+    'visit.issue': 'Signalement',
+    'visit.no_show': 'Absence client',
+  } as const satisfies Record<WorkerOfflineQueueItem['kind'], string>;
 
   return (
     <div aria-label="Offline action ledger" className="offline-ledger">
@@ -645,15 +655,27 @@ function OfflineQueueLedger({
       <div className="offline-ledger-list">
         {visibleQueue.map((item) => (
           <div className="offline-ledger-item" key={item.id}>
+            <span className="offline-ledger-type">{queueTone[item.kind]}</span>
             <strong>{item.label}</strong>
-            <span>
-              {item.operationId} · {item.idempotencyKey}
-            </span>
+            <span>{formatQueueTimestamp(item.createdAt)} · prêt à envoyer</span>
           </div>
         ))}
       </div>
     </div>
   );
+}
+
+function formatQueueTimestamp(value: string): string {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return 'En attente';
+  }
+
+  return new Intl.DateTimeFormat('fr-TG', {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
 }
 
 function VisitLifecycle({

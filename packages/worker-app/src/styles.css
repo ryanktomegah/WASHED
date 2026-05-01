@@ -33,7 +33,7 @@ button {
   gap: 12px;
   max-width: 430px;
   margin: 0 auto;
-  padding: 0 14px 88px;
+  padding: 0 14px 92px;
 }
 
 .worker-summary,
@@ -48,7 +48,7 @@ button {
 
 .worker-summary {
   margin: 0 -14px;
-  padding: 18px 18px 20px;
+  padding: 16px 18px 18px;
   background:
     radial-gradient(circle at 88% 12%, rgba(212, 144, 14, 0.26), transparent 32%),
     linear-gradient(145deg, #16482b 0%, #0d2416 74%);
@@ -173,7 +173,7 @@ button {
 .field-command-card {
   display: grid;
   gap: 16px;
-  margin-top: -8px;
+  margin-top: -6px;
   border: 1px solid color-mix(in srgb, var(--washed-primary) 18%, var(--washed-border));
   border-radius: 22px;
   background: var(--washed-surface);
@@ -196,7 +196,7 @@ button {
 
 .field-command-main h2 {
   margin: 0 0 8px;
-  font-size: 28px;
+  font-size: 26px;
   line-height: 1;
 }
 
@@ -524,16 +524,16 @@ button {
 
 .offline-ledger {
   display: grid;
-  gap: 12px;
+  gap: 10px;
   border: 1px solid var(--washed-border);
   border-radius: 14px;
-  padding: 14px;
+  padding: 12px;
   background: var(--washed-surface);
 }
 
 .offline-ledger h2 {
-  margin: 4px 0 0;
-  font-size: 20px;
+  margin: 2px 0 0;
+  font-size: 18px;
   line-height: 1.1;
 }
 
@@ -544,20 +544,42 @@ button {
 
 .offline-ledger-item {
   display: grid;
-  gap: 4px;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 8px;
   min-width: 0;
   border: 1px solid var(--washed-border);
   border-radius: 10px;
-  padding: 10px;
+  padding: 9px 10px;
   background: color-mix(in srgb, var(--washed-primary-soft) 58%, var(--washed-surface));
 }
 
-.offline-ledger-item span {
-  overflow-wrap: anywhere;
+.offline-ledger-item strong {
+  overflow: hidden;
+  color: var(--washed-foreground);
+  font-size: 14px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.offline-ledger-item span:not(.offline-ledger-type) {
+  grid-column: 2;
   color: var(--washed-muted);
   font-size: 11px;
   font-weight: 800;
   line-height: 1.35;
+}
+
+.offline-ledger-type {
+  display: inline-grid;
+  grid-row: span 2;
+  align-self: start;
+  border-radius: 999px;
+  background: var(--washed-surface);
+  color: var(--washed-primary);
+  font-size: 10px;
+  font-weight: 900;
+  padding: 4px 7px;
 }
 
 .visit-workstation h3,

@@ -102,7 +102,8 @@ describe('worker app', () => {
 
     fireEvent.click(screen.getByRole('button', { name: "Aujourd'hui" }));
     expect(screen.getByText('6 actions en attente de synchronisation')).toBeInTheDocument();
-    expect(screen.getByLabelText('Offline action ledger')).toHaveTextContent('checkOutVisit');
+    expect(screen.getByLabelText('Offline action ledger')).toHaveTextContent('Sortie GPS');
+    expect(screen.getByLabelText('Offline action ledger')).not.toHaveTextContent('checkOutVisit');
   });
 
   it('navigates to planning, earnings, and profile and records worker actions', () => {
