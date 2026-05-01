@@ -18,6 +18,7 @@ test('worker mobile covers activation, offline visit actions, SOS, and daily sum
   await page.getByRole('button', { name: "Pointer l'arrivée" }).click();
   await expect(page.getByText("Pointage d'arrivée ajouté à la file hors ligne.")).toBeVisible();
   await expect(page.getByText('Arrivée pointée')).toBeVisible();
+  await expect(page.getByLabel('Last GPS proof')).toContainText('GPS arrivée capturé');
   await page.getByRole('button', { name: 'Prendre photo avant' }).click();
   await expect(page.getByText('Photo avant ajoutée à la file hors ligne.')).toBeVisible();
   await page.getByRole('button', { name: 'Démarrer la visite' }).click();
@@ -26,6 +27,7 @@ test('worker mobile covers activation, offline visit actions, SOS, and daily sum
   await expect(page.getByText('Photo après ajoutée à la file hors ligne.')).toBeVisible();
   await page.getByRole('button', { name: 'Pointer la sortie' }).click();
   await expect(page.getByText('Pointage de sortie ajouté à la file hors ligne.')).toBeVisible();
+  await expect(page.getByLabel('Last GPS proof')).toContainText('GPS sortie capturé');
 
   await page.getByRole('button', { name: "Aujourd'hui" }).click();
   await page.getByRole('button', { name: 'Photos' }).click();

@@ -48,6 +48,11 @@ export interface WorkerCopy {
     readonly route: string;
     readonly title: string;
   };
+  readonly location: {
+    readonly checkInCaptured: string;
+    readonly checkOutCaptured: string;
+    readonly failedTitle: string;
+  };
   readonly nav: Record<WorkerRoute, string>;
   readonly photoRetry: {
     readonly blur: string;
@@ -136,6 +141,8 @@ export const workerCopy = {
     erasureRequested: "Demande d'effacement envoyée pour revue opérateur.",
     exportRequested: "Demande d'export des données enregistrée.",
     issueQueued: 'Signalement ajouté à la file hors ligne.',
+    locationCaptureFailed:
+      "GPS indisponible. Réessayez dehors ou utilisez le code foyer avec l'opérateur.",
     noShowQueued: 'Absence foyer déclarée et ajoutée à la file hors ligne.',
     sosSubmitted: "Alerte SOS envoyée à l'opérateur.",
     syncComplete: 'Toutes les actions locales sont synchronisées.',
@@ -157,6 +164,11 @@ export const workerCopy = {
     payout: 'Paiement mensuel prévu le 31 mai',
     route: 'Route de demain confirmée',
     title: 'Notifications',
+  },
+  location: {
+    checkInCaptured: 'GPS arrivée capturé',
+    checkOutCaptured: 'GPS sortie capturé',
+    failedTitle: 'Pointage GPS impossible',
   },
   photoRetry: {
     blur: 'La photo semble floue ou trop sombre. Reprendre avant de quitter le foyer.',

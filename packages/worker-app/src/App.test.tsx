@@ -54,13 +54,16 @@ describe('worker app', () => {
 
     fireEvent.click(screen.getByRole('button', { name: "Pointer l'arrivée" }));
 
-    expect(screen.getByText("Pointage d'arrivée ajouté à la file hors ligne.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Pointage d'arrivée ajouté à la file hors ligne."),
+    ).toBeInTheDocument();
     expect(screen.getByText('1 actions en attente de synchronisation')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Pointage arrivée' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
     expect(screen.getByText('Arrivée pointée')).toBeInTheDocument();
+    expect(screen.getByLabelText('Last GPS proof')).toHaveTextContent('GPS arrivée capturé');
 
     fireEvent.click(screen.getByRole('button', { name: 'Prendre photo avant' }));
     expect(
@@ -81,8 +84,11 @@ describe('worker app', () => {
     expect(screen.getByText('Photo après enregistrée')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Pointer la sortie' }));
-    expect(screen.getByText('Pointage de sortie ajouté à la file hors ligne.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Pointage de sortie ajouté à la file hors ligne.'),
+    ).toBeInTheDocument();
     expect(screen.getByText('Sortie pointée')).toBeInTheDocument();
+    expect(screen.getByLabelText('Last GPS proof')).toHaveTextContent('GPS sortie capturé');
 
     fireEvent.click(screen.getByRole('button', { name: 'Signaler un problème' }));
     expect(screen.getByText('Signalement ajouté à la file hors ligne.')).toBeInTheDocument();

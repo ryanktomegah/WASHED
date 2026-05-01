@@ -217,6 +217,22 @@ button {
   color: var(--washed-success);
 }
 
+.gps-proof {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--washed-success);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--washed-success) 14%, var(--washed-surface));
+  color: var(--washed-success);
+}
+
+.gps-proof span {
+  color: var(--washed-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .visit-actions {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }

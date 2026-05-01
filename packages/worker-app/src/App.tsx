@@ -28,6 +28,11 @@ import {
   type WorkerState,
 } from './workerState.js';
 import { captureVisitPhoto } from './nativeCamera.js';
+import {
+  captureVisitLocation,
+  type NativeLocationResult,
+  type VisitLocationCheckpoint,
+} from './nativeLocation.js';
 
 const navOrder = [
   'today',
@@ -40,6 +45,11 @@ export function App(): ReactElement {
   const [route, setRoute] = useState<WorkerRoute>('today');
   const [workerState, dispatch] = useReducer(workerReducer, initialWorkerState);
   const [captureInProgress, setCaptureInProgress] = useState(false);
+  const [locationCheckpoint, setLocationCheckpoint] = useState<VisitLocationCheckpoint | null>(
+    null,
+  );
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [lastLocationProof, setLastLocationProof] = useState<NativeLocationResult | null>(null);
   const t = workerCopy;
 
   async function captureProof(kind: 'after' | 'before') {
@@ -49,6 +59,20 @@ export function App(): ReactElement {
       dispatch({ step: kind === 'before' ? 'beforePhoto' : 'afterPhoto', type: 'visit/setStep' });
     } finally {
       setCaptureInProgress(false);
+    }
+  }
+
+  async function captureLocationProof(checkpoint: VisitLocationCheckpoint) {
+    setLocationCheckpoint(checkpoint);
+    setLocationError(null);
+    try {
+      const proof = await captureVisitLocation(checkpoint);
+      setLastLocationProof(proof);
+      dispatch({ step: checkpoint, type: 'visit/setStep' });
+    } catch {
+      setLocationError(t.feedback.locationCaptureFailed);
+    } finally {
+      setLocationCheckpoint(null);
     }
   }
 
@@ -79,7 +103,11 @@ export function App(): ReactElement {
           <TodayScreen
             dispatch={dispatch}
             isCapturingPhoto={captureInProgress}
+            locationCaptureCheckpoint={locationCheckpoint}
+            locationError={locationError}
+            locationProof={lastLocationProof}
             onRouteChange={setRoute}
+            onVisitLocationCapture={captureLocationProof}
             onVisitPhotoCapture={captureProof}
             t={t}
             workerState={workerState}
@@ -125,14 +153,22 @@ export function App(): ReactElement {
 function TodayScreen({
   dispatch,
   isCapturingPhoto,
+  locationCaptureCheckpoint,
+  locationError,
+  locationProof,
   onRouteChange,
+  onVisitLocationCapture,
   onVisitPhotoCapture,
   t,
   workerState,
 }: {
   readonly dispatch: Dispatch<WorkerAction>;
   readonly isCapturingPhoto: boolean;
+  readonly locationCaptureCheckpoint: VisitLocationCheckpoint | null;
+  readonly locationError: string | null;
+  readonly locationProof: NativeLocationResult | null;
   readonly onRouteChange: (route: WorkerRoute) => void;
+  readonly onVisitLocationCapture: (checkpoint: VisitLocationCheckpoint) => Promise<void>;
   readonly onVisitPhotoCapture: (kind: 'after' | 'before') => Promise<void>;
   readonly t: typeof workerCopy;
   readonly workerState: WorkerState;
@@ -204,7 +240,11 @@ function TodayScreen({
         <VisitWorkstation
           dispatch={dispatch}
           isCapturingPhoto={isCapturingPhoto}
+          locationCaptureCheckpoint={locationCaptureCheckpoint}
+          locationError={locationError}
+          locationProof={locationProof}
           onRouteChange={onRouteChange}
+          onVisitLocationCapture={onVisitLocationCapture}
           onVisitPhotoCapture={onVisitPhotoCapture}
           t={t}
           workerState={workerState}
@@ -268,14 +308,22 @@ function TodayScreen({
 function VisitWorkstation({
   dispatch,
   isCapturingPhoto,
+  locationCaptureCheckpoint,
+  locationError,
+  locationProof,
   onRouteChange,
+  onVisitLocationCapture,
   onVisitPhotoCapture,
   t,
   workerState,
 }: {
   readonly dispatch: Dispatch<WorkerAction>;
   readonly isCapturingPhoto: boolean;
+  readonly locationCaptureCheckpoint: VisitLocationCheckpoint | null;
+  readonly locationError: string | null;
+  readonly locationProof: NativeLocationResult | null;
   readonly onRouteChange: (route: WorkerRoute) => void;
+  readonly onVisitLocationCapture: (checkpoint: VisitLocationCheckpoint) => Promise<void>;
   readonly onVisitPhotoCapture: (kind: 'after' | 'before') => Promise<void>;
   readonly t: typeof workerCopy;
   readonly workerState: WorkerState;
@@ -284,7 +332,8 @@ function VisitWorkstation({
     afterPhoto: {
       body: 'Vérifier les preuves, confirmer la sortie GPS et fermer la visite.',
       label: t.action.checkOutNow,
-      onClick: () => dispatch({ step: 'checkOut', type: 'visit/setStep' }),
+      loading: locationCaptureCheckpoint === 'checkOut',
+      onClick: () => void onVisitLocationCapture('checkOut'),
       title: 'Photo après enregistrée',
     },
     beforePhoto: {
@@ -309,7 +358,8 @@ function VisitWorkstation({
     heading: {
       body: 'Le suivi encadré est visible côté abonnée seulement pendant ce trajet.',
       label: t.action.checkInNow,
-      onClick: () => dispatch({ step: 'checkIn', type: 'visit/setStep' }),
+      loading: locationCaptureCheckpoint === 'checkIn',
+      onClick: () => void onVisitLocationCapture('checkIn'),
       title: 'En route vers Ama K.',
     },
     inVisit: {
@@ -348,6 +398,26 @@ function VisitWorkstation({
           </span>
         ))}
       </div>
+
+      {locationProof === null ? null : (
+        <div className="gps-proof" aria-label="Last GPS proof">
+          <strong>
+            {locationProof.checkpoint === 'checkIn'
+              ? t.location.checkInCaptured
+              : t.location.checkOutCaptured}
+          </strong>
+          <span>
+            {locationProof.latitude.toFixed(4)}, {locationProof.longitude.toFixed(4)} ·{' '}
+            {locationProof.accuracyMeters} m
+          </span>
+        </div>
+      )}
+
+      {locationError === null ? null : (
+        <Alert title={t.location.failedTitle} tone="danger">
+          {locationError}
+        </Alert>
+      )}
 
       <Button
         fullWidth

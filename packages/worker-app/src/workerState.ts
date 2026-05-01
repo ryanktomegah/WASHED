@@ -13,6 +13,7 @@ export type WorkerFeedback =
   | 'erasureRequested'
   | 'exportRequested'
   | 'issueQueued'
+  | 'locationCaptureFailed'
   | 'noShowQueued'
   | 'sosSubmitted'
   | 'syncComplete'
