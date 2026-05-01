@@ -177,7 +177,7 @@ export const copy = {
       paymentRecovery: 'Payment',
       profile: 'Profile',
       subscription: 'Plan',
-      support: 'Support',
+      support: 'Messages',
       visit: 'Visit',
     },
     paymentStatus: {
@@ -318,7 +318,7 @@ export const copy = {
       paymentRecovery: 'Paiement',
       profile: 'Profil',
       subscription: 'Abonnement',
-      support: 'Support',
+      support: 'Messages',
       visit: 'Visite',
     },
     paymentStatus: {

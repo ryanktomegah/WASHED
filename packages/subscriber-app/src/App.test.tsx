@@ -8,7 +8,10 @@ describe('subscriber app', () => {
     render(<App />);
 
     expect(screen.getByRole('button', { name: 'WashedBeta Lomé' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'mardi 5 mai', level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Essi Agbodzan 👋', level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'mardi 5 mai', level: 2 })).toBeInTheDocument();
+    expect(screen.getByText('PROCHAINE VISITE')).toBeInTheDocument();
+    expect(screen.getByText('Visites · Formule T2')).toBeInTheDocument();
     expect(screen.getByText('Suivi encadré')).toBeInTheDocument();
     expect(screen.getByText('35 surfaces')).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Primary' })).toBeInTheDocument();
@@ -120,7 +123,7 @@ describe('subscriber app', () => {
     expect(screen.getByText(/Le foyer est prêt pour validation opérateur/u)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Terminé' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Support' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Messages' }));
 
     expect(screen.getByRole('heading', { name: 'Support' })).toBeInTheDocument();
     expect(screen.getByText('Messages relayés par opérateur')).toBeInTheDocument();
@@ -160,7 +163,7 @@ describe('subscriber app', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Démarrer le suivi' }));
     expect(screen.getByLabelText('Bounded live map')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Support' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Messages' }));
     fireEvent.click(screen.getByRole('button', { name: 'Inbox' }));
     expect(
       screen.getByRole('heading', { name: 'Boîte de réception et notifications' }),

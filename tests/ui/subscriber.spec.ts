@@ -43,12 +43,12 @@ test('subscriber mobile exposes production routes and bounded tracking', async (
   await page.getByRole('button', { name: "Confirmer l'arrivée" }).click();
   await expect(page.getByText("Arrivée confirmée; le suivi s'arrête.")).toBeVisible();
 
-  await page.getByRole('button', { name: 'Visite' }).click();
+  await page.getByRole('button', { name: 'Visite', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Détail de visite' })).toBeVisible();
   await page.getByRole('button', { name: 'Sauter la visite' }).click();
   await expect(page.getByText('Crédit de saut utilisé pour la prochaine visite.')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Support' }).click();
+  await page.getByRole('button', { name: 'Messages' }).click();
   await expect(page.getByRole('heading', { name: 'Support' })).toBeVisible();
   await page.getByRole('button', { name: 'Inbox' }).click();
   await expect(
