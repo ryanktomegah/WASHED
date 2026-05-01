@@ -58,6 +58,8 @@ export const operatorFeedback = {
   disputeEscalated: 'Dispute escalated for senior operator review.',
   disputeResolved: 'Dispute resolved with audit event.',
   forcedUpdateToggled: 'Forced-update flag changed for beta clients.',
+  loginOtpSent: 'OTP sent to the operator phone.',
+  loginVerified: 'Operator session verified.',
   matchAccepted: 'Matching decision accepted and audit logged.',
   matchRejected: 'Matching candidate rejected with operator reason required.',
   notificationsDelivered: 'Due notifications delivered through the operator queue.',

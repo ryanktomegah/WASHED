@@ -4,8 +4,30 @@ import { describe, expect, it } from 'vitest';
 import { App } from './App.js';
 
 describe('operator console', () => {
+  function authenticateOperator(): void {
+    fireEvent.click(screen.getByRole('button', { name: 'Send OTP' }));
+    expect(screen.getByText('OTP sent to the operator phone.')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('OTP code'), { target: { value: '123456' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Verify OTP' }));
+    expect(screen.getByText('Operator session verified.')).toBeInTheDocument();
+  }
+
+  it('gates privileged console data behind phone OTP', () => {
+    render(<App />);
+
+    expect(screen.getByRole('heading', { name: 'Washed Ops login' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Operator phone')).toHaveValue('+228 90 00 00 00');
+    expect(screen.queryByRole('heading', { name: 'Operations dashboard' })).not.toBeInTheDocument();
+
+    authenticateOperator();
+
+    expect(screen.queryByRole('heading', { name: 'Washed Ops login' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Operations dashboard' })).toBeInTheDocument();
+  });
+
   it('renders dashboard navigation, metrics, and surface inventory', () => {
     render(<App />);
+    authenticateOperator();
 
     expect(screen.getByRole('navigation', { name: 'Operator navigation' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Operations dashboard' })).toBeInTheDocument();
@@ -15,6 +37,7 @@ describe('operator console', () => {
 
   it('accepts a matching candidate and keeps an audit-ready state visible', () => {
     render(<App />);
+    authenticateOperator();
 
     fireEvent.click(screen.getByRole('button', { name: 'Attribution' }));
     expect(screen.getByRole('heading', { name: 'Matching command center' })).toBeInTheDocument();
@@ -35,6 +58,7 @@ describe('operator console', () => {
 
   it('renders the live ops map and active visits', () => {
     render(<App />);
+    authenticateOperator();
 
     fireEvent.click(screen.getByRole('button', { name: 'Opérations' }));
 
@@ -45,6 +69,7 @@ describe('operator console', () => {
 
   it('handles disputes, privacy, and blocklist actions', () => {
     render(<App />);
+    authenticateOperator();
 
     fireEvent.click(screen.getByRole('button', { name: 'Litiges' }));
     expect(screen.getByRole('heading', { name: 'Dispute desk' })).toBeInTheDocument();
@@ -73,6 +98,7 @@ describe('operator console', () => {
 
   it('navigates to payments, audit, and settings surfaces and records actions', () => {
     render(<App />);
+    authenticateOperator();
 
     fireEvent.click(screen.getByRole('button', { name: 'Paiements' }));
     expect(screen.getByRole('heading', { name: 'Payments and payouts' })).toBeInTheDocument();
@@ -109,6 +135,7 @@ describe('operator console', () => {
 
   it('manages route planning, notifications, and report exports', () => {
     render(<App />);
+    authenticateOperator();
 
     fireEvent.click(screen.getByRole('button', { name: 'Planning' }));
     expect(screen.getByRole('heading', { name: 'Daily route planning' })).toBeInTheDocument();

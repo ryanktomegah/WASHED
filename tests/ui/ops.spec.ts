@@ -5,6 +5,13 @@ test('operator console covers planning, matching, notifications, reports, and go
 }) => {
   await page.goto('/');
 
+  await expect(page.getByRole('heading', { name: 'Washed Ops login' })).toBeVisible();
+  await page.getByRole('button', { name: 'Send OTP' }).click();
+  await expect(page.getByText('OTP sent to the operator phone.')).toBeVisible();
+  await page.getByLabel('OTP code').fill('123456');
+  await page.getByRole('button', { name: 'Verify OTP' }).click();
+  await expect(page.getByText('Operator session verified.')).toBeVisible();
+
   await expect(page.getByRole('heading', { name: 'Operations dashboard' })).toBeVisible();
   await expect(page.getByText('Operational coverage')).toBeVisible();
   await expect(page.getByText('18 surfaces')).toBeVisible();

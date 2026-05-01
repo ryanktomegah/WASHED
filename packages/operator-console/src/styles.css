@@ -21,6 +21,42 @@ button {
   min-height: 100vh;
 }
 
+.login-overlay {
+  position: fixed;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  inset: 0;
+  padding: 24px;
+  background: color-mix(in srgb, var(--washed-background) 84%, rgba(21, 19, 29, 0.48));
+}
+
+.login-card {
+  display: grid;
+  width: min(100%, 440px);
+  gap: 16px;
+}
+
+.login-card h1,
+.login-card p {
+  margin: 0;
+}
+
+.login-card h1 {
+  font-size: 34px;
+  line-height: 1.05;
+}
+
+.login-card p {
+  color: var(--washed-muted);
+  line-height: 1.45;
+}
+
+.login-form {
+  display: grid;
+  gap: 14px;
+}
+
 .operator-layout {
   display: grid;
   grid-template-columns: 244px minmax(0, 1fr);

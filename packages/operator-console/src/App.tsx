@@ -1,6 +1,15 @@
 import { useReducer, useState } from 'react';
 
-import { Alert, Badge, Button, Card, ListItem, Tabs, WashedThemeProvider } from '@washed/ui';
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  ListItem,
+  Tabs,
+  TextField,
+  WashedThemeProvider,
+} from '@washed/ui';
 import type { Dispatch, ReactElement } from 'react';
 
 import {
@@ -29,63 +38,127 @@ export function App(): ReactElement {
 
   return (
     <WashedThemeProvider className="operator-frame" theme="operator">
-      <div className="operator-layout">
-        <aside className="sidebar">
-          <strong className="brand">Washed Ops</strong>
-          <nav aria-label="Operator navigation">
-            {navItems.map((item) => (
-              <button
-                aria-current={route === item.route ? 'page' : undefined}
-                key={item.route}
-                onClick={() => setRoute(item.route)}
-                type="button"
-              >
-                {item.label}
-              </button>
-            ))}
-          </nav>
-        </aside>
+      {operatorState.login.verified ? (
+        <div className="operator-layout">
+          <aside className="sidebar">
+            <strong className="brand">Washed Ops</strong>
+            <nav aria-label="Operator navigation">
+              {navItems.map((item) => (
+                <button
+                  aria-current={route === item.route ? 'page' : undefined}
+                  key={item.route}
+                  onClick={() => setRoute(item.route)}
+                  type="button"
+                >
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+          </aside>
 
-        <main className="operator-main">
-          <OperatorHeader route={route} />
-          {operatorState.lastFeedback === null ? null : (
-            <Alert className="feedback-banner" tone="success">
-              {operatorFeedback[operatorState.lastFeedback]}
-            </Alert>
-          )}
+          <main className="operator-main">
+            <OperatorHeader route={route} />
+            {operatorState.lastFeedback === null ? null : (
+              <Alert className="feedback-banner" tone="success">
+                {operatorFeedback[operatorState.lastFeedback]}
+              </Alert>
+            )}
 
-          {route === 'dashboard' ? (
-            <Dashboard operatorState={operatorState} onRouteChange={setRoute} />
-          ) : null}
-          {route === 'matching' ? (
-            <Matching dispatch={dispatch} operatorState={operatorState} />
-          ) : null}
-          {route === 'liveOps' ? <LiveOps /> : null}
-          {route === 'routePlanning' ? (
-            <RoutePlanning dispatch={dispatch} operatorState={operatorState} />
-          ) : null}
-          {route === 'profiles' ? (
-            <Profiles dispatch={dispatch} operatorState={operatorState} />
-          ) : null}
-          {route === 'disputes' ? (
-            <Disputes dispatch={dispatch} operatorState={operatorState} />
-          ) : null}
-          {route === 'payments' ? (
-            <Payments dispatch={dispatch} operatorState={operatorState} />
-          ) : null}
-          {route === 'notifications' ? (
-            <Notifications dispatch={dispatch} operatorState={operatorState} />
-          ) : null}
-          {route === 'audit' ? <Audit dispatch={dispatch} operatorState={operatorState} /> : null}
-          {route === 'reports' ? (
-            <Reports dispatch={dispatch} operatorState={operatorState} />
-          ) : null}
-          {route === 'settings' ? (
-            <Settings dispatch={dispatch} operatorState={operatorState} />
-          ) : null}
-        </main>
-      </div>
+            {route === 'dashboard' ? (
+              <Dashboard operatorState={operatorState} onRouteChange={setRoute} />
+            ) : null}
+            {route === 'matching' ? (
+              <Matching dispatch={dispatch} operatorState={operatorState} />
+            ) : null}
+            {route === 'liveOps' ? <LiveOps /> : null}
+            {route === 'routePlanning' ? (
+              <RoutePlanning dispatch={dispatch} operatorState={operatorState} />
+            ) : null}
+            {route === 'profiles' ? (
+              <Profiles dispatch={dispatch} operatorState={operatorState} />
+            ) : null}
+            {route === 'disputes' ? (
+              <Disputes dispatch={dispatch} operatorState={operatorState} />
+            ) : null}
+            {route === 'payments' ? (
+              <Payments dispatch={dispatch} operatorState={operatorState} />
+            ) : null}
+            {route === 'notifications' ? (
+              <Notifications dispatch={dispatch} operatorState={operatorState} />
+            ) : null}
+            {route === 'audit' ? <Audit dispatch={dispatch} operatorState={operatorState} /> : null}
+            {route === 'reports' ? (
+              <Reports dispatch={dispatch} operatorState={operatorState} />
+            ) : null}
+            {route === 'settings' ? (
+              <Settings dispatch={dispatch} operatorState={operatorState} />
+            ) : null}
+          </main>
+        </div>
+      ) : (
+        <LoginGate dispatch={dispatch} operatorState={operatorState} />
+      )}
     </WashedThemeProvider>
+  );
+}
+
+function LoginGate({
+  dispatch,
+  operatorState,
+}: {
+  readonly dispatch: Dispatch<OperatorAction>;
+  readonly operatorState: OperatorState;
+}): ReactElement {
+  const [phone, setPhone] = useState(operatorState.login.phone);
+  const [otp, setOtp] = useState('');
+
+  return (
+    <div className="login-overlay" role="presentation">
+      <Card className="login-card" elevated>
+        <Badge>Operator access</Badge>
+        <h1>Washed Ops login</h1>
+        <p>
+          Operator console access requires phone OTP before showing subscriber, worker, payment, or
+          audit data.
+        </p>
+
+        {operatorState.lastFeedback === null ? null : (
+          <Alert tone="success">{operatorFeedback[operatorState.lastFeedback]}</Alert>
+        )}
+
+        <form
+          className="login-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (operatorState.login.otpSent) {
+              dispatch({ type: 'login/verifyOtp' });
+              return;
+            }
+
+            dispatch({ phone, type: 'login/sendOtp' });
+          }}
+        >
+          <TextField
+            autoComplete="tel"
+            label="Operator phone"
+            onChange={(event) => setPhone(event.target.value)}
+            value={phone}
+          />
+          {operatorState.login.otpSent ? (
+            <TextField
+              autoComplete="one-time-code"
+              inputMode="numeric"
+              label="OTP code"
+              onChange={(event) => setOtp(event.target.value)}
+              value={otp}
+            />
+          ) : null}
+          <Button fullWidth type="submit">
+            {operatorState.login.otpSent ? 'Verify OTP' : 'Send OTP'}
+          </Button>
+        </form>
+      </Card>
+    </div>
   );
 }
 

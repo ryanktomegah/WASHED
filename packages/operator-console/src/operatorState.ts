@@ -6,6 +6,8 @@ export type OperatorFeedback =
   | 'disputeEscalated'
   | 'disputeResolved'
   | 'forcedUpdateToggled'
+  | 'loginOtpSent'
+  | 'loginVerified'
   | 'matchAccepted'
   | 'matchRejected'
   | 'notificationsDelivered'
@@ -21,6 +23,11 @@ export type OperatorFeedback =
   | 'workerPrivacyHandled';
 
 export interface OperatorState extends OperatorConsoleSnapshot {
+  readonly login: {
+    readonly otpSent: boolean;
+    readonly phone: string;
+    readonly verified: boolean;
+  };
   readonly lastFeedback: OperatorFeedback | null;
 }
 
@@ -31,6 +38,8 @@ export type OperatorAction =
   | { readonly type: 'blocklist/add' }
   | { readonly type: 'dispute/escalate' }
   | { readonly type: 'dispute/resolve' }
+  | { readonly phone: string; readonly type: 'login/sendOtp' }
+  | { readonly type: 'login/verifyOtp' }
   | { readonly type: 'notifications/deliverDue' }
   | { readonly type: 'payments/issueRefund' }
   | { readonly type: 'payments/retryFailedPayout' }
@@ -47,9 +56,37 @@ export type OperatorAction =
 export const initialOperatorState = {
   ...DEMO_OPERATOR_CONSOLE_SNAPSHOT,
   lastFeedback: null,
+  login: {
+    otpSent: false,
+    phone: '+228 90 00 00 00',
+    verified: false,
+  },
 } as const satisfies OperatorState;
 
 export function operatorReducer(state: OperatorState, action: OperatorAction): OperatorState {
+  if (action.type === 'login/sendOtp') {
+    return {
+      ...state,
+      lastFeedback: 'loginOtpSent',
+      login: {
+        ...state.login,
+        otpSent: true,
+        phone: action.phone,
+      },
+    };
+  }
+
+  if (action.type === 'login/verifyOtp') {
+    return {
+      ...state,
+      lastFeedback: 'loginVerified',
+      login: {
+        ...state.login,
+        verified: true,
+      },
+    };
+  }
+
   if (action.type === 'matching/accept') {
     return {
       ...state,
