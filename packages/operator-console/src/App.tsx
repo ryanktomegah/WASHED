@@ -7,9 +7,12 @@ import {
   liveVisits,
   matchingCandidates,
   navItems,
+  notificationRows,
   operatorFeedback,
   operatorSurfaces,
   queueMetrics,
+  reportCards,
+  routePlanRows,
   type MatchingCandidate,
   type OperatorRoute,
 } from './appData.js';
@@ -58,6 +61,9 @@ export function App(): ReactElement {
             <Matching dispatch={dispatch} operatorState={operatorState} />
           ) : null}
           {route === 'liveOps' ? <LiveOps /> : null}
+          {route === 'routePlanning' ? (
+            <RoutePlanning dispatch={dispatch} operatorState={operatorState} />
+          ) : null}
           {route === 'profiles' ? (
             <Profiles dispatch={dispatch} operatorState={operatorState} />
           ) : null}
@@ -67,7 +73,13 @@ export function App(): ReactElement {
           {route === 'payments' ? (
             <Payments dispatch={dispatch} operatorState={operatorState} />
           ) : null}
+          {route === 'notifications' ? (
+            <Notifications dispatch={dispatch} operatorState={operatorState} />
+          ) : null}
           {route === 'audit' ? <Audit dispatch={dispatch} operatorState={operatorState} /> : null}
+          {route === 'reports' ? (
+            <Reports dispatch={dispatch} operatorState={operatorState} />
+          ) : null}
           {route === 'settings' ? (
             <Settings dispatch={dispatch} operatorState={operatorState} />
           ) : null}
@@ -84,8 +96,11 @@ function OperatorHeader({ route }: { readonly route: OperatorRoute }): ReactElem
     disputes: 'Dispute desk',
     liveOps: 'Live Ops board',
     matching: 'Matching command center',
+    notifications: 'Notifications and push devices',
     payments: 'Payments and payouts',
     profiles: 'Worker and subscriber profiles',
+    reports: 'Reports and KPI exports',
+    routePlanning: 'Daily route planning',
     settings: 'Settings and readiness',
   }[route];
 
@@ -140,27 +155,93 @@ function Dashboard({
           </div>
           <ListItem
             after={
-              <Button onClick={() => onRouteChange('liveOps')} size="sm">
+              <Button onClick={() => onRouteChange('routePlanning')} size="sm">
                 Open
               </Button>
             }
             description="Akouvi route is 18 minutes behind schedule"
-            title="Visit at risk"
+            title="Route overload"
           />
           <ListItem
             after={
-              <Button onClick={() => onRouteChange('payments')} size="sm">
+              <Button onClick={() => onRouteChange('notifications')} size="sm">
                 Open
               </Button>
             }
-            description="4 mobile-money recovery exceptions"
-            title="Payment exceptions"
+            description={`${operatorState.notifications.due} due, ${operatorState.notifications.failedDevices} failed devices`}
+            title="Notification queue"
           />
         </Card>
 
         <SurfaceInventory />
       </section>
     </>
+  );
+}
+
+function RoutePlanning({
+  dispatch,
+  operatorState,
+}: {
+  readonly dispatch: Dispatch<OperatorAction>;
+  readonly operatorState: OperatorState;
+}): ReactElement {
+  return (
+    <section className="console-grid">
+      <Card className="worklist" elevated>
+        <div className="card-header">
+          <h2>Tomorrow route board</h2>
+          <Badge tone={operatorState.routePlanning.overloadedRoutes > 0 ? 'danger' : 'success'}>
+            {operatorState.routePlanning.overloadedRoutes} overloads
+          </Badge>
+        </div>
+        {routePlanRows.map((row) => (
+          <ListItem
+            after={
+              <Badge
+                tone={
+                  row.risk === 'overloaded'
+                    ? 'danger'
+                    : row.risk === 'unavailable'
+                      ? 'accent'
+                      : 'success'
+                }
+              >
+                {row.risk}
+              </Badge>
+            }
+            description={row.load}
+            key={row.worker}
+            title={row.worker}
+          />
+        ))}
+      </Card>
+      <Card>
+        <Alert title="Planning guardrails" tone="primary">
+          Route approval must account for worker unavailability, service-cell capacity, and
+          high-risk subscriber relationships.
+        </Alert>
+        <ListItem
+          description={`${operatorState.routePlanning.unavailableWorkers} worker unavailable`}
+          title="Unavailability conflicts"
+        />
+        <ListItem
+          description={`${operatorState.routePlanning.approvedRoutes} approval events`}
+          title="Approved routes"
+        />
+        <div className="operator-actions">
+          <Button onClick={() => dispatch({ type: 'routePlanning/acknowledgeRisk' })}>
+            Acknowledge risk
+          </Button>
+          <Button
+            onClick={() => dispatch({ type: 'routePlanning/approveRoutes' })}
+            variant="secondary"
+          >
+            Approve routes
+          </Button>
+        </div>
+      </Card>
+    </section>
   );
 }
 
@@ -389,6 +470,60 @@ function Payments({
   );
 }
 
+function Notifications({
+  dispatch,
+  operatorState,
+}: {
+  readonly dispatch: Dispatch<OperatorAction>;
+  readonly operatorState: OperatorState;
+}): ReactElement {
+  return (
+    <section className="console-grid">
+      <Card className="worklist" elevated>
+        <div className="card-header">
+          <h2>Notification delivery</h2>
+          <Badge tone={operatorState.notifications.due > 0 ? 'accent' : 'success'}>
+            {operatorState.notifications.due} due
+          </Badge>
+        </div>
+        {notificationRows.map((row) => (
+          <ListItem
+            after={
+              <Badge
+                tone={
+                  row.status === 'failed' ? 'danger' : row.status === 'due' ? 'accent' : 'success'
+                }
+              >
+                {row.status}
+              </Badge>
+            }
+            description={row.audience}
+            key={row.title}
+            title={row.title}
+          />
+        ))}
+      </Card>
+      <Card>
+        <Alert title="Push device recovery" tone="primary">
+          Failed push devices stay visible because they often explain missed visit reminders and
+          worker route confirmations.
+        </Alert>
+        <ListItem
+          description={`${operatorState.notifications.failedDevices} devices need token recovery`}
+          title="Failed devices"
+        />
+        <ListItem
+          description={`${operatorState.notifications.deliveredDue} delivered from this queue`}
+          title="Delivered due"
+        />
+        <Button onClick={() => dispatch({ type: 'notifications/deliverDue' })}>
+          Deliver due notifications
+        </Button>
+      </Card>
+    </section>
+  );
+}
+
 function Audit({
   dispatch,
   operatorState,
@@ -415,6 +550,44 @@ function Audit({
       />
       <Button onClick={() => dispatch({ type: 'audit/filter' })}>Apply risk filter</Button>
     </Card>
+  );
+}
+
+function Reports({
+  dispatch,
+  operatorState,
+}: {
+  readonly dispatch: Dispatch<OperatorAction>;
+  readonly operatorState: OperatorState;
+}): ReactElement {
+  return (
+    <section className="console-grid">
+      <Card className="worklist" elevated>
+        <div className="card-header">
+          <h2>{operatorState.reports.kpiPeriod}</h2>
+          <Badge>Beta metrics</Badge>
+        </div>
+        {reportCards.map((card) => (
+          <ListItem
+            description="Read from beta metrics and operational queues"
+            key={card.label}
+            title={`${card.label}: ${card.value}`}
+          />
+        ))}
+      </Card>
+      <Card>
+        <Alert title="Export discipline" tone="primary">
+          Reports are review artifacts for founder and ops cadence; they are not a public analytics
+          dashboard yet.
+        </Alert>
+        <ListItem
+          after={<Badge>{operatorState.reports.exportedAt ?? 'Not exported'}</Badge>}
+          description="CSV/PDF export placeholder wired to metrics state"
+          title="Latest export"
+        />
+        <Button onClick={() => dispatch({ type: 'reports/export' })}>Export report</Button>
+      </Card>
+    </section>
   );
 }
 

@@ -7,8 +7,11 @@ export type OperatorRoute =
   | 'disputes'
   | 'liveOps'
   | 'matching'
+  | 'notifications'
   | 'payments'
   | 'profiles'
+  | 'reports'
+  | 'routePlanning'
   | 'settings';
 
 export interface QueueMetric {
@@ -32,6 +35,23 @@ export interface OpsVisit {
   readonly worker: string;
 }
 
+export interface RoutePlanRow {
+  readonly load: string;
+  readonly risk: 'balanced' | 'overloaded' | 'unavailable';
+  readonly worker: string;
+}
+
+export interface NotificationRow {
+  readonly audience: string;
+  readonly status: 'due' | 'failed' | 'sent';
+  readonly title: string;
+}
+
+export interface ReportCard {
+  readonly label: string;
+  readonly value: string;
+}
+
 export const operatorFeedback = {
   auditFiltered: 'Audit filter applied to money, privacy, and SOS events.',
   blocklistAdded: 'Household relationship block added and audit logged.',
@@ -40,11 +60,15 @@ export const operatorFeedback = {
   forcedUpdateToggled: 'Forced-update flag changed for beta clients.',
   matchAccepted: 'Matching decision accepted and audit logged.',
   matchRejected: 'Matching candidate rejected with operator reason required.',
+  notificationsDelivered: 'Due notifications delivered through the operator queue.',
   paymentRetryQueued: 'Mobile-money recovery retry queued.',
   payoutBatchStarted: 'Worker payout batch started.',
   payoutRetryQueued: 'Failed worker payout retry queued.',
   providerReadinessChecked: 'Provider readiness check completed.',
   refundIssued: 'Refund issued with reason and audit event.',
+  reportExported: 'Closed-beta report export prepared for review.',
+  routePlanApproved: 'Daily route plan approved and audit logged.',
+  routeRiskAcknowledged: 'Route overload risk acknowledged for manual intervention.',
   subscriberPrivacyHandled: 'Subscriber privacy request marked handled.',
   workerPrivacyHandled: 'Worker privacy request marked handled.',
 } as const satisfies Record<OperatorFeedback, string>;
@@ -53,10 +77,13 @@ export const navItems = [
   { label: 'Dashboard', route: 'dashboard' },
   { label: translate('operator.nav.matching', 'fr'), route: 'matching' },
   { label: translate('operator.nav.liveOps', 'fr'), route: 'liveOps' },
+  { label: 'Planning', route: 'routePlanning' },
   { label: 'Profiles', route: 'profiles' },
   { label: 'Litiges', route: 'disputes' },
   { label: translate('operator.nav.payments', 'fr'), route: 'payments' },
+  { label: 'Notifications', route: 'notifications' },
   { label: 'Audit', route: 'audit' },
+  { label: 'Rapports', route: 'reports' },
   { label: 'Settings', route: 'settings' },
 ] as const satisfies readonly { readonly label: string; readonly route: OperatorRoute }[];
 
@@ -96,6 +123,25 @@ export const liveVisits = [
   { eta: '10:05', status: 'Check-in', subscriber: 'Esi A.', worker: 'Esi K.' },
   { eta: '11:20', status: 'At risk', subscriber: 'Mawuli B.', worker: 'Mawuli D.' },
 ] as const satisfies readonly OpsVisit[];
+
+export const routePlanRows = [
+  { load: '4 visits · 1 delayed', risk: 'overloaded', worker: 'Akouvi A.' },
+  { load: '3 visits · balanced', risk: 'balanced', worker: 'Esi K.' },
+  { load: 'Unavailable 2026-05-06', risk: 'unavailable', worker: 'Mawuli D.' },
+] as const satisfies readonly RoutePlanRow[];
+
+export const notificationRows = [
+  { audience: 'Subscribers', status: 'due', title: 'T-24h visit reminders' },
+  { audience: 'Workers', status: 'sent', title: 'Route assignment confirmations' },
+  { audience: 'Push devices', status: 'failed', title: 'Missing token recovery' },
+] as const satisfies readonly NotificationRow[];
+
+export const reportCards = [
+  { label: 'Active subscribers', value: '42' },
+  { label: 'Visit completion', value: '94%' },
+  { label: 'Worker payout readiness', value: 'May batch' },
+  { label: 'Payment recovery SLA', value: '4 exceptions' },
+] as const satisfies readonly ReportCard[];
 
 export const operatorSurfaces = [
   'Dashboard',

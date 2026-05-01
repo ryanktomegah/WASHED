@@ -9,3 +9,4 @@ docs/
 research/
 packages/subscriber-web/ios/
 packages/subscriber-app/ios/
+packages/worker-app/ios/

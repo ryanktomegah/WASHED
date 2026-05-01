@@ -106,4 +106,39 @@ describe('operator console', () => {
     expect(screen.getByText('Forced-update flag changed for beta clients.')).toBeInTheDocument();
     expect(screen.getByText('Forced')).toBeInTheDocument();
   });
+
+  it('manages route planning, notifications, and report exports', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Planning' }));
+    expect(screen.getByRole('heading', { name: 'Daily route planning' })).toBeInTheDocument();
+    expect(screen.getByText('Tomorrow route board')).toBeInTheDocument();
+    expect(screen.getByText('2 overloads')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Acknowledge risk' }));
+    expect(
+      screen.getByText('Route overload risk acknowledged for manual intervention.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('1 overloads')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Approve routes' }));
+    expect(screen.getByText('Daily route plan approved and audit logged.')).toBeInTheDocument();
+    expect(screen.getByText('1 approval events')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Notifications' }));
+    expect(
+      screen.getByRole('heading', { name: 'Notifications and push devices' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('6 due')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Deliver due notifications' }));
+    expect(
+      screen.getByText('Due notifications delivered through the operator queue.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('0 due')).toBeInTheDocument();
+    expect(screen.getByText('6 delivered from this queue')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Rapports' }));
+    expect(screen.getByRole('heading', { name: 'Reports and KPI exports' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Export report' }));
+    expect(screen.getByText('Closed-beta report export prepared for review.')).toBeInTheDocument();
+    expect(screen.getByText('just now')).toBeInTheDocument();
+  });
 });

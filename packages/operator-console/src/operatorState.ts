@@ -8,11 +8,15 @@ export type OperatorFeedback =
   | 'forcedUpdateToggled'
   | 'matchAccepted'
   | 'matchRejected'
+  | 'notificationsDelivered'
   | 'paymentRetryQueued'
   | 'payoutBatchStarted'
   | 'payoutRetryQueued'
   | 'providerReadinessChecked'
   | 'refundIssued'
+  | 'reportExported'
+  | 'routePlanApproved'
+  | 'routeRiskAcknowledged'
   | 'subscriberPrivacyHandled'
   | 'workerPrivacyHandled';
 
@@ -27,12 +31,16 @@ export type OperatorAction =
   | { readonly type: 'blocklist/add' }
   | { readonly type: 'dispute/escalate' }
   | { readonly type: 'dispute/resolve' }
+  | { readonly type: 'notifications/deliverDue' }
   | { readonly type: 'payments/issueRefund' }
   | { readonly type: 'payments/retryFailedPayout' }
   | { readonly type: 'payments/retryRecovery' }
   | { readonly type: 'payments/startPayoutBatch' }
   | { readonly type: 'privacy/handleSubscriber' }
   | { readonly type: 'privacy/handleWorker' }
+  | { readonly type: 'reports/export' }
+  | { readonly type: 'routePlanning/acknowledgeRisk' }
+  | { readonly type: 'routePlanning/approveRoutes' }
   | { readonly type: 'settings/checkReadiness' }
   | { readonly type: 'settings/toggleForcedUpdate' };
 
@@ -103,6 +111,48 @@ export function operatorReducer(state: OperatorState, action: OperatorAction): O
         exceptions: Math.max(0, state.payments.exceptions - 1),
         retryQueued: state.payments.retryQueued + 1,
       },
+    };
+  }
+
+  if (action.type === 'routePlanning/acknowledgeRisk') {
+    return {
+      ...state,
+      lastFeedback: 'routeRiskAcknowledged',
+      routePlanning: {
+        ...state.routePlanning,
+        overloadedRoutes: Math.max(0, state.routePlanning.overloadedRoutes - 1),
+      },
+    };
+  }
+
+  if (action.type === 'routePlanning/approveRoutes') {
+    return {
+      ...state,
+      lastFeedback: 'routePlanApproved',
+      routePlanning: {
+        ...state.routePlanning,
+        approvedRoutes: state.routePlanning.approvedRoutes + 1,
+      },
+    };
+  }
+
+  if (action.type === 'notifications/deliverDue') {
+    return {
+      ...state,
+      lastFeedback: 'notificationsDelivered',
+      notifications: {
+        ...state.notifications,
+        deliveredDue: state.notifications.deliveredDue + state.notifications.due,
+        due: 0,
+      },
+    };
+  }
+
+  if (action.type === 'reports/export') {
+    return {
+      ...state,
+      lastFeedback: 'reportExported',
+      reports: { ...state.reports, exportedAt: 'just now' },
     };
   }
 

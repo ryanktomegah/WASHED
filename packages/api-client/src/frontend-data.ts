@@ -72,6 +72,11 @@ export interface OperatorConsoleSnapshot {
     readonly acceptedMatchId: string | null;
     readonly rejectedMatchIds: readonly string[];
   };
+  readonly notifications: {
+    readonly deliveredDue: number;
+    readonly due: number;
+    readonly failedDevices: number;
+  };
   readonly payments: {
     readonly exceptions: number;
     readonly failedPayouts: number;
@@ -86,6 +91,15 @@ export interface OperatorConsoleSnapshot {
   readonly readiness: {
     readonly forcedUpdateEnabled: boolean;
     readonly lastChecked: string;
+  };
+  readonly reports: {
+    readonly exportedAt: string | null;
+    readonly kpiPeriod: string;
+  };
+  readonly routePlanning: {
+    readonly approvedRoutes: number;
+    readonly overloadedRoutes: number;
+    readonly unavailableWorkers: number;
   };
 }
 
@@ -106,8 +120,13 @@ export const FRONTEND_OPERATION_IDS = {
     listAuditEvents: 'listOperatorAuditEvents',
     listDisputes: 'listOperatorDisputes',
     listMatchingQueue: 'listOperatorMatchingQueue',
+    listNotifications: 'listOperatorNotifications',
     listPaymentAttempts: 'listOperatorPaymentAttempts',
+    listPushDevices: 'listOperatorPushDevices',
+    listServiceCells: 'listOperatorServiceCells',
+    listWorkerUnavailability: 'listWorkerUnavailability',
     resolveDispute: 'resolveOperatorDispute',
+    sendDueNotifications: 'deliverDueOperatorNotifications',
   },
   subscriber: {
     cancelSubscription: 'cancelSubscription',
@@ -192,6 +211,11 @@ export const DEMO_OPERATOR_CONSOLE_SNAPSHOT = {
     acceptedMatchId: null,
     rejectedMatchIds: [],
   },
+  notifications: {
+    deliveredDue: 0,
+    due: 6,
+    failedDevices: 2,
+  },
   payments: {
     exceptions: 4,
     failedPayouts: 1,
@@ -206,6 +230,15 @@ export const DEMO_OPERATOR_CONSOLE_SNAPSHOT = {
   readiness: {
     forcedUpdateEnabled: false,
     lastChecked: 'not checked',
+  },
+  reports: {
+    exportedAt: null,
+    kpiPeriod: 'May closed beta',
+  },
+  routePlanning: {
+    approvedRoutes: 0,
+    overloadedRoutes: 2,
+    unavailableWorkers: 1,
   },
 } as const satisfies OperatorConsoleSnapshot;
 
