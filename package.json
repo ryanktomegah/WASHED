@@ -15,6 +15,8 @@
     "lint": "turbo lint",
     "migrations:check": "node scripts/check-migrations.mjs",
     "openapi:check": "node scripts/check-openapi.mjs",
+    "ios:sim:subscriber": "node scripts/launch-ios-simulator.mjs subscriber",
+    "ios:sim:worker": "node scripts/launch-ios-simulator.mjs worker",
     "ui:smoke": "playwright test",
     "dry-run:beta": "pnpm --filter @washed/core-api build && node scripts/closed-beta-dry-run.mjs",
     "load:beta": "pnpm --filter @washed/core-api build && node scripts/beta-load-test.mjs",

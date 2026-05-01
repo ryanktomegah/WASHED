@@ -1,35 +1,65 @@
 # iOS Simulator Runbook
 
-Use this runbook to install and launch the subscriber app in Apple Simulator through the native Capacitor wrapper.
+Use this runbook to install and launch the production React + Capacitor mobile apps in Apple Simulator.
+
+## Apps
+
+- Subscriber app: `@washed/subscriber-app`, bundle id `app.washed.subscriber`
+- Worker app: `@washed/worker-app`, bundle id `app.washed.worker`
+
+The operator console is web-only and is covered by `pnpm ui:smoke`.
 
 ## Prerequisites
 
 - Xcode is installed and selected with `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`.
 - The iOS simulator runtime is installed. If `xcrun simctl list runtimes` is empty, run `xcodebuild -downloadPlatform iOS`.
-- The core API is running locally on `http://127.0.0.1:3000`.
+- At least one iPhone simulator is booted in Simulator.app.
 
-## First-Time Setup
+The current mobile apps use the checked-in demo frontend data source, so they open without the local API. Backend-backed payment, push, and assignment flows still need the API when those integrations replace demo data.
+
+## First-Time Native Project Setup
+
+The native projects are checked in. If they ever need to be recreated:
 
 ```sh
-pnpm install
 pnpm --filter @washed/subscriber-app ios:add
+pnpm --filter @washed/worker-app ios:add
 ```
 
-This creates `packages/subscriber-app/ios`, the native Xcode project used by Simulator.
-
-## Sync Web Assets
-
-```sh
-pnpm --filter @washed/subscriber-app ios:sync
-```
-
-Run this after changing files in `packages/subscriber-app/src`. The command rebuilds the React app and copies it into the native project.
-
-## Launch In Simulator
+## Launch Subscriber
 
 ```sh
 open -a Simulator
-pnpm --filter @washed/subscriber-app ios:run
+pnpm ios:sim:subscriber
 ```
 
-The simulator app talks to the local API at `127.0.0.1:3000`. If the API is not running, the app opens but account, booking, billing, and privacy actions will fail.
+The script builds the React app, syncs Capacitor assets, builds the Xcode simulator target with signing disabled, installs the `.app` bundle on the booted simulator, and launches `app.washed.subscriber`.
+
+## Launch Worker
+
+```sh
+open -a Simulator
+pnpm ios:sim:worker
+```
+
+This follows the same path and launches `app.washed.worker`.
+
+## Manual Fallback
+
+If the script fails, run the exact steps by hand for the target app:
+
+```sh
+pnpm --filter @washed/subscriber-app ios:sync
+xcodebuild \
+  -project packages/subscriber-app/ios/App/App.xcodeproj \
+  -scheme App \
+  -configuration Debug \
+  -sdk iphonesimulator \
+  -derivedDataPath packages/subscriber-app/ios/DerivedData \
+  CODE_SIGNING_ALLOWED=NO \
+  build
+xcrun simctl install booted packages/subscriber-app/ios/DerivedData/Build/Products/Debug-iphonesimulator/App.app
+xcrun simctl launch booted app.washed.subscriber
+```
+
+Replace `subscriber-app` with `worker-app` and `app.washed.subscriber` with `app.washed.worker` for the worker app.
