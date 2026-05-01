@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useReducer, useState } from 'react';
 
 import {
   Alert,
@@ -11,16 +11,15 @@ import {
   Tabs,
   WashedThemeProvider,
 } from '@washed/ui';
-import type { ReactElement, ReactNode } from 'react';
+import type { Dispatch, ReactElement, ReactNode } from 'react';
 
+import { routeCards, visitSteps, workerCopy, workerSurfaces, type WorkerRoute } from './appData.js';
 import {
-  routeCards,
-  visitSteps,
-  workerCopy,
-  workerSurfaces,
-  type VisitStep,
-  type WorkerRoute,
-} from './appData.js';
+  initialWorkerState,
+  workerReducer,
+  type WorkerAction,
+  type WorkerState,
+} from './workerState.js';
 
 const navOrder = [
   'today',
@@ -31,14 +30,8 @@ const navOrder = [
 
 export function App(): ReactElement {
   const [route, setRoute] = useState<WorkerRoute>('today');
-  const [visitStep, setVisitStep] = useState<VisitStep>('heading');
-  const [offlineCount, setOfflineCount] = useState(3);
-  const [sosOpen, setSosOpen] = useState(false);
+  const [workerState, dispatch] = useReducer(workerReducer, initialWorkerState);
   const t = workerCopy;
-
-  const syncNow = (): void => {
-    setOfflineCount(0);
-  };
 
   return (
     <WashedThemeProvider className="worker-frame" theme="worker">
@@ -48,29 +41,39 @@ export function App(): ReactElement {
           <strong>Washed</strong>
           <span>Travailleuse</span>
         </button>
-        <Button className="sos-button" onClick={() => setSosOpen(true)} variant="danger">
+        <Button
+          className="sos-button"
+          onClick={() => dispatch({ type: 'sos/open' })}
+          variant="danger"
+        >
           {t.safety.panic}
         </Button>
       </header>
 
       <main className="worker-shell">
+        {workerState.lastFeedback === null ? null : (
+          <Alert className="feedback-banner" tone="success">
+            {t.feedback[workerState.lastFeedback]}
+          </Alert>
+        )}
         {route === 'today' ? (
           <TodayScreen
-            offlineCount={offlineCount}
+            dispatch={dispatch}
             onRouteChange={setRoute}
-            onSos={() => setSosOpen(true)}
-            onSyncNow={syncNow}
-            onVisitStepChange={setVisitStep}
             t={t}
-            visitStep={visitStep}
+            workerState={workerState}
           />
         ) : null}
-        {route === 'planning' ? <PlanningScreen t={t} /> : null}
-        {route === 'earnings' ? <EarningsScreen t={t} /> : null}
-        {route === 'profile' ? <ProfileScreen t={t} /> : null}
+        {route === 'planning' ? (
+          <PlanningScreen dispatch={dispatch} workerState={workerState} t={t} />
+        ) : null}
+        {route === 'earnings' ? (
+          <EarningsScreen dispatch={dispatch} workerState={workerState} t={t} />
+        ) : null}
+        {route === 'profile' ? <ProfileScreen dispatch={dispatch} t={t} /> : null}
       </main>
 
-      {sosOpen ? <SosSheet onClose={() => setSosOpen(false)} t={t} /> : null}
+      {workerState.sos.open ? <SosSheet dispatch={dispatch} t={t} /> : null}
 
       <BottomNav
         className="bottom-nav"
@@ -85,22 +88,18 @@ export function App(): ReactElement {
 }
 
 function TodayScreen({
-  offlineCount,
+  dispatch,
   onRouteChange,
-  onSos,
-  onSyncNow,
-  onVisitStepChange,
   t,
-  visitStep,
+  workerState,
 }: {
-  readonly offlineCount: number;
+  readonly dispatch: Dispatch<WorkerAction>;
   readonly onRouteChange: (route: WorkerRoute) => void;
-  readonly onSos: () => void;
-  readonly onSyncNow: () => void;
-  readonly onVisitStepChange: (step: VisitStep) => void;
   readonly t: typeof workerCopy;
-  readonly visitStep: VisitStep;
+  readonly workerState: WorkerState;
 }): ReactElement {
+  const offlineCount = workerState.offlineQueueCount;
+
   return (
     <>
       <section className="worker-summary" aria-labelledby="worker-route-title">
@@ -112,20 +111,27 @@ function TodayScreen({
             {offlineCount > 0 ? ` · ${offlineCount} actions hors ligne` : ''}
           </p>
         </div>
-        <Button onClick={onSos} variant="danger">
+        <Button onClick={() => dispatch({ type: 'sos/open' })} variant="danger">
           {t.safety.panic}
         </Button>
       </section>
 
       <Alert
-        title={offlineCount > 0 ? t.sync.pending : t.sync.ready}
+        title={
+          offlineCount > 0 ? `${offlineCount} actions en attente de synchronisation` : t.sync.ready
+        }
         tone={offlineCount > 0 ? 'accent' : 'success'}
       >
         <div className="sync-alert-body">
           <span>
             {offlineCount > 0 ? t.sync.offline : 'Toutes les preuves locales sont synchronisées.'}
           </span>
-          <Button disabled={offlineCount === 0} onClick={onSyncNow} size="sm" variant="secondary">
+          <Button
+            disabled={offlineCount === 0}
+            onClick={() => dispatch({ type: 'sync/complete' })}
+            size="sm"
+            variant="secondary"
+          >
             {t.action.retrySync}
           </Button>
         </div>
@@ -144,13 +150,31 @@ function TodayScreen({
           description={t.today.addressHint}
           title={t.action.heading}
         />
-        <VisitLifecycle onVisitStepChange={onVisitStepChange} t={t} visitStep={visitStep} />
+        <VisitLifecycle dispatch={dispatch} t={t} workerState={workerState} />
         <div className="visit-actions">
-          <Button fullWidth onClick={() => onVisitStepChange('checkIn')}>
+          <Button
+            aria-label={t.action.checkInNow}
+            fullWidth
+            onClick={() => dispatch({ step: 'checkIn', type: 'visit/setStep' })}
+          >
             {t.visitStep.checkIn}
           </Button>
           <Button fullWidth onClick={() => onRouteChange('planning')} variant="secondary">
             {t.planning.week}
+          </Button>
+          <Button
+            fullWidth
+            onClick={() => dispatch({ type: 'visit/reportIssue' })}
+            variant="secondary"
+          >
+            {t.action.safetyReport}
+          </Button>
+          <Button
+            fullWidth
+            onClick={() => dispatch({ type: 'visit/declareNoShow' })}
+            variant="danger"
+          >
+            {t.action.declareNoShow}
           </Button>
         </div>
       </Card>
@@ -180,22 +204,23 @@ function TodayScreen({
 }
 
 function VisitLifecycle({
-  onVisitStepChange,
+  dispatch,
   t,
-  visitStep,
+  workerState,
 }: {
-  readonly onVisitStepChange: (step: VisitStep) => void;
+  readonly dispatch: Dispatch<WorkerAction>;
   readonly t: typeof workerCopy;
-  readonly visitStep: VisitStep;
+  readonly workerState: WorkerState;
 }): ReactElement {
   return (
     <div className="route-steps" aria-label="Worker route lifecycle">
       {visitSteps.map((step, index) => (
         <button
-          aria-pressed={visitStep === step}
+          aria-label={t.visitStep[step]}
+          aria-pressed={workerState.visit.step === step}
           className="route-step"
           key={step}
-          onClick={() => onVisitStepChange(step)}
+          onClick={() => dispatch({ step, type: 'visit/setStep' })}
           type="button"
         >
           <span>{index + 1}</span>
@@ -206,7 +231,15 @@ function VisitLifecycle({
   );
 }
 
-function PlanningScreen({ t }: { readonly t: typeof workerCopy }): ReactElement {
+function PlanningScreen({
+  dispatch,
+  t,
+  workerState,
+}: {
+  readonly dispatch: Dispatch<WorkerAction>;
+  readonly t: typeof workerCopy;
+  readonly workerState: WorkerState;
+}): ReactElement {
   return (
     <ScreenFrame eyebrow="Semaine" title={t.planning.title}>
       <Card elevated>
@@ -226,11 +259,21 @@ function PlanningScreen({ t }: { readonly t: typeof workerCopy }): ReactElement 
           {['Matin', 'Midi', 'Après-midi', 'Urgence'].map((slot) => (
             <button key={slot} type="button">
               <strong>{slot}</strong>
-              <span>{slot === 'Urgence' ? 'Réservé opérateur' : 'Disponible'}</span>
+              <span>
+                {workerState.availabilityUnavailable
+                  ? 'Indisponible'
+                  : slot === 'Urgence'
+                    ? 'Réservé opérateur'
+                    : 'Disponible'}
+              </span>
             </button>
           ))}
         </div>
-        <Button fullWidth variant="secondary">
+        <Button
+          fullWidth
+          onClick={() => dispatch({ type: 'planning/markUnavailable' })}
+          variant="secondary"
+        >
           {t.planning.markUnavailable}
         </Button>
       </Card>
@@ -238,7 +281,15 @@ function PlanningScreen({ t }: { readonly t: typeof workerCopy }): ReactElement 
   );
 }
 
-function EarningsScreen({ t }: { readonly t: typeof workerCopy }): ReactElement {
+function EarningsScreen({
+  dispatch,
+  t,
+  workerState,
+}: {
+  readonly dispatch: Dispatch<WorkerAction>;
+  readonly t: typeof workerCopy;
+  readonly workerState: WorkerState;
+}): ReactElement {
   return (
     <ScreenFrame eyebrow="Paiement" title={t.earnings.title}>
       <Card elevated>
@@ -250,13 +301,25 @@ function EarningsScreen({ t }: { readonly t: typeof workerCopy }): ReactElement 
         <Alert title={t.earnings.advance} tone="accent">
           Les avances sont validées par opérateur et déduites du paiement mensuel.
         </Alert>
-        <Button fullWidth>{t.action.advance}</Button>
+        <Button
+          disabled={workerState.advanceRequested}
+          fullWidth
+          onClick={() => dispatch({ type: 'earnings/requestAdvance' })}
+        >
+          {t.action.advance}
+        </Button>
       </Card>
     </ScreenFrame>
   );
 }
 
-function ProfileScreen({ t }: { readonly t: typeof workerCopy }): ReactElement {
+function ProfileScreen({
+  dispatch,
+  t,
+}: {
+  readonly dispatch: Dispatch<WorkerAction>;
+  readonly t: typeof workerCopy;
+}): ReactElement {
   return (
     <ScreenFrame eyebrow="Compte" title={t.profile.title}>
       <Card elevated>
@@ -267,6 +330,24 @@ function ProfileScreen({ t }: { readonly t: typeof workerCopy }): ReactElement {
           title={t.profile.privacy}
         />
         <ListItem description="Assistance terrain et procédures" title={t.profile.help} />
+      </Card>
+      <Card>
+        <div className="profile-actions">
+          <Button
+            fullWidth
+            onClick={() => dispatch({ type: 'privacy/export' })}
+            variant="secondary"
+          >
+            {t.action.requestExport}
+          </Button>
+          <Button
+            fullWidth
+            onClick={() => dispatch({ type: 'privacy/erasure' })}
+            variant="secondary"
+          >
+            {t.action.requestErasure}
+          </Button>
+        </div>
       </Card>
       <Card>
         <div className="card-header">
@@ -284,10 +365,10 @@ function ProfileScreen({ t }: { readonly t: typeof workerCopy }): ReactElement {
 }
 
 function SosSheet({
-  onClose,
+  dispatch,
   t,
 }: {
-  readonly onClose: () => void;
+  readonly dispatch: Dispatch<WorkerAction>;
   readonly t: typeof workerCopy;
 }): ReactElement {
   return (
@@ -297,10 +378,10 @@ function SosSheet({
         <h2>{t.safety.title}</h2>
         <p>{t.safety.body}</p>
         <div className="sheet-actions">
-          <Button fullWidth variant="danger">
+          <Button fullWidth onClick={() => dispatch({ type: 'sos/confirm' })} variant="danger">
             {t.action.confirmSos}
           </Button>
-          <Button fullWidth onClick={onClose} variant="secondary">
+          <Button fullWidth onClick={() => dispatch({ type: 'sos/close' })} variant="secondary">
             {t.action.close}
           </Button>
         </div>

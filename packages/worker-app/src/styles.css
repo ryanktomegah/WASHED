@@ -162,7 +162,8 @@ button {
 }
 
 .route-list,
-.visit-actions {
+.visit-actions,
+.profile-actions {
   display: grid;
   gap: 10px;
 }

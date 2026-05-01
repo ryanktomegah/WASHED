@@ -1,20 +1,18 @@
+import type { VisitStep, WorkerFeedback } from './workerState.js';
+
 export type WorkerRoute = 'earnings' | 'planning' | 'profile' | 'today';
-export type VisitStep =
-  | 'afterPhoto'
-  | 'beforePhoto'
-  | 'checkIn'
-  | 'checkOut'
-  | 'heading'
-  | 'inVisit';
 
 export interface WorkerCopy {
   readonly action: {
     readonly advance: string;
     readonly cancel: string;
+    readonly checkInNow: string;
     readonly close: string;
     readonly confirmSos: string;
     readonly declareNoShow: string;
     readonly heading: string;
+    readonly requestErasure: string;
+    readonly requestExport: string;
     readonly retrySync: string;
     readonly safetyReport: string;
     readonly submitIssue: string;
@@ -26,6 +24,7 @@ export interface WorkerCopy {
     readonly nextPayout: string;
     readonly title: string;
   };
+  readonly feedback: Record<WorkerFeedback, string>;
   readonly nav: Record<WorkerRoute, string>;
   readonly planning: {
     readonly markUnavailable: string;
@@ -64,10 +63,13 @@ export const workerCopy = {
   action: {
     advance: 'Demander une avance',
     cancel: 'Annuler',
+    checkInNow: "Pointer l'arrivée",
     close: 'Fermer',
     confirmSos: "Prévenir l'opérateur",
     declareNoShow: 'Déclarer absence foyer',
     heading: 'En route vers le foyer',
+    requestErasure: "Demander l'effacement",
+    requestExport: 'Exporter mes données',
     retrySync: 'Synchroniser maintenant',
     safetyReport: 'Signaler un problème',
     submitIssue: 'Envoyer le signalement',
@@ -78,6 +80,22 @@ export const workerCopy = {
     floor: 'Plancher mensuel garanti: 40 000 FCFA',
     nextPayout: 'Prochain paiement: 31 mai',
     title: 'Gains',
+  },
+  feedback: {
+    advanceRequested: "Demande d'avance envoyée à l'opérateur.",
+    afterPhotoQueued: 'Photo après ajoutée à la file hors ligne.',
+    beforePhotoQueued: 'Photo avant ajoutée à la file hors ligne.',
+    checkInQueued: "Pointage d'arrivée ajouté à la file hors ligne.",
+    checkOutQueued: 'Pointage de sortie ajouté à la file hors ligne.',
+    dayMarkedComplete: 'Résumé de fin de journée enregistré.',
+    erasureRequested: "Demande d'effacement envoyée pour revue opérateur.",
+    exportRequested: "Demande d'export des données enregistrée.",
+    issueQueued: 'Signalement ajouté à la file hors ligne.',
+    noShowQueued: 'Absence foyer déclarée et ajoutée à la file hors ligne.',
+    sosSubmitted: "Alerte SOS envoyée à l'opérateur.",
+    syncComplete: 'Toutes les actions locales sont synchronisées.',
+    unavailableMarked: 'Indisponibilité envoyée à la planification.',
+    visitInProgress: 'Visite marquée en cours.',
   },
   nav: {
     earnings: 'Gains',
