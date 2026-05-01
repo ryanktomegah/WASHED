@@ -9,7 +9,7 @@ describe('operator console', () => {
     expect(screen.getByText('OTP sent to the operator phone.')).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('OTP code'), { target: { value: '123456' } });
     fireEvent.click(screen.getByRole('button', { name: 'Verify OTP' }));
-    expect(screen.getByText('Operator session verified.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Operations dashboard' })).toBeInTheDocument();
   }
 
   it('gates privileged console data behind phone OTP', () => {
@@ -40,7 +40,7 @@ describe('operator console', () => {
     authenticateOperator();
 
     fireEvent.click(screen.getByRole('button', { name: 'Attribution' }));
-    expect(screen.getByRole('heading', { name: 'Matching command center' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: "File d'attribution" })).toBeInTheDocument();
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Accept' })[0]!);
 
@@ -62,7 +62,7 @@ describe('operator console', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Opérations' }));
 
-    expect(screen.getByRole('heading', { name: 'Live Ops board' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Live ops board' })).toBeInTheDocument();
     expect(screen.getByLabelText('Live operations map')).toBeInTheDocument();
     expect(screen.getByText('Akouvi A. · ETA 09:12')).toBeInTheDocument();
   });
@@ -72,7 +72,7 @@ describe('operator console', () => {
     authenticateOperator();
 
     fireEvent.click(screen.getByRole('button', { name: 'Litiges' }));
-    expect(screen.getByRole('heading', { name: 'Dispute desk' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Bureau des litiges' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Resolve dispute' }));
     expect(screen.getByText('Dispute resolved with audit event.')).toBeInTheDocument();

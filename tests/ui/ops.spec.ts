@@ -10,7 +10,6 @@ test('operator console covers planning, matching, notifications, reports, and go
   await expect(page.getByText('OTP sent to the operator phone.')).toBeVisible();
   await page.getByLabel('OTP code').fill('123456');
   await page.getByRole('button', { name: 'Verify OTP' }).click();
-  await expect(page.getByText('Operator session verified.')).toBeVisible();
 
   await expect(page.getByRole('heading', { name: 'Operations dashboard' })).toBeVisible();
   await expect(page.getByText('Operational coverage')).toBeVisible();
@@ -26,7 +25,7 @@ test('operator console covers planning, matching, notifications, reports, and go
   await expect(page.getByText('Daily route plan approved and audit logged.')).toBeVisible();
 
   await page.getByRole('button', { name: 'Attribution' }).click();
-  await expect(page.getByRole('heading', { name: 'Matching command center' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: "File d'attribution" })).toBeVisible();
   await page.getByRole('button', { name: 'Accept' }).first().click();
   await expect(page.getByText('Matching decision accepted and audit logged.')).toBeVisible();
   await expect(page.getByText('Accepted', { exact: true })).toBeVisible();

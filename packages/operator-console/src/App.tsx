@@ -39,61 +39,89 @@ export function App(): ReactElement {
   return (
     <WashedThemeProvider className="operator-frame" theme="operator">
       {operatorState.login.verified ? (
-        <div className="operator-layout">
-          <aside className="sidebar">
-            <strong className="brand">Washed Ops</strong>
-            <nav aria-label="Operator navigation">
-              {navItems.map((item) => (
-                <button
-                  aria-current={route === item.route ? 'page' : undefined}
-                  key={item.route}
-                  onClick={() => setRoute(item.route)}
-                  type="button"
-                >
-                  {item.label}
-                </button>
-              ))}
-            </nav>
-          </aside>
+        <div className="operator-browser">
+          <div className="browser-chrome" aria-hidden="true">
+            <span className="browser-dot browser-dot-red" />
+            <span className="browser-dot browser-dot-amber" />
+            <span className="browser-dot browser-dot-green" />
+            <div className="browser-address">console.washed.tg</div>
+          </div>
 
-          <main className="operator-main">
-            <OperatorHeader route={route} />
-            {operatorState.lastFeedback === null ? null : (
-              <Alert className="feedback-banner" tone="success">
-                {operatorFeedback[operatorState.lastFeedback]}
-              </Alert>
-            )}
+          <div className="operator-layout">
+            <aside className="sidebar">
+              <div className="sidebar-brand">
+                <strong className="brand">Washed</strong>
+                <span>Console Opérateur · Lomé</span>
+              </div>
+              <nav aria-label="Operator navigation">
+                {navItems.map((item) => {
+                  const badge = 'badge' in item ? item.badge : undefined;
 
-            {route === 'dashboard' ? (
-              <Dashboard operatorState={operatorState} onRouteChange={setRoute} />
-            ) : null}
-            {route === 'matching' ? (
-              <Matching dispatch={dispatch} operatorState={operatorState} />
-            ) : null}
-            {route === 'liveOps' ? <LiveOps /> : null}
-            {route === 'routePlanning' ? (
-              <RoutePlanning dispatch={dispatch} operatorState={operatorState} />
-            ) : null}
-            {route === 'profiles' ? (
-              <Profiles dispatch={dispatch} operatorState={operatorState} />
-            ) : null}
-            {route === 'disputes' ? (
-              <Disputes dispatch={dispatch} operatorState={operatorState} />
-            ) : null}
-            {route === 'payments' ? (
-              <Payments dispatch={dispatch} operatorState={operatorState} />
-            ) : null}
-            {route === 'notifications' ? (
-              <Notifications dispatch={dispatch} operatorState={operatorState} />
-            ) : null}
-            {route === 'audit' ? <Audit dispatch={dispatch} operatorState={operatorState} /> : null}
-            {route === 'reports' ? (
-              <Reports dispatch={dispatch} operatorState={operatorState} />
-            ) : null}
-            {route === 'settings' ? (
-              <Settings dispatch={dispatch} operatorState={operatorState} />
-            ) : null}
-          </main>
+                  return (
+                    <button
+                      aria-current={route === item.route ? 'page' : undefined}
+                      aria-label={item.label}
+                      key={item.route}
+                      onClick={() => setRoute(item.route)}
+                      type="button"
+                    >
+                      <span aria-hidden="true" className="nav-icon">
+                        {item.icon}
+                      </span>
+                      <span>{item.label}</span>
+                      {badge === undefined ? null : <em>{badge}</em>}
+                    </button>
+                  );
+                })}
+              </nav>
+              <div className="sidebar-footer">
+                <span>Mode dispatch</span>
+                <strong>Opérateur manuel ⟳</strong>
+              </div>
+            </aside>
+
+            <main className="operator-main">
+              <OperatorHeader route={route} />
+              {operatorState.lastFeedback === null ||
+              operatorState.lastFeedback === 'loginVerified' ? null : (
+                <Alert className="feedback-banner" tone="success">
+                  {operatorFeedback[operatorState.lastFeedback]}
+                </Alert>
+              )}
+
+              {route === 'dashboard' ? (
+                <Dashboard operatorState={operatorState} onRouteChange={setRoute} />
+              ) : null}
+              {route === 'matching' ? (
+                <Matching dispatch={dispatch} operatorState={operatorState} />
+              ) : null}
+              {route === 'liveOps' ? <LiveOps /> : null}
+              {route === 'routePlanning' ? (
+                <RoutePlanning dispatch={dispatch} operatorState={operatorState} />
+              ) : null}
+              {route === 'profiles' ? (
+                <Profiles dispatch={dispatch} operatorState={operatorState} />
+              ) : null}
+              {route === 'disputes' ? (
+                <Disputes dispatch={dispatch} operatorState={operatorState} />
+              ) : null}
+              {route === 'payments' ? (
+                <Payments dispatch={dispatch} operatorState={operatorState} />
+              ) : null}
+              {route === 'notifications' ? (
+                <Notifications dispatch={dispatch} operatorState={operatorState} />
+              ) : null}
+              {route === 'audit' ? (
+                <Audit dispatch={dispatch} operatorState={operatorState} />
+              ) : null}
+              {route === 'reports' ? (
+                <Reports dispatch={dispatch} operatorState={operatorState} />
+              ) : null}
+              {route === 'settings' ? (
+                <Settings dispatch={dispatch} operatorState={operatorState} />
+              ) : null}
+            </main>
+          </div>
         </div>
       ) : (
         <LoginGate dispatch={dispatch} operatorState={operatorState} />
@@ -163,28 +191,82 @@ function LoginGate({
 }
 
 function OperatorHeader({ route }: { readonly route: OperatorRoute }): ReactElement {
-  const title = {
-    audit: 'Audit and governance',
-    dashboard: 'Operations dashboard',
-    disputes: 'Dispute desk',
-    liveOps: 'Live Ops board',
-    matching: 'Matching command center',
-    notifications: 'Notifications and push devices',
-    payments: 'Payments and payouts',
-    profiles: 'Worker and subscriber profiles',
-    reports: 'Reports and KPI exports',
-    routePlanning: 'Daily route planning',
-    settings: 'Settings and readiness',
+  const meta = {
+    audit: {
+      badge: 'Immutable',
+      detail: 'Operator id, event type, affected entity, timestamp',
+      title: 'Audit and governance',
+    },
+    dashboard: {
+      badge: 'Closed beta console',
+      detail: 'Dense internal tooling for assignment, support, payments, safety, and governance.',
+      title: 'Operations dashboard',
+    },
+    disputes: {
+      badge: '2 ouverts',
+      detail: 'SLA résolution : 24h',
+      title: 'Bureau des litiges',
+    },
+    liveOps: {
+      detail: 'Lundi 28 avr · 42 visites planifiées',
+      live: 'Mise à jour en direct · <200ms',
+      title: 'Live ops board',
+    },
+    matching: {
+      badge: '3 en attente',
+      detail: 'SLA : assigner < 4h · ⏱ 1h12 restant pour Essi',
+      title: "File d'attribution",
+    },
+    notifications: {
+      badge: 'Push devices',
+      detail: 'Failed devices explain missed reminders and route confirmations.',
+      title: 'Notifications and push devices',
+    },
+    payments: {
+      badge: 'Mobile money',
+      detail: 'Recoveries, refunds, payout batches, and failed payout retries.',
+      title: 'Payments and payouts',
+    },
+    profiles: {
+      badge: 'CS',
+      detail: 'Worker history, subscriber support, privacy queues, and blocklist flags.',
+      title: 'Worker and subscriber profiles',
+    },
+    reports: {
+      badge: 'Beta metrics',
+      detail: 'Founder cadence exports for weekly operations review.',
+      title: 'Reports and KPI exports',
+    },
+    routePlanning: {
+      badge: 'Tomorrow',
+      detail: 'Plan around service-cell capacity, unavailability, and blocked relationships.',
+      title: 'Daily route planning',
+    },
+    settings: {
+      badge: 'Readiness',
+      detail: 'OTP, push, payment, storage, observability, and forced-update flags.',
+      title: 'Settings and readiness',
+    },
   }[route];
 
   return (
     <header className="operator-header">
       <div>
-        <Badge>Closed beta console</Badge>
-        <h1>{title}</h1>
-        <p>Dense internal tooling for assignment, support, payments, safety, and governance.</p>
+        {meta.badge === undefined ? null : (
+          <Badge tone={route === 'disputes' ? 'danger' : 'primary'}>{meta.badge}</Badge>
+        )}
+        <h1>{meta.title}</h1>
+        {meta.live === undefined ? null : (
+          <span className="live-indicator">
+            <i aria-hidden="true" />
+            {meta.live}
+          </span>
+        )}
+        <p>{meta.detail}</p>
       </div>
-      <Button variant="secondary">Command palette</Button>
+      {route === 'matching' || route === 'liveOps' || route === 'disputes' ? null : (
+        <Button variant="secondary">Command palette</Button>
+      )}
     </header>
   );
 }
@@ -325,62 +407,170 @@ function Matching({
   readonly dispatch: Dispatch<OperatorAction>;
   readonly operatorState: OperatorState;
 }): ReactElement {
+  const matchingQueue = [
+    {
+      active: true,
+      name: 'Essi Agbodzan',
+      neighborhood: 'Bè Kpota',
+      schedule: 'T2 · Lundi matin',
+      timeLeft: '3h22',
+      urgent: false,
+    },
+    {
+      active: false,
+      name: 'Kodjo Amévi',
+      neighborhood: 'Tokoin Est',
+      schedule: 'T1 · Vendredi',
+      timeLeft: '1h45',
+      urgent: false,
+    },
+    {
+      active: false,
+      name: 'Abla Fiagbé',
+      neighborhood: 'Adidogomé',
+      schedule: 'T2 · Mercredi',
+      timeLeft: '0h29',
+      urgent: true,
+    },
+  ] as const;
+
   return (
-    <section className="console-grid">
-      <Card className="worklist" elevated>
-        <div className="card-header">
-          <h2>Top candidate queue</h2>
-          <Badge>Attribution</Badge>
+    <section className="attribution-shell" aria-label="Operator matching command center">
+      <aside className="assignment-queue">
+        {matchingQueue.map((entry) => (
+          <button
+            className={[
+              'queue-card',
+              entry.active ? 'queue-card-active' : '',
+              entry.urgent ? 'queue-card-urgent' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+            key={entry.name}
+            type="button"
+          >
+            <span>
+              <strong>{entry.name}</strong>
+              <small>
+                {entry.schedule} · {entry.neighborhood}
+              </small>
+              {entry.urgent ? <small className="urgent-copy">SLA presque atteint</small> : null}
+            </span>
+            <em>⏱ {entry.timeLeft}</em>
+          </button>
+        ))}
+      </aside>
+
+      <div className="assignment-detail">
+        <div className="assignment-title">
+          <div>
+            <h2>Essi Agbodzan — T2 · Lundi matin</h2>
+            <p>Bè Kpota · Lomé · Inscrite il y a 3h22 · Premier abonnement</p>
+          </div>
+          <Badge tone="accent">En attente</Badge>
         </div>
+
         <Tabs
           tabs={[{ active: true, label: 'Pending' }, { label: 'Assigned' }, { label: 'Rejected' }]}
         />
-        {matchingCandidates.map((candidate) => (
-          <CandidateRow
-            candidate={candidate}
-            dispatch={dispatch}
-            key={candidate.id}
-            status={
-              operatorState.matching.acceptedMatchId === candidate.id
-                ? 'accepted'
-                : operatorState.matching.rejectedMatchIds.includes(candidate.id)
-                  ? 'rejected'
-                  : 'pending'
-            }
-          />
-        ))}
-      </Card>
 
-      <Card>
+        <p className="section-eyebrow">Top 5 candidates · Score ML</p>
+        <div className="candidate-stack">
+          {matchingCandidates.map((candidate) => (
+            <CandidateRow
+              candidate={candidate}
+              dispatch={dispatch}
+              key={candidate.id}
+              status={
+                operatorState.matching.acceptedMatchId === candidate.id
+                  ? 'accepted'
+                  : operatorState.matching.rejectedMatchIds.includes(candidate.id)
+                    ? 'rejected'
+                    : 'pending'
+              }
+            />
+          ))}
+        </div>
+
+        <div className="assignment-map" aria-label="Lomé candidate map">
+          <span>🗺</span>
+          <strong>Carte Lomé</strong>
+          <p>Positions laveuses disponibles + quartier Essi</p>
+        </div>
+
         <Alert title="Decision logging" tone="primary">
           Every accept/reject writes an audit event with feature scores, operator id, and reason.
         </Alert>
-        <ListItem description="Distance, schedule, safety, rating, load" title="Feature scores" />
-        <ListItem description="2 per quarter, operator-approved" title="Worker swap requests" />
-      </Card>
+      </div>
     </section>
   );
 }
 
 function LiveOps(): ReactElement {
   return (
-    <section className="console-grid">
-      <Card className="ops-map" elevated>
+    <section className="liveops-shell">
+      <div className="live-map" aria-label="Live operations map">
+        <div className="live-kpis" aria-label="Live operations metrics">
+          {[
+            ['12', 'En cours', '🟢'],
+            ['18', 'Planifiées', '⚪'],
+            ['8', 'Terminées', '⬛'],
+            ['1', 'Problèmes', '🔴'],
+            ['3', 'Non assignées', '🟡'],
+          ].map(([value, label, icon]) => (
+            <div key={label}>
+              <span>
+                {icon} {label}
+              </span>
+              <strong>{value}</strong>
+            </div>
+          ))}
+        </div>
+
+        <div className="map-centerpiece">
+          <span>🗺</span>
+          <strong>Carte Lomé en temps réel</strong>
+          <p>Laveuses + abonnés · sous-200ms</p>
+        </div>
+
+        <span className="map-pin map-pin-a" />
+        <span className="map-pin map-pin-b" />
+        <span className="map-pin map-pin-risk" />
+
+        <div className="map-legend">
+          {[
+            ['🟢', 'En route / en cours'],
+            ['🟡', 'Prochaine (< 1h)'],
+            ['⚪', 'Planifiée'],
+            ['🔴', 'Problème signalé'],
+            ['⬛', 'Terminée'],
+          ].map(([icon, label]) => (
+            <span key={label}>
+              {icon} {label}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <aside className="live-side-panel">
         <div className="card-header">
-          <h2>Route map</h2>
-          <Badge>WebSocket</Badge>
+          <h2>Alertes actives</h2>
+          <Badge tone="danger">3</Badge>
         </div>
-        <div className="map-board" aria-label="Live operations map">
-          <span className="map-pin map-pin-a" />
-          <span className="map-pin map-pin-b" />
-          <span className="map-pin map-pin-risk" />
-        </div>
-      </Card>
-      <Card>
-        <div className="card-header">
-          <h2>Active visits</h2>
-          <Badge>{liveVisits.length}</Badge>
-        </div>
+        {[
+          ['🔴', 'Yao Agbeko · laveuse en retard 40 min', 'urgent'],
+          ['🟡', 'Ama Dossou · position GPS imprécise', 'warning'],
+          ['🟡', '3 abonnés non assignés', 'warning'],
+        ].map(([icon, title, tone]) => (
+          <div className={`live-alert live-alert-${tone}`} key={title}>
+            <strong>
+              {icon} {title}
+            </strong>
+            <button type="button">Intervenir</button>
+          </div>
+        ))}
+
+        <p className="section-eyebrow">Laveuses actives (12)</p>
         {liveVisits.map((visit) => (
           <ListItem
             after={
@@ -391,7 +581,7 @@ function LiveOps(): ReactElement {
             title={visit.subscriber}
           />
         ))}
-      </Card>
+      </aside>
     </section>
   );
 }
@@ -461,24 +651,84 @@ function Disputes({
   readonly operatorState: OperatorState;
 }): ReactElement {
   return (
-    <Card elevated>
-      <div className="card-header">
-        <h2>Dispute triage</h2>
-        <Badge>{operatorState.disputes.open} open</Badge>
-      </div>
-      <p>
-        Missed visit, damaged clothes, late worker, and safety reports route here before refunds or
-        worker sanctions.
-      </p>
-      <div className="operator-actions">
-        <Button onClick={() => dispatch({ type: 'dispute/resolve' })}>Resolve dispute</Button>
-        <Button onClick={() => dispatch({ type: 'dispute/escalate' })} variant="danger">
-          Escalate safety case
-        </Button>
-      </div>
-      <ListItem description={`${operatorState.disputes.resolved} resolved`} title="Resolved" />
-      <ListItem description={`${operatorState.disputes.escalated} escalated`} title="Escalated" />
-    </Card>
+    <section className="dispute-desk">
+      <aside className="dispute-list">
+        {[
+          ['Essi Agbodzan', 'Vêtement endommagé', '2h', 'active'],
+          ['Kodjo Mévi', 'Objet manquant', '18h', 'critical'],
+          ['Abla F. (résolu)', 'Laveuse absente', 'résolu', 'resolved'],
+        ].map(([name, title, age, status]) => (
+          <button className={`dispute-ticket dispute-ticket-${status}`} key={name} type="button">
+            <strong>{name}</strong>
+            <span>{title}</span>
+            <small>{age}</small>
+          </button>
+        ))}
+      </aside>
+
+      <Card className="dispute-detail" elevated>
+        <div className="assignment-title">
+          <div>
+            <h2>Essi Agbodzan — Vêtement endommagé</h2>
+            <p>Visite du 29 avr · Akouvi Koffi · Ouvert il y a 2h</p>
+          </div>
+          <Badge>{operatorState.disputes.open} open</Badge>
+        </div>
+
+        <p className="section-eyebrow">Preuves & contexte</p>
+        <div className="evidence-grid">
+          {['Photo client\n(vêtement)', 'Photo Akouvi\nAVANT', 'Photo Akouvi\nAPRÈS'].map(
+            (label) => (
+              <div key={label}>{label}</div>
+            ),
+          )}
+        </div>
+
+        <div className="client-statement">
+          <span>Description client</span>
+          <p>
+            "Ma robe bleue a été déchirée sur le côté. Elle était en bon état avant la visite."
+          </p>
+        </div>
+
+        <div className="proof-trail">
+          {[
+            ['GPS check-in', '✓ 9h02 · 42m'],
+            ['GPS check-out', '✓ 11h08 · 38m'],
+            ['Durée', '2h06 min'],
+            ['Appels', '1 · 3 min'],
+          ].map(([label, value]) => (
+            <div key={label}>
+              <span>{label}</span>
+              <strong>{value}</strong>
+            </div>
+          ))}
+        </div>
+
+        <div className="worker-statement">
+          <strong>Déclaration laveuse (en attente)</strong>
+          <span>Demander à Akouvi via l'app → notification push envoyée</span>
+        </div>
+
+        <div className="dispute-actions">
+          <Button onClick={() => dispatch({ type: 'dispute/resolve' })}>Resolve dispute</Button>
+          <Button onClick={() => dispatch({ type: 'dispute/escalate' })} variant="danger">
+            Escalate safety case
+          </Button>
+        </div>
+
+        <div className="proof-trail">
+          <div>
+            <span>Resolved</span>
+            <strong>{operatorState.disputes.resolved} resolved</strong>
+          </div>
+          <div>
+            <span>Escalated</span>
+            <strong>{operatorState.disputes.escalated} escalated</strong>
+          </div>
+        </div>
+      </Card>
+    </section>
   );
 }
 
@@ -719,9 +969,23 @@ function CandidateRow({
   readonly status: 'accepted' | 'pending' | 'rejected';
 }): ReactElement {
   return (
-    <ListItem
-      after={
-        status === 'accepted' ? (
+    <div className={`candidate-row candidate-row-${status}`}>
+      <div className="candidate-photo">photo</div>
+      <div className="candidate-info">
+        <div>
+          <strong>{candidate.worker}</strong>
+          {candidate.top ? <Badge tone="success">Top match</Badge> : null}
+        </div>
+        <p>
+          {candidate.visits} visites · {candidate.distance} · {candidate.availability}
+        </p>
+      </div>
+      <div className="candidate-score">
+        <strong>{candidate.score}</strong>
+        <span>score ML</span>
+      </div>
+      <div className="candidate-actions">
+        {status === 'accepted' ? (
           <Badge tone="success">Accepted</Badge>
         ) : status === 'rejected' ? (
           <Badge tone="danger">Rejected</Badge>
@@ -741,11 +1005,9 @@ function CandidateRow({
               Reject
             </Button>
           </div>
-        )
-      }
-      description={`${candidate.worker} · ${candidate.cell}`}
-      title={`${candidate.subscriber} · ${candidate.score}`}
-    />
+        )}
+      </div>
+    </div>
   );
 }
 

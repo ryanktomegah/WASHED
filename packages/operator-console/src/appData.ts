@@ -21,10 +21,14 @@ export interface QueueMetric {
 }
 
 export interface MatchingCandidate {
+  readonly availability: string;
   readonly cell: string;
+  readonly distance: string;
   readonly id: string;
   readonly score: number;
   readonly subscriber: string;
+  readonly top: boolean;
+  readonly visits: number;
   readonly worker: string;
 }
 
@@ -52,6 +56,13 @@ export interface ReportCard {
   readonly value: string;
 }
 
+export interface OperatorNavItem {
+  readonly badge?: string;
+  readonly icon: string;
+  readonly label: string;
+  readonly route: OperatorRoute;
+}
+
 export const operatorFeedback = {
   auditFiltered: 'Audit filter applied to money, privacy, and SOS events.',
   blocklistAdded: 'Household relationship block added and audit logged.',
@@ -76,18 +87,18 @@ export const operatorFeedback = {
 } as const satisfies Record<OperatorFeedback, string>;
 
 export const navItems = [
-  { label: 'Dashboard', route: 'dashboard' },
-  { label: translate('operator.nav.matching', 'fr'), route: 'matching' },
-  { label: translate('operator.nav.liveOps', 'fr'), route: 'liveOps' },
-  { label: 'Planning', route: 'routePlanning' },
-  { label: 'Profiles', route: 'profiles' },
-  { label: 'Litiges', route: 'disputes' },
-  { label: translate('operator.nav.payments', 'fr'), route: 'payments' },
-  { label: 'Notifications', route: 'notifications' },
-  { label: 'Audit', route: 'audit' },
-  { label: 'Rapports', route: 'reports' },
-  { label: 'Settings', route: 'settings' },
-] as const satisfies readonly { readonly label: string; readonly route: OperatorRoute }[];
+  { icon: '⌂', label: 'Dashboard', route: 'dashboard' },
+  { badge: '3', icon: '📋', label: translate('operator.nav.matching', 'fr'), route: 'matching' },
+  { badge: '1', icon: '🗺', label: translate('operator.nav.liveOps', 'fr'), route: 'liveOps' },
+  { icon: '🗓', label: 'Planning', route: 'routePlanning' },
+  { icon: '👷', label: 'Profiles', route: 'profiles' },
+  { badge: '2', icon: '⚖', label: 'Litiges', route: 'disputes' },
+  { icon: '💳', label: translate('operator.nav.payments', 'fr'), route: 'payments' },
+  { icon: '🔔', label: 'Notifications', route: 'notifications' },
+  { icon: '🧾', label: 'Audit', route: 'audit' },
+  { icon: '📊', label: 'Rapports', route: 'reports' },
+  { icon: '⚙', label: 'Settings', route: 'settings' },
+] as const satisfies readonly OperatorNavItem[];
 
 export const queueMetrics = [
   { label: 'Matching pending', tone: 'primary', value: '7' },
@@ -98,25 +109,37 @@ export const queueMetrics = [
 
 export const matchingCandidates = [
   {
-    cell: 'Adidogomé',
+    availability: 'Libre lundi matin',
+    cell: 'Bè Kpota',
+    distance: '1.2 km',
     id: 'match-afi',
     score: 94,
-    subscriber: 'Afi Mensah',
-    worker: 'Akouvi A.',
+    subscriber: 'Essi Agbodzan',
+    top: true,
+    visits: 47,
+    worker: 'Akouvi Koffi',
   },
   {
-    cell: 'Tokoin',
+    availability: 'Libre lundi',
+    cell: 'Tokoin Est',
+    distance: '2.1 km',
     id: 'match-kossi',
-    score: 88,
-    subscriber: 'Kossi Family',
-    worker: 'Esi K.',
+    score: 87,
+    subscriber: 'Essi Agbodzan',
+    top: false,
+    visits: 31,
+    worker: 'Dédé Amétodji',
   },
   {
-    cell: 'Agoè',
+    availability: 'Sur disponibilité',
+    cell: 'Adidogomé',
+    distance: '3.4 km',
     id: 'match-ama',
-    score: 83,
-    subscriber: 'Ama N.',
-    worker: 'Mawuli D.',
+    score: 71,
+    subscriber: 'Essi Agbodzan',
+    top: false,
+    visits: 12,
+    worker: 'Yawa Gbéa',
   },
 ] as const satisfies readonly MatchingCandidate[];
 
