@@ -12,24 +12,24 @@ Use this runbook to install and launch the subscriber app in Apple Simulator thr
 
 ```sh
 pnpm install
-pnpm --filter @washed/subscriber-web ios:add
+pnpm --filter @washed/subscriber-app ios:add
 ```
 
-This creates `packages/subscriber-web/ios`, the native Xcode project used by Simulator.
+This creates `packages/subscriber-app/ios`, the native Xcode project used by Simulator.
 
 ## Sync Web Assets
 
 ```sh
-pnpm --filter @washed/subscriber-web ios:sync
+pnpm --filter @washed/subscriber-app ios:sync
 ```
 
-Run this after changing files in `packages/subscriber-web/public`. The command rebuilds the static app and copies it into the native project.
+Run this after changing files in `packages/subscriber-app/src`. The command rebuilds the React app and copies it into the native project.
 
 ## Launch In Simulator
 
 ```sh
 open -a Simulator
-pnpm --filter @washed/subscriber-web ios:run
+pnpm --filter @washed/subscriber-app ios:run
 ```
 
 The simulator app talks to the local API at `127.0.0.1:3000`. If the API is not running, the app opens but account, booking, billing, and privacy actions will fail.

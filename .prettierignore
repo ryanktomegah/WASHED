@@ -8,3 +8,4 @@ pnpm-lock.yaml
 docs/
 research/
 packages/subscriber-web/ios/
+packages/subscriber-app/ios/
