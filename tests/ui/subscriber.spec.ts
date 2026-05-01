@@ -9,8 +9,33 @@ test('subscriber mobile exposes production routes and bounded tracking', async (
 
   await page.getByRole('button', { name: "Démarrer l'inscription" }).click();
   await expect(page.getByRole('heading', { name: 'Inscription abonnée' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Langue' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Continuer' }).click();
   await expect(page.getByRole('textbox', { name: 'Téléphone' })).toBeVisible();
-  await expect(page.getByLabel('Onboarding steps').getByText('Paiement')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Continuer' }).click();
+  await expect(page.getByRole('textbox', { name: 'OTP' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Continuer' }).click();
+  await expect(page.getByRole('textbox', { name: 'Quartier' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Continuer' }).click();
+  await page.getByRole('button', { name: /T3/u }).click();
+  await expect(page.getByRole('button', { name: /T3/u })).toHaveAttribute('aria-pressed', 'true');
+
+  await page.getByRole('button', { name: 'Continuer' }).click();
+  await page.getByRole('button', { name: /Jeudi/u }).click();
+  await expect(page.getByRole('button', { name: /Jeudi/u })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+
+  await page.getByRole('button', { name: 'Continuer' }).click();
+  await expect(page.getByRole('textbox', { name: 'Mobile Money' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Continuer' }).click();
+  await expect(page.getByText(/prêt pour validation opérateur/u)).toBeVisible();
   await page.getByRole('button', { name: 'Terminé' }).click();
 
   await page.getByRole('button', { name: 'Démarrer le suivi' }).click();

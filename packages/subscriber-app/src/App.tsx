@@ -298,42 +298,252 @@ function OnboardingScreen({
   readonly onRouteChange: (route: AppRoute) => void;
   readonly t: LocalizedCopy;
 }): ReactElement {
+  const [stepIndex, setStepIndex] = useState(0);
+  const [selectedTier, setSelectedTier] = useState<'T1' | 'T2' | 'T3'>('T2');
+  const [selectedSchedule, setSelectedSchedule] = useState(
+    locale === 'fr' ? 'Mardi · 9-11' : 'Tuesday · 9-11',
+  );
+  const currentStep = onboardingSteps[stepIndex] ?? 'language';
+  const isFirstStep = stepIndex === 0;
+  const isLastStep = stepIndex === onboardingSteps.length - 1;
+  const scheduleSlots =
+    locale === 'fr'
+      ? ['Mardi · 9-11', 'Jeudi · 13-15', 'Samedi · 9-11']
+      : ['Tuesday · 9-11', 'Thursday · 13-15', 'Saturday · 9-11'];
+  const helperCopy =
+    locale === 'fr'
+      ? {
+          addressHint: 'Adidogomé, Tokoin, Agoè...',
+          addressLabel: 'Quartier',
+          back: 'Retour',
+          continue: 'Continuer',
+          landmark: 'Repère et consignes',
+          languageBody: 'Le foyer pourra changer FR / EN plus tard depuis le profil.',
+          momoHint: 'Numéro Mobile Money utilisé pour les prélèvements Washed.',
+          momoLabel: 'Mobile Money',
+          otpHint: 'Code de test prérempli pour le simulateur.',
+          paymentBody:
+            'Le prélèvement démarre après validation opérateur. Les échecs ouvrent le parcours de régularisation.',
+          phoneHint: 'Format Togo, utilisé pour OTP et support.',
+          scheduleBody: 'Choisissez le créneau habituel; les reports restent possibles 24h avant.',
+          stepPrefix: 'Étape',
+          tierBody: 'La formule pourra être ajustée au prochain cycle depuis Abonnement.',
+        }
+      : {
+          addressHint: 'Adidogome, Tokoin, Agoe...',
+          addressLabel: 'Neighborhood',
+          back: 'Back',
+          continue: 'Continue',
+          landmark: 'Landmark and access notes',
+          languageBody: 'The household can switch FR / EN later from profile.',
+          momoHint: 'Mobile Money number used for Washed collections.',
+          momoLabel: 'Mobile Money',
+          otpHint: 'Simulator test code is prefilled.',
+          paymentBody:
+            'Collection starts after operator validation. Failures open the payment recovery path.',
+          phoneHint: 'Togo format, used for OTP and support.',
+          scheduleBody: 'Pick the usual window; rescheduling stays available 24h before.',
+          stepPrefix: 'Step',
+          tierBody: 'The tier can be adjusted next cycle from Subscription.',
+        };
+
+  const goNext = (): void => {
+    if (isLastStep) {
+      onRouteChange('home');
+      return;
+    }
+
+    setStepIndex((current) => Math.min(current + 1, onboardingSteps.length - 1));
+  };
+
+  const goBack = (): void => {
+    if (isFirstStep) {
+      onRouteChange('home');
+      return;
+    }
+
+    setStepIndex((current) => Math.max(current - 1, 0));
+  };
+
   return (
     <ScreenFrame
       action={
-        <Button onClick={() => onRouteChange('home')} variant="primary">
-          {translate('common.done', locale)}
-        </Button>
+        <Badge tone="accent">
+          {stepIndex + 1} / {onboardingSteps.length}
+        </Badge>
       }
       eyebrow="C1"
       title={t.onboarding.title}
     >
-      <div className="progress-rail" aria-label="Onboarding steps">
-        {onboardingSteps.map((step, index) => (
-          <div className="progress-step" key={step}>
-            <span>{index + 1}</span>
-            <strong>{t.onboarding[step]}</strong>
-          </div>
-        ))}
-      </div>
+      <Card elevated>
+        <div className="onboarding-progress" aria-label="Onboarding steps">
+          {onboardingSteps.map((step, index) => (
+            <button
+              aria-current={index === stepIndex ? 'step' : undefined}
+              className="onboarding-step-pill"
+              key={step}
+              onClick={() => setStepIndex(index)}
+              type="button"
+            >
+              <span>{index + 1}</span>
+              <strong>{t.onboarding[step]}</strong>
+            </button>
+          ))}
+        </div>
+      </Card>
 
       <Card>
-        <div className="form-stack">
-          <TextField
-            defaultValue="+228 90 00 00 00"
-            inputMode="tel"
-            label={t.onboarding.phone}
-            placeholder="+228"
-          />
-          <TextField defaultValue="Adidogomé, près du carrefour" label={t.onboarding.address} />
-          <ListItem
-            after={<Badge>{formatXof(4500, locale)}</Badge>}
-            description="T2 · Mardi matin · 9-11"
-            title={`${t.onboarding.tier} + ${t.onboarding.schedule}`}
-          />
-          <Alert title={t.onboarding.payment} tone="accent">
-            Mobile money is captured during signup but recovery remains platform-controlled.
-          </Alert>
+        <div className="onboarding-panel">
+          <div>
+            <span className="eyebrow">
+              {helperCopy.stepPrefix} {stepIndex + 1}
+            </span>
+            <h2>{t.onboarding[currentStep]}</h2>
+          </div>
+
+          {currentStep === 'language' ? (
+            <div className="choice-grid" aria-label={t.onboarding.language}>
+              {['Français', 'English'].map((language) => (
+                <button
+                  aria-pressed={
+                    (locale === 'fr' && language === 'Français') ||
+                    (locale === 'en' && language === 'English')
+                  }
+                  className="choice-card"
+                  key={language}
+                  type="button"
+                >
+                  <strong>{language}</strong>
+                  <span>{helperCopy.languageBody}</span>
+                </button>
+              ))}
+            </div>
+          ) : null}
+
+          {currentStep === 'phone' ? (
+            <TextField
+              defaultValue="+228 90 00 00 00"
+              hint={helperCopy.phoneHint}
+              inputMode="tel"
+              label={t.onboarding.phone}
+              placeholder="+228"
+            />
+          ) : null}
+
+          {currentStep === 'otp' ? (
+            <TextField
+              defaultValue="0426"
+              hint={helperCopy.otpHint}
+              inputMode="numeric"
+              label={t.onboarding.otp}
+              maxLength={6}
+            />
+          ) : null}
+
+          {currentStep === 'address' ? (
+            <div className="form-stack">
+              <TextField
+                defaultValue="Adidogomé"
+                hint={helperCopy.addressHint}
+                label={helperCopy.addressLabel}
+              />
+              <TextField
+                defaultValue="Portail bleu, pharmacie à côté"
+                label={helperCopy.landmark}
+              />
+            </div>
+          ) : null}
+
+          {currentStep === 'tier' ? (
+            <>
+              <Alert tone="primary">{helperCopy.tierBody}</Alert>
+              <div className="choice-grid" aria-label={t.onboarding.tier}>
+                {[
+                  ['T1', 2500, '2 visites / mois'],
+                  ['T2', 4500, '4 visites / mois'],
+                  ['T3', 6500, '6 visites / mois'],
+                ].map(([tier, price, cadence]) => (
+                  <button
+                    aria-pressed={tier === selectedTier}
+                    className="choice-card"
+                    key={tier}
+                    onClick={() => setSelectedTier(tier as 'T1' | 'T2' | 'T3')}
+                    type="button"
+                  >
+                    <strong>{tier}</strong>
+                    <span>{cadence}</span>
+                    <Badge>{formatXof(Number(price), locale)}</Badge>
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : null}
+
+          {currentStep === 'schedule' ? (
+            <>
+              <Alert tone="primary">{helperCopy.scheduleBody}</Alert>
+              <div className="choice-grid" aria-label={t.onboarding.schedule}>
+                {scheduleSlots.map((slot) => (
+                  <button
+                    aria-pressed={slot === selectedSchedule}
+                    className="choice-card"
+                    key={slot}
+                    onClick={() => setSelectedSchedule(slot)}
+                    type="button"
+                  >
+                    <strong>{slot}</strong>
+                    <span>{t.onboarding.schedule}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : null}
+
+          {currentStep === 'payment' ? (
+            <div className="form-stack">
+              <TextField
+                defaultValue="+228 90 00 00 00"
+                hint={helperCopy.momoHint}
+                inputMode="tel"
+                label={helperCopy.momoLabel}
+              />
+              <Alert title={t.onboarding.payment} tone="accent">
+                {helperCopy.paymentBody}
+              </Alert>
+            </div>
+          ) : null}
+
+          {currentStep === 'confirm' ? (
+            <div className="form-stack">
+              <ListItem
+                after={<Badge>{selectedTier}</Badge>}
+                description={`${selectedTier} · ${
+                  selectedTier === 'T1'
+                    ? formatXof(2500, locale)
+                    : selectedTier === 'T2'
+                      ? formatXof(4500, locale)
+                      : formatXof(6500, locale)
+                }`}
+                title={t.onboarding.tier}
+              />
+              <ListItem description={selectedSchedule} title={t.onboarding.schedule} />
+              <ListItem description="+228 90 00 00 00" title={t.onboarding.phone} />
+              <Alert title={t.onboarding.confirm} tone="success">
+                {locale === 'fr'
+                  ? 'Le foyer est prêt pour validation opérateur et première attribution.'
+                  : 'The household is ready for operator validation and first assignment.'}
+              </Alert>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="onboarding-actions">
+          <Button onClick={goBack} variant="secondary">
+            {helperCopy.back}
+          </Button>
+          <Button onClick={goNext} variant="primary">
+            {isLastStep ? translate('common.done', locale) : helperCopy.continue}
+          </Button>
         </div>
       </Card>
     </ScreenFrame>

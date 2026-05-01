@@ -94,6 +94,30 @@ describe('subscriber app', () => {
     expect(within(screen.getByLabelText('Onboarding steps')).getAllByText(/./u)).not.toHaveLength(
       0,
     );
+    expect(screen.getByRole('heading', { name: 'Langue', level: 2 })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    expect(screen.getByRole('textbox', { name: 'Téléphone' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    expect(screen.getByRole('textbox', { name: 'OTP' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    expect(screen.getByRole('textbox', { name: 'Quartier' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    fireEvent.click(screen.getByRole('button', { name: /T3/u }));
+    expect(screen.getByRole('button', { name: /T3/u, pressed: true })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    fireEvent.click(screen.getByRole('button', { name: /Jeudi/u }));
+    expect(screen.getByRole('button', { name: /Jeudi/u, pressed: true })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    expect(screen.getByRole('textbox', { name: 'Mobile Money' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    expect(screen.getByText(/Le foyer est prêt pour validation opérateur/u)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Terminé' }));
     fireEvent.click(screen.getByRole('button', { name: 'Support' }));

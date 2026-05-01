@@ -311,6 +311,111 @@ input {
   background: var(--washed-surface);
 }
 
+.onboarding-progress {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.onboarding-step-pill {
+  display: grid;
+  min-width: 0;
+  min-height: 72px;
+  gap: 8px;
+  align-content: start;
+  justify-items: start;
+  border: 1px solid var(--washed-border);
+  border-radius: 12px;
+  padding: 9px;
+  background: var(--washed-surface);
+  color: var(--washed-foreground);
+  cursor: pointer;
+  text-align: left;
+}
+
+.onboarding-step-pill[aria-current='step'] {
+  border-color: var(--washed-primary);
+  background: var(--washed-primary-soft);
+  color: var(--washed-primary);
+}
+
+.onboarding-step-pill span {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--washed-primary-soft);
+  color: var(--washed-primary);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.onboarding-step-pill strong {
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.15;
+}
+
+.onboarding-panel {
+  display: grid;
+  min-height: 330px;
+  gap: 16px;
+  align-content: start;
+}
+
+.onboarding-panel h2 {
+  margin: 4px 0 0;
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.choice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.choice-card {
+  display: grid;
+  min-width: 0;
+  min-height: 112px;
+  gap: 8px;
+  align-content: start;
+  justify-items: start;
+  border: 1px solid var(--washed-border);
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--washed-surface);
+  color: var(--washed-foreground);
+  cursor: pointer;
+  text-align: left;
+}
+
+.choice-card[aria-pressed='true'] {
+  border-color: var(--washed-primary);
+  background: var(--washed-primary-soft);
+}
+
+.choice-card strong {
+  font-size: 16px;
+  line-height: 1.1;
+}
+
+.choice-card span {
+  color: var(--washed-muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.onboarding-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 16px;
+}
+
 .action-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -391,7 +496,14 @@ input {
   .visit-actions,
   .timeline,
   .progress-rail,
+  .onboarding-progress,
+  .choice-grid,
+  .onboarding-actions,
   .action-grid {
     grid-template-columns: 1fr;
+  }
+
+  .onboarding-panel {
+    min-height: 360px;
   }
 }
