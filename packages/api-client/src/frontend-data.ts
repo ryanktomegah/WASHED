@@ -41,7 +41,13 @@ export interface SubscriberAppSnapshot {
 export interface WorkerAppSnapshot {
   readonly advanceRequested: boolean;
   readonly availabilityUnavailable: boolean;
+  readonly activation: {
+    readonly agreementAccepted: boolean;
+    readonly payoutConfirmed: boolean;
+    readonly serviceCellsConfirmed: boolean;
+  };
   readonly dayComplete: boolean;
+  readonly inboxUnread: number;
   readonly offlineQueueCount: number;
   readonly privacy: {
     readonly erasureRequested: boolean;
@@ -180,7 +186,13 @@ export const DEMO_SUBSCRIBER_APP_SNAPSHOT = {
 export const DEMO_WORKER_APP_SNAPSHOT = {
   advanceRequested: false,
   availabilityUnavailable: false,
+  activation: {
+    agreementAccepted: false,
+    payoutConfirmed: true,
+    serviceCellsConfirmed: true,
+  },
   dayComplete: false,
+  inboxUnread: 3,
   offlineQueueCount: 3,
   privacy: {
     erasureRequested: false,

@@ -12,6 +12,7 @@ describe('worker app', () => {
     expect(sosButton).toBeInTheDocument();
     expect(screen.getByText('3 actions en attente de synchronisation')).toBeInTheDocument();
     expect(screen.getByLabelText('Worker route lifecycle').children).toHaveLength(6);
+    expect(screen.getByText('Activation du profil')).toBeInTheDocument();
   });
 
   it('opens and closes the SOS sheet', () => {
@@ -89,12 +90,41 @@ describe('worker app', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Profil' }));
     expect(screen.getByRole('heading', { name: 'Profil' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Worker app surfaces').children).toHaveLength(12);
+    expect(screen.getByLabelText('Worker app surfaces').children).toHaveLength(14);
     fireEvent.click(screen.getByRole('button', { name: 'Exporter mes données' }));
     expect(screen.getByText("Demande d'export des données enregistrée.")).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: "Demander l'effacement" }));
     expect(
       screen.getByText("Demande d'effacement envoyée pour revue opérateur."),
     ).toBeInTheDocument();
+  });
+
+  it('handles activation, inbox, photo retry, and day summary surfaces', () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Activation' }));
+    expect(screen.getByRole('heading', { name: 'Activation du profil' })).toBeInTheDocument();
+    expect(screen.getByText('Accord travailleuse')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: "Terminer l'activation" }));
+    expect(screen.getByText('Profil activé pour les routes terrain.')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: "Aujourd'hui" }));
+    fireEvent.click(screen.getByRole('button', { name: 'Inbox' }));
+    expect(screen.getByRole('heading', { name: 'Notifications' })).toBeInTheDocument();
+    expect(screen.getByText('Route de demain confirmée')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: "Aujourd'hui" }));
+    fireEvent.click(screen.getByRole('button', { name: 'Photos' }));
+    expect(screen.getByRole('heading', { name: 'Contrôle photo' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Photo quality preview')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Reprendre la photo' }));
+    expect(screen.getByText('Photo avant ajoutée à la file hors ligne.')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: "Aujourd'hui" }));
+    fireEvent.click(screen.getByRole('button', { name: 'Résumé' }));
+    expect(screen.getByRole('heading', { name: 'Résumé de fin de journée' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Clôturer la journée' }));
+    expect(screen.getByText('Résumé de fin de journée enregistré.')).toBeInTheDocument();
+    expect(screen.getByText('Clôturée')).toBeInTheDocument();
   });
 });

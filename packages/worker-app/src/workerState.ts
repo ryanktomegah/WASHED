@@ -3,6 +3,7 @@ import { DEMO_WORKER_APP_SNAPSHOT, type WorkerVisitStep } from '@washed/api-clie
 export type VisitStep = WorkerVisitStep;
 
 export type WorkerFeedback =
+  | 'activationCompleted'
   | 'advanceRequested'
   | 'afterPhotoQueued'
   | 'beforePhotoQueued'
@@ -21,7 +22,13 @@ export type WorkerFeedback =
 export interface WorkerState {
   readonly advanceRequested: boolean;
   readonly availabilityUnavailable: boolean;
+  readonly activation: {
+    readonly agreementAccepted: boolean;
+    readonly payoutConfirmed: boolean;
+    readonly serviceCellsConfirmed: boolean;
+  };
   readonly dayComplete: boolean;
+  readonly inboxUnread: number;
   readonly lastFeedback: WorkerFeedback | null;
   readonly offlineQueueCount: number;
   readonly privacy: {
@@ -43,6 +50,7 @@ export interface WorkerState {
 
 export type WorkerAction =
   | { readonly step: VisitStep; readonly type: 'visit/setStep' }
+  | { readonly type: 'activation/complete' }
   | { readonly type: 'day/complete' }
   | { readonly type: 'earnings/requestAdvance' }
   | { readonly type: 'planning/markUnavailable' }
@@ -67,6 +75,18 @@ function queueAction(state: WorkerState): number {
 export function workerReducer(state: WorkerState, action: WorkerAction): WorkerState {
   if (action.type === 'sync/complete') {
     return { ...state, lastFeedback: 'syncComplete', offlineQueueCount: 0 };
+  }
+
+  if (action.type === 'activation/complete') {
+    return {
+      ...state,
+      activation: {
+        agreementAccepted: true,
+        payoutConfirmed: true,
+        serviceCellsConfirmed: true,
+      },
+      lastFeedback: 'activationCompleted',
+    };
   }
 
   if (action.type === 'visit/setStep') {

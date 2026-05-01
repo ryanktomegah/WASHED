@@ -13,7 +13,14 @@ import {
 } from '@washed/ui';
 import type { Dispatch, ReactElement, ReactNode } from 'react';
 
-import { routeCards, visitSteps, workerCopy, workerSurfaces, type WorkerRoute } from './appData.js';
+import {
+  routeCards,
+  visitSteps,
+  workerCopy,
+  workerSurfaces,
+  type PrimaryWorkerRoute,
+  type WorkerRoute,
+} from './appData.js';
 import {
   initialWorkerState,
   workerReducer,
@@ -26,7 +33,7 @@ const navOrder = [
   'planning',
   'earnings',
   'profile',
-] as const satisfies readonly WorkerRoute[];
+] as const satisfies readonly PrimaryWorkerRoute[];
 
 export function App(): ReactElement {
   const [route, setRoute] = useState<WorkerRoute>('today');
@@ -71,6 +78,14 @@ export function App(): ReactElement {
           <EarningsScreen dispatch={dispatch} workerState={workerState} t={t} />
         ) : null}
         {route === 'profile' ? <ProfileScreen dispatch={dispatch} t={t} /> : null}
+        {route === 'activation' ? (
+          <ActivationScreen dispatch={dispatch} workerState={workerState} t={t} />
+        ) : null}
+        {route === 'inbox' ? <InboxScreen workerState={workerState} t={t} /> : null}
+        {route === 'photoRetry' ? <PhotoRetryScreen dispatch={dispatch} t={t} /> : null}
+        {route === 'daySummary' ? (
+          <DaySummaryScreen dispatch={dispatch} workerState={workerState} t={t} />
+        ) : null}
       </main>
 
       {workerState.sos.open ? <SosSheet dispatch={dispatch} t={t} /> : null}
@@ -137,6 +152,17 @@ function TodayScreen({
         </div>
       </Alert>
 
+      {workerState.activation.agreementAccepted ? null : (
+        <Alert title={t.activation.title} tone="accent">
+          <div className="sync-alert-body">
+            <span>{t.activation.agreement}</span>
+            <Button onClick={() => onRouteChange('activation')} size="sm" variant="secondary">
+              {t.nav.activation}
+            </Button>
+          </div>
+        </Alert>
+      )}
+
       <Card elevated>
         <div className="card-header">
           <div>
@@ -169,6 +195,9 @@ function TodayScreen({
           >
             {t.action.safetyReport}
           </Button>
+          <Button fullWidth onClick={() => onRouteChange('photoRetry')} variant="secondary">
+            {t.nav.photoRetry}
+          </Button>
           <Button
             fullWidth
             onClick={() => dispatch({ type: 'visit/declareNoShow' })}
@@ -197,6 +226,14 @@ function TodayScreen({
               title={`${card.time} · ${card.title}`}
             />
           ))}
+        </div>
+        <div className="visit-actions">
+          <Button fullWidth onClick={() => onRouteChange('inbox')} variant="secondary">
+            {t.nav.inbox}
+          </Button>
+          <Button fullWidth onClick={() => onRouteChange('daySummary')} variant="secondary">
+            {t.nav.daySummary}
+          </Button>
         </div>
       </Card>
     </>
@@ -330,6 +367,15 @@ function ProfileScreen({
           title={t.profile.privacy}
         />
         <ListItem description="Assistance terrain et procédures" title={t.profile.help} />
+        <div className="profile-actions">
+          <Button
+            fullWidth
+            onClick={() => dispatch({ type: 'activation/complete' })}
+            variant="secondary"
+          >
+            {t.activation.complete}
+          </Button>
+        </div>
       </Card>
       <Card>
         <div className="profile-actions">
@@ -359,6 +405,114 @@ function ProfileScreen({
             <span key={surface}>{surface}</span>
           ))}
         </div>
+      </Card>
+    </ScreenFrame>
+  );
+}
+
+function ActivationScreen({
+  dispatch,
+  t,
+  workerState,
+}: {
+  readonly dispatch: Dispatch<WorkerAction>;
+  readonly t: typeof workerCopy;
+  readonly workerState: WorkerState;
+}): ReactElement {
+  return (
+    <ScreenFrame eyebrow="Première connexion" title={t.activation.title}>
+      <Card elevated>
+        <ListItem
+          after={
+            <Badge tone={workerState.activation.agreementAccepted ? 'success' : 'accent'}>
+              {workerState.activation.agreementAccepted ? 'OK' : 'À faire'}
+            </Badge>
+          }
+          description="Consentement, règles de sécurité, confidentialité localisation."
+          title={t.activation.agreement}
+        />
+        <ListItem
+          after={<Badge tone="success">OK</Badge>}
+          description="+228 90 00 00 00"
+          title={t.activation.payout}
+        />
+        <ListItem
+          after={<Badge tone="success">OK</Badge>}
+          description="Adidogomé, Agoè, Tokoin"
+          title={t.activation.serviceCells}
+        />
+        <Button fullWidth onClick={() => dispatch({ type: 'activation/complete' })}>
+          {t.activation.complete}
+        </Button>
+      </Card>
+    </ScreenFrame>
+  );
+}
+
+function InboxScreen({
+  t,
+  workerState,
+}: {
+  readonly t: typeof workerCopy;
+  readonly workerState: WorkerState;
+}): ReactElement {
+  return (
+    <ScreenFrame eyebrow="Messages" title={t.inbox.title}>
+      <Card elevated>
+        <ListItem
+          after={<Badge tone="success">{workerState.inboxUnread}</Badge>}
+          description="9:00 · Ama K."
+          title={t.inbox.route}
+        />
+        <ListItem description="20 000 FCFA max · statut opérateur" title={t.inbox.advance} />
+        <ListItem description="40 000 FCFA plancher + bonus" title={t.inbox.payout} />
+      </Card>
+    </ScreenFrame>
+  );
+}
+
+function PhotoRetryScreen({
+  dispatch,
+  t,
+}: {
+  readonly dispatch: Dispatch<WorkerAction>;
+  readonly t: typeof workerCopy;
+}): ReactElement {
+  return (
+    <ScreenFrame eyebrow="Qualité" title={t.photoRetry.title}>
+      <Card elevated>
+        <Alert title={t.photoRetry.retake} tone="accent">
+          {t.photoRetry.blur}
+        </Alert>
+        <div className="photo-preview" aria-label="Photo quality preview">
+          <span />
+        </div>
+        <Button fullWidth onClick={() => dispatch({ step: 'beforePhoto', type: 'visit/setStep' })}>
+          {t.photoRetry.retake}
+        </Button>
+      </Card>
+    </ScreenFrame>
+  );
+}
+
+function DaySummaryScreen({
+  dispatch,
+  t,
+  workerState,
+}: {
+  readonly dispatch: Dispatch<WorkerAction>;
+  readonly t: typeof workerCopy;
+  readonly workerState: WorkerState;
+}): ReactElement {
+  return (
+    <ScreenFrame eyebrow="Fin journée" title={t.daySummary.title}>
+      <Card elevated>
+        <Metric label="Visites terminées" value="3 / 3" />
+        <Metric label="Actions hors ligne" value={String(workerState.offlineQueueCount)} />
+        <Metric label="Statut" value={workerState.dayComplete ? 'Clôturée' : 'Ouverte'} />
+        <Button fullWidth onClick={() => dispatch({ type: 'day/complete' })}>
+          {t.daySummary.complete}
+        </Button>
       </Card>
     </ScreenFrame>
   );

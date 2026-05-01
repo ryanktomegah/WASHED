@@ -210,6 +210,35 @@ button {
   font-size: 18px;
 }
 
+.photo-preview {
+  position: relative;
+  overflow: hidden;
+  min-height: 220px;
+  margin: 12px 0;
+  border: 1px solid var(--washed-border);
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(37, 110, 76, 0.28), rgba(37, 110, 76, 0.05)),
+    repeating-linear-gradient(
+      45deg,
+      rgba(37, 110, 76, 0.12) 0 10px,
+      rgba(255, 255, 255, 0.55) 10px 20px
+    );
+}
+
+.photo-preview span {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  display: block;
+  width: 92px;
+  height: 56px;
+  border: 4px solid var(--washed-surface);
+  border-radius: 12px;
+  background: rgba(37, 110, 76, 0.35);
+  filter: blur(2px);
+}
+
 .sheet-backdrop {
   position: fixed;
   z-index: 6;

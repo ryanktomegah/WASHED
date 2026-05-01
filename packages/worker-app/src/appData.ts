@@ -1,6 +1,7 @@
 import type { VisitStep, WorkerFeedback } from './workerState.js';
 
-export type WorkerRoute = 'earnings' | 'planning' | 'profile' | 'today';
+export type PrimaryWorkerRoute = 'earnings' | 'planning' | 'profile' | 'today';
+export type WorkerRoute = PrimaryWorkerRoute | 'activation' | 'daySummary' | 'inbox' | 'photoRetry';
 
 export interface WorkerCopy {
   readonly action: {
@@ -17,6 +18,17 @@ export interface WorkerCopy {
     readonly safetyReport: string;
     readonly submitIssue: string;
   };
+  readonly activation: {
+    readonly agreement: string;
+    readonly complete: string;
+    readonly payout: string;
+    readonly serviceCells: string;
+    readonly title: string;
+  };
+  readonly daySummary: {
+    readonly complete: string;
+    readonly title: string;
+  };
   readonly earnings: {
     readonly advance: string;
     readonly bonus: string;
@@ -25,7 +37,18 @@ export interface WorkerCopy {
     readonly title: string;
   };
   readonly feedback: Record<WorkerFeedback, string>;
+  readonly inbox: {
+    readonly advance: string;
+    readonly payout: string;
+    readonly route: string;
+    readonly title: string;
+  };
   readonly nav: Record<WorkerRoute, string>;
+  readonly photoRetry: {
+    readonly blur: string;
+    readonly retake: string;
+    readonly title: string;
+  };
   readonly planning: {
     readonly markUnavailable: string;
     readonly title: string;
@@ -74,6 +97,17 @@ export const workerCopy = {
     safetyReport: 'Signaler un problème',
     submitIssue: 'Envoyer le signalement',
   },
+  activation: {
+    agreement: 'Accord travailleuse',
+    complete: "Terminer l'activation",
+    payout: 'Mobile Money confirmé',
+    serviceCells: 'Cellules de service confirmées',
+    title: 'Activation du profil',
+  },
+  daySummary: {
+    complete: 'Clôturer la journée',
+    title: 'Résumé de fin de journée',
+  },
   earnings: {
     advance: 'Avance disponible: 20 000 FCFA max',
     bonus: 'Bonus visites terminées: 3 500 FCFA',
@@ -82,6 +116,7 @@ export const workerCopy = {
     title: 'Gains',
   },
   feedback: {
+    activationCompleted: 'Profil activé pour les routes terrain.',
     advanceRequested: "Demande d'avance envoyée à l'opérateur.",
     afterPhotoQueued: 'Photo après ajoutée à la file hors ligne.',
     beforePhotoQueued: 'Photo avant ajoutée à la file hors ligne.',
@@ -98,10 +133,25 @@ export const workerCopy = {
     visitInProgress: 'Visite marquée en cours.',
   },
   nav: {
+    activation: 'Activation',
+    daySummary: 'Résumé',
     earnings: 'Gains',
+    inbox: 'Inbox',
+    photoRetry: 'Photos',
     planning: 'Planning',
     profile: 'Profil',
     today: "Aujourd'hui",
+  },
+  inbox: {
+    advance: "Demande d'avance reçue par l'opérateur",
+    payout: 'Paiement mensuel prévu le 31 mai',
+    route: 'Route de demain confirmée',
+    title: 'Notifications',
+  },
+  photoRetry: {
+    blur: 'La photo semble floue ou trop sombre. Reprendre avant de quitter le foyer.',
+    retake: 'Reprendre la photo',
+    title: 'Contrôle photo',
   },
   planning: {
     markUnavailable: 'Marquer indisponible',
@@ -173,9 +223,11 @@ export const routeCards = [
 
 export const workerSurfaces = [
   "Aujourd'hui",
+  'Activation',
   'Planning',
   'Gains',
   'Profil',
+  'Inbox',
   'SOS',
   'Offline queue',
   'Advance request',
