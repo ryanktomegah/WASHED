@@ -75,6 +75,17 @@ export function App(): ReactElement {
   const t = workerCopy;
 
   useEffect(() => {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
+    const shell = document.querySelector<HTMLElement>('.worker-shell');
+    if (shell !== null) {
+      shell.scrollTop = 0;
+      shell.scrollLeft = 0;
+    }
+  }, [route]);
+
+  useEffect(() => {
     let cancelled = false;
 
     void loadPersistedWorkerState().then((persistedState) => {
@@ -586,6 +597,15 @@ function VisitWorkstation({
         <p>{stepConfig.body}</p>
       </div>
 
+      <Button
+        className="step-primary-button"
+        fullWidth
+        loading={'loading' in stepConfig ? stepConfig.loading : false}
+        onClick={stepConfig.onClick}
+      >
+        {stepConfig.label}
+      </Button>
+
       {workerState.visit.step === 'heading' ? (
         <div className="visit-map" aria-label="Worker GPS map">
           <MapPinned aria-hidden="true" size={30} strokeWidth={2.4} />
@@ -622,14 +642,6 @@ function VisitWorkstation({
           {locationError}
         </Alert>
       )}
-
-      <Button
-        fullWidth
-        loading={'loading' in stepConfig ? stepConfig.loading : false}
-        onClick={stepConfig.onClick}
-      >
-        {stepConfig.label}
-      </Button>
     </div>
   );
 }

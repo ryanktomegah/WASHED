@@ -724,7 +724,7 @@ function SubscriptionScreen({
   return (
     <ScreenFrame
       action={
-        <Button onClick={() => onRouteChange('support')} variant="secondary">
+        <Button onClick={() => onRouteChange('support')} size="sm" variant="secondary">
           {t.action.openSupport}
         </Button>
       }

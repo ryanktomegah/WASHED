@@ -140,8 +140,20 @@ input {
 
 .section-title h1 {
   margin-top: 4px;
-  font-size: 30px;
+  font-size: 28px;
   line-height: 1.05;
+}
+
+.section-title {
+  padding: 0 20px 16px;
+}
+
+.section-title > div {
+  min-width: 0;
+}
+
+.section-title button {
+  flex: 0 0 auto;
 }
 
 .subscriber-greeting-actions {
@@ -1316,8 +1328,19 @@ input {
   }
 
   .section-title {
-    align-items: stretch;
-    flex-direction: column;
+    align-items: flex-start;
+    flex-direction: row;
+  }
+
+  .section-title h1 {
+    font-size: 26px;
+  }
+
+  .section-title button {
+    min-height: 38px !important;
+    padding: 8px 11px !important;
+    font-size: 13px !important;
+    white-space: nowrap;
   }
 
   .visit-actions,
