@@ -1,0 +1,147 @@
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #f7f7fb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.operator-frame {
+  min-height: 100vh;
+}
+
+.operator-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  display: grid;
+  align-content: start;
+  gap: 20px;
+  border-right: 1px solid var(--washed-border);
+  background: var(--washed-surface);
+  padding: 20px;
+}
+
+.brand {
+  color: var(--washed-primary);
+  font-size: 20px;
+}
+
+.sidebar nav {
+  display: grid;
+  gap: 6px;
+}
+
+.sidebar a {
+  border-radius: 10px;
+  color: var(--washed-muted);
+  font-weight: 800;
+  padding: 10px 12px;
+  text-decoration: none;
+}
+
+.sidebar a[aria-current='page'] {
+  background: var(--washed-primary-soft);
+  color: var(--washed-primary);
+}
+
+.operator-main {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  padding: 24px;
+}
+
+.operator-header,
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.operator-header h1,
+.card-header h2 {
+  margin: 0;
+}
+
+.operator-header h1 {
+  margin-top: 10px;
+  font-size: 34px;
+}
+
+.operator-header p {
+  color: var(--washed-muted);
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.metric-label {
+  color: var(--washed-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.metric-value {
+  display: block;
+  margin-top: 8px;
+  font-size: 34px;
+}
+
+.console-grid {
+  display: grid;
+  grid-template-columns: minmax(360px, 1.25fr) minmax(320px, 0.75fr);
+  gap: 16px;
+}
+
+.worklist {
+  display: grid;
+  gap: 12px;
+}
+
+.surface-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.surface-grid span {
+  border: 1px solid var(--washed-border);
+  border-radius: 10px;
+  background: var(--washed-surface);
+  color: var(--washed-foreground);
+  font-size: 13px;
+  font-weight: 800;
+  padding: 9px 10px;
+}
+
+@media (max-width: 900px) {
+  .operator-layout,
+  .console-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--washed-border);
+  }
+
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

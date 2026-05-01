@@ -1,0 +1,52 @@
+{
+  "name": "@washed/subscriber-app",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "android:add": "cap add android",
+    "android:open": "cap open android",
+    "android:run": "pnpm build && cap run android",
+    "android:sync": "pnpm build && cap sync android",
+    "build": "vite build",
+    "dev": "vite --host 127.0.0.1",
+    "ios:add": "cap add ios",
+    "ios:open": "cap open ios",
+    "ios:run": "pnpm build && cap run ios",
+    "ios:sync": "pnpm build && cap sync ios",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@capacitor/app": "8.1.0",
+    "@capacitor/core": "8.3.1",
+    "@capacitor/geolocation": "8.2.0",
+    "@capacitor/network": "8.0.1",
+    "@capacitor/preferences": "8.0.1",
+    "@capacitor/push-notifications": "8.0.3",
+    "@capacitor/status-bar": "8.0.2",
+    "@washed/api-client": "workspace:*",
+    "@washed/auth": "workspace:*",
+    "@washed/i18n": "workspace:*",
+    "@washed/ui": "workspace:*",
+    "react": "19.2.5",
+    "react-dom": "19.2.5"
+  },
+  "devDependencies": {
+    "@capacitor/android": "8.3.1",
+    "@capacitor/cli": "8.3.1",
+    "@capacitor/ios": "8.3.1",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
+    "@types/node": "24.10.1",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@washed/frontend-config": "workspace:*",
+    "jsdom": "29.1.1",
+    "typescript": "5.9.3",
+    "vite": "8.0.10",
+    "vitest": "4.1.5"
+  }
+}

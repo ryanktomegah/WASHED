@@ -1,0 +1,34 @@
+{
+  "name": "@washed/operator-console",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite --host 127.0.0.1",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@washed/api-client": "workspace:*",
+    "@washed/auth": "workspace:*",
+    "@washed/i18n": "workspace:*",
+    "@washed/ui": "workspace:*",
+    "react": "19.2.5",
+    "react-dom": "19.2.5"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
+    "@types/node": "24.10.1",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@washed/frontend-config": "workspace:*",
+    "jsdom": "29.1.1",
+    "typescript": "5.9.3",
+    "vite": "8.0.10",
+    "vitest": "4.1.5"
+  }
+}

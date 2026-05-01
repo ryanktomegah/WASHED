@@ -157,6 +157,58 @@ importers:
         specifier: 4.1.5
         version: 4.1.5(@types/node@24.10.1)(jsdom@29.1.1)(vite@8.0.10(@types/node@24.10.1)(esbuild@0.27.7))
 
+  packages/operator-console:
+    dependencies:
+      '@washed/api-client':
+        specifier: workspace:*
+        version: link:../api-client
+      '@washed/auth':
+        specifier: workspace:*
+        version: link:../auth
+      '@washed/i18n':
+        specifier: workspace:*
+        version: link:../i18n
+      '@washed/ui':
+        specifier: workspace:*
+        version: link:../ui
+      react:
+        specifier: 19.2.5
+        version: 19.2.5
+      react-dom:
+        specifier: 19.2.5
+        version: 19.2.5(react@19.2.5)
+    devDependencies:
+      '@testing-library/jest-dom':
+        specifier: 6.9.1
+        version: 6.9.1
+      '@testing-library/react':
+        specifier: 16.3.2
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@types/node':
+        specifier: 24.10.1
+        version: 24.10.1
+      '@types/react':
+        specifier: 19.2.14
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: 19.2.3
+        version: 19.2.3(@types/react@19.2.14)
+      '@washed/frontend-config':
+        specifier: workspace:*
+        version: link:../frontend-config
+      jsdom:
+        specifier: 29.1.1
+        version: 29.1.1
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      vite:
+        specifier: 8.0.10
+        version: 8.0.10(@types/node@24.10.1)(esbuild@0.27.7)
+      vitest:
+        specifier: 4.1.5
+        version: 4.1.5(@types/node@24.10.1)(jsdom@29.1.1)(vite@8.0.10(@types/node@24.10.1)(esbuild@0.27.7))
+
   packages/ops-web: {}
 
   packages/shared:
@@ -170,6 +222,88 @@ importers:
       typescript:
         specifier: 5.9.3
         version: 5.9.3
+      vitest:
+        specifier: 4.1.5
+        version: 4.1.5(@types/node@24.10.1)(jsdom@29.1.1)(vite@8.0.10(@types/node@24.10.1)(esbuild@0.27.7))
+
+  packages/subscriber-app:
+    dependencies:
+      '@capacitor/app':
+        specifier: 8.1.0
+        version: 8.1.0(@capacitor/core@8.3.1)
+      '@capacitor/core':
+        specifier: 8.3.1
+        version: 8.3.1
+      '@capacitor/geolocation':
+        specifier: 8.2.0
+        version: 8.2.0(@capacitor/core@8.3.1)
+      '@capacitor/network':
+        specifier: 8.0.1
+        version: 8.0.1(@capacitor/core@8.3.1)
+      '@capacitor/preferences':
+        specifier: 8.0.1
+        version: 8.0.1(@capacitor/core@8.3.1)
+      '@capacitor/push-notifications':
+        specifier: 8.0.3
+        version: 8.0.3(@capacitor/core@8.3.1)
+      '@capacitor/status-bar':
+        specifier: 8.0.2
+        version: 8.0.2(@capacitor/core@8.3.1)
+      '@washed/api-client':
+        specifier: workspace:*
+        version: link:../api-client
+      '@washed/auth':
+        specifier: workspace:*
+        version: link:../auth
+      '@washed/i18n':
+        specifier: workspace:*
+        version: link:../i18n
+      '@washed/ui':
+        specifier: workspace:*
+        version: link:../ui
+      react:
+        specifier: 19.2.5
+        version: 19.2.5
+      react-dom:
+        specifier: 19.2.5
+        version: 19.2.5(react@19.2.5)
+    devDependencies:
+      '@capacitor/android':
+        specifier: 8.3.1
+        version: 8.3.1(@capacitor/core@8.3.1)
+      '@capacitor/cli':
+        specifier: 8.3.1
+        version: 8.3.1
+      '@capacitor/ios':
+        specifier: 8.3.1
+        version: 8.3.1(@capacitor/core@8.3.1)
+      '@testing-library/jest-dom':
+        specifier: 6.9.1
+        version: 6.9.1
+      '@testing-library/react':
+        specifier: 16.3.2
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@types/node':
+        specifier: 24.10.1
+        version: 24.10.1
+      '@types/react':
+        specifier: 19.2.14
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: 19.2.3
+        version: 19.2.3(@types/react@19.2.14)
+      '@washed/frontend-config':
+        specifier: workspace:*
+        version: link:../frontend-config
+      jsdom:
+        specifier: 29.1.1
+        version: 29.1.1
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      vite:
+        specifier: 8.0.10
+        version: 8.0.10(@types/node@24.10.1)(esbuild@0.27.7)
       vitest:
         specifier: 4.1.5
         version: 4.1.5(@types/node@24.10.1)(jsdom@29.1.1)(vite@8.0.10(@types/node@24.10.1)(esbuild@0.27.7))
@@ -213,6 +347,91 @@ importers:
         specifier: 4.1.5
         version: 4.1.5(@types/node@24.10.1)(jsdom@29.1.1)(vite@8.0.10(@types/node@24.10.1)(esbuild@0.27.7))
 
+  packages/worker-app:
+    dependencies:
+      '@capacitor/app':
+        specifier: 8.1.0
+        version: 8.1.0(@capacitor/core@8.3.1)
+      '@capacitor/camera':
+        specifier: 8.2.0
+        version: 8.2.0(@capacitor/core@8.3.1)
+      '@capacitor/core':
+        specifier: 8.3.1
+        version: 8.3.1
+      '@capacitor/geolocation':
+        specifier: 8.2.0
+        version: 8.2.0(@capacitor/core@8.3.1)
+      '@capacitor/network':
+        specifier: 8.0.1
+        version: 8.0.1(@capacitor/core@8.3.1)
+      '@capacitor/preferences':
+        specifier: 8.0.1
+        version: 8.0.1(@capacitor/core@8.3.1)
+      '@capacitor/push-notifications':
+        specifier: 8.0.3
+        version: 8.0.3(@capacitor/core@8.3.1)
+      '@capacitor/status-bar':
+        specifier: 8.0.2
+        version: 8.0.2(@capacitor/core@8.3.1)
+      '@washed/api-client':
+        specifier: workspace:*
+        version: link:../api-client
+      '@washed/auth':
+        specifier: workspace:*
+        version: link:../auth
+      '@washed/i18n':
+        specifier: workspace:*
+        version: link:../i18n
+      '@washed/ui':
+        specifier: workspace:*
+        version: link:../ui
+      react:
+        specifier: 19.2.5
+        version: 19.2.5
+      react-dom:
+        specifier: 19.2.5
+        version: 19.2.5(react@19.2.5)
+    devDependencies:
+      '@capacitor/android':
+        specifier: 8.3.1
+        version: 8.3.1(@capacitor/core@8.3.1)
+      '@capacitor/cli':
+        specifier: 8.3.1
+        version: 8.3.1
+      '@capacitor/ios':
+        specifier: 8.3.1
+        version: 8.3.1(@capacitor/core@8.3.1)
+      '@testing-library/jest-dom':
+        specifier: 6.9.1
+        version: 6.9.1
+      '@testing-library/react':
+        specifier: 16.3.2
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@types/node':
+        specifier: 24.10.1
+        version: 24.10.1
+      '@types/react':
+        specifier: 19.2.14
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: 19.2.3
+        version: 19.2.3(@types/react@19.2.14)
+      '@washed/frontend-config':
+        specifier: workspace:*
+        version: link:../frontend-config
+      jsdom:
+        specifier: 29.1.1
+        version: 29.1.1
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      vite:
+        specifier: 8.0.10
+        version: 8.0.10(@types/node@24.10.1)(esbuild@0.27.7)
+      vitest:
+        specifier: 4.1.5
+        version: 4.1.5(@types/node@24.10.1)(jsdom@29.1.1)(vite@8.0.10(@types/node@24.10.1)(esbuild@0.27.7))
+
 packages:
 
   '@adobe/css-tools@4.4.4':
@@ -249,6 +468,21 @@ packages:
     resolution: {integrity: sha512-ctxtJ/eA+t+6q2++vj5j7FYX3nRu311q1wfYH3xjlLOsczhlhxAg2FWNUXhpGvAw3BWo1xBcvOV6/YLc2r5FJw==}
     hasBin: true
 
+  '@capacitor/android@8.3.1':
+    resolution: {integrity: sha512-hjskIG8YcBEh3X4yaTXvE9gcqpdcxunTgFruSKnuPxtMxAUzEK4Oq25x0Z1g3cz+MQPc+lRG09R7Ovc+ydKsNw==}
+    peerDependencies:
+      '@capacitor/core': ^8.3.0
+
+  '@capacitor/app@8.1.0':
+    resolution: {integrity: sha512-MlmttTOWHDedr/G4SrhNRxsXMqY+R75S4MM4eIgzsgCzOYhb/MpCkA5Q3nuOCfL1oHm26xjUzqZ5aupbOwdfYg==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
+
+  '@capacitor/camera@8.2.0':
+    resolution: {integrity: sha512-hYfrT6xpL936qoEkIpJzSnb0fQCaTkOux1cXzGBfH8QLOGqr6gSLiWZlZz/fqMPmMKJMNRBqlTQkj5fuMhVZog==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
+
   '@capacitor/cli@8.3.1':
     resolution: {integrity: sha512-1sPGW4THTDfR6YjXwZ0jM7oAfAtciPOHN00qs/3sNAQx1kKrrEYSfDPwCm1/xlAgi0OeL69SiRfw314Ans+1sw==}
     engines: {node: '>=22.0.0'}
@@ -257,10 +491,38 @@ packages:
   '@capacitor/core@8.3.1':
     resolution: {integrity: sha512-UF8ItlHguU1Z6GXfPTeT2gakf+ctNI8pAS1kwSBQlsJMlfD4OPoto/SmKnOxKCQvnF4WRcdWeg6C0zREUNaAQg==}
 
+  '@capacitor/geolocation@8.2.0':
+    resolution: {integrity: sha512-N29QcoIPmme0xSxRkm7+3hjoHp6mBAOarxecvtCCZKyOBeKiJsFUq981cezg2XWBa6fhCXJMCCjQPngKK/dIag==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
+
   '@capacitor/ios@8.3.1':
     resolution: {integrity: sha512-BEhLyYYHWJLib4mpaPMaaylbC8meqgxbNYwQJH2svsSLW7yo/hFie+Zoo66a44XnqcMd2tvmAuzimWunXZi/xA==}
     peerDependencies:
       '@capacitor/core': ^8.3.0
+
+  '@capacitor/network@8.0.1':
+    resolution: {integrity: sha512-9xK/FHFmzKGanB6BdoSZOzXk8vF0OFVQSQ4PAsIrzAzLuXHryO317qy8dcHVpgxYeuZq2noI0My9z1DvVDi/9w==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
+
+  '@capacitor/preferences@8.0.1':
+    resolution: {integrity: sha512-T6no3ebi79XJCk91U3Jp/liJUwgBdvHR+s6vhvPkPxSuch7z3zx5Rv1bdWM6sWruNx+pViuEGqZvbfCdyBvcHQ==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
+
+  '@capacitor/push-notifications@8.0.3':
+    resolution: {integrity: sha512-jmBBoJvOzmzem8YoO9dQJBPFiM1bksTNAoV7yksCBN10BybAOtmBF19vFPt/jr2KGAirnPZz0ne2X0OH/rRGtg==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
+
+  '@capacitor/status-bar@8.0.2':
+    resolution: {integrity: sha512-WXs8YB8B9eEaPZz+bcdY6t2nForF1FLoj/JU0Dl9RRgQnddnS98FEEyDooQhaY7wivr000j4+SC1FyeJkrFO7A==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
+
+  '@capacitor/synapse@1.0.4':
+    resolution: {integrity: sha512-/C1FUo8/OkKuAT4nCIu/34ny9siNHr9qtFezu4kxm6GY1wNFxrCFWjfYx5C1tUhVGz3fxBABegupkpjXvjCHrw==}
 
   '@csstools/color-helpers@6.0.2':
     resolution: {integrity: sha512-LMGQLS9EuADloEFkcTBR3BwV/CGHV7zyDxVRtVDTwdI2Ca4it0CCVTT9wCkxSgokjE5Ho41hEPgb8OEUwoXr6Q==}
@@ -1765,6 +2027,18 @@ snapshots:
     dependencies:
       css-tree: 3.2.1
 
+  '@capacitor/android@8.3.1(@capacitor/core@8.3.1)':
+    dependencies:
+      '@capacitor/core': 8.3.1
+
+  '@capacitor/app@8.1.0(@capacitor/core@8.3.1)':
+    dependencies:
+      '@capacitor/core': 8.3.1
+
+  '@capacitor/camera@8.2.0(@capacitor/core@8.3.1)':
+    dependencies:
+      '@capacitor/core': 8.3.1
+
   '@capacitor/cli@8.3.1':
     dependencies:
       '@ionic/cli-framework-output': 2.2.8
@@ -1791,9 +2065,32 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  '@capacitor/geolocation@8.2.0(@capacitor/core@8.3.1)':
+    dependencies:
+      '@capacitor/core': 8.3.1
+      '@capacitor/synapse': 1.0.4
+
   '@capacitor/ios@8.3.1(@capacitor/core@8.3.1)':
     dependencies:
       '@capacitor/core': 8.3.1
+
+  '@capacitor/network@8.0.1(@capacitor/core@8.3.1)':
+    dependencies:
+      '@capacitor/core': 8.3.1
+
+  '@capacitor/preferences@8.0.1(@capacitor/core@8.3.1)':
+    dependencies:
+      '@capacitor/core': 8.3.1
+
+  '@capacitor/push-notifications@8.0.3(@capacitor/core@8.3.1)':
+    dependencies:
+      '@capacitor/core': 8.3.1
+
+  '@capacitor/status-bar@8.0.2(@capacitor/core@8.3.1)':
+    dependencies:
+      '@capacitor/core': 8.3.1
+
+  '@capacitor/synapse@1.0.4': {}
 
   '@csstools/color-helpers@6.0.2': {}
 
