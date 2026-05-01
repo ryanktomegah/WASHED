@@ -6,6 +6,23 @@ export {
   type CoreApiOperation,
   type CoreApiOperationId,
 } from './operations.js';
+export {
+  DEMO_OPERATOR_CONSOLE_SNAPSHOT,
+  DEMO_SUBSCRIBER_APP_SNAPSHOT,
+  DEMO_WORKER_APP_SNAPSHOT,
+  FRONTEND_OPERATION_IDS,
+  createDemoFrontendDataSource,
+  type FrontendDataSource,
+  type OperatorConsoleSnapshot,
+  type SubscriberAppSnapshot,
+  type SubscriberVisitStage,
+  type SubscriberVisitStatus,
+  type SubscriptionPaymentStatus,
+  type SubscriptionStatus,
+  type SubscriptionTierCode,
+  type WorkerAppSnapshot,
+  type WorkerVisitStep,
+} from './frontend-data.js';
 
 export interface CoreApiClientOptions {
   readonly baseUrl: string;

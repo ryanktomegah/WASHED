@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import { CORE_API_OPERATIONS } from './operations.js';
-import { CoreApiError, createCoreApiClient } from './index.js';
+import {
+  CoreApiError,
+  FRONTEND_OPERATION_IDS,
+  createCoreApiClient,
+  createDemoFrontendDataSource,
+} from './index.js';
 
 describe('createCoreApiClient', () => {
   it('builds requests from OpenAPI operation ids', async () => {
@@ -73,5 +78,29 @@ describe('createCoreApiClient', () => {
     expect(CORE_API_OPERATIONS.map((operation) => operation.operationId)).toContain(
       'getOperatorSubscriptionSupportContext',
     );
+  });
+
+  it('maps frontend actions to existing operation ids', () => {
+    const operationIds = new Set(CORE_API_OPERATIONS.map((operation) => operation.operationId));
+    const frontendOperationIds = Object.values(FRONTEND_OPERATION_IDS).flatMap((surface) =>
+      Object.values(surface),
+    );
+
+    expect(frontendOperationIds.every((operationId) => operationIds.has(operationId))).toBe(true);
+    expect(FRONTEND_OPERATION_IDS.subscriber.skipVisit).toBe('skipVisit');
+    expect(FRONTEND_OPERATION_IDS.worker.checkIn).toBe('checkInVisit');
+    expect(FRONTEND_OPERATION_IDS.operator.issueRefund).toBe('issueOperatorPaymentRefund');
+  });
+
+  it('loads isolated demo snapshots for the three production apps', async () => {
+    const dataSource = createDemoFrontendDataSource();
+    const first = await dataSource.loadSubscriberApp();
+    const second = await dataSource.loadSubscriberApp();
+
+    expect(first).toEqual(second);
+    expect(first).not.toBe(second);
+    expect(first.nextVisit.workerName).toBe('Akouvi');
+    expect((await dataSource.loadWorkerApp()).offlineQueueCount).toBe(3);
+    expect((await dataSource.loadOperatorConsole()).payments.exceptions).toBe(4);
   });
 });

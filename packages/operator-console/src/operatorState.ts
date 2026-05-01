@@ -1,3 +1,5 @@
+import { DEMO_OPERATOR_CONSOLE_SNAPSHOT, type OperatorConsoleSnapshot } from '@washed/api-client';
+
 export type OperatorFeedback =
   | 'auditFiltered'
   | 'blocklistAdded'
@@ -14,34 +16,8 @@ export type OperatorFeedback =
   | 'subscriberPrivacyHandled'
   | 'workerPrivacyHandled';
 
-export interface OperatorState {
-  readonly auditFilter: string;
-  readonly blocklistCount: number;
-  readonly disputes: {
-    readonly escalated: number;
-    readonly open: number;
-    readonly resolved: number;
-  };
+export interface OperatorState extends OperatorConsoleSnapshot {
   readonly lastFeedback: OperatorFeedback | null;
-  readonly matching: {
-    readonly acceptedMatchId: string | null;
-    readonly rejectedMatchIds: readonly string[];
-  };
-  readonly payments: {
-    readonly exceptions: number;
-    readonly failedPayouts: number;
-    readonly payoutBatchStarted: boolean;
-    readonly refundsIssued: number;
-    readonly retryQueued: number;
-  };
-  readonly privacy: {
-    readonly subscriberHandled: boolean;
-    readonly workerHandled: boolean;
-  };
-  readonly readiness: {
-    readonly forcedUpdateEnabled: boolean;
-    readonly lastChecked: string;
-  };
 }
 
 export type OperatorAction =
@@ -61,33 +37,8 @@ export type OperatorAction =
   | { readonly type: 'settings/toggleForcedUpdate' };
 
 export const initialOperatorState = {
-  auditFilter: '',
-  blocklistCount: 2,
-  disputes: {
-    escalated: 0,
-    open: 4,
-    resolved: 0,
-  },
+  ...DEMO_OPERATOR_CONSOLE_SNAPSHOT,
   lastFeedback: null,
-  matching: {
-    acceptedMatchId: null,
-    rejectedMatchIds: [],
-  },
-  payments: {
-    exceptions: 4,
-    failedPayouts: 1,
-    payoutBatchStarted: false,
-    refundsIssued: 0,
-    retryQueued: 0,
-  },
-  privacy: {
-    subscriberHandled: false,
-    workerHandled: false,
-  },
-  readiness: {
-    forcedUpdateEnabled: false,
-    lastChecked: 'not checked',
-  },
 } as const satisfies OperatorState;
 
 export function operatorReducer(state: OperatorState, action: OperatorAction): OperatorState {

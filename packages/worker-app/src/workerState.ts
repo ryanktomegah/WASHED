@@ -1,10 +1,6 @@
-export type VisitStep =
-  | 'afterPhoto'
-  | 'beforePhoto'
-  | 'checkIn'
-  | 'checkOut'
-  | 'heading'
-  | 'inVisit';
+import { DEMO_WORKER_APP_SNAPSHOT, type WorkerVisitStep } from '@washed/api-client';
+
+export type VisitStep = WorkerVisitStep;
 
 export type WorkerFeedback =
   | 'advanceRequested'
@@ -60,26 +56,8 @@ export type WorkerAction =
   | { readonly type: 'visit/reportIssue' };
 
 export const initialWorkerState = {
-  advanceRequested: false,
-  availabilityUnavailable: false,
-  dayComplete: false,
+  ...DEMO_WORKER_APP_SNAPSHOT,
   lastFeedback: null,
-  offlineQueueCount: 3,
-  privacy: {
-    erasureRequested: false,
-    exportRequested: false,
-  },
-  sos: {
-    incidentLogged: false,
-    open: false,
-  },
-  visit: {
-    afterPhotoCaptured: false,
-    beforePhotoCaptured: false,
-    issueReported: false,
-    noShowDeclared: false,
-    step: 'heading',
-  },
 } as const satisfies WorkerState;
 
 function queueAction(state: WorkerState): number {

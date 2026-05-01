@@ -1,7 +1,16 @@
-export type SubscriptionStatus = 'active' | 'cancelled';
-export type PaymentStatus = 'current' | 'overdue' | 'recovered';
-export type VisitStatus = 'rescheduled' | 'scheduled' | 'skipped';
-export type VisitStage = 'arrived' | 'enRoute' | 'inProgress' | 'scheduled';
+import {
+  DEMO_SUBSCRIBER_APP_SNAPSHOT,
+  type SubscriberVisitStage,
+  type SubscriberVisitStatus,
+  type SubscriptionPaymentStatus,
+  type SubscriptionStatus as ApiSubscriptionStatus,
+  type SubscriptionTierCode,
+} from '@washed/api-client';
+
+export type SubscriptionStatus = ApiSubscriptionStatus;
+export type PaymentStatus = SubscriptionPaymentStatus;
+export type VisitStatus = SubscriberVisitStatus;
+export type VisitStage = SubscriberVisitStage;
 
 export type SubscriberFeedback =
   | 'cancelRequested'
@@ -38,7 +47,7 @@ export interface SubscriberState {
     readonly skipCreditsRemaining: number;
     readonly status: SubscriptionStatus;
     readonly swapCreditsRemaining: number;
-    readonly tier: 'T1' | 'T2' | 'T3';
+    readonly tier: SubscriptionTierCode;
   };
 }
 
@@ -57,28 +66,8 @@ export type SubscriberAction =
   | { readonly type: 'visit/stopTracking' };
 
 export const initialSubscriberState = {
-  inboxUnread: 2,
+  ...DEMO_SUBSCRIBER_APP_SNAPSHOT,
   lastFeedback: null,
-  nextVisit: {
-    cell: 'Cellule Adidogomé',
-    startsAt: '2026-05-05T09:00:00.000Z',
-    status: 'scheduled',
-    stage: 'scheduled',
-    window: '9-11',
-    workerName: 'Akouvi',
-  },
-  privacy: {
-    erasureRequested: false,
-    exportRequested: false,
-  },
-  subscription: {
-    monthlyPriceXof: 4500,
-    paymentStatus: 'overdue',
-    skipCreditsRemaining: 2,
-    status: 'active',
-    swapCreditsRemaining: 2,
-    tier: 'T2',
-  },
 } as const satisfies SubscriberState;
 
 export function subscriberReducer(

@@ -21,6 +21,7 @@ import {
   subscriberSurfaceGroups,
   visitTimeline,
   type AppRoute,
+  type LocalizedCopy,
 } from './appData.js';
 import {
   initialSubscriberState,
@@ -134,7 +135,7 @@ function HomeScreen({
   readonly onGroupChange: (group: string) => void;
   readonly onRouteChange: (route: AppRoute) => void;
   readonly subscriberState: SubscriberState;
-  readonly t: (typeof copy)[WashedLocale];
+  readonly t: LocalizedCopy;
 }): ReactElement {
   const nextVisit = formatVisitDate(subscriberState.nextVisit.startsAt, locale);
   const trackingIsVisible = subscriberState.nextVisit.stage === 'enRoute';
@@ -267,7 +268,7 @@ function OnboardingScreen({
 }: {
   readonly locale: WashedLocale;
   readonly onRouteChange: (route: AppRoute) => void;
-  readonly t: (typeof copy)[WashedLocale];
+  readonly t: LocalizedCopy;
 }): ReactElement {
   return (
     <ScreenFrame
@@ -322,7 +323,7 @@ function SubscriptionScreen({
   readonly locale: WashedLocale;
   readonly onRouteChange: (route: AppRoute) => void;
   readonly subscriberState: SubscriberState;
-  readonly t: (typeof copy)[WashedLocale];
+  readonly t: LocalizedCopy;
 }): ReactElement {
   const price = subscriberState.subscription.monthlyPriceXof;
   const tier = `${subscriberState.subscription.tier} · ${formatXof(price, locale)}`;
@@ -404,7 +405,7 @@ function SupportScreen({
 }: {
   readonly onRouteChange: (route: AppRoute) => void;
   readonly subscriberState: SubscriberState;
-  readonly t: (typeof copy)[WashedLocale];
+  readonly t: LocalizedCopy;
 }): ReactElement {
   return (
     <ScreenFrame
@@ -450,7 +451,7 @@ function ProfileScreen({
   readonly dispatch: Dispatch<SubscriberAction>;
   readonly locale: WashedLocale;
   readonly onRouteChange: (route: AppRoute) => void;
-  readonly t: (typeof copy)[WashedLocale];
+  readonly t: LocalizedCopy;
 }): ReactElement {
   return (
     <ScreenFrame
@@ -507,7 +508,7 @@ function BoundedTrackingMap({
   t,
 }: {
   readonly onArrive: () => void;
-  readonly t: (typeof copy)[WashedLocale];
+  readonly t: LocalizedCopy;
 }): ReactElement {
   return (
     <div className="tracking-panel" aria-label="Bounded live map">
