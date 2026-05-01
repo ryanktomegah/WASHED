@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { App } from './App.js';
@@ -156,5 +156,26 @@ describe('worker app', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Clôturer la journée' }));
     expect(screen.getByText('Résumé de fin de journée enregistré.')).toBeInTheDocument();
     expect(screen.getByText('Clôturée')).toBeInTheDocument();
+  });
+
+  it('restores queued worker state after an app restart', async () => {
+    const { unmount } = render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Synchroniser maintenant' }));
+    fireEvent.click(screen.getByRole('button', { name: "Pointer l'arrivée" }));
+    await screen.findByText("Pointage d'arrivée ajouté à la file hors ligne.");
+    fireEvent.click(screen.getByRole('button', { name: 'Prendre photo avant' }));
+    await screen.findByText('Photo avant ajoutée à la file hors ligne.');
+
+    await waitFor(() => {
+      expect(localStorage.getItem('washed.worker.local-state.v1')).toContain('beforePhoto');
+    });
+
+    unmount();
+    render(<App />);
+
+    expect(await screen.findByText('Preuve avant capturée')).toBeInTheDocument();
+    expect(screen.getByText('2 actions en attente de synchronisation')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Aide immédiate' })).not.toBeInTheDocument();
   });
 });

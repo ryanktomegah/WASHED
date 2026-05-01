@@ -60,6 +60,7 @@ export type WorkerAction =
   | { readonly type: 'sos/close' }
   | { readonly type: 'sos/confirm' }
   | { readonly type: 'sos/open' }
+  | { readonly state: WorkerState; readonly type: 'state/hydrate' }
   | { readonly type: 'sync/complete' }
   | { readonly type: 'visit/declareNoShow' }
   | { readonly type: 'visit/reportIssue' };
@@ -74,6 +75,10 @@ function queueAction(state: WorkerState): number {
 }
 
 export function workerReducer(state: WorkerState, action: WorkerAction): WorkerState {
+  if (action.type === 'state/hydrate') {
+    return action.state;
+  }
+
   if (action.type === 'sync/complete') {
     return { ...state, lastFeedback: 'syncComplete', offlineQueueCount: 0 };
   }

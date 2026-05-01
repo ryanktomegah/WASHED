@@ -1,4 +1,4 @@
-import { useReducer, useState } from 'react';
+import { useEffect, useReducer, useState } from 'react';
 
 import {
   Alert,
@@ -33,6 +33,7 @@ import {
   type NativeLocationResult,
   type VisitLocationCheckpoint,
 } from './nativeLocation.js';
+import { loadPersistedWorkerState, persistWorkerState } from './workerPersistence.js';
 
 const navOrder = [
   'today',
@@ -50,7 +51,36 @@ export function App(): ReactElement {
   );
   const [locationError, setLocationError] = useState<string | null>(null);
   const [lastLocationProof, setLastLocationProof] = useState<NativeLocationResult | null>(null);
+  const [persistenceReady, setPersistenceReady] = useState(false);
   const t = workerCopy;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void loadPersistedWorkerState().then((persistedState) => {
+      if (cancelled) {
+        return;
+      }
+
+      if (persistedState !== null) {
+        dispatch({ state: persistedState, type: 'state/hydrate' });
+      }
+
+      setPersistenceReady(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!persistenceReady) {
+      return;
+    }
+
+    void persistWorkerState(workerState);
+  }, [persistenceReady, workerState]);
 
   async function captureProof(kind: 'after' | 'before') {
     setCaptureInProgress(true);
