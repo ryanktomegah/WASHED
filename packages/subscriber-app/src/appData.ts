@@ -1,0 +1,307 @@
+import type { WashedLocale } from '@washed/i18n';
+
+export type AppRoute = 'home' | 'onboarding' | 'profile' | 'subscription' | 'support';
+export type VisitStage = 'arrived' | 'enRoute' | 'inProgress' | 'scheduled';
+
+export interface LocalizedCopy {
+  readonly action: {
+    readonly changeTier: string;
+    readonly openSupport: string;
+    readonly recoverPayment: string;
+    readonly requestSwap: string;
+    readonly reschedule: string;
+    readonly skipVisit: string;
+    readonly startTracking: string;
+    readonly stopTracking: string;
+  };
+  readonly home: {
+    readonly assigned: string;
+    readonly boundedTrackingBody: string;
+    readonly boundedTrackingTitle: string;
+    readonly greeting: string;
+    readonly hero: string;
+    readonly nextVisit: string;
+    readonly price: string;
+    readonly routeInventory: string;
+    readonly setupNote: string;
+    readonly surfaceCount: string;
+    readonly visitControls: string;
+    readonly washerConfirmed: string;
+  };
+  readonly nav: Record<AppRoute, string>;
+  readonly onboarding: {
+    readonly address: string;
+    readonly confirm: string;
+    readonly language: string;
+    readonly otp: string;
+    readonly payment: string;
+    readonly phone: string;
+    readonly schedule: string;
+    readonly start: string;
+    readonly tier: string;
+    readonly title: string;
+  };
+  readonly profile: {
+    readonly account: string;
+    readonly deleteAccount: string;
+    readonly erasure: string;
+    readonly exportData: string;
+    readonly legal: string;
+    readonly maintenance: string;
+    readonly privacy: string;
+    readonly title: string;
+  };
+  readonly subscription: {
+    readonly billing: string;
+    readonly cancel: string;
+    readonly history: string;
+    readonly priceNote: string;
+    readonly swapLimit: string;
+    readonly tier: string;
+    readonly title: string;
+  };
+  readonly support: {
+    readonly dispute: string;
+    readonly inbox: string;
+    readonly messages: string;
+    readonly notificationCenter: string;
+    readonly title: string;
+  };
+  readonly visitStage: Record<VisitStage, string>;
+}
+
+export interface SurfaceGroup {
+  readonly count: number;
+  readonly label: string;
+  readonly screens: readonly string[];
+}
+
+export const copy = {
+  en: {
+    action: {
+      changeTier: 'Change tier',
+      openSupport: 'Open support',
+      recoverPayment: 'Recover payment',
+      requestSwap: 'Request worker swap',
+      reschedule: 'Reschedule',
+      skipVisit: 'Skip visit',
+      startTracking: 'Start en-route demo',
+      stopTracking: 'Stop tracking',
+    },
+    home: {
+      assigned: 'Assigned',
+      boundedTrackingBody:
+        'The map appears only after the worker taps Heading to subscriber and stops at check-in.',
+      boundedTrackingTitle: 'Bounded tracking',
+      greeting: 'Active subscription',
+      hero: 'In-home laundry subscriptions for Lomé households, with support, billing, privacy, and visit controls prepared for production.',
+      nextVisit: 'Next visit',
+      price: 'Monthly price',
+      routeInventory: 'Production route inventory',
+      setupNote: 'Closed beta setup is ready if this household still needs onboarding.',
+      surfaceCount: '35 surfaces',
+      visitControls: 'Visit controls',
+      washerConfirmed: 'Washerwoman confirmed',
+    },
+    nav: {
+      home: 'Home',
+      onboarding: 'Start',
+      profile: 'Profile',
+      subscription: 'Plan',
+      support: 'Support',
+    },
+    onboarding: {
+      address: 'Home address',
+      confirm: 'Confirmation',
+      language: 'Language',
+      otp: 'OTP',
+      payment: 'Payment',
+      phone: 'Phone',
+      schedule: 'Schedule',
+      start: 'Start setup',
+      tier: 'Tier',
+      title: 'Subscriber onboarding',
+    },
+    profile: {
+      account: 'Account recovery',
+      deleteAccount: 'Delete account',
+      erasure: 'Request erasure',
+      exportData: 'Export data',
+      legal: 'Terms and privacy',
+      maintenance: 'Maintenance and app update states',
+      privacy: 'Privacy rights',
+      title: 'Profile and privacy',
+    },
+    subscription: {
+      billing: 'Billing history',
+      cancel: 'Cancel subscription',
+      history: 'Visit history',
+      priceNote: 'Mobile-money recovery remains platform-controlled',
+      swapLimit: '2 swaps left this quarter',
+      tier: 'Tier 2 · 4,500 FCFA',
+      title: 'Subscription controls',
+    },
+    support: {
+      dispute: 'Open a visit dispute',
+      inbox: 'Inbox',
+      messages: 'Operator-mediated messages',
+      notificationCenter: 'Notification center',
+      title: 'Support',
+    },
+    visitStage: {
+      arrived: 'Arrived',
+      enRoute: 'En route',
+      inProgress: 'In progress',
+      scheduled: 'Scheduled',
+    },
+  },
+  fr: {
+    action: {
+      changeTier: 'Changer la formule',
+      openSupport: 'Contacter le support',
+      recoverPayment: 'Régulariser le paiement',
+      requestSwap: 'Demander un remplacement',
+      reschedule: 'Reprogrammer',
+      skipVisit: 'Sauter la visite',
+      startTracking: 'Démarrer le suivi',
+      stopTracking: 'Arrêter le suivi',
+    },
+    home: {
+      assigned: 'Attribuée',
+      boundedTrackingBody:
+        "La carte s'affiche uniquement quand la travailleuse appuie sur En route et s'arrête au pointage d'arrivée.",
+      boundedTrackingTitle: 'Suivi encadré',
+      greeting: 'Abonnement actif',
+      hero: 'Abonnements de lessive à domicile pour les foyers de Lomé, avec support, paiement, confidentialité et contrôles de visite prêts pour la production.',
+      nextVisit: 'Prochaine visite',
+      price: 'Prix mensuel',
+      routeInventory: 'Inventaire des écrans production',
+      setupNote: "L'inscription beta reste disponible si ce foyer doit encore être activé.",
+      surfaceCount: '35 surfaces',
+      visitControls: 'Contrôles de visite',
+      washerConfirmed: 'Washerwoman confirmée',
+    },
+    nav: {
+      home: 'Accueil',
+      onboarding: 'Départ',
+      profile: 'Profil',
+      subscription: 'Abonnement',
+      support: 'Support',
+    },
+    onboarding: {
+      address: 'Adresse du foyer',
+      confirm: 'Confirmation',
+      language: 'Langue',
+      otp: 'OTP',
+      payment: 'Paiement',
+      phone: 'Téléphone',
+      schedule: 'Créneau',
+      start: "Démarrer l'inscription",
+      tier: 'Formule',
+      title: 'Inscription abonnée',
+    },
+    profile: {
+      account: 'Récupération du compte',
+      deleteAccount: 'Supprimer le compte',
+      erasure: "Demander l'effacement",
+      exportData: 'Exporter mes données',
+      legal: 'Conditions et confidentialité',
+      maintenance: 'Maintenance et mise à jour obligatoire',
+      privacy: 'Droits de confidentialité',
+      title: 'Profil et confidentialité',
+    },
+    subscription: {
+      billing: 'Historique de paiement',
+      cancel: "Annuler l'abonnement",
+      history: 'Historique des visites',
+      priceNote: 'Le recouvrement mobile money reste contrôlé par Washed',
+      swapLimit: '2 remplacements restants ce trimestre',
+      tier: 'Formule 2 · 4 500 FCFA',
+      title: "Gestion de l'abonnement",
+    },
+    support: {
+      dispute: 'Ouvrir une réclamation visite',
+      inbox: 'Boîte de réception',
+      messages: 'Messages relayés par opérateur',
+      notificationCenter: 'Centre de notifications',
+      title: 'Support',
+    },
+    visitStage: {
+      arrived: 'Arrivée',
+      enRoute: 'En route',
+      inProgress: 'En cours',
+      scheduled: 'Planifiée',
+    },
+  },
+} as const satisfies Record<WashedLocale, LocalizedCopy>;
+
+export const onboardingSteps = [
+  'language',
+  'phone',
+  'otp',
+  'address',
+  'tier',
+  'schedule',
+  'payment',
+  'confirm',
+] as const;
+
+export const subscriberSurfaceGroups = [
+  {
+    count: 8,
+    label: 'Core',
+    screens: ['Splash', 'Phone', 'OTP', 'Address', 'Tier', 'Schedule', 'Payment', 'Confirm'],
+  },
+  {
+    count: 9,
+    label: 'Visit',
+    screens: [
+      'Home',
+      'Visit detail',
+      'En-route map',
+      'Skip modal',
+      'Reschedule modal',
+      'Rating',
+      'Visit history',
+      'Dispute',
+      'Messages',
+    ],
+  },
+  {
+    count: 9,
+    label: 'Subscription',
+    screens: [
+      'Subscription',
+      'Tier change',
+      'Worker swap',
+      'Billing history',
+      'Payment recovery',
+      'Cancel flow',
+      'Receipts',
+      'Support credits',
+      'Notification priming',
+    ],
+  },
+  {
+    count: 9,
+    label: 'Privacy',
+    screens: [
+      'Profile',
+      'Terms',
+      'Privacy policy',
+      'Export request',
+      'Erasure request',
+      'Account deletion',
+      'Change number',
+      'Maintenance',
+      'Help / FAQ',
+    ],
+  },
+] as const satisfies readonly SurfaceGroup[];
+
+export const visitTimeline: readonly VisitStage[] = [
+  'scheduled',
+  'enRoute',
+  'arrived',
+  'inProgress',
+];
