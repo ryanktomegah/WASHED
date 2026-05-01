@@ -77,6 +77,8 @@ export interface WorkerCopy {
     readonly title: string;
   };
   readonly sync: {
+    readonly complete: string;
+    readonly failed: string;
     readonly offline: string;
     readonly pending: string;
     readonly ready: string;
@@ -193,6 +195,8 @@ export const workerCopy = {
     title: 'Aide immédiate',
   },
   sync: {
+    complete: 'Toutes les preuves locales sont synchronisées.',
+    failed: 'La synchronisation a échoué. La file locale est conservée pour réessayer.',
     offline:
       "Mode hors ligne actif. Les photos, pointages et signalements restent en file d'attente.",
     pending: '3 actions en attente de synchronisation',

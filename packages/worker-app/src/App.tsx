@@ -35,6 +35,7 @@ import {
   type VisitLocationCheckpoint,
 } from './nativeLocation.js';
 import { loadPersistedWorkerState, persistWorkerState } from './workerPersistence.js';
+import { syncWorkerOfflineQueue } from './workerQueueSync.js';
 
 const navOrder = [
   'today',
@@ -53,6 +54,8 @@ export function App(): ReactElement {
   const [locationError, setLocationError] = useState<string | null>(null);
   const [lastLocationProof, setLastLocationProof] = useState<NativeLocationResult | null>(null);
   const [persistenceReady, setPersistenceReady] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [syncInProgress, setSyncInProgress] = useState(false);
   const t = workerCopy;
 
   useEffect(() => {
@@ -86,8 +89,12 @@ export function App(): ReactElement {
   async function captureProof(kind: 'after' | 'before') {
     setCaptureInProgress(true);
     try {
-      await captureVisitPhoto(kind);
-      dispatch({ step: kind === 'before' ? 'beforePhoto' : 'afterPhoto', type: 'visit/setStep' });
+      const proof = await captureVisitPhoto(kind);
+      dispatch({
+        photoProof: proof,
+        step: kind === 'before' ? 'beforePhoto' : 'afterPhoto',
+        type: 'visit/setStep',
+      });
     } finally {
       setCaptureInProgress(false);
     }
@@ -99,11 +106,29 @@ export function App(): ReactElement {
     try {
       const proof = await captureVisitLocation(checkpoint);
       setLastLocationProof(proof);
-      dispatch({ step: checkpoint, type: 'visit/setStep' });
+      dispatch({ locationProof: proof, step: checkpoint, type: 'visit/setStep' });
     } catch {
       setLocationError(t.feedback.locationCaptureFailed);
     } finally {
       setLocationCheckpoint(null);
+    }
+  }
+
+  async function syncOfflineQueue() {
+    if (workerState.offlineQueue.length === 0 || syncInProgress) {
+      return;
+    }
+
+    setSyncError(null);
+    setSyncInProgress(true);
+
+    try {
+      await syncWorkerOfflineQueue(workerState.offlineQueue);
+      dispatch({ type: 'sync/complete' });
+    } catch {
+      setSyncError(t.sync.failed);
+    } finally {
+      setSyncInProgress(false);
     }
   }
 
@@ -134,12 +159,15 @@ export function App(): ReactElement {
           <TodayScreen
             dispatch={dispatch}
             isCapturingPhoto={captureInProgress}
+            isSyncingQueue={syncInProgress}
             locationCaptureCheckpoint={locationCheckpoint}
             locationError={locationError}
             locationProof={lastLocationProof}
             onRouteChange={setRoute}
+            onSyncQueue={syncOfflineQueue}
             onVisitLocationCapture={captureLocationProof}
             onVisitPhotoCapture={captureProof}
+            syncError={syncError}
             t={t}
             workerState={workerState}
           />
@@ -184,23 +212,29 @@ export function App(): ReactElement {
 function TodayScreen({
   dispatch,
   isCapturingPhoto,
+  isSyncingQueue,
   locationCaptureCheckpoint,
   locationError,
   locationProof,
   onRouteChange,
+  onSyncQueue,
   onVisitLocationCapture,
   onVisitPhotoCapture,
+  syncError,
   t,
   workerState,
 }: {
   readonly dispatch: Dispatch<WorkerAction>;
   readonly isCapturingPhoto: boolean;
+  readonly isSyncingQueue: boolean;
   readonly locationCaptureCheckpoint: VisitLocationCheckpoint | null;
   readonly locationError: string | null;
   readonly locationProof: NativeLocationResult | null;
   readonly onRouteChange: (route: WorkerRoute) => void;
+  readonly onSyncQueue: () => Promise<void>;
   readonly onVisitLocationCapture: (checkpoint: VisitLocationCheckpoint) => Promise<void>;
   readonly onVisitPhotoCapture: (kind: 'after' | 'before') => Promise<void>;
+  readonly syncError: string | null;
   readonly t: typeof workerCopy;
   readonly workerState: WorkerState;
 }): ReactElement {
@@ -229,12 +263,10 @@ function TodayScreen({
         tone={offlineCount > 0 ? 'accent' : 'success'}
       >
         <div className="sync-alert-body">
-          <span>
-            {offlineCount > 0 ? t.sync.offline : 'Toutes les preuves locales sont synchronisées.'}
-          </span>
+          <span>{syncError ?? (offlineCount > 0 ? t.sync.offline : t.sync.complete)}</span>
           <Button
-            disabled={offlineCount === 0}
-            onClick={() => dispatch({ type: 'sync/complete' })}
+            disabled={offlineCount === 0 || isSyncingQueue}
+            onClick={onSyncQueue}
             size="sm"
             variant="secondary"
           >

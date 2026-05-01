@@ -53,7 +53,7 @@ describe('worker app', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Synchroniser maintenant' }));
 
-    expect(screen.getByText('Synchronisation prête')).toBeInTheDocument();
+    expect(await screen.findByText('Synchronisation prête')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: "Pointer l'arrivée" }));
 

@@ -42,7 +42,24 @@ export interface WorkerOfflineQueueItem {
   readonly kind: WorkerOfflineActionKind;
   readonly label: string;
   readonly operationId: CoreApiOperationId;
+  readonly request: WorkerOfflineQueueRequest;
   readonly status: 'queued';
+}
+
+export interface WorkerOfflineQueueRequest {
+  readonly body?: Record<string, unknown>;
+  readonly pathParams: Record<string, string | number>;
+}
+
+export interface WorkerVisitLocationProof {
+  readonly capturedAt: string;
+  readonly latitude: number;
+  readonly longitude: number;
+}
+
+export interface WorkerVisitPhotoProof {
+  readonly capturedAt: string;
+  readonly path: string;
 }
 
 export interface WorkerState {
@@ -76,7 +93,12 @@ export interface WorkerState {
 }
 
 export type WorkerAction =
-  | { readonly step: VisitStep; readonly type: 'visit/setStep' }
+  | {
+      readonly locationProof?: WorkerVisitLocationProof;
+      readonly photoProof?: WorkerVisitPhotoProof;
+      readonly step: VisitStep;
+      readonly type: 'visit/setStep';
+    }
   | { readonly type: 'activation/complete' }
   | { readonly type: 'day/complete' }
   | { readonly type: 'earnings/requestAdvance' }
@@ -90,6 +112,11 @@ export type WorkerAction =
   | { readonly type: 'sync/complete' }
   | { readonly type: 'visit/declareNoShow' }
   | { readonly type: 'visit/reportIssue' };
+
+export const WORKER_APP_DEMO_IDS = {
+  visitId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  workerId: '22222222-2222-4222-8222-222222222222',
+} as const;
 
 export const initialWorkerState = {
   ...DEMO_WORKER_APP_SNAPSHOT,
@@ -120,7 +147,7 @@ export function createLegacyOfflineQueue(count: number): readonly WorkerOfflineQ
 
 function queueAction(
   state: WorkerState,
-  input: Omit<WorkerOfflineQueueItem, 'createdAt' | 'id' | 'idempotencyKey' | 'status'>,
+  input: WorkerOfflineQueueInput,
 ): Pick<WorkerState, 'offlineQueue' | 'offlineQueueCount'> {
   const offlineQueue = [
     ...state.offlineQueue,
@@ -133,16 +160,101 @@ function queueAction(
   };
 }
 
-function createQueueItem(
-  sequence: number,
-  input: Omit<WorkerOfflineQueueItem, 'createdAt' | 'id' | 'idempotencyKey' | 'status'>,
-): WorkerOfflineQueueItem {
+function createQueueItem(sequence: number, input: WorkerOfflineQueueInput): WorkerOfflineQueueItem {
+  const createdAt =
+    input.locationProof?.capturedAt ?? input.photoProof?.capturedAt ?? new Date().toISOString();
+
   return {
-    ...input,
-    createdAt: new Date().toISOString(),
+    createdAt,
     id: `worker-queue-${String(sequence).padStart(4, '0')}`,
     idempotencyKey: `worker-akouvi:visit-ama-2026-05-05-0900:${input.kind}:${sequence}`,
+    kind: input.kind,
+    label: input.label,
+    operationId: input.operationId,
+    request: buildOfflineQueueRequest(input, createdAt, sequence),
     status: 'queued',
+  };
+}
+
+type WorkerOfflineQueueInput = Omit<
+  WorkerOfflineQueueItem,
+  'createdAt' | 'id' | 'idempotencyKey' | 'request' | 'status'
+> & {
+  readonly locationProof?: WorkerVisitLocationProof | undefined;
+  readonly photoProof?: WorkerVisitPhotoProof | undefined;
+};
+
+export function buildOfflineQueueRequest(
+  input: Pick<WorkerOfflineQueueInput, 'kind'> & Partial<WorkerOfflineQueueInput>,
+  createdAt: string,
+  sequence = 1,
+): WorkerOfflineQueueRequest {
+  if (input.kind === 'planning.unavailable') {
+    return {
+      body: {
+        createdAt,
+        date: '2026-05-06',
+        reason: 'Indisponible marquée dans l’app travailleuse.',
+      },
+      pathParams: { workerId: WORKER_APP_DEMO_IDS.workerId },
+    };
+  }
+
+  const visitPathParams = { visitId: WORKER_APP_DEMO_IDS.visitId };
+
+  if (input.kind === 'visit.check_in' || input.kind === 'visit.check_out') {
+    const location = input.locationProof ?? {
+      latitude: 6.1319,
+      longitude: 1.2228,
+    };
+
+    return {
+      body: {
+        [input.kind === 'visit.check_in' ? 'checkedInAt' : 'checkedOutAt']: createdAt,
+        location: {
+          latitude: location.latitude,
+          longitude: location.longitude,
+        },
+        workerId: WORKER_APP_DEMO_IDS.workerId,
+      },
+      pathParams: visitPathParams,
+    };
+  }
+
+  if (input.kind === 'visit.before_photo' || input.kind === 'visit.after_photo') {
+    const photoType = input.kind === 'visit.before_photo' ? 'before' : 'after';
+
+    return {
+      body: {
+        byteSize: 128_000,
+        capturedAt: createdAt,
+        contentType: 'image/jpeg',
+        objectKey: `visits/${WORKER_APP_DEMO_IDS.visitId}/${photoType}-${sequence}.jpg`,
+        photoType,
+        workerId: WORKER_APP_DEMO_IDS.workerId,
+      },
+      pathParams: visitPathParams,
+    };
+  }
+
+  return {
+    body: {
+      createdAt,
+      description:
+        input.kind === 'sos'
+          ? "Alerte SOS déclenchée depuis l'app travailleuse."
+          : input.kind === 'visit.no_show'
+            ? 'Foyer absent au moment de la visite.'
+            : 'Signalement terrain envoyé depuis la visite.',
+      issueType:
+        input.kind === 'sos'
+          ? 'safety_concern'
+          : input.kind === 'visit.no_show'
+            ? 'client_unavailable'
+            : 'other',
+      workerId: WORKER_APP_DEMO_IDS.workerId,
+    },
+    pathParams: visitPathParams,
   };
 }
 
@@ -172,6 +284,7 @@ export function workerReducer(state: WorkerState, action: WorkerAction): WorkerS
       const queued = queueAction(state, {
         kind: 'visit.check_in',
         label: 'Pointage arrivée · Ama K.',
+        locationProof: action.locationProof,
         operationId: FRONTEND_OPERATION_IDS.worker.checkIn,
       });
 
@@ -188,6 +301,7 @@ export function workerReducer(state: WorkerState, action: WorkerAction): WorkerS
         kind: 'visit.before_photo',
         label: 'Photo avant · Ama K.',
         operationId: FRONTEND_OPERATION_IDS.worker.recordPhoto,
+        photoProof: action.photoProof,
       });
 
       return {
@@ -211,6 +325,7 @@ export function workerReducer(state: WorkerState, action: WorkerAction): WorkerS
         kind: 'visit.after_photo',
         label: 'Photo après · Ama K.',
         operationId: FRONTEND_OPERATION_IDS.worker.recordPhoto,
+        photoProof: action.photoProof,
       });
 
       return {
@@ -225,6 +340,7 @@ export function workerReducer(state: WorkerState, action: WorkerAction): WorkerS
       const queued = queueAction(state, {
         kind: 'visit.check_out',
         label: 'Pointage sortie · Ama K.',
+        locationProof: action.locationProof,
         operationId: FRONTEND_OPERATION_IDS.worker.checkOut,
       });
 

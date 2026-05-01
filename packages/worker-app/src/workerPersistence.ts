@@ -2,10 +2,12 @@ import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
 
 import {
+  buildOfflineQueueRequest,
   createLegacyOfflineQueue,
   initialWorkerState,
   type WorkerOfflineActionKind,
   type WorkerOfflineQueueItem,
+  type WorkerOfflineQueueRequest,
   type WorkerState,
   type VisitStep,
 } from './workerState.js';
@@ -179,6 +181,7 @@ function readOfflineQueue(value: Record<string, unknown>): readonly WorkerOfflin
         kind,
         label: typeof item.label === 'string' ? item.label : kind,
         operationId: operationId as WorkerOfflineQueueItem['operationId'],
+        request: readOfflineQueueRequest(item, kind),
         status: 'queued',
       },
     ];
@@ -189,6 +192,35 @@ function readOfflineQueue(value: Record<string, unknown>): readonly WorkerOfflin
         readNumber(value.offlineQueueCount, initialWorkerState.offlineQueueCount),
       )
     : queue;
+}
+
+function readOfflineQueueRequest(
+  value: Record<string, unknown>,
+  kind: WorkerOfflineActionKind,
+): WorkerOfflineQueueRequest {
+  const request = value.request;
+
+  if (!isRecord(request) || !isPathParams(request.pathParams)) {
+    return buildOfflineQueueRequest(
+      { kind },
+      typeof value.createdAt === 'string' ? value.createdAt : new Date().toISOString(),
+    );
+  }
+
+  return {
+    ...(isRecord(request.body) ? { body: request.body } : {}),
+    pathParams: request.pathParams,
+  };
+}
+
+function isPathParams(value: unknown): value is Record<string, string | number> {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return Object.values(value).every(
+    (pathValue) => typeof pathValue === 'string' || typeof pathValue === 'number',
+  );
 }
 
 function readNestedBoolean(value: unknown, key: string, fallback: boolean): boolean {
