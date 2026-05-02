@@ -91,26 +91,138 @@
   .tbl td { padding: 12px 14px; border-bottom: 1px solid var(--line); }
   .tbl tr:hover td { background: var(--surface-2); }
 
-  /* STATES grid */
-  .states { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--s-4); }
-  .state-tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-5); min-height: 200px; display: flex; flex-direction: column; gap: var(--s-3); position: relative; }
-  .state-tile .stamp { position: absolute; top: var(--s-3); right: var(--s-3); font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.08em; }
-  .state-tile .glyph { width: 40px; height: 40px; border-radius: var(--r-sm); display: grid; place-items: center; }
-  .state-tile h5 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-md); margin: 0; }
-  .state-tile p { font-size: 13px; color: var(--ink-3); margin: 0; line-height: 1.5; }
-  .state-tile .copy { font-family: var(--font-mono); font-size: 11px; padding: 8px; background: var(--bg-deep); border-radius: var(--r-xs); color: var(--ink-2); }
+  /* MODAL & SHEET preview frames */
+  .preview { background: var(--bg-deep); border-radius: var(--r-md); padding: var(--s-7); display: grid; place-items: center; min-height: 320px; position: relative; overflow: hidden; }
+  .preview.dim::before { content: ''; position: absolute; inset: 0; background: rgba(28,18,8,0.45); z-index: 1; }
+
+  /* MODAL (web/desktop) */
+  .modal { background: var(--surface); border-radius: var(--r-md); width: 380px; max-width: 100%; box-shadow: var(--shadow-overlay); position: relative; z-index: 2; padding: var(--s-6); }
+  .modal h4 { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 22px; margin: 0 0 var(--s-2); letter-spacing: -0.01em; }
+  .modal p { font-size: 13px; color: var(--ink-2); margin: 0 0 var(--s-5); line-height: 1.55; }
+  .modal .actions { display: flex; gap: 8px; justify-content: flex-end; }
+  .modal .close { position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; border-radius: 999px; background: transparent; border: none; color: var(--ink-3); cursor: pointer; font-size: 18px; }
+
+  /* SHEET (mobile) */
+  .sheet-frame { width: 280px; height: 320px; background: var(--ink); border-radius: 24px; padding: 8px; box-shadow: 0 30px 60px -20px rgba(28,18,8,0.4); position: relative; z-index: 2; overflow: hidden; }
+  .sheet-frame .stage { width: 100%; height: 100%; border-radius: 18px; background: rgba(28,18,8,0.55); position: relative; overflow: hidden; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface); border-radius: 22px 22px 0 0; padding: 18px 16px 16px; }
+  .sheet .handle { width: 36px; height: 4px; background: var(--line-2); border-radius: 999px; margin: 0 auto 14px; }
+  .sheet h4 { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 18px; margin: 0 0 6px; }
+  .sheet p { font-size: 11px; color: var(--ink-3); margin: 0 0 12px; line-height: 1.5; }
+  .sheet .row-cta { display: flex; gap: 6px; }
+  .sheet .row-cta .btn { padding: 10px 14px; font-size: 12px; }
+  .sheet .row-cta .btn.primary { flex: 1; }
+  .sheet .row-cta .btn.secondary { padding: 10px 14px; }
+
+  /* SWITCH */
+  .switch { width: 48px; height: 28px; background: var(--bg-deep); border-radius: 999px; position: relative; cursor: pointer; transition: background var(--d-base); }
+  .switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 999px; background: var(--surface); box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: transform var(--d-base) var(--ease-standard); }
+  .switch.on { background: var(--primary); }
+  .switch.on::after { transform: translateX(20px); }
+  .switch.disabled { opacity: 0.4; cursor: not-allowed; }
+  .switch-row { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .switch-row:last-child { border-bottom: none; }
+  .switch-row .info { flex: 1; }
+  .switch-row .ttl { font-size: 14px; font-weight: 500; }
+  .switch-row .desc { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+
+  /* CHECKBOX + RADIO */
+  .check { width: 20px; height: 20px; border: 1.5px solid var(--ink-3); border-radius: var(--r-xs); display: grid; place-items: center; flex-shrink: 0; cursor: pointer; transition: all var(--d-base); background: var(--surface); }
+  .check.on { background: var(--primary); border-color: var(--primary); }
+  .check.on::after { content: '✓'; color: white; font-size: 14px; font-weight: 700; line-height: 1; }
+  .check.disabled { opacity: 0.4; }
+
+  .radio { width: 20px; height: 20px; border: 1.5px solid var(--ink-3); border-radius: 999px; display: grid; place-items: center; flex-shrink: 0; cursor: pointer; transition: all var(--d-base); background: var(--surface); }
+  .radio.on { border-color: var(--primary); border-width: 2px; }
+  .radio.on::after { content: ''; width: 10px; height: 10px; border-radius: 999px; background: var(--primary); }
+
+  /* TABS */
+  .tabs { display: flex; gap: var(--s-5); border-bottom: 1px solid var(--line); }
+  .tabs .tab { padding: 10px 0; font-size: 14px; color: var(--ink-3); border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; transition: color var(--d-base); }
+  .tabs .tab:hover { color: var(--ink); }
+  .tabs .tab.active { color: var(--primary); border-color: var(--primary); }
+  .tabs .tab .count { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); margin-left: 6px; }
+  .tabs .tab.active .count { color: var(--primary); }
+
+  /* ACCORDION */
+  .acc { border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden; }
+  .acc .item { border-bottom: 1px solid var(--line); }
+  .acc .item:last-child { border-bottom: none; }
+  .acc .head { padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 14px; font-weight: 500; }
+  .acc .head .ic { color: var(--primary); transition: transform var(--d-base); font-size: 12px; font-family: var(--font-mono); }
+  .acc .item.open .head { background: var(--bg-deep); }
+  .acc .item.open .head .ic { transform: rotate(45deg); }
+  .acc .body { padding: 0 16px 14px; font-size: 13px; color: var(--ink-3); line-height: 1.55; display: none; }
+  .acc .item.open .body { display: block; }
+
+  /* TOOLTIP */
+  .tooltip { position: relative; display: inline-block; }
+  .tip-bubble { position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--surface); font-family: var(--font-body); font-size: 11px; padding: 6px 10px; border-radius: 6px; white-space: nowrap; box-shadow: var(--shadow-card); z-index: 10; }
+  .tip-bubble::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 4px solid transparent; border-top-color: var(--ink); }
+
+  /* TOP NAV (mobile app bar) */
+  .topnav-frame { width: 280px; background: var(--ink); border-radius: 24px 24px 0 0; padding: 8px 8px 0; }
+  .topnav-frame .stage { background: var(--surface); border-radius: 18px 18px 0 0; padding-bottom: var(--s-7); min-height: 220px; overflow: hidden; }
+  .topnav { padding: 14px 16px 12px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--line); }
+  .topnav .back { width: 24px; height: 24px; border-radius: 999px; display: grid; place-items: center; color: var(--ink); font-size: 18px; cursor: pointer; }
+  .topnav .ttl { font-family: var(--font-display); font-weight: 500; font-size: 16px; flex: 1; }
+  .topnav .actions { display: flex; gap: 8px; }
+  .topnav .actions .ic { width: 24px; height: 24px; display: grid; place-items: center; color: var(--ink-2); }
+
+  /* BOTTOM NAV */
+  .bnav { display: flex; justify-content: space-around; padding: 8px 0 6px; border-top: 1px solid var(--line); background: var(--surface); }
+  .bnav .item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 8px; min-width: 56px; cursor: pointer; }
+  .bnav .item .glyph { width: 18px; height: 18px; border-radius: 4px; background: currentColor; opacity: 0.5; }
+  .bnav .item .lbl { font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); }
+  .bnav .item.active .glyph { opacity: 1; color: var(--primary); }
+  .bnav .item.active .lbl { color: var(--primary); }
+  .bnav .item .badge { position: absolute; transform: translate(8px, -16px); background: var(--danger); color: white; font-family: var(--font-mono); font-size: 9px; padding: 1px 5px; border-radius: 999px; min-width: 16px; text-align: center; }
+
+  /* AVATAR */
+  .avatar-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .avatar-row .avatar { background: linear-gradient(135deg, var(--primary), var(--accent)); border-radius: 999px; display: grid; place-items: center; color: var(--surface); font-family: var(--font-display); font-style: italic; font-weight: 600; flex-shrink: 0; }
+  .avatar-row .avatar.s-24 { width: 24px; height: 24px; font-size: 12px; }
+  .avatar-row .avatar.s-32 { width: 32px; height: 32px; font-size: 16px; }
+  .avatar-row .avatar.s-48 { width: 48px; height: 48px; font-size: 22px; }
+  .avatar-row .avatar.s-72 { width: 72px; height: 72px; font-size: 36px; }
+  .avatar-row .avatar.placeholder { background: var(--bg-deep); color: var(--ink-3); font-style: normal; }
+  .avatar-row .avatar .badge-dot { position: absolute; transform: translate(20px, 20px); width: 10px; height: 10px; border-radius: 999px; background: var(--success); border: 2px solid var(--surface); }
+  .avatar-stack { display: flex; }
+  .avatar-stack .avatar { border: 2px solid var(--surface); margin-left: -8px; }
+  .avatar-stack .avatar:first-child { margin-left: 0; }
+  .avatar-stack .more { background: var(--bg-deep); color: var(--ink-2); font-style: normal; font-family: var(--font-mono); font-size: 11px; }
+
+  /* ICONS */
+  .icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: var(--s-3); }
+  .icon-cell { display: flex; flex-direction: column; align-items: center; padding: var(--s-4); border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); }
+  .icon-cell svg { width: 24px; height: 24px; color: var(--ink); margin-bottom: 8px; }
+  .icon-cell .name { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); }
+
+  /* SEARCH FIELD */
+  .search { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; min-width: 280px; }
+  .search svg { width: 16px; height: 16px; color: var(--ink-3); flex-shrink: 0; }
+  .search input { flex: 1; border: none; outline: none; font-family: var(--font-body); font-size: 14px; background: transparent; color: var(--ink); }
+  .search .kbd { font-family: var(--font-mono); font-size: 10px; padding: 2px 6px; background: var(--bg-deep); border-radius: 4px; color: var(--ink-3); border: 1px solid var(--line); }
+
+  /* DROPDOWN */
+  .dropdown { position: relative; display: inline-block; }
+  .dropdown-trigger { padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; min-width: 160px; }
+  .dropdown-trigger .ic { color: var(--ink-3); margin-left: auto; }
+  .dropdown-menu { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); box-shadow: var(--shadow-elevated); padding: 6px; min-width: 200px; }
+  .dropdown-menu .item { padding: 8px 10px; border-radius: var(--r-xs); font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+  .dropdown-menu .item:hover { background: var(--bg-deep); }
+  .dropdown-menu .item.selected { background: var(--primary-soft); color: var(--primary); }
+  .dropdown-menu .sep { height: 1px; background: var(--line); margin: 6px 0; }
 
   .skel { background: linear-gradient(90deg, var(--line) 0%, var(--bg-deep) 50%, var(--line) 100%); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; border-radius: var(--r-xs); }
   @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-  @media (max-width: 880px) { .states { grid-template-columns: 1fr 1fr; } }
 </style></head>
 <body data-theme="subscriber">
 <div class="page">
   <div class="crumb"><a href="../index.html">← Index</a> · 01 Design System · Composants &amp; états</div>
 
-  <h1>Composants <em>& états</em>.</h1>
-  <p class="lede">Les primitives partagées par les trois applications. Chaque composant existe en sept états (default, hover, pressed, focus, disabled, loading, error). Pas un composant n'est livrable sans sa matrice d'états documentée.</p>
+  <h1>Composants <em>partagés</em>.</h1>
+  <p class="lede">Les primitives partagées par les trois applications. Chaque composant existe en sept états (default, hover, pressed, focus, disabled, loading, error) — voir la <a href="../08-states-library/states.html" style="color:var(--primary)">bibliothèque d'états</a> pour les copies FR de chaque état.</p>
 
   <!-- BUTTONS -->
   <section class="section">
@@ -234,56 +346,313 @@
     </div>
   </section>
 
-  <!-- STATES -->
+  <!-- OVERLAYS -->
   <section class="section">
-    <div class="num">02 · BIBLIOTHÈQUE D'ÉTATS</div>
-    <h2>Cinq états par liste, sans exception</h2>
-    <p class="sub">La règle non-négociable : chaque écran qui contient une liste doit documenter ses cinq états. Si un état n'est pas explicitement traité, il est traité par défaut — c'est-à-dire mal.</p>
+    <div class="num">01.4 · SUPERPOSITIONS</div>
+    <h2>Modales &amp; sheets</h2>
+    <p class="sub">Une seule modale à la fois sur l'écran. Web = modale centrée avec backdrop. Mobile = bottom sheet avec drag handle. Toute action destructive passe par une modale ; toute action informative ou un choix de paramètre passe par une sheet.</p>
 
-    <div class="states">
-      <div class="state-tile">
-        <div class="stamp">01 / 05</div>
-        <div class="glyph" style="background: var(--bg-deep); color: var(--ink-3)">○</div>
-        <h5>Vide — premier usage</h5>
-        <p>Le contenu n'existe pas encore. On guide vers la création.</p>
-        <div class="copy">«&nbsp;Vous n'avez pas encore de laveuse. On vous en trouve une en 4 heures.&nbsp;»</div>
-      </div>
-
-      <div class="state-tile">
-        <div class="stamp">02 / 05</div>
-        <div class="glyph" style="background: var(--bg-deep);"><div class="skel" style="width:24px;height:8px"></div></div>
-        <h5>Chargement</h5>
-        <p>Squelette de la forme attendue. Pas de spinner sauf en dernier recours.</p>
-        <div style="display: flex; flex-direction: column; gap: 6px; margin-top: auto">
-          <div class="skel" style="height: 12px; width: 60%"></div>
-          <div class="skel" style="height: 8px; width: 80%"></div>
-          <div class="skel" style="height: 8px; width: 40%"></div>
+    <div class="lab">
+      <div class="title-row"><h3>Modal · web/desktop (operator)</h3><span class="id">Modal</span></div>
+      <div class="preview dim">
+        <div class="modal">
+          <button class="close">×</button>
+          <h4>Suspendre l'abonnement&nbsp;?</h4>
+          <p>Yaa Mensah ne sera plus prélevée à partir du 1<sup>er</sup> juin. Sa visite de mardi est annulée. La laveuse Mawu Edem sera prévenue automatiquement.</p>
+          <div class="actions">
+            <button class="btn secondary">Annuler</button>
+            <button class="btn danger">Suspendre</button>
+          </div>
         </div>
       </div>
+    </div>
 
-      <div class="state-tile">
-        <div class="stamp">03 / 05</div>
-        <div class="glyph" style="background: var(--danger-soft); color: var(--danger)">!</div>
-        <h5>Erreur</h5>
-        <p>Quelque chose a échoué côté serveur ou réseau. On explique et on propose une action.</p>
-        <div class="copy">«&nbsp;Impossible de charger vos visites. <u>Réessayer</u>&nbsp;»</div>
+    <div class="lab">
+      <div class="title-row"><h3>Bottom sheet · mobile (subscriber/worker)</h3><span class="id">BottomSheet</span></div>
+      <div style="display:flex;justify-content:center">
+        <div class="topnav-frame" style="border-radius:24px;padding:8px;height:380px;width:280px">
+          <div class="stage" style="border-radius:18px;height:100%;position:relative;background:rgba(28,18,8,0.45)">
+            <div class="sheet">
+              <div class="handle"></div>
+              <h4>Reporter la visite&nbsp;?</h4>
+              <p>Mardi 9 h 00 → semaine prochaine. Akouvi est libre.</p>
+              <div class="row-cta">
+                <div class="btn secondary" style="font-size:12px;padding:10px 14px">Annuler</div>
+                <div class="btn primary" style="font-size:12px;padding:10px 14px;flex:1">Reporter</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+      <div class="annot" style="margin-top:var(--s-4)"><b>Comportement</b>Drag-handle visible · swipe-down ferme · backdrop tap ferme · Esc (web) ferme. Hauteur min 30% écran, max 80%. Pas de modale dans une modale (jamais).</div>
+    </div>
+  </section>
 
-      <div class="state-tile">
-        <div class="stamp">04 / 05</div>
-        <div class="glyph" style="background: var(--warn-soft); color: var(--warn)">⚡</div>
-        <h5>Hors-ligne</h5>
-        <p>Pas de réseau. On affiche le cache local et on avertit que c'est figé.</p>
-        <div class="copy">«&nbsp;Hors-ligne. Données du 12 avril 8&nbsp;h&nbsp;15.&nbsp;»</div>
-      </div>
+  <!-- TOGGLES -->
+  <section class="section">
+    <div class="num">01.5 · CONTRÔLES BOOLÉENS</div>
+    <h2>Switch, checkbox, radio</h2>
+    <p class="sub">Switch = action immédiate (bascule un paramètre). Checkbox = sélection multiple, validée par un bouton. Radio = choix exclusif dans un groupe.</p>
 
-      <div class="state-tile">
-        <div class="stamp">05 / 05</div>
-        <div class="glyph" style="background: var(--success-soft); color: var(--success)">✓</div>
-        <h5>Fin de liste</h5>
-        <p>L'utilisateur a tout vu. On clôt avec une note discrète, pas un mur.</p>
-        <div class="copy">«&nbsp;Vous avez vu vos 32 visites. Bravo Akouvi.&nbsp;»</div>
+    <div class="lab">
+      <div class="title-row"><h3>Switch · paramètre instantané</h3><span class="id">Switch</span></div>
+      <div style="max-width:480px">
+        <div class="switch-row">
+          <div class="info">
+            <div class="ttl">Notifications par SMS</div>
+            <div class="desc">Rappel J-1 et confirmation visite</div>
+          </div>
+          <div class="switch on"></div>
+        </div>
+        <div class="switch-row">
+          <div class="info">
+            <div class="ttl">Notifications push</div>
+            <div class="desc">En route, terminée, paiement</div>
+          </div>
+          <div class="switch on"></div>
+        </div>
+        <div class="switch-row">
+          <div class="info">
+            <div class="ttl">Email mensuel · récap</div>
+            <div class="desc">Reçu et statistiques du mois</div>
+          </div>
+          <div class="switch"></div>
+        </div>
+        <div class="switch-row">
+          <div class="info">
+            <div class="ttl" style="color:var(--ink-4)">Activé par défaut · admin uniquement</div>
+            <div class="desc" style="color:var(--ink-4)">Verrouillé par votre organisation</div>
+          </div>
+          <div class="switch on disabled"></div>
+        </div>
       </div>
+    </div>
+
+    <div class="lab">
+      <div class="title-row"><h3>Checkbox · sélection multiple</h3><span class="id">Checkbox</span></div>
+      <div style="display:flex;flex-direction:column;gap:10px;max-width:480px">
+        <div style="display:flex;align-items:center;gap:10px"><div class="check on"></div><span>J'accepte les conditions générales</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><div class="check"></div><span>Recevoir des nouvelles produits (optionnel)</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><div class="check on disabled"></div><span style="color:var(--ink-4)">J'ai au moins 18 ans (requis)</span></div>
+      </div>
+    </div>
+
+    <div class="lab">
+      <div class="title-row"><h3>Radio · choix exclusif</h3><span class="id">Radio</span></div>
+      <div style="display:flex;flex-direction:column;gap:10px;max-width:480px">
+        <div style="display:flex;align-items:center;gap:10px"><div class="radio on"></div><span>TMoney · 90 12 34 56</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><div class="radio"></div><span>Mixx by Yas · 99 87 65 43</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><div class="radio"></div><span>Flooz · ajouter un nouveau numéro</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TABS & ACCORDION -->
+  <section class="section">
+    <div class="num">01.6 · ORGANISATION DE CONTENU</div>
+    <h2>Tabs &amp; accordion</h2>
+    <p class="sub">Tabs = vues alternatives sur le même objet (operator). Accordion = sections collapsibles d'une page longue (FAQ, paramètres détaillés).</p>
+
+    <div class="lab">
+      <div class="title-row"><h3>Tabs · onglets contextuels</h3><span class="id">Tabs</span></div>
+      <div class="tabs">
+        <div class="tab active">Tout <span class="count">87</span></div>
+        <div class="tab">À risque <span class="count">3</span></div>
+        <div class="tab">Sans laveuse <span class="count">12</span></div>
+        <div class="tab">Modifiées <span class="count">5</span></div>
+      </div>
+      <div style="padding:var(--s-4) 0;font-size:13px;color:var(--ink-3)">Contenu de l'onglet actif s'affiche ici…</div>
+    </div>
+
+    <div class="lab">
+      <div class="title-row"><h3>Accordion · FAQ</h3><span class="id">Accordion</span></div>
+      <div class="acc" style="max-width:560px">
+        <div class="item open">
+          <div class="head">Comment annuler une visite&nbsp;?<span class="ic">+</span></div>
+          <div class="body">Ouvrez la visite concernée et tapez « Reporter ». Si la visite est dans moins de 12&nbsp;h, le bureau vous rappellera pour confirmer avec la laveuse.</div>
+        </div>
+        <div class="item">
+          <div class="head">Que faire si la laveuse ne vient pas&nbsp;?<span class="ic">+</span></div>
+        </div>
+        <div class="item">
+          <div class="head">Comment mettre à jour mon Mobile Money&nbsp;?<span class="ic">+</span></div>
+        </div>
+        <div class="item">
+          <div class="head">Le linge a été abîmé, que faire&nbsp;?<span class="ic">+</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NAVIGATION -->
+  <section class="section">
+    <div class="num">01.7 · NAVIGATION</div>
+    <h2>Top nav &amp; bottom nav</h2>
+    <p class="sub">Top nav = barre de titre d'écran (dans une pile de navigation). Bottom nav = navigation principale entre 4 onglets fixes. Le bouton retour appartient au top nav, jamais au bottom.</p>
+
+    <div class="lab">
+      <div class="title-row"><h3>Top nav · app bar mobile</h3><span class="id">TopNav</span></div>
+      <div style="display:flex;justify-content:center">
+        <div class="topnav-frame" style="height:auto">
+          <div class="stage">
+            <div class="topnav">
+              <div class="back">‹</div>
+              <div class="ttl">Mes visites</div>
+              <div class="actions">
+                <div class="ic">⌕</div>
+                <div class="ic">⋮</div>
+              </div>
+            </div>
+            <div style="padding:var(--s-5)">
+              <div class="skel" style="height:12px;width:60%"></div>
+              <div class="skel" style="height:8px;width:40%;margin-top:8px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lab">
+      <div class="title-row"><h3>Bottom nav · 4 onglets</h3><span class="id">BottomNav</span></div>
+      <div style="display:flex;justify-content:center">
+        <div class="topnav-frame" style="height:auto;border-radius:0 0 24px 24px;padding:0 8px 8px">
+          <div class="stage" style="border-radius:0 0 18px 18px;padding-top:var(--s-7);min-height:120px">
+            <div class="bnav">
+              <div class="item active"><div class="glyph"></div><div class="lbl">Accueil</div></div>
+              <div class="item"><div class="glyph"></div><div class="lbl">Visites</div></div>
+              <div class="item"><div class="glyph"></div><div class="lbl">Forfait</div></div>
+              <div class="item"><div class="glyph"></div><div class="lbl">Profil</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="annot" style="margin-top:var(--s-4)"><b>Règle</b>4 onglets max — au-delà, l'utilisateur perd la mémoire spatiale. Si 5+ sections, regrouper sous « Plus » avec une page d'index.</div>
+    </div>
+  </section>
+
+  <!-- AVATARS + ICONS + DROPDOWN + SEARCH + TOOLTIP -->
+  <section class="section">
+    <div class="num">01.8 · IDENTITÉ &amp; ICÔNES</div>
+    <h2>Avatars, icônes, indicateurs</h2>
+
+    <div class="lab">
+      <div class="title-row"><h3>Avatars · 4 tailles</h3><span class="id">Avatar</span></div>
+      <div class="avatar-row">
+        <div class="avatar s-24">A</div>
+        <div class="avatar s-32">A</div>
+        <div class="avatar s-48">A</div>
+        <div class="avatar s-72">A</div>
+        <div class="avatar s-32 placeholder">?</div>
+        <div class="avatar s-48" style="position:relative"><span>A</span><span class="badge-dot"></span></div>
+      </div>
+      <div style="margin-top:var(--s-4)">
+        <div class="avatar-stack">
+          <div class="avatar s-32">A</div>
+          <div class="avatar s-32" style="background:linear-gradient(135deg,#1A5C34,#D4900E)">M</div>
+          <div class="avatar s-32" style="background:linear-gradient(135deg,#3B1F7A,#C4622D)">E</div>
+          <div class="avatar s-32 more">+4</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lab">
+      <div class="title-row"><h3>Icônes · système 24px stroke 1.5</h3><span class="id">Icon</span></div>
+      <p class="sub" style="margin-top:0">Set restreint. Aucun icône custom n'est livrable sans validation design. Style&nbsp;: stroke 1.5px, terminaisons rondes, pas de fill.</p>
+      <div class="icon-grid">
+        <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6v11a2 2 0 0 1-2 2h-4v-7H9v7H5a2 2 0 0 1-2-2z"/></svg><div class="name">home</div></div>
+        <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><div class="name">search</div></div>
+        <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><div class="name">clock</div></div>
+        <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M3 12h18M3 17h18"/></svg><div class="name">menu</div></div>
+        <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><div class="name">plus</div></div>
+        <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg><div class="name">arrow</div></div>
+        <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="3"/><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/></svg><div class="name">pin</div></div>
+        <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z"/></svg><div class="name">phone</div></div>
+        <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg><div class="name">mail</div></div>
+        <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg><div class="name">alert</div></div>
+        <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg><div class="name">check</div></div>
+        <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg><div class="name">close</div></div>
+        <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="9"/><circle cx="12" cy="13" r="3"/><path d="M9 2h6"/></svg><div class="name">camera</div></div>
+        <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><div class="name">user</div></div>
+        <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09c0 .67.39 1.27 1 1.51a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01c.24.61.84 1 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><div class="name">settings</div></div>
+        <div class="icon-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><div class="name">message</div></div>
+      </div>
+    </div>
+
+    <div class="lab">
+      <div class="title-row"><h3>Champ recherche</h3><span class="id">Search</span></div>
+      <div class="row">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input value="adjoa" />
+          <span class="kbd">⌘ K</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="lab">
+      <div class="title-row"><h3>Dropdown / select</h3><span class="id">Dropdown</span></div>
+      <div class="row" style="gap:var(--s-5);align-items:flex-start">
+        <div class="dropdown">
+          <div class="dropdown-trigger">
+            <span>Tokoin</span>
+            <span class="ic">▾</span>
+          </div>
+        </div>
+        <div class="dropdown-menu">
+          <div class="item selected">Tokoin <span style="color:var(--primary);font-family:var(--font-mono);font-size:11px">✓</span></div>
+          <div class="item">Bè</div>
+          <div class="item">Adidogomé</div>
+          <div class="item">Hédzranawoé</div>
+          <div class="sep"></div>
+          <div class="item">Tous les quartiers</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lab">
+      <div class="title-row"><h3>Tooltip</h3><span class="id">Tooltip</span></div>
+      <div class="row" style="padding-top:var(--s-7)">
+        <div class="tooltip">
+          <span class="tip-bubble">Action irréversible</span>
+          <button class="btn danger">Supprimer le compte</button>
+        </div>
+      </div>
+      <div class="annot" style="margin-top:var(--s-4)"><b>Règle</b>Tooltip sur élément non-textuel uniquement (icône, badge). Jamais sur du texte courant — si l'utilisateur a besoin d'une info, elle doit déjà être dans la copie. Apparition après 400 ms hover · disparition immédiate.</div>
+    </div>
+  </section>
+
+  <!-- COVERAGE -->
+  <section class="section">
+    <div class="num">02 · COUVERTURE</div>
+    <h2>23 primitives · états documentés ailleurs</h2>
+    <p class="sub">Cette page documente l'apparence des primitives. Pour les <b>états</b> (vide, chargement, erreur, hors-ligne, fin/succès) de chaque primitive, voir <a href="../08-states-library/states.html" style="color:var(--primary)">08 Bibliothèque d'états</a>. Pour les <b>copies FR</b>, voir <a href="../09-copy-deck/copy.html" style="color:var(--primary)">09 Copy deck</a>. Pour les <b>tokens appliqués</b> par primitive, voir <a href="../10-redlines-handoff/redlines.html" style="color:var(--primary)">10 Redlines</a>.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:var(--s-2);font-family:var(--font-mono);font-size:11px;color:var(--ink-2)">
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">Button · primary</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">Button · secondary</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">Button · tertiary</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">Button · danger</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">TextField</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">OTPField</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">Segmented</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">Search</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">Dropdown</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">Switch</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">Checkbox</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">Radio</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">Badge</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">Card</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">List item</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">Avatar</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">Toast</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">Modal</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">BottomSheet</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">Tabs</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">Accordion</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">Tooltip</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">TopNav · BottomNav</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">DataTable</div>
+      <div style="padding:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs)">Icon (24px stroke)</div>
     </div>
   </section>
 

@@ -1,580 +1,587 @@
 <!doctype html>
 <html lang="fr"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Washed — Flux &amp; architecture</title>
+<title>Washed — Architecture de l'information</title>
 <link rel="stylesheet" href="../shared/tokens.css">
 <style>
-  body { background: var(--bg); }
+  body { background: var(--bg); color: var(--ink); }
   .page { max-width: 1280px; margin: 0 auto; padding: var(--s-9) var(--s-6) var(--s-11); }
   .crumb { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3); margin-bottom: var(--s-6); }
   .crumb a { color: var(--ink-3); text-decoration: none; }
   h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(40px, 6vw, 64px); letter-spacing: -0.02em; line-height: 1.05; margin: 0 0 var(--s-5); }
   h1 em { font-style: italic; color: var(--primary); }
-  .lede { font-size: var(--text-lg); color: var(--ink-2); max-width: 60ch; line-height: 1.55; margin: 0 0 var(--s-9); }
+  .lede { font-size: var(--text-lg); color: var(--ink-2); max-width: 64ch; line-height: 1.55; margin: 0 0 var(--s-9); }
   .section { margin-top: var(--s-10); padding-top: var(--s-7); border-top: 1px solid var(--line); }
-  .section h2 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-2xl); letter-spacing: -0.01em; margin: 0 0 var(--s-2); }
-  .section .sub { color: var(--ink-3); margin: 0 0 var(--s-6); max-width: 70ch; }
+  .section h2 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-2xl); letter-spacing: -0.01em; margin: 0 0 var(--s-3); }
+  .section h3 { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: var(--text-xl); margin: var(--s-7) 0 var(--s-3); color: var(--primary); }
   .num { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); letter-spacing: 0.12em; margin-bottom: var(--s-2); }
+  .sub { color: var(--ink-3); margin: 0 0 var(--s-5); max-width: 70ch; line-height: 1.55; }
+  code { font-family: var(--font-mono); font-size: 12px; background: var(--bg-deep); padding: 1px 5px; border-radius: 3px; color: var(--ink-2); }
 
-  .flow-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: var(--s-7); margin-bottom: var(--s-5); }
-  .flow-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--s-3); flex-wrap: wrap; gap: var(--s-3); }
-  .flow-head h3 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-xl); margin: 0; letter-spacing: -0.01em; }
-  .flow-head em { font-style: italic; color: var(--primary); }
-  .flow-head .meta { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.08em; }
-  .flow-card > p { color: var(--ink-2); font-size: var(--text-sm); line-height: 1.6; max-width: 70ch; margin: 0 0 var(--s-5); }
+  .annot { background: var(--bg-deep); border-left: 3px solid var(--primary); padding: var(--s-4) var(--s-5); border-radius: 0 var(--r-sm) var(--r-sm) 0; margin: var(--s-5) 0; font-size: var(--text-sm); color: var(--ink-2); line-height: 1.55; }
+  .annot b { color: var(--primary); font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; display: block; margin-bottom: 4px; }
 
-  .flow-svg { background: var(--bg-deep); border-radius: var(--r-md); padding: var(--s-5); overflow-x: auto; }
-  .flow-svg svg { display: block; min-width: 800px; }
+  /* Tree view */
+  .tree { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-7); font-family: var(--font-mono); font-size: 12px; color: var(--ink-2); line-height: 1.7; overflow-x: auto; }
+  .tree .node { display: flex; align-items: baseline; gap: 8px; }
+  .tree .node .id { color: var(--primary); font-weight: 600; }
+  .tree .node .label { color: var(--ink); }
+  .tree .node .route { color: var(--ink-3); font-size: 11px; }
+  .tree .node .badge {
+    display: inline-block; padding: 1px 6px; border-radius: 3px;
+    font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em;
+    margin-left: 6px; font-weight: 500;
+  }
+  .tree .node .badge.modal { background: var(--accent-soft); color: var(--accent); }
+  .tree .node .badge.deep { background: var(--success-soft); color: var(--success); }
+  .tree .node .badge.auth { background: var(--bg-deep); color: var(--ink-3); }
+  .tree .root { font-family: var(--font-display); font-style: italic; font-size: 16px; font-weight: 500; color: var(--ink); margin-bottom: 8px; }
+  .tree .indent-1 { padding-left: 24px; }
+  .tree .indent-2 { padding-left: 48px; }
+  .tree .indent-3 { padding-left: 72px; }
+  .tree .indent-4 { padding-left: 96px; }
 
-  /* Sitemap */
-  .sitemap { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-6); margin-bottom: var(--s-5); }
-  .sitemap-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: var(--s-5); padding-bottom: var(--s-4); border-bottom: 1px solid var(--line); flex-wrap: wrap; gap: var(--s-3); }
-  .sitemap-head h3 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-xl); margin: 0; }
-  .sitemap-head .count { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--primary); text-transform: uppercase; letter-spacing: 0.1em; }
-  .smap { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-4); }
-  .smap-group { background: var(--bg-deep); border-radius: var(--r-sm); padding: var(--s-4); }
-  .smap-group h4 { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-3); margin: 0 0 var(--s-3); }
-  .smap-group ul { list-style: none; padding: 0; margin: 0; }
-  .smap-group li { font-size: 13px; padding: 6px 0; border-bottom: 1px dashed var(--line-2); color: var(--ink-2); display: flex; gap: 8px; }
-  .smap-group li:last-child { border-bottom: none; }
-  .smap-group li code { font-family: var(--font-mono); font-size: 11px; color: var(--primary-deep); background: var(--primary-soft); padding: 1px 5px; border-radius: 3px; flex-shrink: 0; }
+  .tree-sub h4 { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 16px; color: var(--ink); margin: var(--s-5) 0 var(--s-2); }
 
-  @media (max-width: 880px) { .smap { grid-template-columns: 1fr 1fr; } }
-  @media (max-width: 600px) { .smap { grid-template-columns: 1fr; } }
+  /* Stats */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-3); border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden; background: var(--surface); margin-bottom: var(--s-5); }
+  .stat { padding: var(--s-4) var(--s-5); border-right: 1px solid var(--line); }
+  .stat:last-child { border-right: none; }
+  .stat .l { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.1em; }
+  .stat .n { font-family: var(--font-display); font-weight: 500; font-style: italic; font-size: 32px; line-height: 1; margin-top: 6px; letter-spacing: -0.02em; color: var(--primary); }
+  .stat .d { font-size: 11px; color: var(--ink-3); margin-top: 4px; }
+
+  /* Cross-app handoff diagram */
+  .handoff {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--r-md); padding: var(--s-7);
+    margin-top: var(--s-5);
+  }
+  .apps-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--s-4); margin-bottom: var(--s-5);
+  }
+  .app-col {
+    padding: var(--s-4); border-radius: var(--r-sm);
+    text-align: center;
+    font-family: var(--font-display); font-style: italic; font-weight: 500;
+    font-size: 16px;
+  }
+  .app-col.sub { background: #FFF3EE; color: #C4622D; }
+  .app-col.work { background: #EAF6EE; color: #1A5C34; }
+  .app-col.ops { background: #F0EBFF; color: #3B1F7A; }
+  .app-col .icon { font-size: 24px; margin-bottom: 6px; }
+
+  .handoff-list {
+    display: grid; gap: var(--s-3);
+  }
+  .ho {
+    display: grid; grid-template-columns: 200px auto 1fr;
+    gap: var(--s-4); padding: var(--s-4);
+    border: 1px solid var(--line); border-radius: var(--r-sm);
+    align-items: center;
+  }
+  .ho .from { font-family: var(--font-mono); font-size: 11px; color: var(--ink); }
+  .ho .from .app { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-3); }
+  .ho .arrow { color: var(--primary); font-family: var(--font-mono); font-size: 16px; }
+  .ho .desc { font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+  .ho .desc b { color: var(--ink); }
+
+  /* Route table */
+  .routes { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: var(--s-3); }
+  .routes thead th { text-align: left; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-3); font-weight: 500; padding: 10px 12px; border-bottom: 2px solid var(--line); background: var(--bg); }
+  .routes tbody td { padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .routes .id { font-family: var(--font-mono); font-size: 11px; color: var(--primary); white-space: nowrap; }
+  .routes .name { color: var(--ink); }
+  .routes .route { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+  .routes .states { font-family: var(--font-mono); font-size: 10px; color: var(--ink-2); }
+  .routes .states .ok { color: var(--success); }
+  .routes .states .miss { color: var(--ink-4); text-decoration: line-through; }
+  .routes .auth { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); }
+
+  /* Nav model viz */
+  .nav-model {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: var(--s-5); margin-top: var(--s-4);
+  }
+  .nav-card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--r-md); padding: var(--s-5);
+  }
+  .nav-card h4 { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 16px; margin: 0 0 var(--s-3); color: var(--primary); }
+  .nav-card ul { margin: 0; padding-left: 18px; font-size: 12px; line-height: 1.7; color: var(--ink-2); }
+
+  .pill { display: inline-block; padding: 2px 7px; border-radius: 3px; font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; margin-left: 4px; }
+  .pill.tab { background: var(--primary-soft); color: var(--primary); }
+  .pill.modal { background: var(--accent-soft); color: var(--accent); }
+  .pill.full { background: var(--bg-deep); color: var(--ink-2); }
+  .pill.deep { background: var(--success-soft); color: var(--success); }
+  .pill.first { background: #1C1208; color: white; }
 </style></head>
 <body data-theme="subscriber">
 <div class="page">
-  <div class="crumb"><a href="../index.html">← Index</a> · 02 Flows &amp; 03 IA · Architecture</div>
+  <div class="crumb"><a href="../index.html">← Index</a> · 03 Architecture de l'information</div>
 
-  <h1>Comment <em>les écrans</em><br>s'enchaînent.</h1>
-  <p class="lede">Six flux critiques cartographiés, trois architectures complètes. Aucun écran ne flotte sans parent. Aucune branche d'erreur sans destination. Si un écran n'apparaît pas ici, il n'existe pas.</p>
+  <h1>Architecture <em>de l'information</em>.<br>Aucun écran orphelin.</h1>
+  <p class="lede">Plan complet des trois applications. Chaque écran a un identifiant (X/W/O), une route, une hiérarchie, un mode de navigation (onglet, modale, plein écran), et un budget d'états (les 5 de la <a href="../08-states-library/states.html" style="color:var(--primary)">bibliothèque d'états</a>). Pour les transitions entre écrans, voir <a href="../02-flows/flows.html" style="color:var(--primary)">02 Flux</a>.</p>
 
-  <!-- ============ FLOWS ============ -->
+  <div class="stats">
+    <div class="stat"><div class="l">Surfaces totales</div><div class="n">81</div><div class="d">+ 24 modales internes</div></div>
+    <div class="stat"><div class="l">Application abonné</div><div class="n">35</div><div class="d">X-01 → X-35</div></div>
+    <div class="stat"><div class="l">Application laveuse</div><div class="n">22</div><div class="d">W-01 → W-22</div></div>
+    <div class="stat"><div class="l">Console opérateur</div><div class="n">24</div><div class="d">O-01 → O-24</div></div>
+  </div>
+
+  <div class="annot"><b>Conventions de cette page</b>Les écrans plein-écran utilisent <code>X-NN</code>, <code>W-NN</code>, <code>O-NN</code>. Les modales internes utilisent <code>X-NN.M</code> (modale de X-NN). Les routes sont relatives à la racine de l'app. Les <span class="pill modal">modal</span> s'ouvrent sans navigation (overlay), les <span class="pill full">page</span> remplacent l'écran courant, les <span class="pill deep">deep</span> sont accessibles par lien direct (push, SMS, partage).</div>
+
+  <!-- =================================================== -->
+  <!-- NAV MODEL                                             -->
+  <!-- =================================================== -->
   <section class="section">
-    <div class="num">02 · FLUX CRITIQUES</div>
-    <h2>Six parcours, branches incluses</h2>
-    <p class="sub">Chaque flux liste les écrans (X-/W-/O-N), les transitions, et les branches d'erreur. Lecture de gauche à droite, le bonheur en haut, les exceptions en bas.</p>
+    <div class="num">01 · MODÈLES DE NAVIGATION</div>
+    <h2>Trois apps, trois patterns</h2>
+    <p class="sub">Chaque application a son modèle de navigation propre — calé sur les conventions de sa plateforme et sur le profil de son utilisateur.</p>
 
-    <!-- Flow 1: Subscriber signup -->
-    <div class="flow-card">
-      <div class="flow-head">
-        <h3>F1 · <em>Inscription</em> abonné</h3>
-        <span class="meta">7 écrans · 2 branches · ~3 min</span>
+    <div class="nav-model">
+      <div class="nav-card" style="border-left: 3px solid #C4622D">
+        <h4>Subscriber · iOS (Tab Bar)</h4>
+        <ul>
+          <li>4 onglets <span class="pill tab">tab</span> : Accueil · Visites · Abonnement · Profil</li>
+          <li>Pile de navigation par onglet (push/pop · transition slide horizontale)</li>
+          <li>Modales en sheet remontante <span class="pill modal">modal</span> : paiement, signalement, support</li>
+          <li>Pas de hamburger menu — toutes les sections principales sont en tab</li>
+          <li>Deep links <span class="pill deep">deep</span> : push notification ouvre l'écran cible directement</li>
+          <li>Authentification <span class="pill first">first-run</span> : flux X-01 → X-08, sortie impossible avant complétion</li>
+        </ul>
       </div>
-      <p>De la première ouverture à la confirmation que la première laveuse a été assignée. Mobile Money obligatoire. SLA d'assignation : 4 h ouvrées.</p>
-      <div class="flow-svg">
-        <svg viewBox="0 0 1200 320" width="1200" height="320">
-          <defs>
-            <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="#C4622D"/>
-            </marker>
-            <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="#C03020"/>
-            </marker>
-          </defs>
-          <g font-family="Inter, sans-serif" font-size="11">
-            <!-- happy path -->
-            <g stroke="#1C1208" stroke-width="1" fill="#FFFDF8">
-              <rect x="20" y="80" width="130" height="80" rx="8"/>
-              <rect x="180" y="80" width="130" height="80" rx="8"/>
-              <rect x="340" y="80" width="130" height="80" rx="8"/>
-              <rect x="500" y="80" width="130" height="80" rx="8"/>
-              <rect x="660" y="80" width="130" height="80" rx="8"/>
-              <rect x="820" y="80" width="130" height="80" rx="8"/>
-              <rect x="980" y="80" width="130" height="80" rx="8"/>
-            </g>
-            <g fill="#1C1208" text-anchor="middle">
-              <text x="85" y="112">X-01 Splash</text><text x="85" y="130" fill="#8C7258" font-size="10">marque + langue</text>
-              <text x="245" y="112">X-02 Téléphone</text><text x="245" y="130" fill="#8C7258" font-size="10">+228 90 12 34 56</text>
-              <text x="405" y="112">X-03 OTP</text><text x="405" y="130" fill="#8C7258" font-size="10">6 chiffres</text>
-              <text x="565" y="112">X-04 Adresse</text><text x="565" y="130" fill="#8C7258" font-size="10">quartier + détail</text>
-              <text x="725" y="112">X-05 Plan</text><text x="725" y="130" fill="#8C7258" font-size="10">2 500 / 4 500</text>
-              <text x="885" y="112">X-06 Paiement</text><text x="885" y="130" fill="#8C7258" font-size="10">T-Money / Flooz</text>
-              <text x="1045" y="112">X-07 Match</text><text x="1045" y="130" fill="#9C4A1F" font-size="10" font-weight="600">en attente · 4 h</text>
-            </g>
-            <!-- arrows -->
-            <g stroke="#C4622D" stroke-width="1.5" fill="none" marker-end="url(#ar)">
-              <line x1="150" y1="120" x2="180" y2="120"/>
-              <line x1="310" y1="120" x2="340" y2="120"/>
-              <line x1="470" y1="120" x2="500" y2="120"/>
-              <line x1="630" y1="120" x2="660" y2="120"/>
-              <line x1="790" y1="120" x2="820" y2="120"/>
-              <line x1="950" y1="120" x2="980" y2="120"/>
-            </g>
-
-            <!-- error branches -->
-            <g stroke="#1C1208" stroke-width="1" fill="#FDECEA">
-              <rect x="340" y="220" width="130" height="60" rx="8"/>
-              <rect x="820" y="220" width="130" height="60" rx="8"/>
-            </g>
-            <g fill="#9C2030" text-anchor="middle" font-size="11">
-              <text x="405" y="248">X-03b OTP refusé</text><text x="405" y="265" fill="#8C7258" font-size="10">3 essais → assistance</text>
-              <text x="885" y="248">X-06b Paiement échoué</text><text x="885" y="265" fill="#8C7258" font-size="10">retry · alt méthode</text>
-            </g>
-            <g stroke="#C03020" stroke-width="1.2" fill="none" marker-end="url(#ar2)" stroke-dasharray="4 3">
-              <path d="M 405 160 L 405 220"/>
-              <path d="M 885 160 L 885 220"/>
-              <path d="M 405 280 Q 405 300, 405 280"/>
-              <path d="M 470 250 Q 600 300, 820 250"/>
-            </g>
-
-            <!-- legend -->
-            <g font-size="10" fill="#8C7258" font-family="JetBrains Mono, monospace" text-transform="uppercase">
-              <text x="20" y="40">— PARCOURS HEUREUX</text>
-              <text x="240" y="40" fill="#9C2030">— BRANCHES D'ERREUR</text>
-            </g>
-          </g>
-        </svg>
+      <div class="nav-card" style="border-left: 3px solid #1A5C34">
+        <h4>Worker · Android (Tab Bar bas + SOS flottant)</h4>
+        <ul>
+          <li>4 onglets <span class="pill tab">tab</span> : Tournée · Gains · Profil · Aide</li>
+          <li>Bouton SOS flottant rouge persistant sur tous les écrans (1 tap = appel direct bureau)</li>
+          <li>Pas de back-stack profond — chaque action revient à la tournée du jour</li>
+          <li>Modales en sheet remontante <span class="pill modal">modal</span> : retrait, signalement, congé</li>
+          <li>Deep links <span class="pill deep">deep</span> : push assignation ouvre détail visite</li>
+          <li>Hors-ligne <span class="pill first">offline-first</span> : tous les écrans fonctionnent sans réseau</li>
+        </ul>
       </div>
-    </div>
-
-    <!-- Flow 2: Visit lifecycle -->
-    <div class="flow-card">
-      <div class="flow-head">
-        <h3>F2 · <em>Cycle de visite</em> (laveuse)</h3>
-        <span class="meta">9 écrans · 3 photos · GPS check-in/out</span>
+      <div class="nav-card" style="border-left: 3px solid #3B1F7A">
+        <h4>Operator · Web desktop (Sidebar + drawer)</h4>
+        <ul>
+          <li>Sidebar fixe gauche · 4 sections : Aujourd'hui · Personnes · Finances · Org</li>
+          <li>Vue principale centrale + drawer contextuel droit pour le détail</li>
+          <li>Palette de commandes <code>⌘K</code> ouvre cherche + actions partout</li>
+          <li>URL routables — chaque vue a une URL partageable copiable</li>
+          <li>Deep links <span class="pill deep">deep</span> : email/Slack ouvre directement le ticket ou la demande</li>
+          <li>Authentification <span class="pill first">2FA</span> : par défaut · session 8h max</li>
+        </ul>
       </div>
-      <p>Du démarrage de la journée à la clôture d'une visite. Tout l'écran est conçu pour fonctionner hors-ligne — la sync arrive au prochain réseau, sans intervention.</p>
-      <div class="flow-svg">
-        <svg viewBox="0 0 1200 280" width="1200" height="280">
-          <defs>
-            <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="#1A5C34"/>
-            </marker>
-          </defs>
-          <g font-family="Inter, sans-serif" font-size="11">
-            <g stroke="#0E1A12" stroke-width="1" fill="#FFFFFF">
-              <rect x="20" y="100" width="120" height="80" rx="8"/>
-              <rect x="160" y="100" width="120" height="80" rx="8"/>
-              <rect x="300" y="100" width="120" height="80" rx="8"/>
-              <rect x="440" y="100" width="120" height="80" rx="8"/>
-              <rect x="580" y="100" width="120" height="80" rx="8"/>
-              <rect x="720" y="100" width="120" height="80" rx="8"/>
-              <rect x="860" y="100" width="120" height="80" rx="8"/>
-              <rect x="1000" y="100" width="120" height="80" rx="8"/>
-            </g>
-            <g fill="#0E1A12" text-anchor="middle">
-              <text x="80" y="130">W-01 Tournée</text><text x="80" y="148" fill="#58685D" font-size="10">5 visites · 12 km</text>
-              <text x="220" y="130">W-02 Itinéraire</text><text x="220" y="148" fill="#58685D" font-size="10">carte · trafic</text>
-              <text x="360" y="130">W-03 Arrivée</text><text x="360" y="148" fill="#1A5C34" font-size="10" font-weight="600">check-in GPS</text>
-              <text x="500" y="130">W-04 Avant</text><text x="500" y="148" fill="#58685D" font-size="10">photo état</text>
-              <text x="640" y="130">W-05 Travail</text><text x="640" y="148" fill="#58685D" font-size="10">timer · pause</text>
-              <text x="780" y="130">W-06 Après</text><text x="780" y="148" fill="#58685D" font-size="10">photo état</text>
-              <text x="920" y="130">W-07 Signature</text><text x="920" y="148" fill="#58685D" font-size="10">abonné valide</text>
-              <text x="1060" y="130">W-08 Clôture</text><text x="1060" y="148" fill="#1A5C34" font-size="10" font-weight="600">+650 XOF</text>
-            </g>
-            <g stroke="#1A5C34" stroke-width="1.5" fill="none" marker-end="url(#ar3)">
-              <line x1="140" y1="140" x2="160" y2="140"/>
-              <line x1="280" y1="140" x2="300" y2="140"/>
-              <line x1="420" y1="140" x2="440" y2="140"/>
-              <line x1="560" y1="140" x2="580" y2="140"/>
-              <line x1="700" y1="140" x2="720" y2="140"/>
-              <line x1="840" y1="140" x2="860" y2="140"/>
-              <line x1="980" y1="140" x2="1000" y2="140"/>
-            </g>
-            <g font-size="10" fill="#58685D" font-family="JetBrains Mono, monospace">
-              <text x="20" y="40">— HORS-LIGNE D'ABORD · sync au réseau</text>
-              <text x="20" y="58" fill="#1A5C34">✓ Photos compressées localement avant upload</text>
-              <text x="20" y="76" fill="#1A5C34">✓ GPS écrit même sans data</text>
-            </g>
-          </g>
-        </svg>
-      </div>
-    </div>
-
-    <!-- Flow 3: Dispute -->
-    <div class="flow-card">
-      <div class="flow-head">
-        <h3>F3 · <em>Litige</em> (abonné → opérateur)</h3>
-        <span class="meta">5 écrans abonné · 4 écrans opérateur · SLA 24 h</span>
-      </div>
-      <p>L'abonné signale un problème (qualité, comportement, dégât). L'opérateur juge avec preuves photo des deux côtés. Issue : crédit, remplacement de laveuse, ou clôture sans suite. Aucune solution n'inclut « désolé » seul.</p>
-      <div class="flow-svg">
-        <svg viewBox="0 0 1200 280" width="1200" height="280">
-          <defs>
-            <marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="#3B1F7A"/>
-            </marker>
-          </defs>
-          <g font-family="Inter, sans-serif" font-size="11">
-            <!-- Sub side -->
-            <g stroke="#1C1208" stroke-width="1" fill="#FFF3EE">
-              <rect x="20" y="40" width="120" height="60" rx="8"/>
-              <rect x="160" y="40" width="120" height="60" rx="8"/>
-              <rect x="300" y="40" width="120" height="60" rx="8"/>
-            </g>
-            <g fill="#9C4A1F" text-anchor="middle">
-              <text x="80" y="65">X-21 Signaler</text><text x="80" y="82" fill="#8C7258" font-size="10">type · photo</text>
-              <text x="220" y="65">X-22 Détails</text><text x="220" y="82" fill="#8C7258" font-size="10">narratif</text>
-              <text x="360" y="65">X-23 Reçu</text><text x="360" y="82" fill="#8C7258" font-size="10">D-7841 · 24 h</text>
-            </g>
-            <!-- Op side -->
-            <g stroke="#15131D" stroke-width="1" fill="#F0EBFF">
-              <rect x="500" y="40" width="120" height="60" rx="8"/>
-              <rect x="640" y="40" width="120" height="60" rx="8"/>
-              <rect x="780" y="40" width="120" height="60" rx="8"/>
-              <rect x="920" y="40" width="120" height="60" rx="8"/>
-            </g>
-            <g fill="#28135A" text-anchor="middle">
-              <text x="560" y="65">O-12 Inbox</text><text x="560" y="82" fill="#686275" font-size="10">12 nouveaux</text>
-              <text x="700" y="65">O-13 Détail</text><text x="700" y="82" fill="#686275" font-size="10">2 versions</text>
-              <text x="840" y="65">O-14 Décision</text><text x="840" y="82" fill="#686275" font-size="10">crédit · swap · ferme</text>
-              <text x="980" y="65">O-15 Notif</text><text x="980" y="82" fill="#686275" font-size="10">2 parties</text>
-            </g>
-            <!-- Outcomes -->
-            <g stroke="#1C1208" stroke-width="1" fill="#DFF0DA">
-              <rect x="500" y="180" width="120" height="60" rx="8"/>
-              <rect x="640" y="180" width="120" height="60" rx="8"/>
-              <rect x="780" y="180" width="120" height="60" rx="8"/>
-            </g>
-            <g fill="#2A5530" text-anchor="middle">
-              <text x="560" y="205">Crédit</text><text x="560" y="222" fill="#686275" font-size="10">XOF auto</text>
-              <text x="700" y="205">Remplacement</text><text x="700" y="222" fill="#686275" font-size="10">nouvelle laveuse</text>
-              <text x="840" y="205">Clôture</text><text x="840" y="222" fill="#686275" font-size="10">explication écrite</text>
-            </g>
-            <!-- arrows -->
-            <g stroke="#3B1F7A" stroke-width="1.5" fill="none" marker-end="url(#ar4)">
-              <line x1="140" y1="70" x2="160" y2="70"/>
-              <line x1="280" y1="70" x2="300" y2="70"/>
-              <path d="M 420 70 Q 460 70, 500 70"/>
-              <line x1="620" y1="70" x2="640" y2="70"/>
-              <line x1="760" y1="70" x2="780" y2="70"/>
-              <line x1="900" y1="70" x2="920" y2="70"/>
-              <path d="M 840 100 L 560 180" stroke-dasharray="3 3"/>
-              <path d="M 840 100 L 700 180" stroke-dasharray="3 3"/>
-              <path d="M 840 100 L 840 180" stroke-dasharray="3 3"/>
-            </g>
-            <g font-size="10" fill="#8C7258" font-family="JetBrains Mono, monospace">
-              <text x="20" y="20">— CÔTÉ ABONNÉ</text>
-              <text x="500" y="20" fill="#28135A">— CÔTÉ OPÉRATEUR</text>
-              <text x="500" y="160" fill="#2A5530">— ISSUES POSSIBLES</text>
-            </g>
-          </g>
-        </svg>
-      </div>
-    </div>
-
-    <!-- Flow 4: Payment recovery -->
-    <div class="flow-card">
-      <div class="flow-head">
-        <h3>F4 · <em>Récupération</em> de paiement</h3>
-        <span class="meta">D+0, D+2, D+5, D+7 · pas d'agressivité</span>
-      </div>
-      <p>Le prélèvement Mobile Money échoue. Quatre rappels échelonnés sur sept jours. Aucun ne contient « urgent » ni « immédiatement ». Au jour 7, le service est suspendu — mais pas l'abonnement, qu'on relance par humain.</p>
-      <div class="flow-svg">
-        <svg viewBox="0 0 1200 200" width="1200" height="200">
-          <g font-family="Inter, sans-serif" font-size="11">
-            <line x1="60" y1="100" x2="1140" y2="100" stroke="#EAE0D5" stroke-width="2"/>
-            <g>
-              <circle cx="100" cy="100" r="14" fill="#C4622D"/>
-              <text x="100" y="104" text-anchor="middle" fill="#FFFDF8" font-weight="600" font-size="11">D+0</text>
-              <text x="100" y="60" text-anchor="middle" font-weight="600">Échec prélèvement</text>
-              <text x="100" y="78" text-anchor="middle" fill="#8C7258" font-size="10">notification douce + retry</text>
-              <text x="100" y="140" text-anchor="middle" fill="#8C7258" font-size="10" font-style="italic">«&nbsp;Le paiement n'a pas abouti.&nbsp;»</text>
-            </g>
-            <g>
-              <circle cx="380" cy="100" r="14" fill="#B8870A"/>
-              <text x="380" y="104" text-anchor="middle" fill="#FFFDF8" font-weight="600" font-size="11">D+2</text>
-              <text x="380" y="60" text-anchor="middle" font-weight="600">Rappel 1</text>
-              <text x="380" y="78" text-anchor="middle" fill="#8C7258" font-size="10">SMS + in-app · alt méthode</text>
-              <text x="380" y="140" text-anchor="middle" fill="#8C7258" font-size="10" font-style="italic">«&nbsp;Vous pouvez essayer Flooz.&nbsp;»</text>
-            </g>
-            <g>
-              <circle cx="660" cy="100" r="14" fill="#B5651D"/>
-              <text x="660" y="104" text-anchor="middle" fill="#FFFDF8" font-weight="600" font-size="11">D+5</text>
-              <text x="660" y="60" text-anchor="middle" font-weight="600">Rappel 2</text>
-              <text x="660" y="78" text-anchor="middle" fill="#8C7258" font-size="10">SMS + appel · proposition humain</text>
-              <text x="660" y="140" text-anchor="middle" fill="#8C7258" font-size="10" font-style="italic">«&nbsp;On vous rappelle ?&nbsp;»</text>
-            </g>
-            <g>
-              <circle cx="940" cy="100" r="14" fill="#C03020"/>
-              <text x="940" y="104" text-anchor="middle" fill="#FFFDF8" font-weight="600" font-size="11">D+7</text>
-              <text x="940" y="60" text-anchor="middle" font-weight="600">Suspension service</text>
-              <text x="940" y="78" text-anchor="middle" fill="#8C7258" font-size="10">visites pause · abo intact</text>
-              <text x="940" y="140" text-anchor="middle" fill="#8C7258" font-size="10" font-style="italic">«&nbsp;Akouvi marque une pause.&nbsp;»</text>
-            </g>
-          </g>
-        </svg>
-      </div>
-    </div>
-
-    <!-- Flow 5: Worker day -->
-    <div class="flow-card">
-      <div class="flow-head">
-        <h3>F5 · <em>Jour</em> de laveuse · vue macro</h3>
-        <span class="meta">06:00 → 18:00 · 5 visites moyennes</span>
-      </div>
-      <p>Comment l'application accompagne une journée type, du réveil à la clôture. La donnée critique de chaque moment : ce que la laveuse voit en premier au déverrouillage.</p>
-      <div class="flow-svg">
-        <svg viewBox="0 0 1200 200" width="1200" height="200">
-          <g font-family="Inter, sans-serif" font-size="11">
-            <line x1="60" y1="120" x2="1140" y2="120" stroke="#DDE8E2" stroke-width="2"/>
-            <g>
-              <rect x="60" y="40" width="160" height="60" rx="8" fill="#FFFFFF" stroke="#DDE8E2"/>
-              <text x="140" y="62" text-anchor="middle" font-weight="600">06:00 — Aperçu jour</text>
-              <text x="140" y="80" text-anchor="middle" fill="#58685D" font-size="10">5 visites · 12 km · 3 250 XOF</text>
-              <text x="140" y="146" text-anchor="middle" fill="#1A5C34" font-size="10" font-weight="600">W-00 Aujourd'hui</text>
-              <circle cx="140" cy="120" r="6" fill="#1A5C34"/>
-            </g>
-            <g>
-              <rect x="240" y="40" width="160" height="60" rx="8" fill="#FFFFFF" stroke="#DDE8E2"/>
-              <text x="320" y="62" text-anchor="middle" font-weight="600">08:30 — En route</text>
-              <text x="320" y="80" text-anchor="middle" fill="#58685D" font-size="10">itinéraire vers Akouvi</text>
-              <text x="320" y="146" text-anchor="middle" fill="#1A5C34" font-size="10" font-weight="600">W-02 Itinéraire</text>
-              <circle cx="320" cy="120" r="6" fill="#1A5C34"/>
-            </g>
-            <g>
-              <rect x="420" y="40" width="160" height="60" rx="8" fill="#FFFFFF" stroke="#DDE8E2"/>
-              <text x="500" y="62" text-anchor="middle" font-weight="600">09:00 — Visite 1</text>
-              <text x="500" y="80" text-anchor="middle" fill="#58685D" font-size="10">cycle 90 min · photos</text>
-              <text x="500" y="146" text-anchor="middle" fill="#1A5C34" font-size="10" font-weight="600">W-03 → W-08</text>
-              <circle cx="500" cy="120" r="6" fill="#1A5C34"/>
-            </g>
-            <g>
-              <rect x="600" y="40" width="160" height="60" rx="8" fill="#FFFFFF" stroke="#DDE8E2"/>
-              <text x="680" y="62" text-anchor="middle" font-weight="600">12:00 — Pause</text>
-              <text x="680" y="80" text-anchor="middle" fill="#58685D" font-size="10">repas · 30 min</text>
-              <text x="680" y="146" text-anchor="middle" fill="#58685D" font-size="10">timer auto</text>
-              <circle cx="680" cy="120" r="6" fill="#D4900E"/>
-            </g>
-            <g>
-              <rect x="780" y="40" width="160" height="60" rx="8" fill="#FFFFFF" stroke="#DDE8E2"/>
-              <text x="860" y="62" text-anchor="middle" font-weight="600">14:00 — Reprise</text>
-              <text x="860" y="80" text-anchor="middle" fill="#58685D" font-size="10">visites 2 → 5</text>
-              <text x="860" y="146" text-anchor="middle" fill="#1A5C34" font-size="10" font-weight="600">cycle continu</text>
-              <circle cx="860" cy="120" r="6" fill="#1A5C34"/>
-            </g>
-            <g>
-              <rect x="960" y="40" width="160" height="60" rx="8" fill="#FFFFFF" stroke="#DDE8E2"/>
-              <text x="1040" y="62" text-anchor="middle" font-weight="600">17:30 — Bilan</text>
-              <text x="1040" y="80" text-anchor="middle" fill="#58685D" font-size="10">3 250 XOF · 5/5</text>
-              <text x="1040" y="146" text-anchor="middle" fill="#1A5C34" font-size="10" font-weight="600">W-12 Gains du jour</text>
-              <circle cx="1040" cy="120" r="6" fill="#1A5C34"/>
-            </g>
-          </g>
-        </svg>
-      </div>
-    </div>
-
-    <!-- Flow 6: Operator matching -->
-    <div class="flow-card">
-      <div class="flow-head">
-        <h3>F6 · <em>Assignation</em> opérateur</h3>
-        <span class="meta">SLA 4 h ouvrées · score multi-critères</span>
-      </div>
-      <p>Une nouvelle abonnée arrive. L'opérateur reçoit un ticket, voit les 3 meilleures candidates ranking, attribue. Le système suggère, l'humain décide — le matching automatique total est explicitement refusé en v1.</p>
-      <div class="flow-svg">
-        <svg viewBox="0 0 1200 240" width="1200" height="240">
-          <defs>
-            <marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="#3B1F7A"/>
-            </marker>
-          </defs>
-          <g font-family="Inter, sans-serif" font-size="11">
-            <g stroke="#15131D" stroke-width="1" fill="#FFFFFF">
-              <rect x="20" y="80" width="140" height="80" rx="8"/>
-              <rect x="200" y="80" width="140" height="80" rx="8"/>
-              <rect x="380" y="80" width="160" height="80" rx="8" fill="#F0EBFF"/>
-              <rect x="580" y="80" width="140" height="80" rx="8"/>
-              <rect x="760" y="80" width="140" height="80" rx="8"/>
-              <rect x="940" y="80" width="180" height="80" rx="8" fill="#DFF0DA"/>
-            </g>
-            <g fill="#15131D" text-anchor="middle">
-              <text x="90" y="112">O-01 Inbox</text><text x="90" y="130" fill="#686275" font-size="10">12 en attente</text>
-              <text x="270" y="112">O-02 Ticket</text><text x="270" y="130" fill="#686275" font-size="10">Mme Yawa · Tokoin</text>
-              <text x="460" y="112" fill="#28135A" font-weight="600">O-03 Candidates</text><text x="460" y="130" fill="#686275" font-size="10">3 rankings · score</text>
-              <text x="650" y="112">O-04 Profil</text><text x="650" y="130" fill="#686275" font-size="10">Akouvi · 4.9★ · 2 km</text>
-              <text x="830" y="112">O-05 Confirmer</text><text x="830" y="130" fill="#686275" font-size="10">message au sub</text>
-              <text x="1030" y="112" fill="#2A5530" font-weight="600">O-06 Assigné</text><text x="1030" y="130" fill="#686275" font-size="10">SLA 2 h 14 / 4 h</text>
-            </g>
-            <g stroke="#3B1F7A" stroke-width="1.5" fill="none" marker-end="url(#ar5)">
-              <line x1="160" y1="120" x2="200" y2="120"/>
-              <line x1="340" y1="120" x2="380" y2="120"/>
-              <line x1="540" y1="120" x2="580" y2="120"/>
-              <line x1="720" y1="120" x2="760" y2="120"/>
-              <line x1="900" y1="120" x2="940" y2="120"/>
-            </g>
-            <g font-size="10" fill="#686275" font-family="JetBrains Mono, monospace">
-              <text x="20" y="40">— CRITÈRES SCORE: distance · charge · langue · ancienneté · note</text>
-              <text x="20" y="58" fill="#28135A">— L'HUMAIN DÉCIDE TOUJOURS · pas d'auto-assignation v1</text>
-              <text x="20" y="200" fill="#28135A">⌥M · raccourci match | ⌥A · assigner | ⌥R · refuser candidate</text>
-            </g>
-          </g>
-        </svg>
+      <div class="nav-card">
+        <h4>Conventions partagées</h4>
+        <ul>
+          <li>Toutes les apps : barre de statut système, jamais cachée</li>
+          <li>Toutes les apps : bouton retour <i>retourne</i>, ne ferme pas l'app</li>
+          <li>Toutes les apps : modale fermable par swipe-down (mobile) ou Esc/click-outside (web)</li>
+          <li>Toutes les apps : URL copiable pour chaque écran principal (mobile = deeplink scheme)</li>
+          <li>Aucune navigation par geste exclusif (toujours équivalent bouton — cf. accessibilité)</li>
+        </ul>
       </div>
     </div>
   </section>
 
-  <!-- ============ IA / SITEMAPS ============ -->
+  <!-- =================================================== -->
+  <!-- SUBSCRIBER TREE                                       -->
+  <!-- =================================================== -->
   <section class="section">
-    <div class="num">03 · ARCHITECTURE</div>
-    <h2>Plans des trois applications</h2>
-    <p class="sub">Les ID (X-, W-, O-) sont la source de vérité. Chaque ID correspond à un wireframe, un écran hi-fi, et un fichier de redline. Si un ID apparaît ici sans wireframe correspondant, c'est un bug à corriger.</p>
+    <div class="num">02 · APPLICATION ABONNÉ — ARBRE</div>
+    <h2>X-01 → X-35 · 35 surfaces</h2>
+    <p class="sub">Tous les écrans côté client. La hiérarchie reflète la navigation réelle après authentification.</p>
 
-    <div class="sitemap" data-theme="subscriber" style="background: var(--bg);">
-      <div class="sitemap-head">
-        <h3>Application abonné · iOS</h3>
-        <div class="count">35 surfaces · X-01 → X-35</div>
-      </div>
-      <div class="smap">
-        <div class="smap-group">
-          <h4>Onboarding</h4>
-          <ul>
-            <li><code>X-01</code>Splash + langue</li>
-            <li><code>X-02</code>Téléphone</li>
-            <li><code>X-03</code>OTP · 6 chiffres</li>
-            <li><code>X-04</code>Adresse · quartier</li>
-            <li><code>X-05</code>Choix de plan</li>
-            <li><code>X-06</code>Paiement Mobile Money</li>
-            <li><code>X-07</code>Match en attente</li>
-            <li><code>X-08</code>Première laveuse présentée</li>
-          </ul>
-        </div>
-        <div class="smap-group">
-          <h4>Tableau de bord</h4>
-          <ul>
-            <li><code>X-10</code>Accueil — prochaine visite</li>
-            <li><code>X-11</code>Détail visite</li>
-            <li><code>X-12</code>Calendrier — 3 prochains mois</li>
-            <li><code>X-13</code>Historique visites</li>
-            <li><code>X-14</code>Profil laveuse</li>
-            <li><code>X-15</code>Reporter / annuler</li>
-          </ul>
-        </div>
-        <div class="smap-group">
-          <h4>Argent</h4>
-          <ul>
-            <li><code>X-16</code>Abonnement actif</li>
-            <li><code>X-17</code>Changer de plan</li>
-            <li><code>X-18</code>Mode de paiement</li>
-            <li><code>X-19</code>Historique paiements</li>
-            <li><code>X-20</code>Facture détaillée</li>
-            <li><code>X-25</code>Suspendre · arrêter</li>
-          </ul>
-        </div>
-        <div class="smap-group">
-          <h4>Support &amp; profil</h4>
-          <ul>
-            <li><code>X-21</code>Signaler un litige</li>
-            <li><code>X-22</code>Détail litige · narratif</li>
-            <li><code>X-23</code>Reçu litige</li>
-            <li><code>X-24</code>Historique litiges</li>
-            <li><code>X-30</code>Mon profil</li>
-            <li><code>X-31</code>Adresse · modifier</li>
-            <li><code>X-32</code>Notifications</li>
-            <li><code>X-33</code>Vie privée &amp; données</li>
-            <li><code>X-34</code>FAQ &amp; chat humain</li>
-            <li><code>X-35</code>Mentions légales</li>
-          </ul>
-        </div>
-      </div>
-    </div>
+    <div class="tree">
+      <div class="root">└─ Subscriber app · /</div>
 
-    <div class="sitemap" data-theme="worker" style="background: var(--bg);">
-      <div class="sitemap-head">
-        <h3>Application laveuse · Android</h3>
-        <div class="count">22 surfaces · W-01 → W-22</div>
+      <div class="tree-sub">
+        <h4>Onboarding · pré-authentification</h4>
+        <div class="node"><span class="id">X-01</span><span class="label">Splash + langue</span><span class="route"><code>/welcome</code></span><span class="badge auth">PUBLIC</span></div>
+        <div class="node indent-1"><span class="id">X-02</span><span class="label">Saisie numéro</span><span class="route"><code>/signup/phone</code></span></div>
+        <div class="node indent-1"><span class="id">X-03</span><span class="label">OTP 6 chiffres</span><span class="route"><code>/signup/otp</code></span></div>
+        <div class="node indent-1"><span class="id">X-04</span><span class="label">Adresse · quartier</span><span class="route"><code>/signup/address</code></span></div>
+        <div class="node indent-1"><span class="id">X-05</span><span class="label">Choix de plan</span><span class="route"><code>/signup/tier</code></span></div>
+        <div class="node indent-1"><span class="id">X-06</span><span class="label">Paiement Mobile Money</span><span class="route"><code>/signup/payment</code></span></div>
+        <div class="node indent-1"><span class="id">X-07</span><span class="label">Récap &amp; consentements</span><span class="route"><code>/signup/review</code></span></div>
+        <div class="node indent-1"><span class="id">X-08</span><span class="label">Bienvenue · onboarding terminé</span><span class="route"><code>/signup/welcome</code></span></div>
       </div>
-      <div class="smap">
-        <div class="smap-group">
-          <h4>Onboarding terrain</h4>
-          <ul>
-            <li><code>W-01</code>Téléphone + OTP</li>
-            <li><code>W-02</code>Pièce d'identité</li>
-            <li><code>W-03</code>Photo profil</li>
-            <li><code>W-04</code>Quartier base</li>
-            <li><code>W-05</code>Mobile Money compte</li>
-            <li><code>W-06</code>Tutoriel cycle</li>
-          </ul>
-        </div>
-        <div class="smap-group">
-          <h4>Tournée du jour</h4>
-          <ul>
-            <li><code>W-07</code>Aujourd'hui · liste</li>
-            <li><code>W-08</code>Itinéraire · carte</li>
-            <li><code>W-09</code>Détail visite (avant)</li>
-            <li><code>W-10</code>Cycle visite — étapes</li>
-            <li><code>W-11</code>Photos avant/après</li>
-            <li><code>W-12</code>Signature abonné</li>
-            <li><code>W-13</code>Clôture · gain affiché</li>
-          </ul>
-        </div>
-        <div class="smap-group">
-          <h4>Gains &amp; planning</h4>
-          <ul>
-            <li><code>W-14</code>Cette semaine</li>
-            <li><code>W-15</code>Historique paiements</li>
-            <li><code>W-16</code>Retrait Mobile Money</li>
-            <li><code>W-17</code>Calendrier 7 jours</li>
-            <li><code>W-18</code>Indisponibilités</li>
-          </ul>
-        </div>
-        <div class="smap-group">
-          <h4>Profil &amp; SOS</h4>
-          <ul>
-            <li><code>W-19</code>Mon profil &amp; note</li>
-            <li><code>W-20</code>SOS · 3 boutons</li>
-            <li><code>W-21</code>Aide &amp; FAQ</li>
-            <li><code>W-22</code>Mes abonnés</li>
-          </ul>
-        </div>
-      </div>
-    </div>
 
-    <div class="sitemap" data-theme="operator" style="background: var(--bg);">
-      <div class="sitemap-head">
-        <h3>Console opérateur · web desktop</h3>
-        <div class="count">24 surfaces · O-01 → O-24</div>
+      <div class="tree-sub">
+        <h4>Onglet Accueil · /home</h4>
+        <div class="node"><span class="id">X-10</span><span class="label">Hub · prochaine visite</span><span class="route"><code>/home</code></span><span class="badge deep">DEEP</span></div>
+        <div class="node indent-1"><span class="id">X-11</span><span class="label">Détail visite à venir</span><span class="route"><code>/visits/:id</code></span><span class="badge deep">DEEP</span></div>
+        <div class="node indent-1"><span class="id">X-11.M</span><span class="label">Reporter cette visite</span><span class="route"><code>/visits/:id?action=reschedule</code></span><span class="badge modal">MODAL</span></div>
+        <div class="node indent-1"><span class="id">X-11.S</span><span class="label">Signaler un souci</span><span class="route"><code>/visits/:id?action=report</code></span><span class="badge modal">MODAL</span></div>
+        <div class="node indent-1"><span class="id">X-12</span><span class="label">Suivi en route · carte</span><span class="route"><code>/visits/:id/tracking</code></span></div>
+        <div class="node indent-1"><span class="id">X-13</span><span class="label">Visite en cours</span><span class="route"><code>/visits/:id/live</code></span></div>
+        <div class="node indent-1"><span class="id">X-14</span><span class="label">Reveal photos avant/après</span><span class="route"><code>/visits/:id/reveal</code></span><span class="badge deep">DEEP</span></div>
+        <div class="node indent-1"><span class="id">X-15</span><span class="label">Feedback post-visite</span><span class="route"><code>/visits/:id/feedback</code></span></div>
       </div>
-      <div class="smap">
-        <div class="smap-group">
-          <h4>Live Ops</h4>
-          <ul>
-            <li><code>O-01</code>Vue d'ensemble · KPIs</li>
-            <li><code>O-02</code>Carte temps réel laveuses</li>
-            <li><code>O-03</code>Visites en cours</li>
-            <li><code>O-04</code>Alertes ouvertes</li>
-          </ul>
-        </div>
-        <div class="smap-group">
-          <h4>Matching</h4>
-          <ul>
-            <li><code>O-05</code>Inbox · tickets attente</li>
-            <li><code>O-06</code>Détail ticket abonné</li>
-            <li><code>O-07</code>Candidates rankées</li>
-            <li><code>O-08</code>Profil candidate</li>
-            <li><code>O-09</code>Confirmation assign</li>
-          </ul>
-        </div>
-        <div class="smap-group">
-          <h4>Support &amp; litiges</h4>
-          <ul>
-            <li><code>O-10</code>Inbox litiges</li>
-            <li><code>O-11</code>Détail litige (2 versions)</li>
-            <li><code>O-12</code>Décision · 3 issues</li>
-            <li><code>O-13</code>Conversations support</li>
-            <li><code>O-14</code>Macros réponses</li>
-          </ul>
-        </div>
-        <div class="smap-group">
-          <h4>Données &amp; admin</h4>
-          <ul>
-            <li><code>O-15</code>Abonnés · table</li>
-            <li><code>O-16</code>Profil abonné</li>
-            <li><code>O-17</code>Laveuses · table</li>
-            <li><code>O-18</code>Profil laveuse</li>
-            <li><code>O-19</code>Paiements · journal</li>
-            <li><code>O-20</code>Notifications campaign</li>
-            <li><code>O-21</code>Audit log</li>
-            <li><code>O-22</code>Rapports KPI</li>
-            <li><code>O-23</code>Équipe &amp; permissions</li>
-            <li><code>O-24</code>Réglages compte ops</li>
-          </ul>
-        </div>
+
+      <div class="tree-sub">
+        <h4>Onglet Visites · /visits</h4>
+        <div class="node"><span class="id">X-16</span><span class="label">Historique des visites</span><span class="route"><code>/visits</code></span></div>
+        <div class="node indent-1"><span class="id">X-17</span><span class="label">Détail visite passée</span><span class="route"><code>/visits/:id/past</code></span></div>
+        <div class="node indent-1"><span class="id">X-18</span><span class="label">Profil de la laveuse</span><span class="route"><code>/worker/:id</code></span><span class="badge deep">DEEP</span></div>
+      </div>
+
+      <div class="tree-sub">
+        <h4>Onglet Abonnement · /subscription</h4>
+        <div class="node"><span class="id">X-19</span><span class="label">Abonnement &amp; tarif</span><span class="route"><code>/subscription</code></span></div>
+        <div class="node indent-1"><span class="id">X-20</span><span class="label">Paiements · historique &amp; reçus</span><span class="route"><code>/subscription/payments</code></span></div>
+        <div class="node indent-1"><span class="id">X-21</span><span class="label">Modifier méthode MM</span><span class="route"><code>/subscription/payment-method</code></span><span class="badge modal">MODAL</span></div>
+        <div class="node indent-1"><span class="id">X-22</span><span class="label">Mettre en pause / annuler</span><span class="route"><code>/subscription/cancel</code></span><span class="badge modal">MODAL</span></div>
+        <div class="node indent-1"><span class="id">X-23</span><span class="label">Bandeau échec paiement</span><span class="route"><code>/subscription?banner=overdue</code></span><span class="badge deep">DEEP</span></div>
+      </div>
+
+      <div class="tree-sub">
+        <h4>Onglet Profil · /me</h4>
+        <div class="node"><span class="id">X-24</span><span class="label">Profil · données perso</span><span class="route"><code>/me</code></span></div>
+        <div class="node indent-1"><span class="id">X-25</span><span class="label">Modifier adresse</span><span class="route"><code>/me/address</code></span><span class="badge modal">MODAL</span></div>
+        <div class="node indent-1"><span class="id">X-26</span><span class="label">Préférences notifications</span><span class="route"><code>/me/notifications</code></span></div>
+        <div class="node indent-1"><span class="id">X-27</span><span class="label">Vie privée &amp; données</span><span class="route"><code>/me/privacy</code></span></div>
+        <div class="node indent-1"><span class="id">X-28</span><span class="label">Supprimer le compte</span><span class="route"><code>/me/delete</code></span><span class="badge modal">MODAL</span></div>
+      </div>
+
+      <div class="tree-sub">
+        <h4>Support · accessible depuis n'importe où</h4>
+        <div class="node"><span class="id">X-29</span><span class="label">Centre d'aide · FAQ</span><span class="route"><code>/help</code></span></div>
+        <div class="node indent-1"><span class="id">X-30</span><span class="label">Contacter le bureau</span><span class="route"><code>/help/contact</code></span><span class="badge modal">MODAL</span></div>
+        <div class="node indent-1"><span class="id">X-31</span><span class="label">Mes tickets</span><span class="route"><code>/help/tickets</code></span></div>
+        <div class="node indent-1"><span class="id">X-32</span><span class="label">Détail ticket</span><span class="route"><code>/help/tickets/:id</code></span></div>
+      </div>
+
+      <div class="tree-sub">
+        <h4>Connectivité &amp; états système</h4>
+        <div class="node"><span class="id">X-33</span><span class="label">Hors-ligne · cache</span><span class="route"><code>?offline=1</code></span></div>
+        <div class="node indent-1"><span class="id">X-34</span><span class="label">Maintenance prévue</span><span class="route"><code>?maintenance=1</code></span></div>
+        <div class="node indent-1"><span class="id">X-35</span><span class="label">Mise à jour requise</span><span class="route"><code>?upgrade=1</code></span></div>
       </div>
     </div>
   </section>
 
-  <p style="margin-top: var(--s-10); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.12em;">— Fin · v2.0 · 2026</p>
+  <!-- =================================================== -->
+  <!-- WORKER TREE                                           -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">03 · APPLICATION LAVEUSE — ARBRE</div>
+    <h2>W-01 → W-22 · 22 surfaces</h2>
+    <p class="sub">Outil de travail. Tous les écrans fonctionnent hors-ligne (sauf W-13 retrait MM, qui requiert le réseau au moment de la transaction).</p>
+
+    <div class="tree">
+      <div class="root">└─ Worker app · /</div>
+
+      <div class="tree-sub">
+        <h4>Démarrage · authentification</h4>
+        <div class="node"><span class="id">W-01</span><span class="label">Splash + sync local</span><span class="route"><code>/launch</code></span><span class="badge auth">PUBLIC</span></div>
+        <div class="node indent-1"><span class="id">W-02</span><span class="label">Connexion PIN 4 chiffres</span><span class="route"><code>/login</code></span></div>
+      </div>
+
+      <div class="tree-sub">
+        <h4>Onglet Tournée · /tour</h4>
+        <div class="node"><span class="id">W-03</span><span class="label">Tournée du jour</span><span class="route"><code>/tour</code></span><span class="badge deep">DEEP</span></div>
+        <div class="node indent-1"><span class="id">W-04</span><span class="label">Détail visite à venir</span><span class="route"><code>/tour/:id</code></span><span class="badge deep">DEEP</span></div>
+        <div class="node indent-1"><span class="id">W-05</span><span class="label">En route · carte + ETA</span><span class="route"><code>/tour/:id/enroute</code></span></div>
+        <div class="node indent-1"><span class="id">W-06</span><span class="label">Geofence détecté</span><span class="route"><code>/tour/:id/arrived</code></span></div>
+        <div class="node indent-1"><span class="id">W-07</span><span class="label">Photo « avant »</span><span class="route"><code>/tour/:id/photo-before</code></span></div>
+        <div class="node indent-1"><span class="id">W-08</span><span class="label">Phase lavage · timer libre</span><span class="route"><code>/tour/:id/washing</code></span></div>
+        <div class="node indent-1"><span class="id">W-09</span><span class="label">Photo « après »</span><span class="route"><code>/tour/:id/photo-after</code></span></div>
+        <div class="node indent-1"><span class="id">W-10</span><span class="label">Check-out · feedback bureau</span><span class="route"><code>/tour/:id/checkout</code></span></div>
+        <div class="node indent-1"><span class="id">W-11</span><span class="label">Récap visite + gain</span><span class="route"><code>/tour/:id/recap</code></span></div>
+        <div class="node indent-1"><span class="id">W-12</span><span class="label">Pause &amp; reprise</span><span class="route"><code>/tour/:id/pause</code></span><span class="badge modal">MODAL</span></div>
+      </div>
+
+      <div class="tree-sub">
+        <h4>Onglet Gains · /earnings</h4>
+        <div class="node"><span class="id">W-13</span><span class="label">Solde &amp; semaine</span><span class="route"><code>/earnings</code></span></div>
+        <div class="node indent-1"><span class="id">W-13.M</span><span class="label">Retirer · Mobile Money</span><span class="route"><code>/earnings/withdraw</code></span><span class="badge modal">MODAL</span></div>
+        <div class="node indent-1"><span class="id">W-14</span><span class="label">Planning · 7 jours</span><span class="route"><code>/earnings/schedule</code></span></div>
+        <div class="node indent-1"><span class="id">W-14.M</span><span class="label">Demander un congé</span><span class="route"><code>/earnings/schedule?action=leave</code></span><span class="badge modal">MODAL</span></div>
+      </div>
+
+      <div class="tree-sub">
+        <h4>Onglet Profil · /me</h4>
+        <div class="node"><span class="id">W-15</span><span class="label">Profil &amp; foyers réguliers</span><span class="route"><code>/me</code></span></div>
+        <div class="node indent-1"><span class="id">W-15.D</span><span class="label">Détail foyer · historique</span><span class="route"><code>/me/foyers/:id</code></span></div>
+      </div>
+
+      <div class="tree-sub">
+        <h4>Urgence · global</h4>
+        <div class="node"><span class="id">W-16</span><span class="label">SOS · 4 catégories</span><span class="route"><code>/sos</code></span><span class="badge modal">MODAL</span></div>
+      </div>
+
+      <div class="tree-sub">
+        <h4>Système · états</h4>
+        <div class="node"><span class="id">W-17</span><span class="label">Hors-ligne · file de sync</span><span class="route"><code>?offline=1</code></span></div>
+        <div class="node indent-1"><span class="id">W-18</span><span class="label">Annulation cliente</span><span class="route"><code>?notice=cancel</code></span><span class="badge deep">DEEP</span></div>
+        <div class="node indent-1"><span class="id">W-19</span><span class="label">Signaler un souci</span><span class="route"><code>/tour/:id/report</code></span><span class="badge modal">MODAL</span></div>
+        <div class="node indent-1"><span class="id">W-20</span><span class="label">Notifications · 3 catégories</span><span class="route"><code>/notifications</code></span><span class="badge deep">DEEP</span></div>
+        <div class="node indent-1"><span class="id">W-21</span><span class="label">Fin de journée · récap</span><span class="route"><code>/tour/done</code></span></div>
+      </div>
+
+      <div class="tree-sub">
+        <h4>Onglet Aide · /help</h4>
+        <div class="node"><span class="id">W-22</span><span class="label">Aide · 6 questions + appel bureau</span><span class="route"><code>/help</code></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- OPERATOR TREE                                         -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">04 · CONSOLE OPÉRATEUR — ARBRE</div>
+    <h2>O-01 → O-24 · 24 surfaces</h2>
+    <p class="sub">Outil dense, raccourcis clavier prioritaires. Toutes les vues sont des routes URL — chaque écran a une URL copiable.</p>
+
+    <div class="tree">
+      <div class="root">└─ Operator console · /</div>
+
+      <div class="tree-sub">
+        <h4>Authentification</h4>
+        <div class="node"><span class="id">O-01</span><span class="label">Connexion 2FA · email + OTP</span><span class="route"><code>/login</code></span><span class="badge auth">PUBLIC</span></div>
+      </div>
+
+      <div class="tree-sub">
+        <h4>Section Aujourd'hui · /today</h4>
+        <div class="node"><span class="id">O-02</span><span class="label">Tableau de bord du shift</span><span class="route"><code>/today</code></span><span class="badge deep">DEEP</span></div>
+        <div class="node indent-1"><span class="id">O-03</span><span class="label">File de matching</span><span class="route"><code>/matching</code></span><span class="badge deep">DEEP</span></div>
+        <div class="node indent-1"><span class="id">O-04</span><span class="label">Détail demande matching</span><span class="route"><code>/matching/:id</code></span><span class="badge deep">DEEP</span></div>
+        <div class="node indent-1"><span class="id">O-05</span><span class="label">Live ops · carte temps réel</span><span class="route"><code>/live</code></span></div>
+        <div class="node indent-1"><span class="id">O-06</span><span class="label">Détail visite live (drawer)</span><span class="route"><code>/live?visit=:id</code></span><span class="badge modal">DRAWER</span></div>
+      </div>
+
+      <div class="tree-sub">
+        <h4>Section Personnes · /people</h4>
+        <div class="node"><span class="id">O-07</span><span class="label">Liste abonnés</span><span class="route"><code>/people/subscribers</code></span></div>
+        <div class="node indent-1"><span class="id">O-08</span><span class="label">Profil abonné · 360°</span><span class="route"><code>/people/subscribers/:id</code></span><span class="badge deep">DEEP</span></div>
+        <div class="node indent-1"><span class="id">O-09</span><span class="label">Liste laveuses</span><span class="route"><code>/people/workers</code></span></div>
+        <div class="node indent-1"><span class="id">O-10</span><span class="label">Profil laveuse · 360°</span><span class="route"><code>/people/workers/:id</code></span><span class="badge deep">DEEP</span></div>
+        <div class="node indent-1"><span class="id">O-22</span><span class="label">Onboarding laveuse</span><span class="route"><code>/people/workers/onboard</code></span><span class="badge modal">MODAL</span></div>
+        <div class="node indent-1"><span class="id">O-23</span><span class="label">Vérification abonné</span><span class="route"><code>/people/subscribers/:id/verify</code></span><span class="badge modal">MODAL</span></div>
+      </div>
+
+      <div class="tree-sub">
+        <h4>Section Tickets · /tickets</h4>
+        <div class="node"><span class="id">O-11</span><span class="label">File de tickets</span><span class="route"><code>/tickets</code></span><span class="badge deep">DEEP</span></div>
+        <div class="node indent-1"><span class="id">O-12</span><span class="label">Détail ticket + drawer politique</span><span class="route"><code>/tickets/:id</code></span><span class="badge deep">DEEP</span></div>
+      </div>
+
+      <div class="tree-sub">
+        <h4>Section Finances · /finance</h4>
+        <div class="node"><span class="id">O-13</span><span class="label">Paiements · encaissements + exceptions</span><span class="route"><code>/finance/payments</code></span></div>
+        <div class="node indent-1"><span class="id">O-14</span><span class="label">Versements laveuses</span><span class="route"><code>/finance/payouts</code></span></div>
+        <div class="node indent-1"><span class="id">O-16</span><span class="label">Rapports · revenus, marge, churn</span><span class="route"><code>/finance/reports</code></span></div>
+      </div>
+
+      <div class="tree-sub">
+        <h4>Section Org · /org</h4>
+        <div class="node"><span class="id">O-15</span><span class="label">Notifications outbound (templates)</span><span class="route"><code>/org/notifications</code></span></div>
+        <div class="node indent-1"><span class="id">O-17</span><span class="label">Audit log · actions utilisateurs</span><span class="route"><code>/org/audit</code></span></div>
+        <div class="node indent-1"><span class="id">O-18</span><span class="label">Paramètres organisation</span><span class="route"><code>/org/settings</code></span></div>
+        <div class="node indent-1"><span class="id">O-19</span><span class="label">Rôles &amp; permissions</span><span class="route"><code>/org/roles</code></span></div>
+      </div>
+
+      <div class="tree-sub">
+        <h4>Surfaces globales</h4>
+        <div class="node"><span class="id">O-20</span><span class="label">Palette de commandes ⌘K</span><span class="route"><code>?cmd=open</code></span><span class="badge modal">OVERLAY</span></div>
+        <div class="node indent-1"><span class="id">O-21</span><span class="label">Alerte SOS reçue</span><span class="route"><code>/sos/:id</code></span><span class="badge modal">FULLSCREEN</span></div>
+        <div class="node indent-1"><span class="id">O-24</span><span class="label">État vide · premier-run</span><span class="route"><code>/?first-run=1</code></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- DEEPLINKS                                             -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">05 · DEEP LINKS</div>
+    <h2>Liens directs · push, SMS, email, partage</h2>
+    <p class="sub">Chaque écran taggé <span class="pill deep">deep</span> est accessible par lien direct. C'est ce qui permet aux notifications push, aux SMS, et aux emails d'atterrir directement sur l'écran utile.</p>
+
+    <table class="routes">
+      <thead><tr>
+        <th>Écran</th>
+        <th>Scheme mobile</th>
+        <th>URL web (operator)</th>
+        <th>Source typique</th>
+      </tr></thead>
+      <tbody>
+        <tr><td class="id">X-10</td><td class="route">washed://home</td><td class="route">—</td><td>App icon · push générique</td></tr>
+        <tr><td class="id">X-11</td><td class="route">washed://visits/:id</td><td class="route">—</td><td>Push « rappel visite »</td></tr>
+        <tr><td class="id">X-14</td><td class="route">washed://visits/:id/reveal</td><td class="route">—</td><td>Push « visite terminée »</td></tr>
+        <tr><td class="id">X-18</td><td class="route">washed://worker/:id</td><td class="route">—</td><td>Tap sur nom laveuse</td></tr>
+        <tr><td class="id">X-23</td><td class="route">washed://subscription?banner=overdue</td><td class="route">—</td><td>SMS « solde insuffisant »</td></tr>
+        <tr><td class="id">W-03</td><td class="route">washed-w://tour</td><td class="route">—</td><td>App icon laveuse</td></tr>
+        <tr><td class="id">W-04</td><td class="route">washed-w://tour/:id</td><td class="route">—</td><td>Push « nouvelle visite assignée »</td></tr>
+        <tr><td class="id">W-18</td><td class="route">washed-w://?notice=cancel</td><td class="route">—</td><td>Push « visite annulée »</td></tr>
+        <tr><td class="id">W-20</td><td class="route">washed-w://notifications</td><td class="route">—</td><td>Tap badge notif</td></tr>
+        <tr><td class="id">O-02</td><td class="route">—</td><td class="route">ops.washed.tg/today</td><td>Bookmark + email matin</td></tr>
+        <tr><td class="id">O-03</td><td class="route">—</td><td class="route">ops.washed.tg/matching</td><td>Email « SLA risque »</td></tr>
+        <tr><td class="id">O-04</td><td class="route">—</td><td class="route">ops.washed.tg/matching/:id</td><td>Slack « demande N° X »</td></tr>
+        <tr><td class="id">O-08</td><td class="route">—</td><td class="route">ops.washed.tg/people/subscribers/:id</td><td>Email « ticket abonné »</td></tr>
+        <tr><td class="id">O-10</td><td class="route">—</td><td class="route">ops.washed.tg/people/workers/:id</td><td>Email « laveuse en retard »</td></tr>
+        <tr><td class="id">O-11</td><td class="route">—</td><td class="route">ops.washed.tg/tickets</td><td>Slack « nouveau ticket prio haute »</td></tr>
+        <tr><td class="id">O-12</td><td class="route">—</td><td class="route">ops.washed.tg/tickets/:id</td><td>Slack thread sur ticket</td></tr>
+        <tr><td class="id">O-21</td><td class="route">—</td><td class="route">ops.washed.tg/sos/:id</td><td>Push opérateur · prio absolue</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- CROSS-APP HANDOFFS                                    -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">06 · HANDOFFS INTER-APPS</div>
+    <h2>Le système est un trio coordonné</h2>
+    <p class="sub">Aucune app ne fonctionne seule — les trois se passent le relais en permanence. Cette section trace les principaux handoffs.</p>
+
+    <div class="handoff">
+      <div class="apps-grid">
+        <div class="app-col sub"><div class="icon">📱</div>Subscriber</div>
+        <div class="app-col work"><div class="icon">📲</div>Worker</div>
+        <div class="app-col ops"><div class="icon">💻</div>Operator</div>
+      </div>
+
+      <div class="handoff-list">
+        <div class="ho">
+          <div class="from"><span class="app">SUBSCRIBER</span><br>X-06 · paiement réussi</div>
+          <div class="arrow">→</div>
+          <div class="desc"><b>OPS</b> O-03 file de matching reçoit la nouvelle demande. SLA 4h démarre. Push opérateur shift de garde si premier paiement.</div>
+        </div>
+        <div class="ho">
+          <div class="from"><span class="app">OPS</span><br>O-04 · proposer une laveuse</div>
+          <div class="arrow">→</div>
+          <div class="desc"><b>WORKER</b> push assignation (« Nouvelle visite proposée 9h00, Tokoin »). Laveuse a 5 minutes pour accepter avant réassignation.</div>
+        </div>
+        <div class="ho">
+          <div class="from"><span class="app">WORKER</span><br>W-06 · geofence détecté</div>
+          <div class="arrow">→</div>
+          <div class="desc"><b>SUBSCRIBER</b> push « Akouvi est devant chez vous » (X-12 → état arrived). <b>OPS</b> O-05 pin passe vert.</div>
+        </div>
+        <div class="ho">
+          <div class="from"><span class="app">WORKER</span><br>W-07 photo avant validée</div>
+          <div class="arrow">→</div>
+          <div class="desc"><b>SUBSCRIBER</b> X-13 visite-en-cours s'affiche, sans push (silence pendant la visite). <b>OPS</b> O-05 cycle visite démarre côté ops.</div>
+        </div>
+        <div class="ho">
+          <div class="from"><span class="app">WORKER</span><br>W-09 photo après validée</div>
+          <div class="arrow">→</div>
+          <div class="desc"><b>SUBSCRIBER</b> push « Visite terminée. Voilà ce que ça donne. » → X-14 reveal photos avant/après. <b>OPS</b> O-05 visite passe en « terminée ».</div>
+        </div>
+        <div class="ho">
+          <div class="from"><span class="app">SUBSCRIBER</span><br>X-15 « Petit souci » signalé</div>
+          <div class="arrow">→</div>
+          <div class="desc"><b>OPS</b> O-11 ouvre un ticket priorité moyenne, drawer politique pré-rempli. Pas de push à la laveuse — l'opérateur gère.</div>
+        </div>
+        <div class="ho">
+          <div class="from"><span class="app">SUBSCRIBER</span><br>X-22 paiement refusé 3 fois</div>
+          <div class="arrow">→</div>
+          <div class="desc"><b>OPS</b> O-13 exception · drawer guide la suspension manuelle. <b>WORKER</b> reçoit annulation visite (W-18) si suspension confirmée.</div>
+        </div>
+        <div class="ho">
+          <div class="from"><span class="app">WORKER</span><br>W-16 SOS déclenché</div>
+          <div class="arrow">→</div>
+          <div class="desc"><b>OPS</b> O-21 alerte plein-écran prioritaire, GPS partagé en direct, contact d'urgence pré-affiché. Push prioritaire à TOUS les opérateurs en service.</div>
+        </div>
+        <div class="ho">
+          <div class="from"><span class="app">OPS</span><br>O-12 réponse à un ticket</div>
+          <div class="arrow">→</div>
+          <div class="desc"><b>SUBSCRIBER</b> X-32 ticket s'enrichit · push « Le bureau vous a répondu ». Email parallèle si l'utilisateur l'a configuré.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="annot" style="margin-top:var(--s-5)"><b>Règle structurelle</b>Aucune communication directe subscriber ↔ worker en v1. Tout passe par l'opérateur. Cette contrainte est verrouillée par l'architecture (les apps ne connaissent pas les numéros de l'autre côté). Voir <a href="../02-flows/flows.html" style="color:var(--primary)">02 Flux F3 · Litige</a> pour le détail.</p>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- ROUTES + STATES BUDGET                                -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">07 · BUDGET D'ÉTATS PAR ÉCRAN</div>
+    <h2>Aucun écran ne livre sans ses 5 états</h2>
+    <p class="sub">Pour chaque ID, indication des états qui doivent être implémentés. ✓ = requis, — = non applicable. Source de vérité de la couverture pour le QA.</p>
+
+    <table class="routes">
+      <thead><tr>
+        <th>ID</th>
+        <th>Écran</th>
+        <th>Vide</th>
+        <th>Charg.</th>
+        <th>Erreur</th>
+        <th>Hors-ligne</th>
+        <th>Fin / Succ.</th>
+      </tr></thead>
+      <tbody>
+        <tr><td class="id">X-10</td><td class="name">Hub abonné</td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="miss">—</span></td></tr>
+        <tr><td class="id">X-11</td><td class="name">Détail visite</td><td class="states"><span class="miss">—</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="miss">—</span></td></tr>
+        <tr><td class="id">X-12</td><td class="name">Suivi en route</td><td class="states"><span class="miss">—</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td></tr>
+        <tr><td class="id">X-14</td><td class="name">Reveal photos</td><td class="states"><span class="miss">—</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td></tr>
+        <tr><td class="id">X-16</td><td class="name">Historique visites</td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td></tr>
+        <tr><td class="id">X-19</td><td class="name">Abonnement</td><td class="states"><span class="miss">—</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="miss">—</span></td></tr>
+        <tr><td class="id">X-20</td><td class="name">Historique paiements</td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td></tr>
+        <tr><td class="id">X-29</td><td class="name">Centre d'aide</td><td class="states"><span class="miss">—</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="miss">—</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="miss">—</span></td></tr>
+        <tr><td class="id">X-31</td><td class="name">Mes tickets</td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td></tr>
+        <tr><td class="id">W-03</td><td class="name">Tournée du jour</td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td></tr>
+        <tr><td class="id">W-05</td><td class="name">En route · carte</td><td class="states"><span class="miss">—</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td></tr>
+        <tr><td class="id">W-07</td><td class="name">Photo avant</td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td></tr>
+        <tr><td class="id">W-09</td><td class="name">Photo après</td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td></tr>
+        <tr><td class="id">W-13</td><td class="name">Gains &amp; retraits</td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td></tr>
+        <tr><td class="id">W-14</td><td class="name">Planning 7 jours</td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="miss">—</span></td></tr>
+        <tr><td class="id">W-15</td><td class="name">Profil &amp; foyers</td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td></tr>
+        <tr><td class="id">O-02</td><td class="name">Tableau de bord</td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="miss">—</span></td></tr>
+        <tr><td class="id">O-03</td><td class="name">File matching</td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td></tr>
+        <tr><td class="id">O-05</td><td class="name">Live ops carte</td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="miss">—</span></td></tr>
+        <tr><td class="id">O-07</td><td class="name">Liste abonnés</td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td></tr>
+        <tr><td class="id">O-09</td><td class="name">Liste laveuses</td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td></tr>
+        <tr><td class="id">O-11</td><td class="name">File tickets</td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td></tr>
+        <tr><td class="id">O-13</td><td class="name">Paiements</td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td></tr>
+        <tr><td class="id">O-20</td><td class="name">Palette ⌘K</td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="annot" style="margin-top:var(--s-5)"><b>Lecture du tableau</b>« — » signifie que l'état n'a pas de sens pour cet écran (un splash n'a pas d'état vide, un reveal photos n'a pas d'état vide). « ✓ » signifie que l'état est requis et doit avoir une copie FR validée dans le copy deck. Liste exhaustive des 81 surfaces dans le code source — extrait ici pour les surfaces critiques.</div>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- AUTH MATRIX                                           -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">08 · AUTHENTIFICATION &amp; PERMISSIONS</div>
+    <h2>Qui voit quoi</h2>
+    <p class="sub">Matrice des accès. Le rôle est déduit du token JWT à la connexion. Aucune élévation de privilège n'est possible côté client.</p>
+
+    <table class="routes">
+      <thead><tr>
+        <th>Section</th>
+        <th>Subscriber</th>
+        <th>Worker</th>
+        <th>Operator (lecteur)</th>
+        <th>Operator (admin)</th>
+        <th>Notes</th>
+      </tr></thead>
+      <tbody>
+        <tr><td class="name">Splash + signup</td><td class="states"><span class="ok">PUBLIC</span></td><td class="states"><span class="ok">PUBLIC</span></td><td class="states"><span class="miss">—</span></td><td class="states"><span class="miss">—</span></td><td>Inscriptions par invitation pour worker</td></tr>
+        <tr><td class="name">Hub abonné · X-10</td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="miss">—</span></td><td class="states"><span class="miss">—</span></td><td class="states"><span class="miss">—</span></td><td>Token subscriber requis</td></tr>
+        <tr><td class="name">Détail visite (own) · X-11</td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="miss">—</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td>Subscriber voit ses visites uniquement</td></tr>
+        <tr><td class="name">Tournée laveuse · W-03</td><td class="states"><span class="miss">—</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓ via O-10</span></td><td class="states"><span class="ok">✓ via O-10</span></td><td>Ops lit la tournée via le profil laveuse</td></tr>
+        <tr><td class="name">SOS · W-16</td><td class="states"><span class="miss">—</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓ recevoir</span></td><td class="states"><span class="ok">✓ recevoir + résoudre</span></td><td>Lecteur ne peut pas marquer résolu</td></tr>
+        <tr><td class="name">Tableau de bord · O-02</td><td class="states"><span class="miss">—</span></td><td class="states"><span class="miss">—</span></td><td class="states"><span class="ok">✓</span></td><td class="states"><span class="ok">✓</span></td><td>Tous les opérateurs</td></tr>
+        <tr><td class="name">Matching · O-03/O-04</td><td class="states"><span class="miss">—</span></td><td class="states"><span class="miss">—</span></td><td class="states"><span class="ok">✓ lire</span></td><td class="states"><span class="ok">✓ proposer</span></td><td>Action « proposer » = admin uniquement</td></tr>
+        <tr><td class="name">Paiements · O-13</td><td class="states"><span class="miss">—</span></td><td class="states"><span class="miss">—</span></td><td class="states"><span class="ok">✓ lire</span></td><td class="states"><span class="ok">✓ lire + relancer</span></td><td>Suspension = admin financier requis</td></tr>
+        <tr><td class="name">Audit log · O-17</td><td class="states"><span class="miss">—</span></td><td class="states"><span class="miss">—</span></td><td class="states"><span class="miss">—</span></td><td class="states"><span class="ok">✓</span></td><td>Admin uniquement · log immuable</td></tr>
+        <tr><td class="name">Rôles &amp; permissions · O-19</td><td class="states"><span class="miss">—</span></td><td class="states"><span class="miss">—</span></td><td class="states"><span class="miss">—</span></td><td class="states"><span class="ok">✓ propriétaire</span></td><td>Owner uniquement (1 seul compte)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <p style="margin-top: var(--s-10); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.12em;">— Fin · v2.0 · 2026 · pour les transitions entre ces écrans, voir <a href="../02-flows/flows.html" style="color:var(--primary)">02 Flux</a></p>
 </div>
 </body></html>

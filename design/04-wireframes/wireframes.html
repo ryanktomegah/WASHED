@@ -172,6 +172,108 @@
         <div class="wrow"><div class="wbtn alt" style="flex:1">Reporter</div><div class="wbtn" style="flex:1">Signaler</div></div>
       </div></div><div class="label"><div class="id">X-11</div><div class="name">Détail visite</div><div class="notes">photos avant/après · états : pas de photos / hors-ligne</div></div></div>
 
+      <!-- X-12 SUIVI EN ROUTE -->
+      <div class="wire"><div class="frame"><div class="wcol">
+        <div class="wlbl">EN ROUTE — 8 MIN</div>
+        <div class="wbar" style="height:200px;margin-top:6px;background:#E5E5E5;border-radius:6px;display:grid;place-items:center;font-family:var(--font-mono);color:#999;font-size:10px">[ carte · pin laveuse → maison ]</div>
+        <div class="wb" style="height:50px;margin-top:8px;padding:8px;display:flex;gap:8px;align-items:center"><div style="width:32px;height:32px;border-radius:999px;background:#1C1208"></div><div style="flex:1"><div class="wbar" style="height:10px;width:60%"></div><div class="wbar" style="height:8px;width:40%;background:#999;margin-top:4px"></div></div></div>
+        <div style="flex:1"></div>
+        <div class="wbtn alt">Annuler</div>
+      </div></div><div class="label"><div class="id">X-12</div><div class="name">Suivi en route</div><div class="notes">map cachée · refresh 30s · état hors-ligne = ETA grisé</div></div></div>
+
+      <!-- X-13 VISITE EN COURS -->
+      <div class="wire"><div class="frame"><div class="wcol">
+        <div class="wlbl">VISITE EN COURS</div>
+        <div class="wbar" style="height:24px;width:80%;margin-top:6px"></div>
+        <div class="wbar" style="height:10px;width:90%;background:#999"></div>
+        <div class="wb" style="height:140px;margin-top:18px;padding:14px;display:grid;place-items:center;text-align:center"><div><div class="wbar" style="height:14px;width:60px;margin:0 auto"></div><div class="wbar" style="height:8px;width:80px;background:#999;margin:6px auto 0"></div></div></div>
+        <div class="wbar dash" style="height:10px;width:60%;margin-top:14px"></div>
+        <div style="flex:1"></div>
+        <div class="wbar" style="height:8px;width:70%;background:#999"></div>
+      </div></div><div class="label"><div class="id">X-13</div><div class="name">Visite en cours</div><div class="notes">silence pendant lavage · pas de timer affiché</div></div></div>
+
+      <!-- X-14 REVEAL -->
+      <div class="wire"><div class="frame"><div class="wcol">
+        <div class="wlbl">VOILÀ CE QUE ÇA DONNE</div>
+        <div class="wbar" style="height:22px;width:80%;margin-top:6px"></div>
+        <div class="wrow" style="gap:6px;margin-top:14px">
+          <div class="wb" style="flex:1;height:120px;display:grid;place-items:center;font-family:var(--font-mono);color:#999;font-size:9px">AVANT</div>
+          <div class="wb" style="flex:1;height:120px;display:grid;place-items:center;font-family:var(--font-mono);color:#999;font-size:9px">APRÈS</div>
+        </div>
+        <div class="wbar" style="height:10px;width:70%;background:#999;margin-top:10px"></div>
+        <div style="flex:1"></div>
+        <div class="wbtn">Tout va bien</div>
+        <div class="wbtn alt">Signaler un souci</div>
+      </div></div><div class="label"><div class="id">X-14</div><div class="name">Reveal photos</div><div class="notes">moment signature · 2h après visite</div></div></div>
+
+      <!-- X-16 HISTORIQUE -->
+      <div class="wire"><div class="frame"><div class="wcol">
+        <div class="wlbl">VISITES PASSÉES</div>
+        <div class="wbar" style="height:22px;width:60%;margin-top:6px"></div>
+        <div class="wb" style="height:50px;margin-top:14px;padding:8px;display:flex;gap:8px;align-items:center"><div style="width:28px;height:28px;border-radius:999px;background:#1C1208"></div><div style="flex:1"><div class="wbar" style="height:10px;width:60%"></div><div class="wbar" style="height:8px;width:80%;background:#999;margin-top:4px"></div></div></div>
+        <div class="wb" style="height:50px;margin-top:6px;padding:8px;display:flex;gap:8px;align-items:center"><div style="width:28px;height:28px;border-radius:999px;background:#1C1208"></div><div style="flex:1"><div class="wbar" style="height:10px;width:60%"></div><div class="wbar" style="height:8px;width:80%;background:#999;margin-top:4px"></div></div></div>
+        <div class="wb" style="height:50px;margin-top:6px;padding:8px;display:flex;gap:8px;align-items:center"><div style="width:28px;height:28px;border-radius:999px;background:#1C1208"></div><div style="flex:1"><div class="wbar" style="height:10px;width:60%"></div><div class="wbar" style="height:8px;width:80%;background:#999;margin-top:4px"></div></div></div>
+        <div style="flex:1"></div>
+        <div class="wbar" style="height:8px;width:50%;background:#999;align-self:center"></div>
+      </div></div><div class="label"><div class="id">X-16</div><div class="name">Historique</div><div class="notes">5 états : vide, charge, erreur, hors-ligne, fin de pagination</div></div></div>
+
+      <!-- X-18 PROFIL LAVEUSE -->
+      <div class="wire"><div class="frame"><div class="wcol">
+        <div class="wlbl">PROFIL LAVEUSE</div>
+        <div style="margin-top:14px;align-self:center;width:80px;height:80px;border-radius:999px;background:#1C1208"></div>
+        <div class="wbar" style="height:18px;width:60%;margin:10px auto 0"></div>
+        <div class="wbar" style="height:10px;width:50%;background:#999;margin:4px auto 0"></div>
+        <div class="wrow" style="margin-top:16px;gap:14px;justify-content:space-around"><div style="text-align:center"><div class="wbar dark" style="height:18px;width:36px"></div><div class="wbar" style="height:8px;width:40px;background:#999;margin-top:4px"></div></div><div style="text-align:center"><div class="wbar dark" style="height:18px;width:36px"></div><div class="wbar" style="height:8px;width:40px;background:#999;margin-top:4px"></div></div><div style="text-align:center"><div class="wbar dark" style="height:18px;width:36px"></div><div class="wbar" style="height:8px;width:40px;background:#999;margin-top:4px"></div></div></div>
+        <div class="wbar" style="height:8px;width:80%;background:#999;margin-top:14px"></div>
+        <div style="flex:1"></div>
+      </div></div><div class="label"><div class="id">X-18</div><div class="name">Profil de la laveuse</div><div class="notes">tenure, compteur, foyers · stickiness</div></div></div>
+
+      <!-- X-19 ABONNEMENT -->
+      <div class="wire"><div class="frame"><div class="wcol">
+        <div class="wlbl">ABONNEMENT</div>
+        <div class="wb" style="height:80px;margin-top:14px;padding:14px"><div class="wbar" style="height:10px;width:30%"></div><div class="wbar dark" style="height:22px;width:60%;margin-top:8px"></div></div>
+        <div class="wb" style="height:60px;margin-top:8px;padding:12px;display:flex;justify-content:space-between;align-items:center"><div><div class="wbar" style="height:8px;width:60px"></div><div class="wbar" style="height:14px;width:80px;margin-top:4px"></div></div><div class="wbar" style="width:24px;height:24px"></div></div>
+        <div class="wb" style="height:60px;margin-top:8px;padding:12px"><div class="wbar" style="height:10px;width:60%"></div><div class="wbar" style="height:8px;width:40%;background:#999;margin-top:4px"></div></div>
+        <div style="flex:1"></div>
+        <div class="wbtn alt">Mettre en pause</div>
+      </div></div><div class="label"><div class="id">X-19</div><div class="name">Abonnement &amp; tarif</div><div class="notes">2 500 / 4 500 · MM rattaché · CTA pause</div></div></div>
+
+      <!-- X-20 PAIEMENTS -->
+      <div class="wire"><div class="frame"><div class="wcol">
+        <div class="wlbl">PAIEMENTS</div>
+        <div class="wbar" style="height:22px;width:80%;margin-top:6px"></div>
+        <div class="wb" style="height:44px;margin-top:14px;padding:8px;display:flex;justify-content:space-between;align-items:center"><div class="wbar" style="height:10px;width:50%"></div><div class="wbar dark" style="height:14px;width:50px"></div></div>
+        <div class="wb" style="height:44px;margin-top:6px;padding:8px;display:flex;justify-content:space-between;align-items:center"><div class="wbar" style="height:10px;width:50%"></div><div class="wbar dark" style="height:14px;width:50px"></div></div>
+        <div class="wb" style="height:44px;margin-top:6px;padding:8px;display:flex;justify-content:space-between;align-items:center;border-color:#C03020"><div class="wbar" style="height:10px;width:50%;background:#C03020"></div><div class="wbar" style="height:14px;width:50px;background:#C03020"></div></div>
+        <div style="flex:1"></div>
+        <div class="wbar" style="height:8px;width:60%;background:#999;align-self:center"></div>
+      </div></div><div class="label"><div class="id">X-20</div><div class="name">Historique paiements</div><div class="notes">échec en rouge · reçu téléchargeable</div></div></div>
+
+      <!-- X-22 ANNULER -->
+      <div class="wire"><div class="frame"><div class="wcol">
+        <div class="wlbl">ANNULER L'ABONNEMENT</div>
+        <div class="wbar" style="height:22px;width:80%;margin-top:6px"></div>
+        <div class="wbar" style="height:8px;width:90%;background:#999;margin-top:4px"></div>
+        <div class="wbar" style="height:8px;width:70%;background:#999"></div>
+        <div class="wb" style="height:80px;margin-top:14px;padding:12px;border-color:#1C1208;border-width:2px"><div class="wbar" style="height:8px;width:70%;background:#999"></div><div class="wbar" style="height:8px;width:90%;background:#999;margin-top:4px"></div><div class="wbar" style="height:8px;width:60%;background:#999;margin-top:4px"></div></div>
+        <div style="flex:1"></div>
+        <div class="wbtn alt">Garder l'abonnement</div>
+        <div class="wbtn" style="background:#C03020">Annuler · 4 500/mois</div>
+      </div></div><div class="label"><div class="id">X-22</div><div class="name">Annuler</div><div class="notes">contexte explicite · pas de bouton « OK » seul</div></div></div>
+
+      <!-- X-29 HELP -->
+      <div class="wire"><div class="frame"><div class="wcol">
+        <div class="wlbl">CENTRE D'AIDE</div>
+        <div class="wbar" style="height:22px;width:60%;margin-top:6px"></div>
+        <div class="wb" style="height:36px;margin-top:14px;padding:10px"><div class="wbar" style="height:10px;width:80%"></div></div>
+        <div class="wb" style="height:36px;margin-top:6px;padding:10px"><div class="wbar" style="height:10px;width:80%"></div></div>
+        <div class="wb" style="height:36px;margin-top:6px;padding:10px"><div class="wbar" style="height:10px;width:80%"></div></div>
+        <div class="wb" style="height:36px;margin-top:6px;padding:10px"><div class="wbar" style="height:10px;width:80%"></div></div>
+        <div class="wb" style="height:36px;margin-top:6px;padding:10px;background:#1C1208"><div class="wbar" style="height:10px;width:80%;background:#fff"></div></div>
+        <div style="flex:1"></div>
+        <div class="wbtn">Contacter le bureau</div>
+      </div></div><div class="label"><div class="id">X-29 → X-31</div><div class="name">Aide · FAQ + tickets</div><div class="notes">5 entrées max · CTA appel direct</div></div></div>
+
     </div>
   </section>
 
@@ -235,6 +337,149 @@
         <div class="wbtn">Voir la suivante</div>
       </div></div><div class="label"><div class="id">W-13</div><div class="name">Clôture · gain affiché</div><div class="notes">renforcement positif. gain signature Fraunces.</div></div></div>
 
+      <!-- W-01 SPLASH -->
+      <div class="wire"><div class="frame"><div class="wcol">
+        <div style="flex:1"></div>
+        <div style="align-self:center;width:60px;height:60px;border-radius:999px;background:#1C1208"></div>
+        <div class="wbar" style="height:18px;width:50%;align-self:center;margin-top:8px"></div>
+        <div class="wbar" style="height:8px;width:30%;align-self:center;background:#999;margin-top:4px"></div>
+        <div style="flex:1"></div>
+        <div style="align-self:center;width:80px;height:2px;background:#1A5C34"></div>
+        <div class="wlbl muted" style="text-align:center;margin-top:6px">SYNCHRONISATION</div>
+      </div></div><div class="label"><div class="id">W-01</div><div class="name">Splash + sync</div><div class="notes">vérifie tournée locale puis tente réseau</div></div></div>
+
+      <!-- W-02 LOGIN PIN -->
+      <div class="wire"><div class="frame"><div class="wcol">
+        <div class="wlbl">CONNEXION</div>
+        <div class="wbar" style="height:22px;width:60%;margin-top:6px"></div>
+        <div class="wbar" style="height:10px;width:90%;background:#999;margin-top:4px"></div>
+        <div class="wlbl" style="margin-top:14px">NUMÉRO</div>
+        <div class="wb" style="height:40px;padding:8px"><div class="wlbl muted">+228 99 87 65 43</div></div>
+        <div class="wlbl" style="margin-top:10px">CODE PIN — 4 CHIFFRES</div>
+        <div class="wrow" style="gap:6px"><div class="wb" style="flex:1;height:42px"></div><div class="wb" style="flex:1;height:42px"></div><div class="wb" style="flex:1;height:42px;border-color:#1C1208;border-width:2px"></div><div class="wb" style="flex:1;height:42px"></div></div>
+        <div style="flex:1"></div>
+        <div class="wbtn">Entrer</div>
+      </div></div><div class="label"><div class="id">W-02</div><div class="name">Login PIN</div><div class="notes">PIN local · jamais envoyé · hash stocké</div></div></div>
+
+      <!-- W-04 DÉTAIL VISITE -->
+      <div class="wire"><div class="frame"><div class="wcol">
+        <div class="wlbl">↩ TOURNÉE · 1 / 5</div>
+        <div class="wbar" style="height:22px;width:70%;margin-top:6px"></div>
+        <div class="wrow" style="gap:6px;margin-top:6px"><div class="wbar" style="width:60px;height:18px;background:#1A5C34;border-radius:999px"></div><div class="wbar" style="width:50px;height:18px;background:#999;border-radius:999px"></div></div>
+        <div class="wb" style="height:60px;margin-top:14px;padding:10px"><div class="wlbl">QUAND</div><div class="wbar dark" style="height:18px;width:60%;margin-top:6px"></div></div>
+        <div class="wb" style="height:60px;margin-top:6px;padding:10px"><div class="wlbl">OÙ</div><div class="wbar" style="height:14px;width:80%;margin-top:6px"></div></div>
+        <div class="wb" style="height:50px;margin-top:6px;padding:10px;background:#FCEAD3"><div class="wlbl" style="color:#B5651D">NOTE CLIENTE</div><div class="wbar" style="height:8px;width:80%;background:#999;margin-top:4px"></div></div>
+        <div style="flex:1"></div>
+        <div class="wbtn">Démarrer la route</div>
+      </div></div><div class="label"><div class="id">W-04</div><div class="name">Détail visite</div><div class="notes">pas d'appel direct cliente · politique no-direct-comms</div></div></div>
+
+      <!-- W-06 GEOFENCE -->
+      <div class="wire"><div class="frame"><div class="wcol">
+        <div style="flex:1"></div>
+        <div style="align-self:center;width:60px;height:60px;border-radius:999px;border:2px solid #1A5C34;display:grid;place-items:center"><div style="width:20px;height:20px;border-radius:999px;background:#1A5C34"></div></div>
+        <div class="wlbl" style="text-align:center;margin-top:14px;color:#1A5C34">VOUS ÊTES ARRIVÉE</div>
+        <div class="wbar" style="height:18px;width:60%;align-self:center;margin-top:6px"></div>
+        <div class="wbar" style="height:8px;width:80%;background:#999;align-self:center;margin-top:4px"></div>
+        <div style="flex:1"></div>
+        <div class="wbtn">Démarrer la visite</div>
+        <div class="wlbl muted" style="text-align:center;margin-top:6px">mauvais endroit ? signaler</div>
+      </div></div><div class="label"><div class="id">W-06</div><div class="name">Geofence détecté</div><div class="notes">tolérance 50m · bouton désactivé hors-zone</div></div></div>
+
+      <!-- W-09 PHOTO APRÈS -->
+      <div class="wire"><div class="frame"><div class="wcol">
+        <div class="wlbl">ÉTAPE 3 / 5 · PHOTO APRÈS</div>
+        <div class="wbar" style="height:22px;width:70%;margin-top:6px"></div>
+        <div class="wrow" style="gap:6px;margin-top:14px"><div class="wb" style="flex:1;height:90px;background:#2C3A30;border-color:#2C3A30;display:grid;place-items:center;color:#999;font-size:9px;font-family:var(--font-mono)">AVANT · 9h01</div><div class="wb" style="flex:1;height:90px;border-style:dashed;display:grid;place-items:center;color:#999;font-size:9px;font-family:var(--font-mono)">APRÈS — capturer</div></div>
+        <div class="wbar dash" style="height:8px;width:60%;align-self:center;margin-top:8px"></div>
+        <div style="flex:1"></div>
+        <div class="wrow" style="gap:14px;justify-content:center;align-items:center"><div class="wbar" style="width:28px;height:28px"></div><div style="width:56px;height:56px;border-radius:999px;border:4px solid #1A5C34"></div><div class="wbar" style="width:28px;height:28px"></div></div>
+      </div></div><div class="label"><div class="id">W-09</div><div class="name">Photo après</div><div class="notes">côte-à-côte avant/après · signature visuelle</div></div></div>
+
+      <!-- W-11 RÉCAP VISITE -->
+      <div class="wire"><div class="frame"><div class="wcol">
+        <div style="flex:1"></div>
+        <div class="wlbl" style="text-align:center;color:#1A5C34">VISITE 1 / 5 TERMINÉE</div>
+        <div class="wbar dark" style="height:50px;width:70%;align-self:center;margin-top:14px;background:#1A5C34;border-radius:6px"></div>
+        <div class="wbar" style="height:10px;width:50%;background:#999;align-self:center;margin-top:8px"></div>
+        <div style="flex:1"></div>
+        <div class="wbar" style="height:1px;width:60%;align-self:center;background:#E5E5E5"></div>
+        <div class="wlbl muted" style="text-align:center;margin-top:14px">PROCHAINE</div>
+        <div class="wbar" style="height:14px;width:50%;align-self:center;margin-top:4px"></div>
+        <div class="wbar" style="height:8px;width:70%;background:#999;align-self:center;margin-top:4px"></div>
+        <div style="flex:1"></div>
+        <div class="wrow"><div class="wbtn alt" style="flex:1">Pause</div><div class="wbtn" style="flex:1">Continuer</div></div>
+      </div></div><div class="label"><div class="id">W-11</div><div class="name">Récap visite</div><div class="notes">moment fierté · count-up animation</div></div></div>
+
+      <!-- W-14 PLANNING -->
+      <div class="wire"><div class="frame"><div class="wcol">
+        <div class="wlbl">PLANNING</div>
+        <div class="wbar" style="height:22px;width:70%;margin-top:6px"></div>
+        <div class="wb" style="height:50px;margin-top:14px;padding:10px;display:flex;justify-content:space-between"><div><div class="wbar" style="height:8px;width:60px"></div><div class="wbar dark" style="height:18px;width:30px;margin-top:4px"></div></div><div style="text-align:right"><div class="wbar" style="height:8px;width:50px"></div><div class="wbar dark" style="height:18px;width:60px;margin-top:4px"></div></div></div>
+        <div class="wb" style="height:36px;margin-top:8px;padding:8px;display:flex;align-items:center;gap:8px"><div style="width:24px;height:24px;border-radius:6px;background:#E5E5E5;display:grid;place-items:center;font-family:var(--font-mono);font-size:10px;color:#1C1208">L</div><div class="wbar" style="height:8px;flex:1"></div></div>
+        <div class="wb" style="height:36px;margin-top:6px;padding:8px;display:flex;align-items:center;gap:8px"><div style="width:24px;height:24px;border-radius:6px;background:#E5E5E5;display:grid;place-items:center;font-family:var(--font-mono);font-size:10px;color:#1C1208">M</div><div class="wbar" style="height:8px;flex:1"></div></div>
+        <div class="wb" style="height:36px;margin-top:6px;padding:8px;display:flex;align-items:center;gap:8px;background:#FCEAD3"><div style="width:24px;height:24px;border-radius:6px;background:#B5651D;color:#fff;display:grid;place-items:center;font-family:var(--font-mono);font-size:10px">V</div><div class="wlbl" style="color:#B5651D">CONGÉ DEMANDÉ</div></div>
+        <div style="flex:1"></div>
+      </div></div><div class="label"><div class="id">W-14</div><div class="name">Planning 7 jours</div><div class="notes">le bureau peut ajuster mais jamais sans appel d'abord</div></div></div>
+
+      <!-- W-15 PROFIL & FOYERS -->
+      <div class="wire"><div class="frame"><div class="wcol">
+        <div class="wrow" style="gap:10px;align-items:center"><div style="width:48px;height:48px;border-radius:999px;background:#1C1208"></div><div><div class="wbar" style="height:14px;width:60px"></div><div class="wbar" style="height:8px;width:80px;background:#999;margin-top:4px"></div></div></div>
+        <div class="wb" style="height:50px;margin-top:14px;padding:8px;display:flex;justify-content:space-around;align-items:center"><div style="text-align:center"><div class="wbar dark" style="height:14px;width:30px"></div><div class="wbar" style="height:6px;width:30px;background:#999;margin-top:4px"></div></div><div style="text-align:center"><div class="wbar dark" style="height:14px;width:30px"></div><div class="wbar" style="height:6px;width:30px;background:#999;margin-top:4px"></div></div><div style="text-align:center"><div class="wbar dark" style="height:14px;width:30px"></div><div class="wbar" style="height:6px;width:30px;background:#999;margin-top:4px"></div></div></div>
+        <div class="wlbl" style="margin-top:14px">FOYERS RÉGULIERS</div>
+        <div class="wb" style="height:42px;margin-top:6px;padding:8px;display:flex;gap:8px;align-items:center"><div style="width:28px;height:28px;border-radius:999px;background:#E5E5E5"></div><div style="flex:1"><div class="wbar" style="height:8px;width:50%"></div><div class="wbar" style="height:6px;width:60%;background:#999;margin-top:3px"></div></div><div class="wbar" style="width:30px;height:14px;background:#1A5C34"></div></div>
+        <div class="wb" style="height:42px;margin-top:6px;padding:8px;display:flex;gap:8px;align-items:center"><div style="width:28px;height:28px;border-radius:999px;background:#E5E5E5"></div><div style="flex:1"><div class="wbar" style="height:8px;width:50%"></div><div class="wbar" style="height:6px;width:60%;background:#999;margin-top:3px"></div></div><div class="wbar" style="width:30px;height:14px;background:#1A5C34"></div></div>
+        <div style="flex:1"></div>
+      </div></div><div class="label"><div class="id">W-15</div><div class="name">Profil &amp; foyers</div><div class="notes">tenure-with-household · stickiness signature</div></div></div>
+
+      <!-- W-16 SOS -->
+      <div class="wire"><div class="frame" style="background:#1C1208"><div class="wcol">
+        <div class="wlbl muted" style="color:rgba(255,255,255,0.5)">URGENCE</div>
+        <div class="wbar" style="height:22px;width:80%;background:#fff;margin-top:6px"></div>
+        <div class="wbar" style="height:10px;width:60%;background:rgba(255,255,255,0.4);margin-top:4px"></div>
+        <div class="wb" style="height:60px;margin-top:14px;padding:12px;background:#C03020;border-color:#C03020"><div class="wbar" style="height:10px;width:60%;background:#fff"></div><div class="wbar" style="height:6px;width:80%;background:rgba(255,255,255,0.7);margin-top:6px"></div></div>
+        <div class="wb" style="height:48px;margin-top:8px;padding:10px;background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.1)"><div class="wbar" style="height:8px;width:60%;background:#fff"></div></div>
+        <div class="wb" style="height:48px;margin-top:6px;padding:10px;background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.1)"><div class="wbar" style="height:8px;width:60%;background:#fff"></div></div>
+        <div class="wb" style="height:48px;margin-top:6px;padding:10px;background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.1)"><div class="wbar" style="height:8px;width:60%;background:#fff"></div></div>
+        <div style="flex:1"></div>
+        <div class="wbtn alt" style="border-color:rgba(255,255,255,0.3);color:#fff">Annuler</div>
+      </div></div><div class="label"><div class="id">W-16</div><div class="name">SOS</div><div class="notes">flottant rouge sur tous les écrans · 1 tap</div></div></div>
+
+      <!-- W-17 OFFLINE -->
+      <div class="wire"><div class="frame"><div class="wcol">
+        <div class="wbar" style="height:18px;width:80%;background:#1C1208;color:#fff;border-radius:6px;display:flex;align-items:center;padding:0 10px;font-family:var(--font-mono);font-size:9px">HORS-LIGNE · 12 ACTIONS EN ATTENTE</div>
+        <div class="wlbl" style="margin-top:14px">VISITE EN COURS</div>
+        <div class="wb" style="height:60px;margin-top:6px;padding:10px"><div class="wbar dark" style="height:14px;width:60%"></div><div class="wbar" style="height:8px;width:50%;background:#999;margin-top:6px"></div></div>
+        <div class="wb" style="height:80px;margin-top:8px;padding:10px;background:#FCEAD3"><div class="wlbl" style="color:#B5651D">ENREGISTRÉ LOCALEMENT</div><div class="wbar" style="height:8px;width:90%;background:#999;margin-top:4px"></div><div class="wbar" style="height:8px;width:80%;background:#999;margin-top:3px"></div><div class="wbar" style="height:8px;width:70%;background:#999;margin-top:3px"></div></div>
+        <div style="flex:1"></div>
+        <div class="wlbl muted" style="text-align:center">tout est sauvegardé · sync auto</div>
+      </div></div><div class="label"><div class="id">W-17</div><div class="name">Hors-ligne · file de sync</div><div class="notes">cycle visite intégralement utilisable hors-ligne</div></div></div>
+
+      <!-- W-21 FIN DE JOURNÉE -->
+      <div class="wire"><div class="frame"><div class="wcol">
+        <div style="flex:1"></div>
+        <div class="wlbl" style="text-align:center;color:#1A5C34">JOURNÉE TERMINÉE</div>
+        <div class="wbar dark" style="height:60px;width:80%;align-self:center;margin-top:14px;background:#1A5C34;border-radius:6px"></div>
+        <div class="wbar" style="height:10px;width:50%;background:#999;align-self:center;margin-top:8px"></div>
+        <div class="wrow" style="gap:6px;margin-top:14px;justify-content:center"><div class="wbar" style="width:60px;height:18px;background:#1A5C34;border-radius:999px"></div><div class="wbar" style="width:60px;height:18px;background:#1A5C34;border-radius:999px"></div><div class="wbar" style="width:60px;height:18px;background:#1A5C34;border-radius:999px"></div></div>
+        <div style="flex:1"></div>
+        <div class="wlbl muted" style="text-align:center">DEMAIN · 3 VISITES</div>
+        <div class="wbar" style="height:14px;width:60%;align-self:center;margin-top:4px"></div>
+        <div style="flex:1"></div>
+        <div class="wbtn">Bonne soirée</div>
+      </div></div><div class="label"><div class="id">W-21</div><div class="name">Fin de journée</div><div class="notes">streak silencieux · « 0 annulation » sans crier</div></div></div>
+
+      <!-- W-22 AIDE -->
+      <div class="wire"><div class="frame"><div class="wcol">
+        <div class="wlbl">AIDE</div>
+        <div class="wbar" style="height:22px;width:60%;margin-top:6px"></div>
+        <div class="wb" style="height:50px;margin-top:14px;padding:10px;background:#1C1208;color:#fff"><div class="wbar" style="height:10px;width:60%;background:#fff"></div><div class="wbar" style="height:8px;width:50%;background:rgba(255,255,255,0.5);margin-top:4px"></div></div>
+        <div class="wb" style="height:36px;margin-top:8px;padding:10px"><div class="wbar" style="height:10px;width:80%"></div></div>
+        <div class="wb" style="height:36px;margin-top:6px;padding:10px"><div class="wbar" style="height:10px;width:80%"></div></div>
+        <div class="wb" style="height:36px;margin-top:6px;padding:10px"><div class="wbar" style="height:10px;width:80%"></div></div>
+        <div class="wb" style="height:36px;margin-top:6px;padding:10px;background:#FDECEA"><div class="wbar" style="height:10px;width:60%;background:#C03020"></div></div>
+        <div style="flex:1"></div>
+      </div></div><div class="label"><div class="id">W-22</div><div class="name">Aide</div><div class="notes">appel téléphonique en premier · FAQ 5 max</div></div></div>
+
     </div>
   </section>
 
@@ -285,9 +530,114 @@
         </div>
       </div></div><div class="label"><div class="id">O-05 → O-09</div><div class="name">Matching · inbox + candidates</div><div class="notes">3 colonnes · raccourcis ⌥+J/K · pas d'auto-assign</div></div></div>
 
+      <!-- O-03 MATCHING QUEUE -->
+      <div class="wire"><div class="frame dt"><div class="wcol" style="flex-direction:row;height:100%">
+        <div style="width:140px;background:#15131D;border-radius:4px"></div>
+        <div style="flex:1;padding:10px;display:flex;flex-direction:column;gap:6px">
+          <div class="wbar" style="height:18px;width:50%"></div>
+          <div class="wb" style="height:30px;padding:6px;display:flex;align-items:center;gap:6px"><div class="wlbl">09:30</div><div class="wbar" style="height:8px;width:40%"></div><div class="wbar" style="width:50px;height:14px;background:#C03020"></div></div>
+          <div class="wb" style="height:30px;padding:6px;display:flex;align-items:center;gap:6px;border-color:#3B1F7A;border-width:2px"><div class="wlbl">11:30</div><div class="wbar" style="height:8px;width:40%"></div><div class="wbar" style="width:50px;height:14px;background:#3B1F7A"></div></div>
+          <div class="wb" style="height:30px;padding:6px;display:flex;align-items:center;gap:6px"><div class="wlbl">12:00</div><div class="wbar" style="height:8px;width:40%"></div><div class="wbar" style="width:50px;height:14px;background:#999"></div></div>
+          <div class="wb" style="height:30px;padding:6px;display:flex;align-items:center;gap:6px"><div class="wlbl">14:00</div><div class="wbar" style="height:8px;width:40%"></div><div class="wbar" style="width:50px;height:14px;background:#999"></div></div>
+          <div class="wb" style="height:30px;padding:6px;display:flex;align-items:center;gap:6px"><div class="wlbl">15:00</div><div class="wbar" style="height:8px;width:40%"></div><div class="wbar" style="width:50px;height:14px;background:#999"></div></div>
+        </div>
+      </div></div><div class="label"><div class="id">O-03</div><div class="name">File de matching</div><div class="notes">SLA en compte à rebours · prio rouge si &lt; 1h</div></div></div>
+
+      <!-- O-07 LISTE ABONNÉS -->
+      <div class="wire"><div class="frame dt"><div class="wcol" style="flex-direction:row;height:100%">
+        <div style="width:140px;background:#15131D;border-radius:4px"></div>
+        <div style="flex:1;padding:10px;display:flex;flex-direction:column;gap:6px">
+          <div class="wrow" style="margin-bottom:8px"><div class="wbar" style="height:18px;flex:1"></div><div class="wb" style="width:120px;height:24px;padding:4px"><div class="wlbl muted">⌕ chercher</div></div></div>
+          <div class="wb" style="height:32px;padding:6px;display:flex;justify-content:space-between;align-items:center"><div class="wrow" style="gap:8px"><div style="width:20px;height:20px;border-radius:999px;background:#1C1208"></div><div class="wbar" style="width:60px;height:10px"></div></div><div class="wbar" style="width:50px;height:10px;background:#1A5C34"></div></div>
+          <div class="wb" style="height:32px;padding:6px;display:flex;justify-content:space-between;align-items:center"><div class="wrow" style="gap:8px"><div style="width:20px;height:20px;border-radius:999px;background:#1C1208"></div><div class="wbar" style="width:60px;height:10px"></div></div><div class="wbar" style="width:50px;height:10px;background:#1A5C34"></div></div>
+          <div class="wb" style="height:32px;padding:6px;display:flex;justify-content:space-between;align-items:center"><div class="wrow" style="gap:8px"><div style="width:20px;height:20px;border-radius:999px;background:#1C1208"></div><div class="wbar" style="width:60px;height:10px"></div></div><div class="wbar" style="width:50px;height:10px;background:#B5651D"></div></div>
+          <div class="wb" style="height:32px;padding:6px;display:flex;justify-content:space-between;align-items:center"><div class="wrow" style="gap:8px"><div style="width:20px;height:20px;border-radius:999px;background:#1C1208"></div><div class="wbar" style="width:60px;height:10px"></div></div><div class="wbar" style="width:50px;height:10px;background:#C03020"></div></div>
+          <div class="wb" style="height:32px;padding:6px;display:flex;justify-content:space-between;align-items:center"><div class="wrow" style="gap:8px"><div style="width:20px;height:20px;border-radius:999px;background:#1C1208"></div><div class="wbar" style="width:60px;height:10px"></div></div><div class="wbar" style="width:50px;height:10px;background:#1A5C34"></div></div>
+        </div>
+      </div></div><div class="label"><div class="id">O-07 → O-08</div><div class="name">Abonnés · liste + 360°</div><div class="notes">recherche typeahead · clic ouvre drawer 360°</div></div></div>
+
+      <!-- O-09 LISTE LAVEUSES -->
+      <div class="wire"><div class="frame dt"><div class="wcol" style="flex-direction:row;height:100%">
+        <div style="width:140px;background:#15131D;border-radius:4px"></div>
+        <div style="flex:1;padding:10px;display:flex;flex-direction:column;gap:6px">
+          <div class="wbar" style="height:18px;width:50%"></div>
+          <div class="wrow" style="gap:8px;margin-top:6px"><div class="wb" style="flex:1;height:40px;padding:6px"><div class="wlbl">EN COURS</div><div class="wbar dark" style="height:14px;width:30%;margin-top:4px"></div></div><div class="wb" style="flex:1;height:40px;padding:6px"><div class="wlbl">LIBRES</div><div class="wbar dark" style="height:14px;width:30%;margin-top:4px"></div></div><div class="wb" style="flex:1;height:40px;padding:6px"><div class="wlbl">PAUSE</div><div class="wbar dark" style="height:14px;width:30%;margin-top:4px"></div></div></div>
+          <div class="wb" style="height:36px;padding:6px;margin-top:6px;display:flex;gap:8px;align-items:center"><div style="width:24px;height:24px;border-radius:999px;background:#1A5C34"></div><div style="flex:1"><div class="wbar" style="height:8px;width:50%"></div><div class="wbar" style="height:6px;width:30%;background:#999;margin-top:3px"></div></div><div class="wbar" style="width:40px;height:14px;background:#1A5C34"></div></div>
+          <div class="wb" style="height:36px;padding:6px;display:flex;gap:8px;align-items:center"><div style="width:24px;height:24px;border-radius:999px;background:#1A5C34"></div><div style="flex:1"><div class="wbar" style="height:8px;width:50%"></div><div class="wbar" style="height:6px;width:30%;background:#999;margin-top:3px"></div></div><div class="wbar" style="width:40px;height:14px;background:#999"></div></div>
+        </div>
+      </div></div><div class="label"><div class="id">O-09 → O-10</div><div class="name">Laveuses · liste + 360°</div><div class="notes">filtre par statut · tournée du jour visible</div></div></div>
+
+      <!-- O-11 TICKETS -->
+      <div class="wire"><div class="frame dt"><div class="wcol" style="flex-direction:row;height:100%">
+        <div style="width:140px;background:#15131D;border-radius:4px"></div>
+        <div style="flex:1;padding:10px;display:flex;flex-direction:column;gap:6px">
+          <div class="wbar" style="height:18px;width:50%"></div>
+          <div class="wb" style="height:40px;padding:6px;border-color:#1C1208;border-width:2px;display:flex;align-items:center;justify-content:space-between"><div><div class="wlbl">#0421</div><div class="wbar dark" style="height:10px;width:120px;margin-top:4px"></div></div><div class="wbar" style="width:50px;height:14px;background:#C03020"></div></div>
+          <div class="wb" style="height:40px;padding:6px;display:flex;align-items:center;justify-content:space-between"><div><div class="wlbl">#0420</div><div class="wbar dark" style="height:10px;width:120px;margin-top:4px"></div></div><div class="wbar" style="width:50px;height:14px;background:#999"></div></div>
+          <div class="wb" style="height:40px;padding:6px;display:flex;align-items:center;justify-content:space-between"><div><div class="wlbl">#0419</div><div class="wbar dark" style="height:10px;width:120px;margin-top:4px"></div></div><div class="wbar" style="width:50px;height:14px;background:#1A5C34"></div></div>
+        </div>
+        <div style="width:200px;padding:10px;background:#FAFAFA;border-radius:4px;display:flex;flex-direction:column;gap:6px"><div class="wlbl">#0421 · DRAWER</div><div class="wbar" style="height:10px;width:80%"></div><div class="wbar" style="height:8px;width:90%;background:#999"></div><div class="wbar" style="height:8px;width:60%;background:#999"></div><div class="wb" style="height:80px;margin-top:6px;padding:6px"><div class="wlbl">POLITIQUE</div><div class="wbar" style="height:8px;width:90%;background:#999;margin-top:4px"></div><div class="wbar" style="height:8px;width:70%;background:#999;margin-top:3px"></div></div><div style="flex:1"></div><div class="wbtn" style="background:#3B1F7A;font-size:8px">Crédit goodwill</div></div>
+      </div></div><div class="label"><div class="id">O-11 → O-12</div><div class="name">Tickets · file + détail</div><div class="notes">drawer guide opérateur · politique pré-remplie</div></div></div>
+
+      <!-- O-13 PAIEMENTS -->
+      <div class="wire"><div class="frame dt"><div class="wcol" style="flex-direction:row;height:100%">
+        <div style="width:140px;background:#15131D;border-radius:4px"></div>
+        <div style="flex:1;padding:10px;display:flex;flex-direction:column;gap:6px">
+          <div class="wbar" style="height:18px;width:50%"></div>
+          <div class="wrow" style="gap:8px;margin-top:6px"><div class="wb" style="flex:1;height:40px;padding:6px"><div class="wlbl">ENCAISSÉ</div><div class="wbar dark" style="height:14px;width:60%;margin-top:4px"></div></div><div class="wb" style="flex:1;height:40px;padding:6px;background:#FDECEA"><div class="wlbl" style="color:#C03020">EN RETARD</div><div class="wbar" style="height:14px;width:60%;background:#C03020;margin-top:4px"></div></div><div class="wb" style="flex:1;height:40px;padding:6px"><div class="wlbl">VERSÉ</div><div class="wbar dark" style="height:14px;width:60%;margin-top:4px"></div></div></div>
+          <div class="wb" style="height:32px;padding:6px;margin-top:6px;display:flex;justify-content:space-between;align-items:center"><div class="wbar" style="height:10px;width:30%"></div><div class="wbar" style="width:60px;height:10px;background:#1A5C34"></div></div>
+          <div class="wb" style="height:32px;padding:6px;display:flex;justify-content:space-between;align-items:center;background:#FDECEA;border-color:#C03020"><div class="wbar" style="height:10px;width:30%;background:#C03020"></div><div class="wbar" style="width:80px;height:10px;background:#C03020"></div></div>
+          <div class="wb" style="height:32px;padding:6px;display:flex;justify-content:space-between;align-items:center"><div class="wbar" style="height:10px;width:30%"></div><div class="wbar" style="width:60px;height:10px;background:#1A5C34"></div></div>
+        </div>
+      </div></div><div class="label"><div class="id">O-13</div><div class="name">Paiements &amp; exceptions</div><div class="notes">refus en rouge · drawer guide la suspension</div></div></div>
+
+      <!-- O-16 RAPPORTS -->
+      <div class="wire"><div class="frame dt"><div class="wcol" style="flex-direction:row;height:100%">
+        <div style="width:140px;background:#15131D;border-radius:4px"></div>
+        <div style="flex:1;padding:10px;display:flex;flex-direction:column;gap:6px">
+          <div class="wbar" style="height:18px;width:40%"></div>
+          <div class="wrow" style="gap:8px;margin-top:6px"><div class="wb" style="flex:1;height:50px;padding:6px"><div class="wlbl">REVENU</div><div class="wbar dark" style="height:18px;width:70%;margin-top:4px"></div></div><div class="wb" style="flex:1;height:50px;padding:6px"><div class="wlbl">MARGE</div><div class="wbar dark" style="height:18px;width:60%;margin-top:4px"></div></div><div class="wb" style="flex:1;height:50px;padding:6px"><div class="wlbl">CHURN</div><div class="wbar dark" style="height:18px;width:40%;margin-top:4px"></div></div></div>
+          <div class="wb" style="flex:1;padding:10px;display:grid;place-items:center;color:#999;font-family:var(--font-mono);font-size:10px">[ graph mensuel · 6 derniers mois ]</div>
+        </div>
+      </div></div><div class="label"><div class="id">O-16</div><div class="name">Rapports</div><div class="notes">graph + KPI · export CSV</div></div></div>
+
+      <!-- O-17 AUDIT LOG -->
+      <div class="wire"><div class="frame dt"><div class="wcol" style="flex-direction:row;height:100%">
+        <div style="width:140px;background:#15131D;border-radius:4px"></div>
+        <div style="flex:1;padding:10px;display:flex;flex-direction:column;gap:6px">
+          <div class="wbar" style="height:18px;width:50%"></div>
+          <div class="wrow" style="gap:8px;margin-top:6px"><div class="wb" style="flex:1;height:24px;padding:4px"><div class="wlbl muted">FILTRE · TOUS</div></div><div class="wb" style="flex:1;height:24px;padding:4px"><div class="wlbl muted">DATE · 7J</div></div><div class="wb" style="flex:1;height:24px;padding:4px"><div class="wlbl muted">UTILISATEUR</div></div></div>
+          <div class="wb" style="height:30px;padding:6px;display:flex;gap:8px;align-items:center"><div class="wlbl muted" style="width:60px">12:34</div><div class="wbar" style="height:8px;flex:1"></div></div>
+          <div class="wb" style="height:30px;padding:6px;display:flex;gap:8px;align-items:center"><div class="wlbl muted" style="width:60px">12:01</div><div class="wbar" style="height:8px;flex:1"></div></div>
+          <div class="wb" style="height:30px;padding:6px;display:flex;gap:8px;align-items:center"><div class="wlbl muted" style="width:60px">11:42</div><div class="wbar" style="height:8px;flex:1"></div></div>
+          <div class="wb" style="height:30px;padding:6px;display:flex;gap:8px;align-items:center;background:#FDECEA"><div class="wlbl" style="color:#C03020;width:60px">11:15</div><div class="wbar" style="height:8px;flex:1;background:#C03020"></div></div>
+        </div>
+      </div></div><div class="label"><div class="id">O-17</div><div class="name">Audit log</div><div class="notes">log immuable · filtres action / utilisateur / date</div></div></div>
+
+      <!-- O-20 CMD PALETTE -->
+      <div class="wire"><div class="frame dt" style="position:relative"><div class="wcol" style="height:100%;background:rgba(28,18,8,0.55);position:relative">
+        <div style="position:absolute;left:50%;top:30px;transform:translateX(-50%);width:80%;background:#fff;border-radius:6px;padding:6px">
+          <div class="wb" style="height:24px;padding:4px;border:none;border-bottom:1px solid #E5E5E5"><div class="wlbl muted">› chercher ou exécuter…</div></div>
+          <div class="wlbl muted" style="margin-top:6px;padding:0 8px">PERSONNES</div>
+          <div class="wb" style="height:24px;padding:4px;border:none;background:#F0EBFF"><div class="wbar" style="height:8px;width:60%;background:#3B1F7A"></div></div>
+          <div class="wb" style="height:24px;padding:4px;border:none"><div class="wbar" style="height:8px;width:50%;background:#999"></div></div>
+          <div class="wlbl muted" style="margin-top:6px;padding:0 8px">ACTIONS</div>
+          <div class="wb" style="height:24px;padding:4px;border:none"><div class="wbar" style="height:8px;width:70%"></div></div>
+          <div class="wb" style="height:24px;padding:4px;border:none"><div class="wbar" style="height:8px;width:70%"></div></div>
+          <div class="wb" style="height:24px;padding:4px;border:none;background:#FDECEA"><div class="wbar" style="height:8px;width:70%;background:#C03020"></div></div>
+        </div>
+      </div></div><div class="label"><div class="id">O-20</div><div class="name">Palette ⌘K</div><div class="notes">overlay backdrop blur · actions destructives marquées</div></div></div>
+
+      <!-- O-21 SOS REÇU -->
+      <div class="wire"><div class="frame dt"><div class="wcol" style="flex-direction:row;height:100%">
+        <div style="width:140px;background:#C03020;border-radius:4px;padding:8px;display:flex;flex-direction:column;gap:4px"><div class="wbar" style="height:10px;background:#fff;width:50%"></div><div class="wbar" style="height:6px;background:rgba(255,255,255,0.7);width:80%;margin-top:4px"></div><div class="wbar" style="height:6px;background:rgba(255,255,255,0.7);width:70%"></div><div class="wbar" style="height:6px;background:rgba(255,255,255,0.7);width:90%"></div><div class="wbar" style="height:6px;background:rgba(255,255,255,0.7);width:60%"></div></div>
+        <div style="flex:1;padding:10px;display:flex;flex-direction:column;gap:6px"><div class="wbar" style="height:14px;width:50%;background:#C03020"></div><div class="wbar" style="height:18px;width:70%"></div><div class="wb" style="flex:1;padding:8px;display:grid;place-items:center;color:#999;font-family:var(--font-mono);font-size:10px">[ carte · GPS partagé en direct ]</div><div class="wrow" style="gap:6px"><div class="wb" style="flex:1;height:30px;padding:4px"><div class="wlbl">VITESSE</div><div class="wbar dark" style="height:10px;width:30%;margin-top:2px"></div></div><div class="wb" style="flex:1;height:30px;padding:4px"><div class="wlbl">BATTERIE</div><div class="wbar dark" style="height:10px;width:30%;margin-top:2px"></div></div><div class="wb" style="flex:1;height:30px;padding:4px"><div class="wlbl">SIGNAL</div><div class="wbar dark" style="height:10px;width:30%;margin-top:2px"></div></div></div></div>
+        <div style="width:140px;padding:10px;background:#FFF7F6;border-radius:4px;display:flex;flex-direction:column;gap:4px"><div class="wlbl" style="color:#C03020">CONTACT URGENCE</div><div class="wbar" style="height:8px;width:80%"></div><div class="wbar" style="height:6px;width:60%;background:#999"></div><div class="wbtn" style="background:#C03020;font-size:8px;margin-top:auto">📞 Appeler</div><div class="wbtn alt" style="font-size:8px">Police 117</div></div>
+      </div></div><div class="label"><div class="id">O-21</div><div class="name">SOS reçu</div><div class="notes">protocole 6 étapes · audit log auto</div></div></div>
+
     </div>
   </section>
 
-  <p style="margin-top: var(--s-10); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.12em;">— 14 wireframes clés sur 81 · les autres en /04-wireframes/ par ID · v2.0 · 2026</p>
+  <p style="margin-top: var(--s-10); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.12em;">— 35 wireframes documentés sur 81 surfaces · les autres dérivent par variation des patterns présentés ici · v2.0 · 2026</p>
 </div>
 </body></html>
