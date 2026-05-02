@@ -1114,11 +1114,318 @@
   </section>
 
   <!-- =================================================== -->
+  <!-- ROW 09 — SPRINT 0 ADDITIONS                          -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">09 · SPRINT 0 · MODALES &amp; SOUS-FLUX</div>
+    <h2>X-09 · X-11.M · X-15.S · X-18.C · X-19.U · X-19.R · X-21.M · X-22.A · X-25 · X-29.O · X-30.S</h2>
+    <p class="lede" style="font-size: var(--text-base); margin-top: var(--s-3); margin-bottom: var(--s-5)">Écrans qui complètent le cycle d'usage : tour guidé première session, modales de modification, confirmations post-action. À l'issue de ce sprint, chaque CTA pointe vers un écran existant.</p>
+
+    <div class="row" style="margin-top: var(--s-7)">
+
+      <!-- X-09 FIRST-RUN TOUR -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>9:42</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body" style="position:relative">
+          <!-- Background X-10 dimmed -->
+          <div style="position:absolute;inset:18px 18px 14px;opacity:0.3;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center"><div class="h-sm">BONJOUR YAWA</div><div class="avatar" style="width:28px;height:28px"></div></div>
+            <div class="h-sm">PROCHAINE VISITE</div>
+            <div style="font-family:var(--font-display);font-weight:500;font-size:42px;letter-spacing:-0.04em;line-height:1;color:var(--ink)"><em style="font-style:italic">Mardi</em></div>
+          </div>
+          <!-- Spotlight on next visit area -->
+          <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(28,18,8,0.85);padding:18px;color:white;border-radius:18px 18px 0 0">
+            <div class="h-sm" style="color:var(--primary-tint);margin-bottom:6px">1 / 3 · DÉCOUVERTE</div>
+            <div style="font-family:var(--font-display);font-weight:500;font-style:italic;font-size:22px;line-height:1.15;color:white">Votre prochaine visite<br>est ici.</div>
+            <div class="p" style="color:rgba(255,255,255,0.85);margin-top:6px;font-size:12px">Toutes les semaines, votre laveuse vient le jour convenu. Vous saurez quand elle arrive — par SMS et dans l'app.</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
+              <div style="display:flex;gap:6px"><span style="width:14px;height:6px;background:var(--primary-tint);border-radius:999px"></span><span style="width:6px;height:6px;background:rgba(255,255,255,0.3);border-radius:999px"></span><span style="width:6px;height:6px;background:rgba(255,255,255,0.3);border-radius:999px"></span></div>
+              <div style="font-size:12px;color:rgba(255,255,255,0.5)">Passer</div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <div class="btn full" style="background:rgba(255,255,255,0.12);color:white;font-size:13px">Précédent</div>
+              <div class="btn full" style="background:white;color:var(--ink);font-size:13px">Suivant</div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">X-09</div><div class="name">Tour guidé · 1/3</div><div class="notes">Superposé sur X-10 · première session uniquement · skippable.</div></div></div>
+
+      <!-- X-11.M RESCHEDULE -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:32</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body" style="position:relative;background:rgba(28,18,8,0.45)">
+          <!-- Sheet -->
+          <div style="position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:22px 22px 0 0;padding:18px 18px 14px">
+            <div style="width:36px;height:4px;background:var(--line-2);border-radius:999px;margin:0 auto 14px"></div>
+            <div class="h-md">Reporter la visite ?</div>
+            <div class="p" style="margin-top:4px">Mardi 5 mai · 9 h 00 → choisissez une nouvelle date.</div>
+            <div class="h-sm" style="margin-top:14px">DATES PROPOSÉES</div>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+              <div class="card" style="padding:10px 12px;display:flex;justify-content:space-between;align-items:center;border-color:var(--primary);border-width:2px"><div><div style="font-size:13px;font-weight:600">Mardi 12 mai</div><div class="p-sm">9 h 00 · Akouvi disponible</div></div><div style="width:14px;height:14px;border:2px solid var(--primary);border-radius:999px;display:grid;place-items:center"><div style="width:6px;height:6px;border-radius:999px;background:var(--primary)"></div></div></div>
+              <div class="card" style="padding:10px 12px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:600">Mercredi 6 mai</div><div class="p-sm">9 h 00 · Akouvi disponible</div></div><div style="width:14px;height:14px;border:2px solid var(--ink-3);border-radius:999px"></div></div>
+              <div class="card" style="padding:10px 12px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:600">Jeudi 7 mai</div><div class="p-sm">14 h 00 · autre laveuse</div></div><div style="width:14px;height:14px;border:2px solid var(--ink-3);border-radius:999px"></div></div>
+            </div>
+            <div class="p-sm" style="margin-top:8px;text-align:center">Aucune ne convient ? <span style="color:var(--primary);font-weight:600">Appeler le bureau</span></div>
+            <div style="margin-top:14px;display:flex;gap:8px"><div class="btn ghost full">Annuler</div><div class="btn primary full">Confirmer</div></div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">X-11.M</div><div class="name">Reporter une visite</div><div class="notes">Sheet remontante · 3 dates calculées avec dispo Akouvi · CTA appel bureau si refusées.</div></div></div>
+
+      <!-- X-15.S SUBMIT CONFIRMATION -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>10:11</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body" style="text-align:center;justify-content:center;align-items:center">
+          <div style="flex:1"></div>
+          <div style="width:48px;height:48px;border-radius:999px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-weight:700;font-size:22px;margin-bottom:14px">✓</div>
+          <div class="h-md">Reçu.</div>
+          <div class="p" style="margin-top:6px;max-width:90%">Le bureau examine votre signalement avec les photos et la laveuse. Vous aurez une réponse sous 4 heures.</div>
+          <div class="card cream" style="margin-top:18px;padding:10px 12px;text-align:left;width:100%">
+            <div class="h-sm" style="color:var(--primary);margin-bottom:4px">VOTRE DEMANDE · #0421</div>
+            <div style="font-size:12px;font-weight:500">Linge endommagé — pull rouge décoloré</div>
+            <div class="p-sm" style="margin-top:2px">Visite du 28 avril · 3 photos jointes</div>
+          </div>
+          <div class="card warn" style="margin-top:6px;padding:10px 12px;text-align:left;width:100%">
+            <div class="h-sm" style="color:var(--accent);margin-bottom:4px">À NOTER</div>
+            <div style="font-size:11px;line-height:1.5">Akouvi ne voit pas votre signalement. Le bureau gère la conversation.</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn full" style="background:var(--ink)">Voir mes tickets</div>
+          <div class="btn ghost full" style="font-size:12px">Retour à l'accueil</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-15.S</div><div class="name">Confirmation post-signalement</div><div class="notes">Crée le ticket #0421 · visible immédiatement dans X-31 · réponse SLA 4h.</div></div></div>
+
+      <!-- X-18.C WORKER CHANGE REQUEST -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:34</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:18px">‹</span><div class="h-sm">CHANGER DE LAVEUSE</div></div>
+          <div class="h-md">Pourquoi voulez-vous<br>changer ?</div>
+          <div class="p">Le bureau vous appelle dans la journée pour comprendre. Akouvi ne voit pas cette demande.</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px;border-color:var(--primary);border-width:2px"><div style="width:14px;height:14px;border:2px solid var(--primary);border-radius:999px;display:grid;place-items:center"><div style="width:6px;height:6px;border-radius:999px;background:var(--primary)"></div></div><div style="font-size:12px;font-weight:500">Préférence personnelle</div></div>
+            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-3);border-radius:999px"></div><div style="font-size:12px">Souci de qualité du travail</div></div>
+            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-3);border-radius:999px"></div><div style="font-size:12px">Souci de comportement</div></div>
+            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-3);border-radius:999px"></div><div style="font-size:12px">Akouvi a déménagé / changé d'horaire</div></div>
+            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-3);border-radius:999px"></div><div style="font-size:12px">Autre</div></div>
+          </div>
+          <div class="card warn" style="padding:10px 12px;margin-top:6px">
+            <div class="h-sm" style="color:var(--accent);margin-bottom:4px">À NOTER</div>
+            <div style="font-size:11px;line-height:1.5">Délai habituel pour changement : 1 à 2 semaines. La prochaine visite est maintenue avec Akouvi.</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn primary full">Envoyer la demande</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-18.C</div><div class="name">Demander un changement de laveuse</div><div class="notes">Crée ticket bureau · délai annoncé · visite suivante maintenue.</div></div></div>
+
+      <!-- X-19.U TIER UPGRADE -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:36</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:18px">‹</span><div class="h-sm">PASSER À 2 VISITES</div></div>
+          <div class="h-md">Deux visites<br>par mois.</div>
+          <div class="p">Effet au prochain cycle · 1<sup>er</sup> juin. Vous économisez 500 XOF par mois vs 2 forfaits T1.</div>
+          <div class="card cream" style="padding:12px;margin-top:6px">
+            <div class="h-sm" style="color:var(--primary);margin-bottom:6px">CE QUI CHANGE</div>
+            <div style="display:flex;justify-content:space-between;font-size:12px"><span>Forfait actuel</span><span style="font-family:var(--font-mono);text-decoration:line-through;color:var(--ink-3)">2 500 XOF</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px"><span style="font-weight:600">Nouveau forfait</span><span style="font-family:var(--font-display);font-weight:500;font-style:italic;font-size:18px;color:var(--primary)">4 500 XOF</span></div>
+            <div style="height:1px;background:var(--primary-tint);margin:8px 0"></div>
+            <div style="display:flex;justify-content:space-between;font-size:11px"><span class="p-sm">Économie / mois</span><span style="font-family:var(--font-mono);color:var(--success)">— 500 XOF</span></div>
+          </div>
+          <div class="card" style="padding:10px 12px">
+            <div class="h-sm" style="margin-bottom:4px">EFFET</div>
+            <ul style="margin:0;padding-left:14px;font-size:11px;line-height:1.6">
+              <li>Mois en cours · 1 visite restante</li>
+              <li>1<sup>er</sup> juin · prélèvement de 4 500 XOF</li>
+              <li>Le bureau vous contacte pour planifier le 2<sup>e</sup> créneau</li>
+              <li>Akouvi reste votre laveuse</li>
+            </ul>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn primary full lg">Confirmer · 4 500 XOF / mois</div>
+          <div class="btn ghost full">Garder mon forfait</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-19.U</div><div class="name">Passer à 2 visites</div><div class="notes">D-02 · effet cycle suivant · pas de prorata · ticket bureau pour planifier 2e créneau.</div></div></div>
+
+      <!-- X-19.R PAUSED STATE -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>9:41</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
+          <div class="h-sm">VOTRE FORFAIT</div>
+          <div class="card warn" style="padding:12px;margin-top:6px">
+            <div class="h-sm" style="color:var(--accent);margin-bottom:4px">FORFAIT EN PAUSE</div>
+            <div style="font-size:13px;font-weight:600">Aucune visite jusqu'à reprise.</div>
+            <div class="p-sm" style="margin-top:4px">Pause active depuis le 14 mai · jour 22 sur 90 max.</div>
+          </div>
+          <div class="h-md">Tout est prêt à<br>reprendre.</div>
+          <div class="card cream" style="padding:10px 12px">
+            <div class="h-sm" style="color:var(--primary);margin-bottom:4px">VOTRE LAVEUSE</div>
+            <div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="width:32px;height:32px"></div><div style="flex:1"><div style="font-size:13px;font-weight:600">Akouvi K. vous attend.</div><div class="p-sm">Réservée pour vous · 8 mois ensemble</div></div></div>
+          </div>
+          <div class="card" style="padding:10px 12px">
+            <div class="h-sm" style="margin-bottom:4px">ATTENTION · DÉLAI MAX</div>
+            <div style="font-size:11px;line-height:1.55">La pause prend fin automatiquement au bout de 3 mois (le 14 août). Au-delà, votre compte est clôturé et Akouvi peut être réassignée à un autre foyer.</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn primary full lg">Reprendre maintenant</div>
+          <div class="btn ghost full" style="font-size:12px">Prolonger la pause · contact bureau</div>
+          <div class="nav">
+            <div class="item"><div class="glyph"></div>Accueil</div>
+            <div class="item"><div class="glyph"></div>Visites</div>
+            <div class="item active"><div class="glyph"></div>Forfait</div>
+            <div class="item"><div class="glyph"></div>Profil</div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">X-19.R</div><div class="name">Forfait en pause · CTA reprise</div><div class="notes">D-04 · pause max 3 mois · Akouvi réservée · clôture auto si dépassement.</div></div></div>
+
+      <!-- X-21.M ADD MM PROVIDER -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:38</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body" style="position:relative;background:rgba(28,18,8,0.45)">
+          <div style="position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:22px 22px 0 0;padding:18px 18px 14px">
+            <div style="width:36px;height:4px;background:var(--line-2);border-radius:999px;margin:0 auto 14px"></div>
+            <div class="h-sm">AJOUTER MIXX BY YAS</div>
+            <div class="h-md" style="margin-top:4px">Votre numéro Mixx.</div>
+            <div class="p">On envoie un code Mixx pour vérifier que c'est bien votre numéro.</div>
+            <div style="margin-top:10px">
+              <div class="h-sm" style="margin-bottom:6px">NUMÉRO MIXX</div>
+              <div class="input" style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono)">
+                <span style="color:var(--ink-3)">+228</span>
+                <span style="color:var(--ink)">99 87 65 43</span>
+                <span style="margin-left:auto;width:2px;height:16px;background:var(--primary)"></span>
+              </div>
+              <div class="p-sm" style="margin-top:4px">Doit être un numéro Mixx by Yas actif.</div>
+            </div>
+            <div style="margin-top:12px">
+              <div class="h-sm" style="margin-bottom:6px">CODE MIXX (4 CHIFFRES)</div>
+              <div style="display:flex;gap:6px">
+                <div class="input" style="width:38px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px;color:var(--ink-3)">·</div>
+                <div class="input" style="width:38px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px;color:var(--ink-3)">·</div>
+                <div class="input" style="width:38px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px;color:var(--ink-3)">·</div>
+                <div class="input" style="width:38px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px;color:var(--ink-3)">·</div>
+              </div>
+              <div class="p-sm" style="margin-top:6px">Composez <span style="font-family:var(--font-mono);color:var(--primary);font-weight:600">*555*7#</span> sur Mixx pour recevoir le code.</div>
+            </div>
+            <div style="margin-top:14px;display:flex;gap:8px"><div class="btn ghost full">Annuler</div><div class="btn primary full">Vérifier &amp; ajouter</div></div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">X-21.M</div><div class="name">Ajouter un fournisseur MM</div><div class="notes">Vérification OTP du fournisseur · code USSD pour récupération.</div></div></div>
+
+      <!-- X-22.A PAUSE CONFIRMATION -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:39</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body" style="text-align:center;justify-content:center;align-items:center">
+          <div style="flex:1"></div>
+          <div style="width:48px;height:48px;border-radius:999px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:22px;margin-bottom:14px">⏸</div>
+          <div class="h-md"><em style="font-style:italic;color:var(--accent)">Pause</em><br>activée.</div>
+          <div class="p" style="margin-top:6px;max-width:90%">Akouvi est prévenue. Elle vous attend, sa place est réservée pendant 3 mois maximum.</div>
+          <div class="card cream" style="margin-top:18px;padding:10px 12px;text-align:left;width:100%">
+            <div class="h-sm" style="color:var(--primary);margin-bottom:6px">CE QUI CHANGE MAINTENANT</div>
+            <ul style="margin:0;padding-left:14px;font-size:11px;line-height:1.7">
+              <li>Visite de mardi 5 mai : <b>annulée · sans frais</b></li>
+              <li>Pas de prélèvement le 1<sup>er</sup> juin</li>
+              <li>Vos données et historique conservés</li>
+              <li>Vous pouvez reprendre à tout moment depuis Forfait</li>
+            </ul>
+          </div>
+          <div class="card warn" style="margin-top:6px;padding:10px 12px;text-align:left;width:100%">
+            <div class="h-sm" style="color:var(--accent);margin-bottom:4px">RAPPEL · DÉLAI MAX</div>
+            <div style="font-size:11px;line-height:1.5">Sans reprise avant le 14 août, votre compte sera clôturé automatiquement.</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn full" style="background:var(--ink)">Compris</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-22.A</div><div class="name">Confirmation post-pause</div><div class="notes">D-04 · délai 3 mois rappelé · données conservées · CTA reprise visible dans X-19.R.</div></div></div>
+
+      <!-- X-25 MODIFY ADDRESS -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:40</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:18px">‹</span><div class="h-sm">MODIFIER L'ADRESSE</div></div>
+          <div class="h-md">Vous déménagez ?</div>
+          <div class="p">Le bureau doit valider la nouvelle adresse au téléphone avant qu'Akouvi ne s'y rende.</div>
+          <div class="card warn" style="padding:10px 12px">
+            <div class="h-sm" style="color:var(--accent);margin-bottom:4px">À NOTER</div>
+            <div style="font-size:11px;line-height:1.5">Pendant la validation, vos visites sont en pause. Délai habituel : 24-48 h.</div>
+          </div>
+          <div>
+            <div class="h-sm" style="margin-bottom:4px">QUARTIER</div>
+            <div class="input" style="display:flex;align-items:center;justify-content:space-between"><span>Bè-Klikamé</span><span style="color:var(--primary)">▾</span></div>
+          </div>
+          <div>
+            <div class="h-sm" style="margin-bottom:4px">RUE / DÉTAIL</div>
+            <div class="input" style="font-family:var(--font-mono);font-size:12px">rue 18, immeuble jaune</div>
+          </div>
+          <div>
+            <div class="h-sm" style="margin-bottom:4px">REPÈRE (FACULTATIF)</div>
+            <div class="input" style="font-size:12px;color:var(--ink-3)">en face de la pharmacie</div>
+          </div>
+          <div class="map" style="height:90px"><div class="pin" style="left:50%;top:50%;transform:translate(-50%,-50%)"></div></div>
+          <div style="flex:1"></div>
+          <div class="btn primary full lg">Envoyer pour validation</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-25</div><div class="name">Modifier l'adresse</div><div class="notes">Pause auto pendant validation · délai 24-48h · réassignation laveuse possible si zone change.</div></div></div>
+
+      <!-- X-29.O FAQ ACCORDION OPEN -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:50</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
+          <div class="h-sm">AIDE</div>
+          <div class="h-md">On vous écoute.</div>
+          <div class="card cream" style="padding:12px;display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:999px;background:var(--primary);color:white;display:grid;place-items:center;font-size:14px">📞</div><div style="flex:1"><div style="font-size:13px;font-weight:600">Appeler le bureau</div><div class="p-sm">90 00 00 00 · lun-sam 7h-19h</div></div><span style="color:var(--primary);font-size:18px">›</span></div>
+          <div class="h-sm" style="margin-top:6px">QUESTIONS FRÉQUENTES</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="card" style="padding:11px 12px;border-color:var(--primary);border-width:2px">
+              <div style="display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:500">Comment annuler une visite ?</span><span style="color:var(--primary);transform:rotate(45deg);transition:transform 0.2s">+</span></div>
+              <div style="font-size:11px;line-height:1.55;color:var(--ink-2);margin-top:8px;padding-top:8px;border-top:1px solid var(--primary-tint)">Ouvrez la visite concernée dans Visites, tapez « Reporter ». Si la visite est dans moins de 12 h, le bureau vous rappelle pour confirmer avec Akouvi. Pas de frais de report.</div>
+            </div>
+            <div class="card" style="padding:11px 12px;display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:500">Que faire si la laveuse ne vient pas ?</span><span style="color:var(--primary)">+</span></div>
+            <div class="card" style="padding:11px 12px;display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:500">Comment changer de Mobile Money ?</span><span style="color:var(--primary)">+</span></div>
+            <div class="card" style="padding:11px 12px;display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:500">Le linge a été abîmé. Que faire ?</span><span style="color:var(--primary)">+</span></div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn ghost">Mes tickets · 0 ouvert</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-29.O</div><div class="name">FAQ · état accordion ouvert</div><div class="notes">Première question expandée · « + » pivote vers « × » · pas de page détail.</div></div></div>
+
+      <!-- X-30.S CONTACT SUBMIT CONFIRMATION -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:52</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body" style="text-align:center;justify-content:center;align-items:center">
+          <div style="flex:1"></div>
+          <div style="width:48px;height:48px;border-radius:999px;background:var(--success-soft);color:var(--success);display:grid;place-items:center;font-weight:700;font-size:22px;margin-bottom:14px">✓</div>
+          <div class="h-md">Message envoyé.</div>
+          <div class="p" style="margin-top:6px;max-width:90%">Le bureau vous rappelle dans la journée. Si c'est urgent, appelez le 90 00 00 00.</div>
+          <div class="card cream" style="margin-top:18px;padding:10px 12px;text-align:left;width:100%">
+            <div class="h-sm" style="color:var(--primary);margin-bottom:4px">VOTRE DEMANDE · #0422</div>
+            <div style="font-size:12px;font-weight:500">Mon abonnement · pause, changement, fin</div>
+            <div class="p-sm" style="margin-top:2px">Visible dans Mes tickets · réponse sous 4 h</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn full" style="background:var(--ink)">Voir mes tickets</div>
+          <div class="btn ghost full" style="font-size:12px">Retour à l'accueil</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-30.S</div><div class="name">Confirmation post-contact bureau</div><div class="notes">Crée ticket #0422 · auto-redirection X-31 après 3 s.</div></div></div>
+
+    </div>
+  </section>
+
+  <!-- =================================================== -->
   <!-- COVERAGE                                             -->
   <!-- =================================================== -->
   <section class="section">
-    <div class="num">09 · COUVERTURE COMPLÈTE</div>
-    <h2>35 surfaces · 100 % cartographiées</h2>
+    <div class="num">10 · COUVERTURE COMPLÈTE</div>
+    <h2>35 surfaces + 11 sous-modales · 100 % cartographiées</h2>
     <p class="lede" style="font-size: var(--text-base); margin-top: var(--s-3); margin-bottom: var(--s-6)">Liste de référence pour ingénierie. Chaque ID est implémenté ou explicitement marqué hors-périmètre v1.</p>
 
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--s-3);font-family:var(--font-mono);font-size:var(--text-xs);color:var(--ink-2)">
@@ -1130,7 +1437,7 @@
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-06</b> · Paiement MM</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-07</b> · Récap &amp; consentement</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-08</b> · Bienvenue</span><span style="color:var(--success)">livré</span></div>
-      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-09</b> · Tour guidé première session</span><span style="color:var(--ink-3)">wireframe</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-09</b> · Tour guidé première session</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-10</b> · Hub · prochaine visite</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-11</b> · Détail visite</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-12</b> · Suivi en route</span><span style="color:var(--success)">livré</span></div>
@@ -1146,7 +1453,7 @@
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-22</b> · Mettre en pause</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-23</b> · Bandeau échec paiement</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-24</b> · Profil &amp; paramètres</span><span style="color:var(--success)">livré</span></div>
-      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-25</b> · Modifier adresse</span><span style="color:var(--ink-3)">wireframe</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-25</b> · Modifier adresse</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-26</b> · Notifications</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-27</b> · Vie privée &amp; données</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-28</b> · Supprimer le compte</span><span style="color:var(--success)">livré</span></div>
@@ -1158,8 +1465,21 @@
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-34</b> · Maintenance prévue</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-35</b> · Mise à jour requise</span><span style="color:var(--success)">livré</span></div>
     </div>
+
+    <h3 style="font-family: var(--font-display); font-weight: 500; font-size: var(--text-lg); margin: var(--s-7) 0 var(--s-3); color: var(--primary);">Sous-modales &amp; sous-flux (Sprint 0)</h3>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--s-3);font-family:var(--font-mono);font-size:var(--text-xs);color:var(--ink-2)">
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-11.M</b> · Reporter une visite</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-15.S</b> · Confirmation post-signalement</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-18.C</b> · Demander changement laveuse</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-19.U</b> · Passer à 2 visites</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-19.R</b> · Forfait pausé · CTA reprise</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-21.M</b> · Ajouter fournisseur MM</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-22.A</b> · Confirmation post-pause</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-29.O</b> · FAQ accordion ouvert</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-30.S</b> · Confirmation post-contact</span><span style="color:var(--success)">livré</span></div>
+    </div>
   </section>
 
-  <p style="margin-top: var(--s-10); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.12em;">— 33 hi-fi sur 35 surfaces · iOS 17 · cible iPhone SE → 15 Pro · Capacitor wrapper · v2.0 · 2026</p>
+  <p style="margin-top: var(--s-10); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.12em;">— 35 surfaces principales + 11 sous-modales · iOS 17 · cible iPhone SE → 15 Pro · Capacitor wrapper · v2.1 Sprint 0 · 2026</p>
 </div>
 </body></html>
