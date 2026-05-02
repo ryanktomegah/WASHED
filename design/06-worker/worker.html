@@ -811,11 +811,354 @@
   </section>
 
   <!-- =================================================== -->
+  <!-- ROW 05 — SPRINT 0 ADDITIONS                          -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">05 · SPRINT 0 · ONBOARDING, MODALES, CYCLES</div>
+    <h2>W-01.O · W-02.R · W-04.P · W-12 · W-13.M · W-14.M · W-15.D · W-15.S · W-19.S</h2>
+    <p class="lede" style="font-size: var(--text-base); margin-top: var(--s-3); margin-bottom: var(--s-5)">Onboarding première-fois, modales financières (retrait, congé), proposition d'assignation, détail foyer. À l'issue du sprint, chaque CTA worker pointe vers un écran existant.</p>
+
+    <div class="row" style="margin-top: var(--s-7)">
+
+      <!-- W-01.O1 — DEFINE PIN -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>10:14</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body">
+          <div class="h-sm">PREMIÈRE INSTALLATION · 1 / 3</div>
+          <div class="h-md">Choisissez votre<br>code PIN.</div>
+          <div class="p">4 chiffres pour ouvrir l'application. Choisissez quelque chose que vous retiendrez.</div>
+          <div class="card warn" style="padding:10px 12px">
+            <div class="h-sm" style="color:var(--accent);margin-bottom:4px">À NE PAS CHOISIR</div>
+            <div style="font-size:11px;line-height:1.55">Évitez 0000, 1234, votre date de naissance — trop faciles à deviner.</div>
+          </div>
+          <div style="margin-top:8px">
+            <div class="h-sm" style="margin-bottom:6px">PIN — 4 CHIFFRES</div>
+            <div style="display:flex;gap:6px">
+              <div style="flex:1;height:48px;border:1px solid var(--ink);border-radius:8px;display:grid;place-items:center;font-family:var(--font-mono);font-size:18px">●</div>
+              <div style="flex:1;height:48px;border:1px solid var(--ink);border-radius:8px;display:grid;place-items:center;font-family:var(--font-mono);font-size:18px">●</div>
+              <div style="flex:1;height:48px;border:1px solid var(--ink);border-radius:8px;display:grid;place-items:center;font-family:var(--font-mono);font-size:18px">●</div>
+              <div style="flex:1;height:48px;border:1px solid var(--primary);border-width:2px;border-radius:8px;display:grid;place-items:center;font-family:var(--font-mono);font-size:18px">|</div>
+            </div>
+            <div class="h-sm" style="margin:10px 0 6px">CONFIRMER LE PIN</div>
+            <div style="display:flex;gap:6px">
+              <div style="flex:1;height:48px;border:1px solid var(--line);border-radius:8px"></div>
+              <div style="flex:1;height:48px;border:1px solid var(--line);border-radius:8px"></div>
+              <div style="flex:1;height:48px;border:1px solid var(--line);border-radius:8px"></div>
+              <div style="flex:1;height:48px;border:1px solid var(--line);border-radius:8px"></div>
+            </div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn primary full lg">Continuer</div>
+        </div>
+      </div></div>
+      <div><div class="id">W-01.O1</div><div class="name">Onboarding · choisir PIN</div><div class="notes">PIN local, jamais envoyé. Hash stocké côté client (Argon2id).</div></div></div>
+
+      <!-- W-01.O2 — MOBILE MONEY PAYOUTS -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>10:15</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body">
+          <div class="h-sm">PREMIÈRE INSTALLATION · 2 / 3</div>
+          <div class="h-md">Où recevez-vous<br>vos paiements ?</div>
+          <div class="p">Vos gains arrivent ici après chaque visite. Vous pourrez changer plus tard.</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+            <div class="card green" style="padding:12px;display:flex;align-items:center;gap:10px">
+              <div style="width:18px;height:18px;border:2px solid var(--primary);border-radius:999px;display:grid;place-items:center"><div style="width:8px;height:8px;border-radius:999px;background:var(--primary)"></div></div>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:600">TMoney</div>
+                <div class="p-sm">+228 99 87 65 43 · ce numéro</div>
+              </div>
+              <div class="chip green">DÉFAUT</div>
+            </div>
+            <div class="card" style="padding:12px;display:flex;align-items:center;gap:10px"><div style="width:18px;height:18px;border:2px solid var(--ink-3);border-radius:999px"></div><div style="flex:1"><div style="font-size:13px;font-weight:600">Mixx by Yas</div><div class="p-sm">ajouter un numéro</div></div></div>
+            <div class="card" style="padding:12px;display:flex;align-items:center;gap:10px"><div style="width:18px;height:18px;border:2px solid var(--ink-3);border-radius:999px"></div><div style="flex:1"><div style="font-size:13px;font-weight:600">Flooz</div><div class="p-sm">ajouter un numéro</div></div></div>
+          </div>
+          <div class="card warn" style="padding:10px 12px">
+            <div class="h-sm" style="color:var(--accent);margin-bottom:4px">VÉRIFICATION</div>
+            <div style="font-size:11px;line-height:1.5">Le bureau vous appelle pour confirmer que ce numéro est bien à vous. Premier paiement après confirmation.</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn primary full lg">Continuer</div>
+        </div>
+      </div></div>
+      <div><div class="id">W-01.O2</div><div class="name">Onboarding · MM payouts</div><div class="notes">Pré-rempli avec numéro de connexion · vérification bureau obligatoire.</div></div></div>
+
+      <!-- W-01.O3 — GUIDED TOUR -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>10:16</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body" style="text-align:center;justify-content:center;align-items:center">
+          <div class="h-sm">PREMIÈRE INSTALLATION · 3 / 3</div>
+          <div style="flex:1"></div>
+          <div style="width:64px;height:64px;border-radius:999px;background:var(--primary);color:white;display:grid;place-items:center;font-family:var(--font-display);font-style:italic;font-weight:600;font-size:38px;margin-bottom:18px">w</div>
+          <div class="h-md" style="text-align:center"><em style="font-style:italic;color:var(--primary)">Bienvenue</em><br>chez Washed.</div>
+          <div class="p" style="margin-top:8px;text-align:center;max-width:90%">Trois choses à savoir avant de commencer.</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;width:100%;text-align:left">
+            <div class="card" style="padding:10px 12px;display:flex;gap:10px;align-items:start"><div style="width:24px;height:24px;border-radius:999px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-weight:600;font-size:12px;flex-shrink:0">1</div><div><div style="font-size:12px;font-weight:600">Tournée du jour</div><div class="p-sm">Vos visites sont là dès 6h le matin.</div></div></div>
+            <div class="card" style="padding:10px 12px;display:flex;gap:10px;align-items:start"><div style="width:24px;height:24px;border-radius:999px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-weight:600;font-size:12px;flex-shrink:0">2</div><div><div style="font-size:12px;font-weight:600">Photos avant / après</div><div class="p-sm">Obligatoires à chaque visite. Pour vous protéger.</div></div></div>
+            <div class="card" style="padding:10px 12px;display:flex;gap:10px;align-items:start"><div style="width:24px;height:24px;border-radius:999px;background:var(--danger-soft);color:var(--danger);display:grid;place-items:center;font-weight:600;font-size:12px;flex-shrink:0">!</div><div><div style="font-size:12px;font-weight:600">Bouton SOS</div><div class="p-sm">Sur tous les écrans. 1 tap, le bureau appelle.</div></div></div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn primary full lg" style="background:var(--primary)">C'est parti</div>
+        </div>
+      </div></div>
+      <div><div class="id">W-01.O3</div><div class="name">Onboarding · 3 essentiels</div><div class="notes">Tour guidé condensé · ouvre W-03 tournée après tap.</div></div></div>
+
+      <!-- W-02.R — PIN RESET AFTER OFFICE CALL -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>11:42</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body">
+          <div class="h-sm">RÉINITIALISATION DU PIN</div>
+          <div class="h-md">Nouveau code<br>par SMS.</div>
+          <div class="p">Le bureau a réinitialisé votre PIN. Saisissez le code temporaire reçu par SMS au +228 99 87 65 43.</div>
+          <div style="margin-top:8px">
+            <div class="h-sm" style="margin-bottom:6px">CODE TEMPORAIRE — 6 CHIFFRES</div>
+            <div style="display:flex;gap:6px">
+              <div class="input" style="width:34px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px">7</div>
+              <div class="input" style="width:34px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px">2</div>
+              <div class="input" style="width:34px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px;border-color:var(--primary);border-width:2px">|</div>
+              <div class="input" style="width:34px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px;color:var(--ink-3)">·</div>
+              <div class="input" style="width:34px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px;color:var(--ink-3)">·</div>
+              <div class="input" style="width:34px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px;color:var(--ink-3)">·</div>
+            </div>
+            <div class="p-sm" style="margin-top:6px">Le code expire dans <span style="font-family:var(--font-mono);color:var(--accent);font-weight:600">14 min</span>.</div>
+          </div>
+          <div class="card cream" style="padding:10px 12px">
+            <div class="h-sm" style="color:var(--primary);margin-bottom:4px">ÉTAPE SUIVANTE</div>
+            <div style="font-size:11px;line-height:1.5">Après ce code, vous choisirez un nouveau PIN à 4 chiffres.</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn primary full lg">Continuer</div>
+          <div class="p-sm" style="text-align:center">Pas reçu ? <span style="color:var(--primary);font-weight:600">Rappeler le bureau</span></div>
+        </div>
+      </div></div>
+      <div><div class="id">W-02.R</div><div class="name">Réinitialisation PIN</div><div class="notes">Code 6 chiffres SMS · expire 15 min · puis flux W-01.O1 raccourci.</div></div></div>
+
+      <!-- W-04.P — ASSIGNMENT PROPOSAL (THE BLOCKER) -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>14:24</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body" style="background:var(--ink);color:var(--surface)">
+          <div class="ribbon" style="background:var(--primary);color:white;align-self:flex-start"><span class="dot" style="background:white"></span> NOUVELLE PROPOSITION</div>
+          <div style="font-family:var(--font-display);font-weight:500;font-size:30px;line-height:1.1;color:var(--surface);margin-top:8px"><em style="font-style:italic;color:var(--primary-tint)">Demain</em><br>jeudi · 9 h 00</div>
+          <div class="card" style="padding:12px;background:rgba(255,255,255,0.06);border-color:transparent;color:var(--surface);margin-top:6px">
+            <div class="h-sm" style="color:rgba(255,255,255,0.5);margin-bottom:6px">CHEZ</div>
+            <div style="font-size:14px;font-weight:600;color:white">Mme Foli Nyaho</div>
+            <div class="p-sm" style="color:rgba(255,255,255,0.7)">Agoé Logopé · 2.4 km · ~12 min en moto</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><span class="chip" style="background:rgba(255,255,255,0.12);color:white">Tarif T1</span><span class="chip" style="background:var(--primary-tint);color:var(--ink)">PREMIÈRE VISITE</span></div>
+          </div>
+          <div class="card" style="padding:10px 12px;background:rgba(255,255,255,0.06);border-color:transparent;color:var(--surface)">
+            <div class="h-sm" style="color:rgba(255,255,255,0.5);margin-bottom:4px">VOTRE GAIN</div>
+            <div style="font-family:var(--font-display);font-weight:500;font-style:italic;font-size:24px;color:var(--primary-tint);letter-spacing:-0.02em">+ 1 500 <span style="font-size:12px;color:rgba(255,255,255,0.6);font-style:normal">XOF</span></div>
+          </div>
+          <div class="card warn" style="padding:8px 12px;background:rgba(212,144,14,0.15);border-color:transparent">
+            <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--accent)"><span style="font-family:var(--font-mono);font-weight:600">⏱ RÉPONSE DANS</span><span style="font-family:var(--font-display);font-weight:500;font-style:italic;font-size:18px;color:var(--surface);letter-spacing:-0.02em">4 min 32</span></div>
+          </div>
+          <div style="flex:1"></div>
+          <div style="display:flex;gap:8px"><div class="btn full" style="background:rgba(255,255,255,0.12);color:white">Refuser</div><div class="btn primary full lg" style="background:var(--primary);color:white">Accepter</div></div>
+          <div class="p-sm" style="text-align:center;color:rgba(255,255,255,0.5)">Sans réponse, la visite est proposée à une autre laveuse.</div>
+        </div>
+      </div></div>
+      <div><div class="id">W-04.P</div><div class="name">Proposition d'assignation</div><div class="notes">Push deeplink · 5 min compte à rebours · refus ouvre W-04.PR raison.</div></div></div>
+
+      <!-- W-04.PR — REFUSAL REASON -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>14:25</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body" style="position:relative;background:rgba(14,26,18,0.45)">
+          <div style="position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:22px 22px 0 0;padding:18px 18px 14px">
+            <div style="width:36px;height:4px;background:var(--line-2);border-radius:999px;margin:0 auto 14px"></div>
+            <div class="h-md">Pourquoi refuser ?</div>
+            <div class="p" style="margin-top:4px">Le bureau a besoin de savoir, pour mieux vous proposer la prochaine fois.</div>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
+              <div class="card" style="padding:10px 12px;display:flex;align-items:center;gap:10px;border-color:var(--primary);border-width:2px"><div style="width:14px;height:14px;border:2px solid var(--primary);border-radius:999px;display:grid;place-items:center"><div style="width:6px;height:6px;border-radius:999px;background:var(--primary)"></div></div><div style="font-size:12px;font-weight:500">Trop loin</div></div>
+              <div class="card" style="padding:10px 12px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-3);border-radius:999px"></div><div style="font-size:12px">Tournée déjà chargée</div></div>
+              <div class="card" style="padding:10px 12px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-3);border-radius:999px"></div><div style="font-size:12px">Personnel · jour de repos</div></div>
+              <div class="card" style="padding:10px 12px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-3);border-radius:999px"></div><div style="font-size:12px">Autre</div></div>
+            </div>
+            <div style="margin-top:14px;display:flex;gap:8px"><div class="btn ghost full">Retour</div><div class="btn full" style="background:var(--ink)">Confirmer le refus</div></div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">W-04.PR</div><div class="name">Raison du refus</div><div class="notes">Sheet remontante · 4 raisons · feedback opérateur pour matching futur.</div></div></div>
+
+      <!-- W-12 — PAUSE DURING VISIT -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>9:34</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body" style="position:relative;background:rgba(14,26,18,0.45)">
+          <div style="position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:22px 22px 0 0;padding:18px 18px 14px">
+            <div style="width:36px;height:4px;background:var(--line-2);border-radius:999px;margin:0 auto 14px"></div>
+            <div class="h-md">Mettre en pause ?</div>
+            <div class="p" style="margin-top:4px">La visite reprend exactement où vous l'avez laissée. Le bureau est notifié.</div>
+            <div class="card warn" style="padding:10px 12px;margin-top:8px">
+              <div class="h-sm" style="color:var(--accent);margin-bottom:4px">PHASE EN COURS</div>
+              <div style="font-size:12px;font-weight:500">Étape 2 · Lavage · 18 min écoulées</div>
+            </div>
+            <div class="h-sm" style="margin-top:10px">RAISON DE LA PAUSE</div>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+              <div class="card" style="padding:10px 12px;display:flex;align-items:center;gap:10px;border-color:var(--primary);border-width:2px"><div style="width:14px;height:14px;border:2px solid var(--primary);border-radius:999px;display:grid;place-items:center"><div style="width:6px;height:6px;border-radius:999px;background:var(--primary)"></div></div><div style="font-size:12px;font-weight:500">Attente d'eau / matériel</div></div>
+              <div class="card" style="padding:10px 12px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-3);border-radius:999px"></div><div style="font-size:12px">Urgence personnelle (bref)</div></div>
+              <div class="card" style="padding:10px 12px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-3);border-radius:999px"></div><div style="font-size:12px">Autre</div></div>
+            </div>
+            <div class="p-sm" style="margin-top:8px;text-align:center">Si la pause dépasse 30 min, le bureau vous appelle.</div>
+            <div style="margin-top:14px;display:flex;gap:8px"><div class="btn ghost full">Annuler</div><div class="btn primary full">Mettre en pause</div></div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">W-12</div><div class="name">Pause pendant visite</div><div class="notes">Photo « avant » conservée · timer figé · alerte ops si &gt; 30 min.</div></div></div>
+
+      <!-- W-13.M — WITHDRAWAL MODAL -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>14:32</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body" style="position:relative;background:rgba(14,26,18,0.45)">
+          <div style="position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:22px 22px 0 0;padding:18px 18px 14px;max-height:90%">
+            <div style="width:36px;height:4px;background:var(--line-2);border-radius:999px;margin:0 auto 14px"></div>
+            <div class="h-md">Retirer combien ?</div>
+            <div class="p" style="margin-top:4px">Solde disponible · <span style="font-family:var(--font-display);font-weight:500;font-style:italic;color:var(--primary)">12 000 XOF</span></div>
+            <div style="margin-top:10px">
+              <div class="h-sm" style="margin-bottom:6px">MONTANT</div>
+              <div class="input" style="display:flex;align-items:center;justify-content:space-between;font-family:var(--font-mono);padding:14px"><span style="font-size:22px;color:var(--ink);font-weight:600">12 000</span><span style="color:var(--ink-3);font-size:12px">XOF</span></div>
+              <div style="display:flex;gap:6px;margin-top:6px"><div style="flex:1;padding:8px;background:var(--bg-deep);border-radius:6px;text-align:center;font-size:11px;font-weight:500">5 000</div><div style="flex:1;padding:8px;background:var(--bg-deep);border-radius:6px;text-align:center;font-size:11px;font-weight:500">10 000</div><div style="flex:1;padding:8px;background:var(--primary-soft);border:1px solid var(--primary);border-radius:6px;text-align:center;font-size:11px;font-weight:600;color:var(--primary)">TOUT</div></div>
+            </div>
+            <div style="margin-top:12px">
+              <div class="h-sm" style="margin-bottom:6px">VERS</div>
+              <div class="card" style="padding:10px 12px;display:flex;align-items:center;gap:10px"><div style="width:18px;height:18px;border:2px solid var(--primary);border-radius:999px;display:grid;place-items:center"><div style="width:8px;height:8px;border-radius:999px;background:var(--primary)"></div></div><div style="flex:1"><div style="font-size:13px;font-weight:600">TMoney · +228 99 87 65 43</div><div class="p-sm">Frais · 0 XOF · arrivée immédiate</div></div></div>
+            </div>
+            <div class="card cream" style="padding:10px 12px;margin-top:8px">
+              <div style="display:flex;justify-content:space-between;font-size:12px"><span class="p-sm">Vous recevez</span><span style="font-family:var(--font-display);font-weight:500;font-style:italic;font-size:18px;color:var(--primary)">12 000 XOF</span></div>
+            </div>
+            <div style="margin-top:14px;display:flex;gap:8px"><div class="btn ghost full">Annuler</div><div class="btn primary full lg">Retirer maintenant</div></div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">W-13.M</div><div class="name">Modale retrait Mobile Money</div><div class="notes">Validation OTP fournisseur si premier retrait du jour · sinon instantané.</div></div></div>
+
+      <!-- W-14.M — LEAVE REQUEST -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>14:33</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:18px">‹</span><div class="h-sm">DEMANDER UN CONGÉ</div></div>
+          <div class="h-md">Vous prenez<br>combien de jours ?</div>
+          <div class="p">Le bureau confirme avec vos foyers et vous prévient sous 48 h.</div>
+          <div class="card" style="padding:10px 12px">
+            <div class="h-sm" style="margin-bottom:4px">DU</div>
+            <div style="font-family:var(--font-display);font-weight:500;font-size:18px">Vendredi 16 mai</div>
+          </div>
+          <div class="card" style="padding:10px 12px">
+            <div class="h-sm" style="margin-bottom:4px">AU</div>
+            <div style="font-family:var(--font-display);font-weight:500;font-size:18px">Vendredi 23 mai</div>
+            <div class="p-sm" style="margin-top:2px">7 jours · 4 visites prévues à reporter</div>
+          </div>
+          <div class="card warn" style="padding:10px 12px">
+            <div class="h-sm" style="color:var(--accent);margin-bottom:4px">CE QUI VA ARRIVER</div>
+            <ul style="margin:0;padding-left:14px;font-size:11px;line-height:1.6">
+              <li>4 visites du 16-23 reportées la semaine d'après</li>
+              <li>Vos foyers sont prévenus par SMS</li>
+              <li>Pas d'impact sur vos revenus mensuels</li>
+            </ul>
+          </div>
+          <div style="margin-top:6px">
+            <div class="h-sm" style="margin-bottom:4px">RAISON (FACULTATIF)</div>
+            <div class="input" style="font-size:12px;color:var(--ink-3)">Décrire en quelques mots…</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn primary full lg">Envoyer la demande</div>
+        </div>
+      </div></div>
+      <div><div class="id">W-14.M</div><div class="name">Demander un congé</div><div class="notes">Calendrier date-range picker · le bureau valide sous 48h · ticket O-* créé.</div></div></div>
+
+      <!-- W-15.D — FOYER DETAIL -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>14:35</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body tight">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:18px">‹</span><div class="h-sm">FOYER RÉGULIER</div></div>
+          <div style="display:flex;gap:14px;align-items:center;margin-top:6px">
+            <div class="avatar lg"></div>
+            <div>
+              <div class="h-md" style="font-size:20px">Mme Adjoa K.</div>
+              <div class="p-sm">Tokoin Casablanca · cliente depuis sept. 2025</div>
+            </div>
+          </div>
+          <div class="card green" style="padding:10px 12px;display:flex;justify-content:space-between">
+            <div><div class="p-sm" style="margin:0">Visites avec elle</div><div style="font-family:var(--font-display);font-weight:500;font-style:italic;font-size:22px;color:var(--primary)">32</div></div>
+            <div style="text-align:right"><div class="p-sm" style="margin:0">Ensemble depuis</div><div style="font-family:var(--font-display);font-weight:500;font-style:italic;font-size:22px;color:var(--primary)">8 mois</div></div>
+          </div>
+          <div class="card" style="padding:10px 12px">
+            <div class="h-sm" style="margin-bottom:4px">RYTHME</div>
+            <div style="font-size:12px;line-height:1.5">Forfait T1 · une visite par mois, le mardi à 9 h. Régulière, pas d'annulation cette année.</div>
+          </div>
+          <div class="card warn" style="padding:10px 12px">
+            <div class="h-sm" style="color:var(--accent);margin-bottom:4px">À SAVOIR · NOTES OPS</div>
+            <ul style="margin:0;padding-left:14px;font-size:11px;line-height:1.55">
+              <li>Portail vert · sonnette à droite</li>
+              <li>Préfère qu'on prévienne 5 min avant</li>
+              <li>A son propre savon de Marseille (ne pas en apporter)</li>
+            </ul>
+          </div>
+          <div class="h-sm" style="margin-top:6px">3 DERNIÈRES VISITES</div>
+          <div class="visit"><div class="when">5<span style="font-size:11px">/5</span></div><div><div class="who">Mardi 5 mai · 1 h 06</div><div class="where">Pas de souci</div></div><div class="chip green" style="margin-left:auto;padding:3px 7px">✓</div></div>
+          <div class="visit"><div class="when">28<span style="font-size:11px">/4</span></div><div><div class="who">Mardi 28 avril · 1 h 12</div><div class="where">Pas de souci</div></div><div class="chip green" style="margin-left:auto;padding:3px 7px">✓</div></div>
+          <div style="flex:1"></div>
+          <div class="btn ghost">Signaler un souci sur ce foyer</div>
+        </div>
+      </div></div>
+      <div><div class="id">W-15.D</div><div class="name">Détail foyer régulier</div><div class="notes">Tap depuis W-15 · notes ops partagées · historique 3 visites + accès ticket bureau.</div></div></div>
+
+      <!-- W-15.S — WORKER SETTINGS -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>14:36</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body tight">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:18px">‹</span><div class="h-sm">PARAMÈTRES</div></div>
+          <div class="h-md">Vos infos.</div>
+          <div style="margin-top:6px;display:flex;flex-direction:column;gap:1px">
+            <div style="padding:14px 12px;background:var(--surface);border:1px solid var(--line);border-bottom:none;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500">Photo de profil</div><div class="p-sm">Visible par vos foyers</div></div><div class="avatar" style="width:32px;height:32px"></div></div>
+            <div style="padding:14px 12px;background:var(--surface);border:1px solid var(--line);border-top:none;border-bottom:none;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500">Numéro de téléphone</div><div class="p-sm">+228 99 87 65 43</div></div><span style="color:var(--ink-3);font-size:18px">›</span></div>
+            <div style="padding:14px 12px;background:var(--surface);border:1px solid var(--line);border-top:none;border-bottom:none;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500">Mobile Money pour mes paiements</div><div class="p-sm">TMoney · +228 99 87 65 43</div></div><span style="color:var(--ink-3);font-size:18px">›</span></div>
+            <div style="padding:14px 12px;background:var(--surface);border:1px solid var(--line);border-top:none;border-bottom:none;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500">Code PIN</div><div class="p-sm">Modifié il y a 2 mois</div></div><span style="color:var(--ink-3);font-size:18px">›</span></div>
+            <div style="padding:14px 12px;background:var(--surface);border:1px solid var(--line);border-top:none;border-radius:0 0 14px 14px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500">Contact d'urgence</div><div class="p-sm">Komi Edem · frère</div></div><span style="color:var(--ink-3);font-size:18px">›</span></div>
+          </div>
+          <div style="margin-top:8px;display:flex;flex-direction:column;gap:1px">
+            <div style="padding:14px 12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;display:flex;justify-content:space-between;align-items:center"><div style="font-size:13px;font-weight:500;color:var(--danger)">Quitter Washed</div><span style="color:var(--ink-3);font-size:18px">›</span></div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="nav">
+            <div class="item"><div class="glyph"></div><span>Tournée</span></div>
+            <div class="item"><div class="glyph"></div><span>Gains</span></div>
+            <div class="item active"><div class="glyph"></div><span>Profil</span></div>
+            <div class="item"><div class="glyph"></div><span>Aide</span></div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">W-15.S</div><div class="name">Paramètres laveuse</div><div class="notes">Modifications téléphone/MM nécessitent appel bureau · contact urgence éditable.</div></div></div>
+
+      <!-- W-19.S — REPORT SUBMIT CONFIRMATION -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>10:18</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body" style="text-align:center;justify-content:center;align-items:center">
+          <div style="flex:1"></div>
+          <div style="width:48px;height:48px;border-radius:999px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-weight:700;font-size:22px;margin-bottom:14px">✓</div>
+          <div class="h-md">Bien reçu.</div>
+          <div class="p" style="margin-top:6px;max-width:90%">Le bureau examine votre signalement. Vous recevez un appel dans les <span style="font-family:var(--font-display);font-style:italic;color:var(--primary)">30 minutes</span> qui viennent.</div>
+          <div class="card cream" style="margin-top:18px;padding:10px 12px;text-align:left;width:100%">
+            <div class="h-sm" style="color:var(--primary);margin-bottom:4px">VOTRE SIGNALEMENT</div>
+            <div style="font-size:12px;font-weight:500">Pas d'eau / pas de savon</div>
+            <div class="p-sm" style="margin-top:2px">Chez M. Kossi A. · 10 h 08</div>
+          </div>
+          <div class="card warn" style="margin-top:6px;padding:10px 12px;text-align:left;width:100%">
+            <div class="h-sm" style="color:var(--accent);margin-bottom:4px">EN ATTENDANT</div>
+            <div style="font-size:11px;line-height:1.5">Vous pouvez quitter le foyer. Le forfait journalier vous protège — la visite compte malgré le souci.</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn full" style="background:var(--ink)">Retour à la tournée</div>
+        </div>
+      </div></div>
+      <div><div class="id">W-19.S</div><div class="name">Confirmation post-signalement</div><div class="notes">Engagement délai 30 min · forfait journalier rassure · retour W-03.</div></div></div>
+
+    </div>
+  </section>
+
+  <!-- =================================================== -->
   <!-- COUVERTURE — IDS COMPLETS                           -->
   <!-- =================================================== -->
   <section class="section">
-    <div class="num">05 · COUVERTURE COMPLÈTE</div>
-    <h2>22 surfaces · 100 % cartographiées</h2>
+    <div class="num">06 · COUVERTURE COMPLÈTE</div>
+    <h2>22 surfaces + 11 sous-modales / onboarding · 100 % cartographiées</h2>
     <p class="lede" style="font-size: var(--text-base); margin-top: var(--s-3); margin-bottom: var(--s-6)">Liste de référence pour ingénierie. Chaque ID est implémenté ou explicitement marqué hors-périmètre v1.</p>
 
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--s-3);font-family:var(--font-mono);font-size:var(--text-xs);color:var(--ink-2)">
@@ -830,7 +1173,7 @@
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-09</b> · Photo après</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-10</b> · Check-out</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-11</b> · Récap visite</span><span style="color:var(--success)">livré</span></div>
-      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-12</b> · Pause &amp; reprise</span><span style="color:var(--ink-3)">wireframe</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-12</b> · Pause &amp; reprise</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-13</b> · Gains</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-14</b> · Planning</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-15</b> · Profil &amp; foyers</span><span style="color:var(--success)">livré</span></div>
@@ -841,6 +1184,21 @@
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-20</b> · Notifications</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-21</b> · Fin de journée</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-22</b> · Aide</span><span style="color:var(--success)">livré</span></div>
+    </div>
+
+    <h3 style="font-family: var(--font-display); font-weight: 500; font-size: var(--text-lg); margin: var(--s-7) 0 var(--s-3); color: var(--primary);">Onboarding &amp; sous-modales (Sprint 0)</h3>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--s-3);font-family:var(--font-mono);font-size:var(--text-xs);color:var(--ink-2)">
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-01.O1</b> · Onboarding · choisir PIN</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-01.O2</b> · Onboarding · MM payouts</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-01.O3</b> · Onboarding · 3 essentiels</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-02.R</b> · Réinitialisation PIN</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-04.P</b> · Proposition d'assignation</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-04.PR</b> · Raison de refus</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-13.M</b> · Modale retrait MM</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-14.M</b> · Demander un congé</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-15.D</b> · Détail foyer régulier</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-15.S</b> · Paramètres laveuse</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-19.S</b> · Confirmation post-signalement</span><span style="color:var(--success)">livré</span></div>
     </div>
   </section>
 
