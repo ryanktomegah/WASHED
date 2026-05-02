@@ -4,18 +4,18 @@
 <title>Washed — Subscriber Hi-Fi</title>
 <link rel="stylesheet" href="../shared/tokens.css">
 <style>
-  body { background: var(--bg); }
+  body { background: var(--bg); color: var(--ink); }
   .page { max-width: 1440px; margin: 0 auto; padding: var(--s-9) var(--s-6) var(--s-11); }
   .crumb { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3); margin-bottom: var(--s-6); }
   .crumb a { color: var(--ink-3); text-decoration: none; }
   h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(40px, 6vw, 64px); letter-spacing: -0.02em; line-height: 1.05; margin: 0 0 var(--s-5); }
   h1 em { font-style: italic; color: var(--primary); }
-  .lede { font-size: var(--text-lg); color: var(--ink-2); max-width: 60ch; line-height: 1.55; margin: 0 0 var(--s-9); }
+  .lede { font-size: var(--text-lg); color: var(--ink-2); max-width: 64ch; line-height: 1.55; margin: 0 0 var(--s-9); }
   .section { margin-top: var(--s-10); padding-top: var(--s-7); border-top: 1px solid var(--line); }
   .section h2 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-2xl); letter-spacing: -0.01em; margin: 0 0 var(--s-2); }
   .num { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); letter-spacing: 0.12em; margin-bottom: var(--s-2); }
 
-  /* Phone */
+  /* iPhone frame (notched) */
   .row { display: flex; gap: var(--s-7); flex-wrap: wrap; align-items: flex-start; }
   .phone {
     width: 280px; height: 580px; background: #0A0807; border-radius: 36px; padding: 10px;
@@ -30,416 +30,1136 @@
   .phone-cap .name { font-family: var(--font-body); font-weight: 500; font-size: 13px; margin-top: 2px; }
   .phone-cap .notes { font-size: 11px; color: var(--ink-3); margin-top: 4px; line-height: 1.4; }
 
-  .sb { height: 36px; padding: 12px 18px 0; display: flex; justify-content: space-between; align-items: flex-end; font-size: 11px; font-weight: 600; font-family: var(--font-body); }
-  .sb svg { width: 12px; height: 12px; }
+  /* Status bar */
+  .sb { height: 36px; padding: 12px 18px 0; display: flex; justify-content: space-between; align-items: flex-end; font-size: 11px; font-weight: 600; font-family: var(--font-body); color: var(--ink); }
   .sb .right { display: flex; gap: 4px; align-items: center; }
 
   /* App content */
-  .body { padding: 18px 18px 20px; height: calc(100% - 36px); display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+  .body { padding: 18px 18px 14px; height: calc(100% - 36px); display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+  .body.tight { gap: 6px; }
   .h-sm { font-size: 10px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-3); }
-  .h-md { font-family: var(--font-display); font-weight: 500; font-size: 22px; letter-spacing: -0.02em; line-height: 1.1; color: var(--ink-1); }
-  .h-lg { font-family: var(--font-display); font-weight: 500; font-size: 32px; letter-spacing: -0.02em; line-height: 1; color: var(--ink-1); }
-  .h-xl { font-family: var(--font-display); font-weight: 500; font-size: 56px; letter-spacing: -0.04em; line-height: 0.9; color: var(--ink-1); }
+  .h-md { font-family: var(--font-display); font-weight: 500; font-size: 22px; letter-spacing: -0.02em; line-height: 1.1; color: var(--ink); }
+  .h-lg { font-family: var(--font-display); font-weight: 500; font-size: 32px; letter-spacing: -0.02em; line-height: 1; color: var(--ink); }
+  .h-xl { font-family: var(--font-display); font-weight: 500; font-size: 56px; letter-spacing: -0.04em; line-height: 0.9; color: var(--ink); }
   .h-xl em { font-style: italic; color: var(--primary); }
   .p { font-size: 13px; color: var(--ink-2); line-height: 1.45; }
-  .p-sm { font-size: 11px; color: var(--ink-3); line-height: 1.45; }
-  .btn { background: var(--ink-1); color: var(--surface); border-radius: 999px; padding: 13px 18px; font-size: 13px; font-weight: 500; text-align: center; }
-  .btn.alt { background: transparent; color: var(--ink-1); border: 1px solid var(--ink-1); }
+  .p-sm { font-size: 11px; color: var(--ink-3); line-height: 1.45; margin: 0; }
+  .btn { background: var(--ink); color: var(--surface); border-radius: 999px; padding: 13px 18px; font-size: 13px; font-weight: 600; text-align: center; }
+  .btn.alt { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
   .btn.primary { background: var(--primary); color: white; }
+  .btn.danger { background: var(--danger); color: white; }
+  .btn.ghost { background: var(--bg-deep); color: var(--ink); }
+  .btn.full { width: 100%; box-sizing: border-box; }
+  .btn.lg { padding: 16px 18px; font-size: 14px; }
   .row2 { display: flex; gap: 8px; }
   .row2 > * { flex: 1; }
   .card { border: 1px solid var(--line); border-radius: 14px; padding: 14px; background: var(--surface); }
-  .card.dark { background: var(--ink-1); color: var(--surface); border-color: transparent; }
-  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 999px; background: var(--bg-deep); font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-2); }
-  .chip.green { background: oklch(0.94 0.04 145); color: var(--success); }
+  .card.dark { background: var(--ink); color: var(--surface); border-color: transparent; }
+  .card.cream { background: var(--primary-soft); border-color: var(--primary-tint); }
+  .card.warn { background: var(--accent-soft); border-color: #F0DFAF; }
+  .card.danger { background: var(--danger-soft); border-color: #F4C8C2; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 999px; background: var(--bg-deep); font-size: 10px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-2); }
+  .chip.green { background: var(--success-soft); color: var(--success); }
   .chip.primary { background: var(--primary); color: white; }
-  .input { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font-size: 13px; background: var(--surface); color: var(--ink-1); }
-  .nav { display: flex; justify-content: space-around; padding: 10px 0 8px; border-top: 1px solid var(--line); margin: auto -18px 0; padding-left: 18px; padding-right: 18px; }
+  .chip.warn { background: var(--accent-soft); color: var(--accent); }
+  .chip.danger { background: var(--danger-soft); color: var(--danger); }
+  .chip.dark { background: var(--ink); color: var(--surface); }
+  .input { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font-size: 13px; background: var(--surface); color: var(--ink); }
+
+  /* Bottom nav */
+  .nav { display: flex; justify-content: space-around; padding: 10px 0 8px; border-top: 1px solid var(--line); margin: auto -18px 0; padding-left: 18px; padding-right: 18px; background: var(--surface); }
   .nav .item { font-size: 9px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); display: flex; flex-direction: column; align-items: center; gap: 4px; }
   .nav .item.active { color: var(--primary); }
-  .nav .dot { width: 4px; height: 4px; border-radius: 999px; background: currentColor; }
+  .nav .glyph { width: 16px; height: 16px; border-radius: 4px; background: currentColor; opacity: 0.5; }
+  .nav .item.active .glyph { opacity: 1; }
 
   /* Photo placeholder */
-  .photo { background: var(--surface-2); border-radius: 10px; display: grid; place-items: center; color: var(--ink-3); font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .photo { background: var(--surface-2); border: 1px dashed var(--line-2); border-radius: 10px; display: grid; place-items: center; color: var(--ink-3); font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .photo.captured { background: linear-gradient(135deg, #F5DDD0 0%, #C4622D 100%); color: rgba(255,255,255,0.85); border: none; }
   .avatar { width: 36px; height: 36px; border-radius: 999px; background: linear-gradient(135deg, var(--primary), var(--accent)); flex-shrink: 0; }
+  .avatar.lg { width: 56px; height: 56px; }
 
-  .key { font-family: var(--font-mono); font-size: 10px; padding: 2px 6px; background: var(--bg-deep); border-radius: 4px; color: var(--ink-2); }
-  .annot {
-    background: var(--bg-deep); border-left: 3px solid var(--primary); padding: var(--s-4) var(--s-5);
-    border-radius: 0 var(--r-sm) var(--r-sm) 0; margin: var(--s-5) 0;
-    font-size: var(--text-sm); color: var(--ink-2); line-height: 1.55;
+  /* Map placeholder */
+  .map {
+    background-image: repeating-linear-gradient(135deg, var(--line) 0, var(--line) 1px, transparent 1px, transparent 8px);
+    background-color: var(--surface-2);
+    border-radius: 10px; position: relative; overflow: hidden;
   }
+  .map .pin { position: absolute; width: 12px; height: 12px; border-radius: 999px; background: var(--primary); box-shadow: 0 0 0 4px rgba(196,98,45,0.18); }
+  .map .pin.me { background: #1E90FF; box-shadow: 0 0 0 4px rgba(30,144,255,0.2); }
+  .map .path { position: absolute; height: 2px; background: var(--primary); border-radius: 2px; }
+
+  /* Annot */
+  .annot { background: var(--bg-deep); border-left: 3px solid var(--primary); padding: var(--s-4) var(--s-5); border-radius: 0 var(--r-sm) var(--r-sm) 0; margin: var(--s-5) 0; font-size: var(--text-sm); color: var(--ink-2); line-height: 1.55; }
   .annot b { color: var(--primary); font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; display: block; margin-bottom: 4px; }
+
+  /* Offline ribbon */
+  .ribbon { background: var(--ink); color: var(--surface); padding: 6px 12px; font-size: 10px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; }
+  .ribbon .dot { width: 6px; height: 6px; border-radius: 999px; background: var(--accent); }
+
+  /* Toast */
+  .toast { display: inline-flex; align-items: center; gap: 8px; background: var(--ink); color: var(--surface); padding: 10px 14px; border-radius: 999px; font-size: 11px; font-weight: 500; box-shadow: var(--shadow-elevated); }
+  .toast.success { background: var(--success); }
 </style></head>
 <body data-theme="subscriber">
 <div class="page">
   <div class="crumb"><a href="../index.html">← Index</a> · 05 Subscriber Hi-Fi</div>
 
   <h1>Subscriber app — <em>iPhone</em></h1>
-  <p class="lede">Hi-fi des écrans clés côté abonné. Le hub (X-10) et le détail visite (X-11) ouvrent 90% des sessions. Les autres écrans sont en /05-subscriber/&lt;id&gt;.html.</p>
+  <p class="lede">Hi-fi des écrans clés côté abonné. iPhone, français, palette Savane. Onboarding 90 secondes (X-01 → X-08), hub avec prochaine visite (X-10), cycle de visite avec reveal photos avant/après (X-12 → X-15), gestion abonnement (X-19 → X-22), support et profil. La signature visuelle est le reveal X-14 — la cliente ouvre l'app pour voir « ce que ça donne ».</p>
 
-  <div class="annot"><b>Vocabulaire visuel</b>Crème (#FAFAF7) sur tous les écrans. Fraunces 500 italique pour le héros et les chiffres-fierté (gain, semaine en cours). Aucune ombre — uniquement des bordures #E8E2D5 1px. Boutons primaires en charbon (#1C1208), pas en couleur de marque.</div>
+  <div class="annot"><b>Vocabulaire visuel — Savane</b>Crème <code style="font-family:var(--font-mono)">#FAF6F0</code> partout, surface <code style="font-family:var(--font-mono)">#FFFDF8</code> pour les cartes. Fraunces 500 italique pour le héros (jour de visite, chiffres-fierté). Aucune ombre lourde — bordures crème <code style="font-family:var(--font-mono)">#EAE0D5</code> 1px. Boutons primaires en charbon (CTA navigation) ou en terracotta (CTA action positive). XOF avec espace insécable. Tutoiement strictement interdit — le « vous » de politesse partout.</div>
 
-  <!-- Onboarding row -->
+  <!-- =================================================== -->
+  <!-- ROW 01 — ONBOARDING (X-01 → X-08)                   -->
+  <!-- =================================================== -->
   <section class="section">
     <div class="num">01 · ONBOARDING</div>
     <h2>X-01 → X-08 · les 90 secondes décisives</h2>
 
     <div class="row" style="margin-top: var(--s-7)">
 
-      <!-- Splash -->
+      <!-- X-01 SPLASH -->
       <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
-        <div class="sb"><span>9:41</span><div class="right">●●●● 5G ▮</div></div>
-        <div class="body" style="background: var(--ink-1); color: var(--surface)">
-          <div style="flex: 1"></div>
+        <div class="sb"><span>9:41</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body" style="background: var(--ink); color: var(--surface); justify-content: center; align-items: center;">
           <div style="text-align:center">
             <div style="font-family:var(--font-display);font-weight:500;font-style:italic;font-size:64px;letter-spacing:-0.04em;color:var(--surface)">Washed.</div>
-            <div style="font-family:var(--font-mono);font-size:10px;color:rgba(250,250,247,0.5);letter-spacing:0.2em;margin-top:8px">LOMÉ — TOGO</div>
+            <div style="font-family:var(--font-mono);font-size:10px;color:rgba(250,250,247,0.5);letter-spacing:0.2em;margin-top:8px">L'APPLI LAVEUSE POUR LOMÉ</div>
           </div>
-          <div style="flex: 1"></div>
-          <div class="row2">
-            <div class="btn" style="background: var(--surface); color: var(--ink-1)">Français</div>
-            <div class="btn alt" style="border-color: rgba(250,250,247,0.3); color: rgba(250,250,247,0.6)">English</div>
+          <div style="position:absolute;left:18px;right:18px;bottom:24px">
+            <div class="row2">
+              <div class="btn full" style="background: var(--surface); color: var(--ink)">Français</div>
+              <div class="btn full alt" style="border-color: rgba(250,250,247,0.3); color: rgba(250,250,247,0.5)">English</div>
+            </div>
+            <div class="p-sm" style="text-align:center;color:rgba(250,250,247,0.4);margin-top:8px">EN bientôt disponible</div>
           </div>
-          <div class="p-sm" style="text-align:center;color:rgba(250,250,247,0.4);margin-top:8px">EN bientôt disponible</div>
         </div>
       </div></div>
-      <div class="id">X-01</div><div class="name">Splash</div><div class="notes">EN désactivé v1. Reste 1.2s.</div></div>
+      <div><div class="id">X-01</div><div class="name">Splash</div><div class="notes">FR par défaut · EN désactivé v1 · 1.2s.</div></div></div>
 
-      <!-- Phone input -->
+      <!-- X-02 PHONE -->
       <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
-        <div class="sb"><span>9:41</span><div class="right">●●●● 5G ▮</div></div>
+        <div class="sb"><span>9:41</span><span class="right">●●●● 5G ▮</span></div>
         <div class="body">
           <div class="h-sm">ÉTAPE 1 / 4</div>
           <div class="h-md">Votre numéro<br>de téléphone.</div>
           <div class="p">On vous envoie un code par SMS pour confirmer.</div>
-          <div style="margin-top:14px">
+          <div style="margin-top:8px">
             <div class="h-sm" style="margin-bottom:6px">NUMÉRO</div>
             <div class="input" style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono)">
               <span style="color:var(--ink-3)">+228</span>
-              <span style="color:var(--ink-1)">90 12 34 56</span>
-              <span style="margin-left:auto;width:6px;height:14px;background:var(--primary);animation:none"></span>
+              <span style="color:var(--ink)">90 12 34 56</span>
+              <span style="margin-left:auto;width:2px;height:16px;background:var(--primary)"></span>
             </div>
-            <div class="p-sm" style="margin-top:6px">T-Money & Flooz acceptés</div>
+            <div class="p-sm" style="margin-top:6px">Le numéro reste privé. Jamais transmis à votre laveuse.</div>
           </div>
           <div style="flex:1"></div>
-          <div class="btn">Recevoir le code</div>
+          <div class="btn full lg">Recevoir le code</div>
         </div>
       </div></div>
-      <div class="id">X-02</div><div class="name">Téléphone</div><div class="notes">Auto-format +228</div></div>
+      <div><div class="id">X-02</div><div class="name">Téléphone</div><div class="notes">inputmode=tel · auto-format +228 · clavier numérique.</div></div></div>
 
-      <!-- OTP -->
+      <!-- X-03 OTP -->
       <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
-        <div class="sb"><span>9:41</span><div class="right">●●●● 5G ▮</div></div>
+        <div class="sb"><span>9:41</span><span class="right">●●●● 5G ▮</span></div>
         <div class="body">
           <div class="h-sm">ÉTAPE 2 / 4</div>
-          <div class="h-md">Le code à<br>6 chiffres.</div>
-          <div class="p">Envoyé au +228 90 12 34 56. <span style="color:var(--primary)">Modifier</span></div>
-          <div style="display:flex;gap:6px;margin-top:18px">
+          <div class="h-md">Le code reçu<br>par SMS.</div>
+          <div class="p">Six chiffres envoyés au +228 90 ●● ●● 56. <span style="color:var(--primary);font-weight:600">Modifier</span></div>
+          <div style="display:flex;gap:6px;margin-top:14px">
             <div class="input" style="width:34px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px">4</div>
             <div class="input" style="width:34px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px">8</div>
-            <div class="input" style="width:34px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px;border-color:var(--primary);border-width:2px">2</div>
-            <div class="input" style="width:34px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px;color:var(--ink-3)">_</div>
-            <div class="input" style="width:34px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px;color:var(--ink-3)">_</div>
-            <div class="input" style="width:34px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px;color:var(--ink-3)">_</div>
+            <div class="input" style="width:34px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px">2</div>
+            <div class="input" style="width:34px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px;border-color:var(--primary);border-width:2px">|</div>
+            <div class="input" style="width:34px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px;color:var(--ink-3)">·</div>
+            <div class="input" style="width:34px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px;color:var(--ink-3)">·</div>
           </div>
-          <div class="p-sm" style="margin-top:14px">Renvoyer dans <span style="font-family:var(--font-mono)">0:28</span></div>
+          <div class="p-sm" style="margin-top:14px">Renvoyer dans <span style="font-family:var(--font-mono);font-weight:600">0:24 s</span></div>
           <div style="flex:1"></div>
-          <div class="p-sm" style="text-align:center">Pas reçu ? <span style="color:var(--primary)">Appeler</span></div>
+          <div class="p-sm" style="text-align:center">Pas reçu après 30s ? <span style="color:var(--primary);font-weight:600">Appeler le bureau</span></div>
         </div>
       </div></div>
-      <div class="id">X-03</div><div class="name">OTP</div><div class="notes">3 essais → assistance WhatsApp</div></div>
+      <div><div class="id">X-03</div><div class="name">OTP 6 chiffres</div><div class="notes">3 essais avant pause anti-fraude de 5 min.</div></div></div>
 
-      <!-- Plans -->
+      <!-- X-04 ADDRESS -->
       <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
-        <div class="sb"><span>9:41</span><div class="right">●●●● 5G ▮</div></div>
-        <div class="body">
+        <div class="sb"><span>9:41</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
           <div class="h-sm">ÉTAPE 3 / 4</div>
-          <div class="h-md">Choisissez<br>votre formule.</div>
+          <div class="h-md">Où passe<br>la laveuse ?</div>
+          <div class="p">Quartier puis détail. Le bureau valide avec vous au téléphone.</div>
+          <div style="margin-top:6px">
+            <div class="h-sm" style="margin-bottom:4px">QUARTIER</div>
+            <div class="input" style="display:flex;align-items:center;justify-content:space-between"><span>Tokoin Casablanca</span><span style="color:var(--primary)">▾</span></div>
+          </div>
+          <div>
+            <div class="h-sm" style="margin-bottom:4px">RUE / DÉTAIL</div>
+            <div class="input" style="font-family:var(--font-mono);font-size:12px">rue 254, maison bleue</div>
+          </div>
+          <div>
+            <div class="h-sm" style="margin-bottom:4px">REPÈRE (FACULTATIF)</div>
+            <div class="input" style="font-size:12px;color:var(--ink-3)">portail vert · sonnette à droite</div>
+          </div>
+          <div class="map" style="height:90px"><div class="pin" style="left:50%;top:50%;transform:translate(-50%,-50%)"></div></div>
+          <div style="flex:1"></div>
+          <div class="btn full">Continuer</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-04</div><div class="name">Adresse</div><div class="notes">Autocomplete Lomé · validation manuelle bureau.</div></div></div>
 
-          <div class="card" style="margin-top:8px;border-color:var(--ink-1);border-width:2px;padding:12px">
+      <!-- X-05 TIER -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>9:41</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
+          <div class="h-sm">ÉTAPE 4 / 4</div>
+          <div class="h-md">Combien de visites<br>par mois ?</div>
+          <div class="p-sm">Vous pouvez changer plus tard, sans frais.</div>
+          <div class="card" style="border-color:var(--primary);border-width:2px;padding:14px;margin-top:8px">
             <div style="display:flex;justify-content:space-between;align-items:start">
               <div>
-                <div style="font-weight:500;font-size:13px">Hebdomadaire</div>
-                <div class="p-sm">1 visite / semaine · ~1.5h</div>
+                <div style="font-weight:600;font-size:14px">Une visite</div>
+                <div class="p-sm">par mois · ~1h30</div>
               </div>
-              <div class="chip">recommandé</div>
+              <div class="chip primary">choisi</div>
             </div>
-            <div style="font-family:var(--font-display);font-weight:500;font-size:24px;letter-spacing:-0.02em;margin-top:8px">2 500 <span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-3)">F·CFA</span></div>
+            <div style="font-family:var(--font-display);font-weight:500;font-size:32px;letter-spacing:-0.02em;margin-top:10px">2 500 <span style="font-family:var(--font-body);font-weight:400;font-size:12px;color:var(--ink-3)">XOF / mois</span></div>
           </div>
-
-          <div class="card" style="padding:12px">
-            <div style="font-weight:500;font-size:13px">Hebdomadaire +</div>
-            <div class="p-sm">+ aspirateur intérieur</div>
-            <div style="font-family:var(--font-display);font-weight:500;font-size:24px;letter-spacing:-0.02em;margin-top:8px">4 500 <span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-3)">F·CFA</span></div>
+          <div class="card" style="padding:14px">
+            <div style="display:flex;justify-content:space-between;align-items:start">
+              <div>
+                <div style="font-weight:600;font-size:14px">Deux visites</div>
+                <div class="p-sm">par mois · économie 500 XOF</div>
+              </div>
+            </div>
+            <div style="font-family:var(--font-display);font-weight:500;font-size:32px;letter-spacing:-0.02em;margin-top:10px">4 500 <span style="font-family:var(--font-body);font-weight:400;font-size:12px;color:var(--ink-3)">XOF / mois</span></div>
           </div>
-
           <div style="flex:1"></div>
-          <div class="btn">Continuer · 2 500 F</div>
+          <div class="btn full lg">Continuer · 2 500 XOF</div>
         </div>
       </div></div>
-      <div class="id">X-05</div><div class="name">Plans</div><div class="notes">Sticky CTA reflète sélection</div></div>
+      <div><div class="id">X-05</div><div class="name">Choix de plan</div><div class="notes">CTA reflète sélection en live · sticky bottom.</div></div></div>
+
+      <!-- X-06 PAYMENT -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>9:41</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
+          <div class="h-sm">PAIEMENT</div>
+          <div class="h-md">Le moyen<br>de paiement.</div>
+          <div class="p">TMoney, Mixx by Yas ou Flooz. Pas de carte, pas d'espèces.</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+            <div class="card" style="border-color:var(--primary);border-width:2px;padding:12px;display:flex;align-items:center;gap:10px">
+              <div style="width:18px;height:18px;border:2px solid var(--primary);border-radius:999px;display:grid;place-items:center"><div style="width:8px;height:8px;border-radius:999px;background:var(--primary)"></div></div>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:600">TMoney</div>
+                <div class="p-sm">+228 90 12 34 56</div>
+              </div>
+            </div>
+            <div class="card" style="padding:12px;display:flex;align-items:center;gap:10px">
+              <div style="width:18px;height:18px;border:2px solid var(--ink-3);border-radius:999px"></div>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:600">Mixx by Yas</div>
+                <div class="p-sm">ajouter un numéro</div>
+              </div>
+            </div>
+            <div class="card" style="padding:12px;display:flex;align-items:center;gap:10px">
+              <div style="width:18px;height:18px;border:2px solid var(--ink-3);border-radius:999px"></div>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:600">Flooz</div>
+                <div class="p-sm">ajouter un numéro</div>
+              </div>
+            </div>
+          </div>
+          <div class="p-sm" style="margin-top:6px">Le 1er prélèvement a lieu après confirmation de l'adresse par le bureau.</div>
+          <div style="flex:1"></div>
+          <div class="btn full lg">Continuer</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-06</div><div class="name">Paiement Mobile Money</div><div class="notes">3 fournisseurs · pas de cash, pas de carte.</div></div></div>
+
+      <!-- X-07 REVIEW -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>9:41</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body">
+          <div class="h-sm">RÉCAP</div>
+          <div class="h-md">Tout est bon ?</div>
+          <div class="card" style="padding:12px">
+            <div style="display:flex;justify-content:space-between;font-size:12px"><span class="p-sm">Forfait</span><span style="font-weight:500">1 visite / mois</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px"><span class="p-sm">Adresse</span><span style="font-weight:500">Tokoin Casablanca</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px"><span class="p-sm">Paiement</span><span style="font-weight:500">TMoney · 90&nbsp;12…</span></div>
+            <div style="height:1px;background:var(--line);margin:10px 0"></div>
+            <div style="display:flex;justify-content:space-between;font-size:14px"><span style="font-weight:500">Total mensuel</span><span style="font-family:var(--font-display);font-weight:500;font-style:italic;font-size:18px;color:var(--primary)">2 500 XOF</span></div>
+          </div>
+          <div class="card warn" style="padding:10px 12px">
+            <div class="h-sm" style="color:var(--accent);margin-bottom:4px">PROCHAINE ÉTAPE</div>
+            <div style="font-size:11px;line-height:1.5">Le bureau vous appelle dans la journée pour confirmer l'adresse et planifier la première visite.</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:flex-start;margin-top:4px">
+            <div style="width:18px;height:18px;border:1.5px solid var(--ink);border-radius:4px;background:var(--primary);display:grid;place-items:center;color:white;font-weight:700;font-size:12px">✓</div>
+            <div class="p-sm" style="flex:1">J'accepte les conditions et la politique de confidentialité</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn primary full lg">Confirmer l'abonnement</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-07</div><div class="name">Récap &amp; consentement</div><div class="notes">Pas de surprise · le débit MM se fait après l'appel bureau.</div></div></div>
+
+      <!-- X-08 WELCOME -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>9:42</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body" style="text-align:center;justify-content:center;align-items:center">
+          <div style="flex:1"></div>
+          <div style="width:64px;height:64px;border-radius:999px;background:var(--primary);color:white;display:grid;place-items:center;font-family:var(--font-display);font-style:italic;font-weight:600;font-size:38px;margin-bottom:18px">w</div>
+          <div class="h-md" style="text-align:center"><em style="font-style:italic;color:var(--primary)">Bienvenue</em><br>chez Washed.</div>
+          <div class="p" style="margin-top:8px;text-align:center;max-width:80%">Votre première visite est planifiée. On vous appelle d'abord pour finaliser l'adresse.</div>
+          <div style="flex:1"></div>
+          <div class="btn full lg" style="background:var(--ink)">Voir mon accueil</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-08</div><div class="name">Bienvenue</div><div class="notes">Italique sur "Bienvenue" — signature visuelle.</div></div></div>
 
     </div>
   </section>
 
-  <!-- Hub row -->
+  <!-- =================================================== -->
+  <!-- ROW 02 — HUB & VISIT CYCLE (X-10 → X-15)            -->
+  <!-- =================================================== -->
   <section class="section">
-    <div class="num">02 · LE HUB</div>
-    <h2>X-10 → X-13 · 90% des sessions</h2>
+    <div class="num">02 · LE HUB &amp; CYCLE DE VISITE</div>
+    <h2>X-10 → X-15 · 90% des sessions</h2>
 
     <div class="row" style="margin-top: var(--s-7)">
 
-      <!-- Home / next visit -->
+      <!-- X-10 HUB -->
       <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
-        <div class="sb"><span>9:41</span><div class="right">●●●● 5G ▮</div></div>
-        <div class="body">
+        <div class="sb"><span>9:41</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
           <div style="display:flex;justify-content:space-between;align-items:center">
-            <div class="h-sm">BONJOUR, KOFFI</div>
+            <div class="h-sm">BONJOUR YAWA</div>
             <div class="avatar" style="width:28px;height:28px"></div>
           </div>
-
-          <div style="margin-top:8px">
-            <div class="p-sm">Prochaine visite</div>
-            <div class="h-xl" style="margin-top:4px"><em>jeudi.</em></div>
-            <div class="h-md" style="font-style:normal;font-size:18px;color:var(--ink-2);margin-top:-4px">14 avril · 8h–10h</div>
+          <div style="margin-top:6px">
+            <div class="h-sm">PROCHAINE VISITE</div>
+            <div style="font-family:var(--font-display);font-weight:500;font-size:42px;letter-spacing:-0.04em;line-height:1;color:var(--ink);margin-top:6px"><em style="font-style:italic">Mardi</em></div>
+            <div style="font-family:var(--font-display);font-weight:500;font-size:42px;letter-spacing:-0.04em;line-height:1;color:var(--primary);font-style:italic">9 h 00</div>
+            <div class="p-sm" style="margin-top:4px">dans 2 jours · 21 h</div>
           </div>
-
           <div class="card" style="margin-top:6px;display:flex;gap:10px;align-items:center;padding:12px">
             <div class="avatar"></div>
             <div style="flex:1">
-              <div style="font-weight:500;font-size:13px">Adjo K.</div>
-              <div class="p-sm">★ 4.9 · 142 visites</div>
+              <div style="font-weight:600;font-size:13px">Akouvi K.</div>
+              <div class="p-sm">Tokoin · 8 mois chez vous</div>
             </div>
             <div class="chip green">prête</div>
           </div>
-
-          <div class="row2" style="margin-top:6px">
-            <div class="btn alt" style="padding:11px 14px;font-size:12px">Détail</div>
-            <div class="btn" style="padding:11px 14px;font-size:12px">Calendrier</div>
-          </div>
-
-          <div style="margin-top:12px">
-            <div class="h-sm" style="margin-bottom:6px">CETTE SEMAINE</div>
-            <div style="display:flex;gap:6px">
-              <div class="card" style="flex:1;padding:8px"><div class="p-sm">visites</div><div style="font-family:var(--font-display);font-size:20px;font-weight:500">1<span style="color:var(--ink-3);font-size:12px">/1</span></div></div>
-              <div class="card" style="flex:1;padding:8px"><div class="p-sm">payé</div><div style="font-family:var(--font-display);font-size:20px;font-weight:500">2 500</div></div>
-            </div>
-          </div>
-
-          <div class="nav">
-            <div class="item active"><div class="dot"></div>Accueil</div>
-            <div class="item"><div class="dot"></div>Visites</div>
-            <div class="item"><div class="dot"></div>Paiement</div>
-            <div class="item"><div class="dot"></div>Profil</div>
-          </div>
-        </div>
-      </div></div>
-      <div class="id">X-10 ★</div><div class="name">Accueil — prochaine visite</div><div class="notes">Le hub. Ouvre 80% des sessions.</div></div>
-
-      <!-- Visit detail -->
-      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
-        <div class="sb"><span>9:41</span><div class="right">●●●● 5G ▮</div></div>
-        <div class="body">
-          <div style="display:flex;align-items:center;gap:10px"><span style="font-family:var(--font-mono);font-size:14px">←</span><div class="h-sm">VISITE · 7 AVRIL</div></div>
-
-          <div class="photo" style="height:140px;margin-top:6px">avant · après</div>
-
-          <div style="margin-top:6px">
-            <div class="chip green" style="margin-bottom:6px">terminée · 1h 38min</div>
-            <div class="h-md">Adjo a passé<br><em style="color:var(--primary)">98 minutes</em><br>sur votre voiture.</div>
-          </div>
-
-          <div class="card" style="padding:12px">
-            <div style="display:flex;justify-content:space-between;font-size:12px"><span class="p-sm">arrivée</span><span style="font-family:var(--font-mono)">8:02</span></div>
-            <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px"><span class="p-sm">lavage</span><span style="font-family:var(--font-mono)">42 min</span></div>
-            <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px"><span class="p-sm">séchage</span><span style="font-family:var(--font-mono)">28 min</span></div>
-            <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px"><span class="p-sm">finition</span><span style="font-family:var(--font-mono)">28 min</span></div>
-          </div>
-
-          <div style="flex:1"></div>
           <div class="row2">
-            <div class="btn alt">Reporter</div>
-            <div class="btn">Signaler</div>
+            <div class="btn alt" style="padding:11px 14px;font-size:12px">Détail</div>
+            <div class="btn" style="padding:11px 14px;font-size:12px;background:var(--primary)">Voir les visites</div>
+          </div>
+          <div class="card cream" style="padding:10px 12px">
+            <div class="p-sm" style="color:var(--primary);margin-bottom:2px">DERNIÈRE VISITE · 28 AVRIL</div>
+            <div style="font-size:12px"><em style="font-style:italic;color:var(--primary);font-family:var(--font-display);font-size:16px">32 visites</em> avec Akouvi.</div>
+          </div>
+          <div class="nav">
+            <div class="item active"><div class="glyph"></div>Accueil</div>
+            <div class="item"><div class="glyph"></div>Visites</div>
+            <div class="item"><div class="glyph"></div>Forfait</div>
+            <div class="item"><div class="glyph"></div>Profil</div>
           </div>
         </div>
       </div></div>
-      <div class="id">X-11 ★</div><div class="name">Détail visite</div><div class="notes">Avant/après · timeline · CTA réparation</div></div>
+      <div><div class="id">X-10</div><div class="name">Hub · prochaine visite</div><div class="notes">Le centre. Italique Fraunces sur jour + heure = signature.</div></div></div>
 
-      <!-- Calendar -->
+      <!-- X-11 VISIT DETAIL -->
       <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
-        <div class="sb"><span>9:41</span><div class="right">●●●● 5G ▮</div></div>
+        <div class="sb"><span>9:41</span><span class="right">●●●● 5G ▮</span></div>
         <div class="body">
-          <div class="h-sm">AVRIL 2026</div>
-          <div class="h-md">Vos prochaines<br>visites.</div>
-
-          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;font-family:var(--font-mono);font-size:9px;color:var(--ink-3);margin-top:6px;text-align:center">
-            <div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div><div>D</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:18px">‹</span><div class="h-sm">VISITE · MARDI 5 MAI</div></div>
+          <div class="h-md">Akouvi K. arrive<br>à <em style="font-style:italic;color:var(--primary)">9 h 00</em>.</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span class="chip green">8e mois</span>
+            <span class="chip">Tokoin</span>
+            <span class="chip">~1 h 30</span>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;font-family:var(--font-mono);font-size:11px;text-align:center">
-            <div style="padding:8px;color:var(--ink-3)">31</div>
-            <div style="padding:8px">1</div><div style="padding:8px">2</div><div style="padding:8px">3</div><div style="padding:8px">4</div><div style="padding:8px">5</div><div style="padding:8px">6</div>
-            <div style="padding:8px">7</div>
-            <div style="padding:8px;background:var(--bg-deep);border-radius:6px">8</div>
-            <div style="padding:8px">9</div><div style="padding:8px">10</div><div style="padding:8px">11</div><div style="padding:8px">12</div><div style="padding:8px">13</div>
-            <div style="padding:8px;background:var(--ink-1);color:var(--surface);border-radius:6px;font-weight:600">14</div>
-            <div style="padding:8px">15</div><div style="padding:8px">16</div><div style="padding:8px">17</div><div style="padding:8px">18</div><div style="padding:8px">19</div><div style="padding:8px">20</div>
-            <div style="padding:8px">21</div>
-            <div style="padding:8px;border:1px solid var(--line);border-radius:6px">22</div>
-            <div style="padding:8px">23</div><div style="padding:8px">24</div><div style="padding:8px">25</div><div style="padding:8px">26</div><div style="padding:8px">27</div>
+          <div class="card" style="padding:10px 12px">
+            <div class="h-sm" style="margin-bottom:4px">CE QU'ELLE APPORTE</div>
+            <div style="font-size:11px;line-height:1.5">Rien — vous fournissez l'eau, le savon et la bassine, comme d'habitude.</div>
           </div>
-
-          <div class="card" style="margin-top:auto;padding:10px">
-            <div class="p-sm">jeudi 14 avril</div>
-            <div style="font-weight:500;font-size:13px;margin-top:2px">8h–10h · Adjo K.</div>
+          <div class="card" style="padding:10px 12px">
+            <div class="h-sm" style="margin-bottom:4px">RAPPELS</div>
+            <ul style="margin:0;padding-left:14px;font-size:11px;line-height:1.6;color:var(--ink-2)">
+              <li>SMS 7 h matin du jour J</li>
+              <li>Push quand elle est en route</li>
+              <li>Photos avant / après dans l'app</li>
+            </ul>
           </div>
-          <div class="btn alt" style="margin-top:6px">Demander un report</div>
+          <div style="flex:1"></div>
+          <div class="btn primary full">Suivre Akouvi</div>
+          <div class="row2">
+            <div class="btn ghost">Reporter</div>
+            <div class="btn ghost">Signaler</div>
+          </div>
         </div>
       </div></div>
-      <div class="id">X-12</div><div class="name">Calendrier</div><div class="notes">Mois courant · pluie 22 = report auto</div></div>
+      <div><div class="id">X-11</div><div class="name">Détail visite</div><div class="notes">Pas d'appel direct laveuse · politique no-direct-comms.</div></div></div>
 
-      <!-- Payment -->
+      <!-- X-12 TRACKING -->
       <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
-        <div class="sb"><span>9:41</span><div class="right">●●●● 5G ▮</div></div>
-        <div class="body">
-          <div class="h-sm">PAIEMENT</div>
-          <div class="h-md">Compte bon<br>jusqu'au <em style="color:var(--primary);font-style:italic">30 avril</em>.</div>
-
-          <div class="card dark" style="padding:14px">
-            <div class="p-sm" style="color:rgba(250,250,247,0.6)">forfait actif</div>
-            <div style="font-weight:500;margin-top:4px">Hebdomadaire · 2 500 F·CFA / sem</div>
-            <div style="display:flex;justify-content:space-between;align-items:end;margin-top:14px">
-              <div class="p-sm" style="color:rgba(250,250,247,0.6)">prochain prélèvement</div>
-              <div style="font-family:var(--font-mono);font-size:11px">2 mai · auto</div>
+        <div class="sb"><span>8:48</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
+          <div class="h-sm">EN ROUTE · ARRIVE À 9 H 00</div>
+          <div class="map" style="height:280px">
+            <div class="path" style="left:30px;top:80px;width:160px;transform:rotate(15deg)"></div>
+            <div class="path" style="left:90px;top:160px;width:120px;transform:rotate(-25deg)"></div>
+            <div class="pin" style="left:24px;top:210px"></div>
+            <div class="pin me" style="left:200px;top:60px"></div>
+            <div style="position:absolute;left:24px;top:230px;font-family:var(--font-mono);font-size:9px;color:white;background:var(--primary);padding:2px 6px;border-radius:4px">AKOUVI</div>
+            <div style="position:absolute;left:170px;top:42px;font-family:var(--font-mono);font-size:9px;color:white;background:#1E90FF;padding:2px 6px;border-radius:4px">VOTRE FOYER</div>
+          </div>
+          <div class="card" style="padding:12px;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div class="p-sm">Distance</div>
+              <div style="font-family:var(--font-display);font-weight:500;font-size:18px">800 m</div>
+            </div>
+            <div>
+              <div class="p-sm">Arrive dans</div>
+              <div style="font-family:var(--font-display);font-weight:500;font-style:italic;font-size:20px;color:var(--primary)">8 min</div>
             </div>
           </div>
-
-          <div style="margin-top:8px">
-            <div class="h-sm" style="margin-bottom:6px">HISTORIQUE</div>
-            <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)"><div><div style="font-size:12px;font-weight:500">25 avr.</div><div class="p-sm">T-Money · ★1234</div></div><div style="font-family:var(--font-mono);font-size:13px">2 500 F</div></div>
-            <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)"><div><div style="font-size:12px;font-weight:500">18 avr.</div><div class="p-sm">T-Money · ★1234</div></div><div style="font-family:var(--font-mono);font-size:13px">2 500 F</div></div>
-            <div style="display:flex;justify-content:space-between;padding:10px 0"><div><div style="font-size:12px;font-weight:500">11 avr.</div><div class="p-sm">T-Money · ★1234</div></div><div style="font-family:var(--font-mono);font-size:13px">2 500 F</div></div>
-          </div>
-
-          <div style="flex:1"></div>
-          <div class="btn alt">Changer de moyen</div>
+          <div class="p-sm" style="text-align:center">Mise à jour toutes les 30 secondes</div>
         </div>
       </div></div>
-      <div class="id">X-13</div><div class="name">Paiement</div><div class="notes">"Compte bon" · ton positif</div></div>
+      <div><div class="id">X-12</div><div class="name">Suivi en route</div><div class="notes">Tracking borné · GPS visible 30 min max avant arrivée.</div></div></div>
+
+      <!-- X-13 IN-PROGRESS -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>9:18</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body" style="justify-content:center;text-align:center">
+          <div style="flex:1"></div>
+          <div class="chip green" style="margin:0 auto 14px">VISITE EN COURS</div>
+          <div class="h-md" style="text-align:center">Le linge est<br>entre de bonnes mains.</div>
+          <div class="p" style="margin-top:8px">Vous pouvez fermer l'app. On vous prévient quand c'est fini.</div>
+          <div class="card cream" style="margin-top:14px;padding:10px 12px;text-align:left">
+            <div class="h-sm" style="color:var(--primary);margin-bottom:4px">DÉMARRAGE</div>
+            <div style="font-size:12px"><b>Akouvi est arrivée à 9 h 02.</b> Photo « avant » prise.</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn ghost">Fermer l'app sereinement</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-13</div><div class="name">Visite en cours</div><div class="notes">Pas de timer affiché · décourage la sur-vérification.</div></div></div>
 
     </div>
   </section>
 
-  <!-- Edge cases -->
+  <!-- =================================================== -->
+  <!-- ROW 03 — REVEAL & FEEDBACK                          -->
+  <!-- =================================================== -->
   <section class="section">
-    <div class="num">03 · MOMENTS DE VÉRITÉ</div>
-    <h2>X-21 · X-25 · X-30 · les sales écrans qui font les bons produits</h2>
+    <div class="num">03 · REVEAL — LE MOMENT SIGNATURE</div>
+    <h2>X-14 → X-15 · le retour cliente</h2>
 
     <div class="row" style="margin-top: var(--s-7)">
 
-      <!-- Rain reschedule -->
+      <!-- X-14 REVEAL -->
       <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
-        <div class="sb"><span>9:41</span><div class="right">●●●● 5G ▮</div></div>
-        <div class="body">
-          <div style="margin-top:50px">
-            <div class="chip primary" style="background:var(--primary);color:white">il pleut sur Lomé</div>
-            <div class="h-md" style="margin-top:14px">On reporte<br><em style="color:var(--primary);font-style:italic">à demain</em><br>vendredi 15.</div>
-            <div class="p" style="margin-top:10px">Adjo passe vendredi 8h–10h. Aucun frais — c'est sur nous.</div>
+        <div class="sb"><span>10:08</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
+          <div class="h-sm">VOILÀ CE QUE ÇA DONNE</div>
+          <div class="h-md"><em style="font-style:italic;color:var(--primary)">Visite terminée.</em></div>
+          <div class="p-sm">Akouvi est partie à 10 h 07. Durée 1 h 06.</div>
+          <div class="row2" style="margin-top:6px">
+            <div>
+              <div class="photo" style="aspect-ratio:1;background:linear-gradient(135deg,#4A3622,#1C1208);color:rgba(255,255,255,0.6);border:none">AVANT · 9 H 01</div>
+            </div>
+            <div>
+              <div class="photo captured" style="aspect-ratio:1">APRÈS · 10 H 04</div>
+            </div>
           </div>
-
-          <div class="card" style="margin-top:14px;padding:12px">
-            <div class="p-sm">nouveau créneau</div>
-            <div style="font-weight:500;font-size:14px;margin-top:4px">vendredi 15 avril · 8h–10h</div>
-            <div class="p-sm" style="margin-top:6px">prévision : 28°, ensoleillé</div>
+          <div class="card" style="padding:10px 12px;margin-top:4px">
+            <div class="h-sm" style="margin-bottom:4px">RÉCAP</div>
+            <div style="display:flex;justify-content:space-between;font-size:11px"><span class="p-sm">Démarrage</span><span style="font-family:var(--font-mono)">9 h 02</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:3px"><span class="p-sm">Lavage</span><span style="font-family:var(--font-mono)">62 min</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:3px"><span class="p-sm">Fin</span><span style="font-family:var(--font-mono)">10 h 07</span></div>
           </div>
-
           <div style="flex:1"></div>
-          <div class="row2">
-            <div class="btn alt" style="padding:11px;font-size:12px">Autre créneau</div>
-            <div class="btn" style="padding:11px;font-size:12px">Confirmer</div>
-          </div>
+          <div class="btn primary full">Tout va bien</div>
+          <div class="btn ghost">Signaler un souci</div>
         </div>
       </div></div>
-      <div class="id">X-21</div><div class="name">Pluie · report auto</div><div class="notes">Push proactif · ton chaleureux</div></div>
+      <div><div class="id">X-14</div><div class="name">Reveal photos</div><div class="notes">Côte-à-côte = signature visuelle Washed. Push 2h après visite.</div></div></div>
 
-      <!-- Dispute -->
+      <!-- X-15 FEEDBACK -->
       <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
-        <div class="sb"><span>9:41</span><div class="right">●●●● 5G ▮</div></div>
-        <div class="body">
-          <div style="display:flex;align-items:center;gap:10px"><span style="font-family:var(--font-mono);font-size:14px">←</span><div class="h-sm">SIGNALER · 7 AVRIL</div></div>
-
-          <div class="h-md" style="margin-top:8px">Qu'est-ce<br>qui ne va pas ?</div>
-          <div class="p">On vous rembourse ou on revient — vous choisissez.</div>
-
-          <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px">
-            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-1);border-radius:999px"></div><div style="font-size:12px">Voiture pas propre</div></div>
-            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px;border-color:var(--ink-1);border-width:2px"><div style="width:14px;height:14px;border:2px solid var(--ink-1);border-radius:999px;background:var(--ink-1)"></div><div style="font-size:12px;font-weight:500">Rayure ou dommage</div></div>
-            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-1);border-radius:999px"></div><div style="font-size:12px">Adjo n'est pas venue</div></div>
-            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-1);border-radius:999px"></div><div style="font-size:12px">Autre</div></div>
-          </div>
-
+        <div class="sb"><span>10:09</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body" style="text-align:center;justify-content:center;align-items:center">
           <div style="flex:1"></div>
-          <div class="btn">Suivant · ajouter photos</div>
+          <div style="width:48px;height:48px;border-radius:999px;background:var(--success-soft);color:var(--success);display:grid;place-items:center;font-weight:700;font-size:22px;margin-bottom:14px">✓</div>
+          <div class="h-md">Merci.</div>
+          <div class="p" style="margin-top:6px;max-width:90%">Akouvi sera contente de le savoir. Votre prochaine visite est dans 4 semaines, mardi 2 juin.</div>
+          <div class="card cream" style="margin-top:18px;padding:10px 12px;text-align:left;width:100%">
+            <div class="h-sm" style="color:var(--primary);margin-bottom:4px">VOTRE COMPTEUR</div>
+            <div style="font-family:var(--font-display);font-weight:500;font-style:italic;font-size:30px;color:var(--ink);letter-spacing:-0.02em">33 visites</div>
+            <div class="p-sm">avec Akouvi · depuis septembre 2025</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn ghost full">Retour à l'accueil</div>
         </div>
       </div></div>
-      <div class="id">X-25</div><div class="name">Litige · catégorie</div><div class="notes">SLA 15 min · réponse humaine</div></div>
+      <div><div class="id">X-15</div><div class="name">Feedback positif</div><div class="notes">Compteur stickiness · pas de notation par étoiles.</div></div></div>
 
-      <!-- Payment failed -->
+      <!-- X-15.S FEEDBACK ISSUE -->
       <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
-        <div class="sb"><span>9:41</span><div class="right">●●●● 5G ▮</div></div>
+        <div class="sb"><span>10:09</span><span class="right">●●●● 5G ▮</span></div>
         <div class="body">
-          <div style="margin-top:40px">
-            <div class="chip" style="background:oklch(0.94 0.04 30);color:var(--alert)">paiement non passé</div>
-            <div class="h-md" style="margin-top:14px">Solde T-Money<br>insuffisant.</div>
-            <div class="p" style="margin-top:10px">On a essayé deux fois, sans succès. La visite de jeudi est en attente — vous avez 48h pour régulariser.</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:18px">‹</span><div class="h-sm">SIGNALER UN SOUCI</div></div>
+          <div class="h-md">Qu'est-ce<br>qui ne va pas ?</div>
+          <div class="p">Le bureau vous rappelle dans la journée. Akouvi ne voit pas ce signalement.</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px;border-color:var(--primary);border-width:2px">
+              <div style="width:14px;height:14px;border:2px solid var(--primary);border-radius:999px;display:grid;place-items:center"><div style="width:6px;height:6px;border-radius:999px;background:var(--primary)"></div></div>
+              <div style="font-size:12px;font-weight:500">Linge endommagé</div>
+            </div>
+            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-3);border-radius:999px"></div><div style="font-size:12px">Linge mal lavé</div></div>
+            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-3);border-radius:999px"></div><div style="font-size:12px">Akouvi n'est pas venue</div></div>
+            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-3);border-radius:999px"></div><div style="font-size:12px">Comportement inapproprié</div></div>
+            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-3);border-radius:999px"></div><div style="font-size:12px">Autre · décrire</div></div>
           </div>
-
-          <div class="card" style="margin-top:14px;padding:12px">
-            <div style="display:flex;justify-content:space-between;font-size:13px"><span class="p-sm">à payer</span><span style="font-family:var(--font-mono);font-weight:600">2 500 F</span></div>
-            <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:4px"><span class="p-sm">solde T-Money</span><span style="font-family:var(--font-mono);color:var(--alert)">1 800 F</span></div>
-          </div>
-
           <div style="flex:1"></div>
-          <div class="btn primary" style="background:var(--primary)">Recharger T-Money</div>
-          <div class="btn alt">Essayer Flooz</div>
+          <div class="btn primary full">Suivant · ajouter photos</div>
         </div>
       </div></div>
-      <div class="id">X-30</div><div class="name">Échec paiement</div><div class="notes">Pas de honte. Issue claire.</div></div>
-
-      <!-- Offline state -->
-      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
-        <div class="sb"><span>9:41</span><div class="right">○ HORS LIGNE ▮</div></div>
-        <div class="body">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div class="h-sm">BONJOUR, KOFFI</div>
-            <div class="avatar" style="width:28px;height:28px"></div>
-          </div>
-
-          <div class="card" style="background:var(--bg-deep);padding:10px;border-color:transparent">
-            <div class="p-sm" style="display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;background:var(--ink-3);border-radius:999px"></span>HORS LIGNE — DERNIÈRE MAJ 9:38</div>
-          </div>
-
-          <div style="margin-top:4px">
-            <div class="p-sm">Prochaine visite</div>
-            <div class="h-xl" style="margin-top:4px"><em>jeudi.</em></div>
-            <div class="h-md" style="font-style:normal;font-size:18px;color:var(--ink-2);margin-top:-4px">14 avril · 8h–10h</div>
-          </div>
-
-          <div class="card" style="margin-top:6px;padding:12px;opacity:0.6">
-            <div class="p-sm">infos cachées</div>
-            <div style="font-weight:500;font-size:13px;margin-top:4px">Adjo K. · ★ 4.9</div>
-          </div>
-
-          <div style="flex:1"></div>
-          <div class="p-sm" style="text-align:center">on vérifie le réseau toutes les 30s</div>
-          <div class="btn alt">Réessayer</div>
-        </div>
-      </div></div>
-      <div class="id">X-OFF</div><div class="name">Hors-ligne</div><div class="notes">Cache 7 jours · jamais d'écran blanc</div></div>
+      <div><div class="id">X-15.S</div><div class="name">Signaler un souci</div><div class="notes">SLA réponse opérateur · 4 h. Photos optionnelles.</div></div></div>
 
     </div>
   </section>
 
-  <p style="margin-top: var(--s-10); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.12em;">— 10 écrans clés sur 35 · iOS 17 · cible iPhone SE → 15 Pro · v2.0 · 2026</p>
+  <!-- =================================================== -->
+  <!-- ROW 04 — HISTORY & WORKER PROFILE                   -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">04 · HISTORIQUE &amp; RELATION</div>
+    <h2>X-16 → X-18 · l'actif relationnel</h2>
+
+    <div class="row" style="margin-top: var(--s-7)">
+
+      <!-- X-16 HISTORY -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:32</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
+          <div class="h-sm">VOS VISITES</div>
+          <div class="h-md">Avec <em style="font-style:italic;color:var(--primary)">Akouvi</em><br>depuis 8 mois.</div>
+          <div class="card cream" style="padding:10px 12px;display:flex;justify-content:space-between">
+            <div><div class="p-sm" style="margin:0">Compteur</div><div style="font-family:var(--font-display);font-weight:500;font-size:22px">32</div></div>
+            <div style="text-align:right"><div class="p-sm" style="margin:0">Total payé</div><div style="font-family:var(--font-display);font-weight:500;font-size:22px">80 000 <span style="font-size:11px;color:var(--ink-3);font-weight:400">XOF</span></div></div>
+          </div>
+          <div class="h-sm" style="margin-top:6px">RÉCENTES</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="card" style="padding:10px;display:flex;gap:10px;align-items:center"><div class="avatar" style="width:28px;height:28px"></div><div style="flex:1"><div style="font-size:12px;font-weight:500">28 avr · 9 h 02</div><div class="p-sm">1 h 06 · pas de souci</div></div><div class="chip green" style="font-size:9px">✓</div></div>
+            <div class="card" style="padding:10px;display:flex;gap:10px;align-items:center"><div class="avatar" style="width:28px;height:28px"></div><div style="flex:1"><div style="font-size:12px;font-weight:500">21 avr · 9 h 00</div><div class="p-sm">1 h 12</div></div><div class="chip green" style="font-size:9px">✓</div></div>
+            <div class="card" style="padding:10px;display:flex;gap:10px;align-items:center"><div class="avatar" style="width:28px;height:28px"></div><div style="flex:1"><div style="font-size:12px;font-weight:500">14 avr · 9 h 04</div><div class="p-sm">58 min</div></div><div class="chip green" style="font-size:9px">✓</div></div>
+            <div class="card" style="padding:10px;display:flex;gap:10px;align-items:center"><div class="avatar" style="width:28px;height:28px"></div><div style="flex:1"><div style="font-size:12px;font-weight:500">7 avr · 9 h 00</div><div class="p-sm">1 h 22</div></div><div class="chip green" style="font-size:9px">✓</div></div>
+          </div>
+          <div class="nav">
+            <div class="item"><div class="glyph"></div>Accueil</div>
+            <div class="item active"><div class="glyph"></div>Visites</div>
+            <div class="item"><div class="glyph"></div>Forfait</div>
+            <div class="item"><div class="glyph"></div>Profil</div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">X-16</div><div class="name">Historique des visites</div><div class="notes">Compteur en italique = stickiness lever. Tap = X-17 détail.</div></div></div>
+
+      <!-- X-17 PAST VISIT -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:33</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:18px">‹</span><div class="h-sm">VISITE · 28 AVRIL</div></div>
+          <div class="h-md"><em style="font-style:italic;color:var(--primary)">Bonne visite.</em><br>1 h 06 avec Akouvi.</div>
+          <div class="row2">
+            <div class="photo" style="aspect-ratio:1;background:linear-gradient(135deg,#4A3622,#1C1208);color:rgba(255,255,255,0.6);border:none">AVANT</div>
+            <div class="photo captured" style="aspect-ratio:1">APRÈS</div>
+          </div>
+          <div class="card" style="padding:10px 12px">
+            <div class="h-sm" style="margin-bottom:4px">DÉROULÉ</div>
+            <div style="display:flex;justify-content:space-between;font-size:11px"><span class="p-sm">Arrivée</span><span style="font-family:var(--font-mono)">9 h 02</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:2px"><span class="p-sm">Photo avant</span><span style="font-family:var(--font-mono)">9 h 03</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:2px"><span class="p-sm">Photo après</span><span style="font-family:var(--font-mono)">10 h 04</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:2px"><span class="p-sm">Fin</span><span style="font-family:var(--font-mono)">10 h 07</span></div>
+          </div>
+          <div class="card" style="padding:10px 12px">
+            <div class="h-sm" style="margin-bottom:4px">PAIEMENT</div>
+            <div style="display:flex;justify-content:space-between;font-size:11px"><span class="p-sm">Visite incluse au forfait</span><span style="font-family:var(--font-mono);font-weight:600">— 0 XOF</span></div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn ghost">Signaler a posteriori</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-17</div><div class="name">Détail visite passée</div><div class="notes">Sans CTA fort · l'écran de référence pour le souvenir.</div></div></div>
+
+      <!-- X-18 WORKER PROFILE -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:34</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:18px">‹</span><div class="h-sm">PROFIL DE LA LAVEUSE</div></div>
+          <div style="display:flex;gap:14px;align-items:center;margin-top:6px">
+            <div class="avatar lg"></div>
+            <div>
+              <div class="h-md" style="font-size:20px">Akouvi K.</div>
+              <div class="p-sm">Tokoin · vit avec sa famille à 800 m de chez vous</div>
+            </div>
+          </div>
+          <div class="card cream" style="padding:12px;margin-top:6px">
+            <div class="h-sm" style="color:var(--primary);margin-bottom:6px">VOTRE RELATION</div>
+            <div style="display:flex;justify-content:space-between"><div><div style="font-family:var(--font-display);font-weight:500;font-style:italic;font-size:24px">8 mois</div><div class="p-sm">ensemble</div></div><div style="text-align:right"><div style="font-family:var(--font-display);font-weight:500;font-style:italic;font-size:24px;color:var(--primary)">32</div><div class="p-sm">visites</div></div></div>
+          </div>
+          <div class="card" style="padding:10px 12px">
+            <div class="h-sm" style="margin-bottom:4px">SON PARCOURS</div>
+            <div style="font-size:11px;line-height:1.55;color:var(--ink-2)">Laveuse depuis septembre 2025. 14 foyers réguliers à Lomé. Parle français et éwé.</div>
+          </div>
+          <div class="card" style="padding:10px 12px">
+            <div class="h-sm" style="margin-bottom:4px">FIABILITÉ</div>
+            <div style="font-size:11px;line-height:1.55;color:var(--ink-2)">238 visites · 0 annulation de son fait · 100% à l'heure ce mois-ci.</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn ghost">Demander un changement</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-18</div><div class="name">Profil de la laveuse</div><div class="notes">Pas d'étoiles, pas de note. Relation = stickiness.</div></div></div>
+
+    </div>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- ROW 05 — SUBSCRIPTION & PAYMENT                     -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">05 · ABONNEMENT &amp; PAIEMENT</div>
+    <h2>X-19 → X-23 · l'argent en chiffres clairs</h2>
+
+    <div class="row" style="margin-top: var(--s-7)">
+
+      <!-- X-19 SUBSCRIPTION -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:35</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
+          <div class="h-sm">VOTRE FORFAIT</div>
+          <div class="h-md">Compte bon<br>jusqu'au <em style="font-style:italic;color:var(--primary)">31 mai</em>.</div>
+          <div class="card dark" style="padding:14px">
+            <div class="p-sm" style="color:rgba(250,250,247,0.6)">forfait actif</div>
+            <div style="font-weight:600;margin-top:4px;font-size:14px">Une visite · 2 500 XOF / mois</div>
+            <div style="display:flex;justify-content:space-between;align-items:end;margin-top:14px">
+              <div class="p-sm" style="color:rgba(250,250,247,0.6)">prochain prélèvement</div>
+              <div style="font-family:var(--font-mono);font-size:11px;color:var(--surface)">1 juin · auto</div>
+            </div>
+          </div>
+          <div class="h-sm" style="margin-top:4px">PROCHAINE VISITE</div>
+          <div class="card" style="padding:10px 12px;display:flex;align-items:center;gap:10px">
+            <div class="avatar" style="width:28px;height:28px"></div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:500">Mardi 5 mai · 9 h 00</div>
+              <div class="p-sm">avec Akouvi K.</div>
+            </div>
+          </div>
+          <div class="row2">
+            <div class="btn ghost" style="font-size:11px;padding:10px">Passer à 2 visites</div>
+            <div class="btn ghost" style="font-size:11px;padding:10px">Mettre en pause</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="nav">
+            <div class="item"><div class="glyph"></div>Accueil</div>
+            <div class="item"><div class="glyph"></div>Visites</div>
+            <div class="item active"><div class="glyph"></div>Forfait</div>
+            <div class="item"><div class="glyph"></div>Profil</div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">X-19</div><div class="name">Forfait &amp; tarif</div><div class="notes">"Compte bon jusqu'au…" · ton positif.</div></div></div>
+
+      <!-- X-20 PAYMENTS HISTORY -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:36</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:18px">‹</span><div class="h-sm">HISTORIQUE PAIEMENTS</div></div>
+          <div class="h-md">8 mois<br>de prélèvements.</div>
+          <div class="card cream" style="padding:10px 12px;display:flex;justify-content:space-between">
+            <div><div class="p-sm" style="margin:0">Total payé</div><div style="font-family:var(--font-display);font-weight:500;font-size:22px">20 000 <span style="font-size:11px;color:var(--ink-3);font-weight:400">XOF</span></div></div>
+            <div style="text-align:right"><div class="p-sm" style="margin:0">8 prélèvements</div><div style="font-family:var(--font-display);font-weight:500;font-size:22px">100% ✓</div></div>
+          </div>
+          <div class="h-sm" style="margin-top:4px">DÉTAIL</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)"><div><div style="font-size:12px;font-weight:500">1 mai 2026</div><div class="p-sm">TMoney · MM-78423190</div></div><div style="font-family:var(--font-mono);font-size:13px;font-weight:600">2 500 XOF</div></div>
+            <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)"><div><div style="font-size:12px;font-weight:500">1 avril 2026</div><div class="p-sm">TMoney · MM-78421042</div></div><div style="font-family:var(--font-mono);font-size:13px;font-weight:600">2 500 XOF</div></div>
+            <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)"><div><div style="font-size:12px;font-weight:500">1 mars 2026</div><div class="p-sm">TMoney · MM-78420993</div></div><div style="font-family:var(--font-mono);font-size:13px;font-weight:600">2 500 XOF</div></div>
+            <div style="display:flex;justify-content:space-between;padding:10px 0"><div><div style="font-size:12px;font-weight:500">1 février 2026</div><div class="p-sm">TMoney · MM-78420122</div></div><div style="font-family:var(--font-mono);font-size:13px;font-weight:600">2 500 XOF</div></div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn ghost">Télécharger les reçus</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-20</div><div class="name">Historique paiements</div><div class="notes">Reçus PDF téléchargeables · format légal Togo.</div></div></div>
+
+      <!-- X-21 PAYMENT METHOD -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:37</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:18px">‹</span><div class="h-sm">MOYEN DE PAIEMENT</div></div>
+          <div class="h-md">Mobile Money.</div>
+          <div class="p">L'argent quitte votre compte le 1<sup>er</sup> de chaque mois.</div>
+          <div class="card" style="padding:12px;border-color:var(--primary);border-width:2px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:18px;height:18px;border:2px solid var(--primary);border-radius:999px;display:grid;place-items:center"><div style="width:8px;height:8px;border-radius:999px;background:var(--primary)"></div></div>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:600">TMoney</div>
+                <div class="p-sm">+228 90 12 34 56 · actuel</div>
+              </div>
+              <div class="chip primary" style="font-size:9px">ACTIF</div>
+            </div>
+          </div>
+          <div class="card" style="padding:12px;display:flex;align-items:center;gap:10px"><div style="width:18px;height:18px;border:2px solid var(--ink-3);border-radius:999px"></div><div style="flex:1"><div style="font-size:13px;font-weight:600">Mixx by Yas</div><div class="p-sm">+228 99 87 65 43</div></div><span class="chip" style="font-size:9px">DISPO</span></div>
+          <div class="card" style="padding:12px;display:flex;align-items:center;gap:10px"><div style="width:18px;height:18px;border:2px solid var(--ink-3);border-radius:999px"></div><div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--ink-3)">+ Ajouter un Flooz</div></div></div>
+          <div style="flex:1"></div>
+          <div class="btn full">Enregistrer</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-21</div><div class="name">Modifier méthode MM</div><div class="notes">Modale full-screen · 3 fournisseurs · pas de carte.</div></div></div>
+
+      <!-- X-22 CANCEL -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:38</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:18px">‹</span><div class="h-sm">METTRE EN PAUSE</div></div>
+          <div class="h-md">Vous êtes sûre ?</div>
+          <div class="p">Akouvi ne reviendra plus tant que la pause est active. Le prélèvement de 2 500 XOF s'arrête au prochain mois.</div>
+          <div class="card warn" style="padding:10px 12px">
+            <div class="h-sm" style="color:var(--accent);margin-bottom:4px">CE QUI VA ARRIVER</div>
+            <ul style="margin:0;padding-left:14px;font-size:11px;line-height:1.6">
+              <li>Visite de mardi 5 mai annulée · vous gardez le crédit</li>
+              <li>Pas de prélèvement le 1<sup>er</sup> juin</li>
+              <li>Vous pouvez reprendre à tout moment</li>
+            </ul>
+          </div>
+          <div class="card cream" style="padding:10px 12px">
+            <div class="h-sm" style="color:var(--primary);margin-bottom:4px">SI C'EST UNE QUESTION DE PRIX</div>
+            <div style="font-size:11px;line-height:1.5">Le forfait à 2 visites permet d'économiser 500 XOF.</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn ghost full">Garder mon forfait</div>
+          <div class="btn full" style="background:var(--danger)">Mettre en pause</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-22</div><div class="name">Mettre en pause</div><div class="notes">Friction délibérée · explique l'impact relationnel.</div></div></div>
+
+      <!-- X-23 OVERDUE BANNER -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>9:41</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="h-sm">BONJOUR YAWA</div>
+            <div class="avatar" style="width:28px;height:28px"></div>
+          </div>
+          <div class="card danger" style="padding:12px">
+            <div class="h-sm" style="color:var(--danger);margin-bottom:4px">PAIEMENT NON ABOUTI</div>
+            <div style="font-size:13px;font-weight:600">Solde TMoney insuffisant.</div>
+            <div class="p-sm" style="margin-top:4px">On a essayé deux fois. Visite de mardi en pause jusqu'à régularisation.</div>
+            <div class="row2" style="margin-top:8px">
+              <div class="btn alt" style="border-color:var(--danger);color:var(--danger);font-size:11px;padding:8px">Détails</div>
+              <div class="btn primary" style="font-size:11px;padding:8px">Recharger</div>
+            </div>
+          </div>
+          <div style="margin-top:6px;opacity:0.5">
+            <div class="h-sm">PROCHAINE VISITE</div>
+            <div style="font-family:var(--font-display);font-weight:500;font-size:32px;letter-spacing:-0.04em;line-height:1;margin-top:4px"><em style="font-style:italic">Mardi</em></div>
+            <div class="p-sm" style="margin-top:4px">en attente de paiement</div>
+          </div>
+          <div class="nav">
+            <div class="item active"><div class="glyph"></div>Accueil</div>
+            <div class="item"><div class="glyph"></div>Visites</div>
+            <div class="item"><div class="glyph"></div>Forfait</div>
+            <div class="item"><div class="glyph"></div>Profil</div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">X-23</div><div class="name">Bandeau échec paiement</div><div class="notes">Hub dégradé · prochaine visite grisée jusqu'à régulariser.</div></div></div>
+
+    </div>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- ROW 06 — PROFILE & PRIVACY                          -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">06 · PROFIL &amp; VIE PRIVÉE</div>
+    <h2>X-24 → X-28 · données et permissions</h2>
+
+    <div class="row" style="margin-top: var(--s-7)">
+
+      <!-- X-24 PROFILE -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:40</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
+          <div class="h-sm">PROFIL</div>
+          <div style="display:flex;gap:14px;align-items:center;margin-top:6px">
+            <div class="avatar lg"></div>
+            <div>
+              <div class="h-md" style="font-size:20px">Yawa Mensah</div>
+              <div class="p-sm">+228 90 12 34 56</div>
+              <div class="p-sm">Abonnée depuis sept. 2025</div>
+            </div>
+          </div>
+          <div style="margin-top:8px;display:flex;flex-direction:column;gap:1px">
+            <div style="padding:14px 12px;background:var(--surface);border:1px solid var(--line);border-bottom:none;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500">Adresse</div><div class="p-sm">Tokoin Casablanca</div></div><span style="color:var(--ink-3);font-size:18px">›</span></div>
+            <div style="padding:14px 12px;background:var(--surface);border:1px solid var(--line);border-top:none;border-bottom:none;display:flex;justify-content:space-between;align-items:center"><div style="font-size:13px;font-weight:500">Notifications</div><span style="color:var(--ink-3);font-size:18px">›</span></div>
+            <div style="padding:14px 12px;background:var(--surface);border:1px solid var(--line);border-top:none;border-bottom:none;display:flex;justify-content:space-between;align-items:center"><div style="font-size:13px;font-weight:500">Langue</div><div style="font-family:var(--font-mono);font-size:11px;color:var(--ink-3)">FR</div></div>
+            <div style="padding:14px 12px;background:var(--surface);border:1px solid var(--line);border-top:none;border-radius:0 0 14px 14px;display:flex;justify-content:space-between;align-items:center"><div style="font-size:13px;font-weight:500">Vie privée &amp; données</div><span style="color:var(--ink-3);font-size:18px">›</span></div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn ghost full" style="font-size:12px">Aide &amp; support</div>
+          <div class="btn full" style="background:transparent;color:var(--danger);border:1px solid var(--danger)">Se déconnecter</div>
+          <div class="nav">
+            <div class="item"><div class="glyph"></div>Accueil</div>
+            <div class="item"><div class="glyph"></div>Visites</div>
+            <div class="item"><div class="glyph"></div>Forfait</div>
+            <div class="item active"><div class="glyph"></div>Profil</div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">X-24</div><div class="name">Profil &amp; paramètres</div><div class="notes">Liste groupée style iOS · pas de toggles ici.</div></div></div>
+
+      <!-- X-26 NOTIFICATIONS -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:41</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:18px">‹</span><div class="h-sm">NOTIFICATIONS</div></div>
+          <div class="h-md">Que voulez-vous<br>recevoir ?</div>
+          <div class="p-sm">Vous pouvez tout désactiver. Le bureau vous appellera s'il y a urgence.</div>
+          <div style="display:flex;flex-direction:column;margin-top:6px">
+            <div style="padding:12px 0;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px">
+              <div style="flex:1"><div style="font-size:13px;font-weight:500">SMS · rappel J-1 et J</div><div class="p-sm">Mardi 9 h, mardi 9 h dans 21 h</div></div>
+              <div style="width:44px;height:26px;background:var(--primary);border-radius:999px;position:relative"><div style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:999px;background:white"></div></div>
+            </div>
+            <div style="padding:12px 0;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px">
+              <div style="flex:1"><div style="font-size:13px;font-weight:500">Push · en route</div><div class="p-sm">« Akouvi est en route » · « Akouvi est devant chez vous »</div></div>
+              <div style="width:44px;height:26px;background:var(--primary);border-radius:999px;position:relative"><div style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:999px;background:white"></div></div>
+            </div>
+            <div style="padding:12px 0;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px">
+              <div style="flex:1"><div style="font-size:13px;font-weight:500">Push · reveal photos</div><div class="p-sm">« Voilà ce que ça donne » · 1×</div></div>
+              <div style="width:44px;height:26px;background:var(--primary);border-radius:999px;position:relative"><div style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:999px;background:white"></div></div>
+            </div>
+            <div style="padding:12px 0;display:flex;align-items:center;gap:14px">
+              <div style="flex:1"><div style="font-size:13px;font-weight:500">Email mensuel · récap</div><div class="p-sm">Reçu et statistiques du mois</div></div>
+              <div style="width:44px;height:26px;background:var(--bg-deep);border-radius:999px;position:relative"><div style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:999px;background:white;box-shadow:0 1px 3px rgba(0,0,0,0.2)"></div></div>
+            </div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="p-sm" style="text-align:center">Aucune notification marketing — promis.</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-26</div><div class="name">Préférences notifications</div><div class="notes">Switch par canal · pas de marketing.</div></div></div>
+
+      <!-- X-27 PRIVACY -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:42</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:18px">‹</span><div class="h-sm">VIE PRIVÉE &amp; DONNÉES</div></div>
+          <div class="h-md">Ce qu'on garde<br>sur vous.</div>
+          <div class="card" style="padding:10px 12px">
+            <div class="h-sm" style="margin-bottom:4px">DONNÉES DE COMPTE</div>
+            <div style="font-size:11px;line-height:1.55">Nom · numéro · adresse · numéro Mobile Money. Conservés tant que votre compte est actif.</div>
+          </div>
+          <div class="card" style="padding:10px 12px">
+            <div class="h-sm" style="margin-bottom:4px">PHOTOS DE VISITE</div>
+            <div style="font-size:11px;line-height:1.55">Avant / après — chiffrées, accessibles à vous et au bureau. Supprimées au bout de 12 mois.</div>
+          </div>
+          <div class="card" style="padding:10px 12px">
+            <div class="h-sm" style="margin-bottom:4px">LOCALISATION</div>
+            <div style="font-size:11px;line-height:1.55">Utilisée uniquement pour le suivi en route (X-12). Bornée à 30 min avant arrivée. Jamais conservée.</div>
+          </div>
+          <div class="card" style="padding:10px 12px">
+            <div class="h-sm" style="margin-bottom:4px">VOS DROITS</div>
+            <div style="font-size:11px;line-height:1.55">Demander l'export, la rectification ou la suppression de vos données à tout moment.</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn ghost">Télécharger mes données</div>
+          <div class="btn full" style="background:transparent;color:var(--danger);border:1px solid var(--danger)">Supprimer mon compte</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-27</div><div class="name">Vie privée &amp; données</div><div class="notes">Conformité RGPD-like · transparence totale.</div></div></div>
+
+      <!-- X-28 DELETE -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:43</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:18px">‹</span><div class="h-sm">SUPPRIMER LE COMPTE</div></div>
+          <div class="h-md">C'est définitif.</div>
+          <div class="p">Toutes vos données seront effacées. Vous perdrez l'historique de 32 visites avec Akouvi.</div>
+          <div class="card warn" style="padding:10px 12px">
+            <div class="h-sm" style="color:var(--accent);margin-bottom:4px">CE QUI ARRIVERA</div>
+            <ul style="margin:0;padding-left:14px;font-size:11px;line-height:1.7">
+              <li>Visite de mardi 5 mai annulée · pas de remboursement</li>
+              <li>Toutes vos photos supprimées définitivement</li>
+              <li>Akouvi vous est réassignée si vous revenez</li>
+              <li>Délai légal de conservation : 30 jours côté bureau (factures)</li>
+            </ul>
+          </div>
+          <div style="margin-top:6px">
+            <div class="h-sm" style="margin-bottom:6px">TAPEZ « SUPPRIMER » POUR CONFIRMER</div>
+            <div class="input" style="font-family:var(--font-mono);font-size:13px;color:var(--ink-3)">_</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn ghost full">Annuler</div>
+          <div class="btn full" style="background:var(--danger);color:white;opacity:0.5">Supprimer définitivement</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-28</div><div class="name">Supprimer le compte</div><div class="notes">Confirmation typographique · CTA disabled tant que pas tapé.</div></div></div>
+
+    </div>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- ROW 07 — SUPPORT                                     -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">07 · SUPPORT</div>
+    <h2>X-29 → X-32 · contact, FAQ, tickets</h2>
+
+    <div class="row" style="margin-top: var(--s-7)">
+
+      <!-- X-29 HELP CENTER -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:50</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
+          <div class="h-sm">AIDE</div>
+          <div class="h-md">On vous écoute.</div>
+          <div class="card cream" style="padding:12px;display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;border-radius:999px;background:var(--primary);color:white;display:grid;place-items:center;font-size:14px">📞</div>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:600">Appeler le bureau</div>
+              <div class="p-sm">90 00 00 00 · lun-sam 7h-19h</div>
+            </div>
+            <span style="color:var(--primary);font-size:18px">›</span>
+          </div>
+          <div class="h-sm" style="margin-top:6px">QUESTIONS FRÉQUENTES</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="card" style="padding:11px 12px;display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:500">Comment annuler une visite ?</span><span style="color:var(--primary)">+</span></div>
+            <div class="card" style="padding:11px 12px;display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:500">Que faire si la laveuse ne vient pas ?</span><span style="color:var(--primary)">+</span></div>
+            <div class="card" style="padding:11px 12px;display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:500">Comment changer de Mobile Money ?</span><span style="color:var(--primary)">+</span></div>
+            <div class="card" style="padding:11px 12px;display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:500">Le linge a été abîmé. Que faire ?</span><span style="color:var(--primary)">+</span></div>
+            <div class="card" style="padding:11px 12px;display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:500">Puis-je changer de laveuse ?</span><span style="color:var(--primary)">+</span></div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn ghost">Mes tickets · 0 ouvert</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-29</div><div class="name">Centre d'aide</div><div class="notes">Téléphone d'abord · 5 FAQ · accordéon collapse.</div></div></div>
+
+      <!-- X-30 CONTACT -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:51</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:18px">‹</span><div class="h-sm">CONTACTER LE BUREAU</div></div>
+          <div class="h-md">De quoi voulez-vous<br>parler ?</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px;border-color:var(--primary);border-width:2px"><div style="width:14px;height:14px;border:2px solid var(--primary);border-radius:999px;display:grid;place-items:center"><div style="width:6px;height:6px;border-radius:999px;background:var(--primary)"></div></div><div style="font-size:12px;font-weight:500">Une visite · annulation, report, problème</div></div>
+            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-3);border-radius:999px"></div><div style="font-size:12px">Mon abonnement · pause, changement, fin</div></div>
+            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-3);border-radius:999px"></div><div style="font-size:12px">Paiement Mobile Money</div></div>
+            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-3);border-radius:999px"></div><div style="font-size:12px">Ma laveuse · changement, retour, autre</div></div>
+            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-3);border-radius:999px"></div><div style="font-size:12px">Autre</div></div>
+          </div>
+          <div style="margin-top:6px">
+            <div class="h-sm" style="margin-bottom:4px">VOTRE MESSAGE</div>
+            <div class="input" style="height:80px;color:var(--ink-3);font-size:12px">Décrivez en quelques mots…</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn primary full">Envoyer au bureau</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-30</div><div class="name">Contacter le bureau</div><div class="notes">Catégorisation = SLA opérateur · réponse &lt; 4 h.</div></div></div>
+
+      <!-- X-31 MY TICKETS -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:52</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:18px">‹</span><div class="h-sm">MES TICKETS</div></div>
+          <div class="h-md">Vos demandes.</div>
+          <div class="card" style="padding:12px;border-color:var(--primary);border-width:2px">
+            <div style="display:flex;justify-content:space-between"><div class="h-sm" style="color:var(--primary)">#0421 · OUVERT</div><div class="p-sm">il y a 12 min</div></div>
+            <div style="font-size:13px;font-weight:600;margin-top:4px">Linge endommagé — pull rouge décoloré</div>
+            <div class="p-sm" style="margin-top:2px">Le bureau examine la visite du 28 avril.</div>
+            <div class="p-sm" style="margin-top:6px;color:var(--accent)">⚙ Ama M. enquête · réponse sous 4 h</div>
+          </div>
+          <div class="card" style="padding:12px;opacity:0.8">
+            <div style="display:flex;justify-content:space-between"><div class="h-sm" style="color:var(--success)">#0388 · RÉSOLU</div><div class="p-sm">il y a 12 jours</div></div>
+            <div style="font-size:13px;font-weight:600;margin-top:4px">Changer de Mobile Money</div>
+            <div class="p-sm" style="margin-top:2px">Mixx by Yas activé. Premier prélèvement le 1er mai.</div>
+          </div>
+          <div class="card" style="padding:12px;opacity:0.8">
+            <div style="display:flex;justify-content:space-between"><div class="h-sm" style="color:var(--success)">#0312 · RÉSOLU</div><div class="p-sm">il y a 21 jours</div></div>
+            <div style="font-size:13px;font-weight:600;margin-top:4px">Reporter visite — voyage</div>
+            <div class="p-sm" style="margin-top:2px">Visite du 14 reportée au 21. Crédit appliqué.</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn full">Ouvrir une demande</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-31</div><div class="name">Mes tickets</div><div class="notes">Ticket actif en haut · résolus grisés en bas.</div></div></div>
+
+      <!-- X-32 TICKET DETAIL -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>14:53</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body tight">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:18px">‹</span><div class="h-sm">TICKET #0421</div></div>
+          <div class="chip primary" style="background:var(--primary-soft);color:var(--primary);padding:4px 10px">EN COURS</div>
+          <div class="h-md" style="font-size:18px;margin-top:4px">Linge endommagé —<br>pull rouge décoloré</div>
+          <div class="card" style="padding:10px 12px;background:var(--bg-deep);border-color:transparent">
+            <div class="h-sm" style="margin-bottom:4px">VOUS · IL Y A 12 MIN</div>
+            <div style="font-size:12px;line-height:1.5">Mon pull rouge a déteint sur deux chemises blanches. La laveuse n'a pas séparé les couleurs.</div>
+            <div class="row2" style="margin-top:6px">
+              <div class="photo" style="aspect-ratio:1;background:linear-gradient(135deg,#C03020,#7A1F18);color:rgba(255,255,255,0.6);border:none;height:auto">PULL · 1</div>
+              <div class="photo" style="aspect-ratio:1;background:linear-gradient(135deg,#FFE5DC,#F5C8B8);color:rgba(0,0,0,0.4);border:none;height:auto">CHEMISES · 2</div>
+            </div>
+          </div>
+          <div class="card cream" style="padding:10px 12px">
+            <div class="h-sm" style="color:var(--primary);margin-bottom:4px">BUREAU · IL Y A 4 MIN</div>
+            <div style="font-size:12px;line-height:1.5">Bonjour Yawa, on examine les photos avec Akouvi. Réponse sous 4 h. — Ama</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="input" style="font-size:12px;color:var(--ink-3)">Répondre…</div>
+          <div class="btn full" style="background:var(--ink)">Envoyer</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-32</div><div class="name">Détail ticket</div><div class="notes">Conversation linéaire · pas de chat instantané.</div></div></div>
+
+    </div>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- ROW 08 — EDGE CASES                                  -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">08 · CAS LIMITES</div>
+    <h2>X-33 → X-35 · hors-ligne, maintenance, mise à jour</h2>
+
+    <div class="row" style="margin-top: var(--s-7)">
+
+      <!-- X-33 OFFLINE -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>11:15</span><span class="right" style="color:var(--accent)">⚡ HORS LIGNE</span></div>
+        <div class="body tight">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="h-sm">BONJOUR YAWA</div>
+            <div class="avatar" style="width:28px;height:28px"></div>
+          </div>
+          <div class="ribbon" style="margin-top:4px"><span class="dot"></span> HORS LIGNE · DERNIÈRE MAJ 9 H 38</div>
+          <div style="margin-top:6px">
+            <div class="h-sm">PROCHAINE VISITE</div>
+            <div style="font-family:var(--font-display);font-weight:500;font-size:42px;letter-spacing:-0.04em;line-height:1;color:var(--ink);margin-top:6px"><em style="font-style:italic">Mardi</em></div>
+            <div style="font-family:var(--font-display);font-weight:500;font-size:42px;letter-spacing:-0.04em;line-height:1;color:var(--primary);font-style:italic">9 h 00</div>
+          </div>
+          <div class="card" style="margin-top:6px;display:flex;gap:10px;align-items:center;padding:12px;opacity:0.7">
+            <div class="avatar"></div>
+            <div style="flex:1">
+              <div style="font-weight:600;font-size:13px">Akouvi K.</div>
+              <div class="p-sm">infos cachées localement</div>
+            </div>
+          </div>
+          <div class="p-sm" style="text-align:center;margin-top:auto">On vérifie le réseau toutes les 30 secondes.</div>
+          <div class="btn ghost full">Réessayer</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-33</div><div class="name">Hors-ligne · cache</div><div class="notes">Cache 7 jours · jamais d'écran blanc.</div></div></div>
+
+      <!-- X-34 MAINTENANCE -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>9:41</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body" style="text-align:center;justify-content:center;align-items:center">
+          <div style="flex:1"></div>
+          <div style="width:48px;height:48px;border-radius:999px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;margin-bottom:18px;font-size:22px">⚙</div>
+          <div class="h-md" style="text-align:center">Maintenance<br>en cours.</div>
+          <div class="p" style="margin-top:8px;max-width:90%">On améliore quelque chose pour vous. L'app revient dans 8 minutes environ.</div>
+          <div class="card" style="margin-top:18px;padding:10px 12px;text-align:left;width:100%">
+            <div class="h-sm" style="margin-bottom:4px">VOTRE PROCHAINE VISITE</div>
+            <div style="font-size:13px;font-weight:500">Mardi 5 mai · 9 h 00 · Akouvi</div>
+            <div class="p-sm" style="margin-top:4px">Maintenue · pas d'impact.</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="p-sm" style="text-align:center">En cas d'urgence, appelez le bureau au 90 00 00 00.</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-34</div><div class="name">Maintenance prévue</div><div class="notes">ETA précis · rassure sur la visite.</div></div></div>
+
+      <!-- X-35 UPGRADE -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>9:41</span><span class="right">●●●● 5G ▮</span></div>
+        <div class="body" style="text-align:center;justify-content:center;align-items:center">
+          <div style="flex:1"></div>
+          <div style="width:48px;height:48px;border-radius:999px;background:var(--primary);color:white;display:grid;place-items:center;margin-bottom:18px;font-family:var(--font-display);font-style:italic;font-weight:600;font-size:24px">w</div>
+          <div class="h-md" style="text-align:center"><em style="font-style:italic;color:var(--primary)">Une nouvelle version</em><br>est disponible.</div>
+          <div class="p" style="margin-top:8px;max-width:90%">Mises à jour de sécurité importantes. La version actuelle ne fonctionne plus à partir d'aujourd'hui.</div>
+          <div class="card cream" style="margin-top:18px;padding:10px 12px;text-align:left;width:100%">
+            <div class="h-sm" style="color:var(--primary);margin-bottom:4px">QUOI DE NEUF</div>
+            <ul style="margin:0;padding-left:14px;font-size:11px;line-height:1.7;color:var(--ink-2)">
+              <li>Reveal photos plus rapide</li>
+              <li>Meilleur suivi en route</li>
+              <li>Correctifs de sécurité</li>
+            </ul>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn primary full lg">Mettre à jour</div>
+        </div>
+      </div></div>
+      <div><div class="id">X-35</div><div class="name">Mise à jour requise</div><div class="notes">Bloquant si min-version dépassée.</div></div></div>
+
+    </div>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- COVERAGE                                             -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">09 · COUVERTURE COMPLÈTE</div>
+    <h2>35 surfaces · 100 % cartographiées</h2>
+    <p class="lede" style="font-size: var(--text-base); margin-top: var(--s-3); margin-bottom: var(--s-6)">Liste de référence pour ingénierie. Chaque ID est implémenté ou explicitement marqué hors-périmètre v1.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--s-3);font-family:var(--font-mono);font-size:var(--text-xs);color:var(--ink-2)">
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-01</b> · Splash &amp; langue</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-02</b> · Téléphone</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-03</b> · OTP</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-04</b> · Adresse</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-05</b> · Choix de plan</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-06</b> · Paiement MM</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-07</b> · Récap &amp; consentement</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-08</b> · Bienvenue</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-09</b> · Tour guidé première session</span><span style="color:var(--ink-3)">wireframe</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-10</b> · Hub · prochaine visite</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-11</b> · Détail visite</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-12</b> · Suivi en route</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-13</b> · Visite en cours</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-14</b> · Reveal photos</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-15</b> · Feedback / signaler</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-16</b> · Historique visites</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-17</b> · Détail visite passée</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-18</b> · Profil de la laveuse</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-19</b> · Forfait &amp; tarif</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-20</b> · Historique paiements</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-21</b> · Modifier méthode MM</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-22</b> · Mettre en pause</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-23</b> · Bandeau échec paiement</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-24</b> · Profil &amp; paramètres</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-25</b> · Modifier adresse</span><span style="color:var(--ink-3)">wireframe</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-26</b> · Notifications</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-27</b> · Vie privée &amp; données</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-28</b> · Supprimer le compte</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-29</b> · Centre d'aide</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-30</b> · Contacter le bureau</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-31</b> · Mes tickets</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-32</b> · Détail ticket</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-33</b> · Hors-ligne</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-34</b> · Maintenance prévue</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">X-35</b> · Mise à jour requise</span><span style="color:var(--success)">livré</span></div>
+    </div>
+  </section>
+
+  <p style="margin-top: var(--s-10); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.12em;">— 33 hi-fi sur 35 surfaces · iOS 17 · cible iPhone SE → 15 Pro · Capacitor wrapper · v2.0 · 2026</p>
 </div>
 </body></html>
