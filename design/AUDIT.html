@@ -1,0 +1,1059 @@
+<!doctype html>
+<html lang="fr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Washed — Audit de couverture pré-implémentation</title>
+<link rel="stylesheet" href="shared/tokens.css">
+<style>
+  body { background: var(--bg); color: var(--ink); }
+  .page { max-width: 1280px; margin: 0 auto; padding: var(--s-9) var(--s-6) var(--s-11); }
+  .crumb { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3); margin-bottom: var(--s-6); }
+  .crumb a { color: var(--ink-3); text-decoration: none; }
+  h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(40px, 6vw, 64px); letter-spacing: -0.02em; line-height: 1.05; margin: 0 0 var(--s-5); }
+  h1 em { font-style: italic; color: var(--primary); }
+  .lede { font-size: var(--text-lg); color: var(--ink-2); max-width: 64ch; line-height: 1.55; margin: 0 0 var(--s-9); }
+  .section { margin-top: var(--s-9); padding-top: var(--s-6); border-top: 1px solid var(--line); }
+  .section h2 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-2xl); letter-spacing: -0.01em; margin: 0 0 var(--s-3); }
+  .section h3 { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: var(--text-xl); margin: var(--s-7) 0 var(--s-3); color: var(--primary); }
+  .num { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); letter-spacing: 0.12em; margin-bottom: var(--s-2); }
+  .sub { color: var(--ink-3); margin: 0 0 var(--s-5); max-width: 70ch; line-height: 1.55; }
+  code { font-family: var(--font-mono); font-size: 12px; background: var(--bg-deep); padding: 1px 5px; border-radius: 3px; color: var(--ink-2); }
+
+  .tldr { background: var(--ink); color: var(--surface); padding: var(--s-7) var(--s-7); border-radius: var(--r-md); margin-bottom: var(--s-7); }
+  .tldr h3 { font-family: var(--font-display); font-weight: 500; font-style: italic; font-size: var(--text-xl); margin: 0 0 var(--s-4); color: var(--surface); }
+  .tldr-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-5); margin-top: var(--s-4); }
+  .tldr-cell { padding: var(--s-4); background: rgba(255,255,255,0.06); border-radius: var(--r-sm); }
+  .tldr-cell .l { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.5); }
+  .tldr-cell .n { font-family: var(--font-display); font-style: italic; font-size: 36px; line-height: 1; margin-top: 4px; color: var(--primary-tint); letter-spacing: -0.02em; }
+  .tldr-cell .d { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 4px; line-height: 1.4; }
+
+  .bar {
+    height: 28px; border-radius: var(--r-sm); overflow: hidden; display: flex;
+    background: rgba(255,255,255,0.08); margin-top: 6px;
+  }
+  .bar .filled { background: var(--primary); }
+  .bar .partial { background: var(--accent); }
+  .bar .empty { background: transparent; }
+  .bar-row { display: grid; grid-template-columns: 100px 1fr 80px; gap: var(--s-4); align-items: center; padding: var(--s-3) 0; }
+  .bar-row .l { font-family: var(--font-mono); font-size: 11px; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 0.05em; }
+  .bar-row .n { font-family: var(--font-mono); font-size: 12px; color: var(--surface); text-align: right; }
+
+  .annot { background: var(--bg-deep); border-left: 3px solid var(--primary); padding: var(--s-4) var(--s-5); border-radius: 0 var(--r-sm) var(--r-sm) 0; margin: var(--s-5) 0; font-size: var(--text-sm); color: var(--ink-2); line-height: 1.55; }
+  .annot b { color: var(--primary); font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; display: block; margin-bottom: 4px; }
+
+  /* Severity legend */
+  .legend { display: flex; gap: var(--s-5); flex-wrap: wrap; padding: var(--s-4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); margin-top: var(--s-4); }
+  .legend .li { display: flex; gap: 8px; align-items: center; font-size: 12px; }
+  .legend .pip { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; }
+  .legend .pip.blocker { background: var(--danger); }
+  .legend .pip.important { background: var(--accent); }
+  .legend .pip.defer { background: var(--ink-4); }
+
+  /* Gap table */
+  .gaps { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: var(--s-4); }
+  .gaps thead th { text-align: left; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-3); font-weight: 500; padding: 10px 12px; border-bottom: 2px solid var(--line); background: var(--bg); }
+  .gaps tbody td { padding: 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .gaps tbody tr:hover { background: var(--surface-2); }
+  .gaps .id { font-family: var(--font-mono); font-size: 11px; color: var(--primary); white-space: nowrap; font-weight: 600; }
+  .gaps .what { font-weight: 500; color: var(--ink); }
+  .gaps .why { font-size: 12px; color: var(--ink-2); margin-top: 4px; line-height: 1.55; }
+  .gaps .reco { font-size: 12px; color: var(--ink-2); }
+  .gaps .reco code { background: var(--primary-soft); color: var(--primary); }
+  .sev {
+    font-family: var(--font-mono); font-size: 9px; text-transform: uppercase;
+    letter-spacing: 0.1em; padding: 3px 8px; border-radius: 4px;
+    display: inline-block; white-space: nowrap; font-weight: 600;
+  }
+  .sev.blocker { background: var(--danger-soft); color: var(--danger); }
+  .sev.important { background: var(--accent-soft); color: var(--accent); }
+  .sev.defer { background: var(--bg-deep); color: var(--ink-3); }
+
+  /* Connection diagram */
+  .conn-block { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-5); margin-bottom: var(--s-3); }
+  .conn-block h4 { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 16px; margin: 0 0 var(--s-3); color: var(--ink); }
+  .conn-row { display: grid; grid-template-columns: 1fr auto 1fr 100px; gap: var(--s-3); align-items: center; padding: var(--s-2) 0; border-bottom: 1px solid var(--line); font-size: 12px; }
+  .conn-row:last-child { border-bottom: none; }
+  .conn-row .from { font-family: var(--font-mono); color: var(--ink); font-size: 11px; }
+  .conn-row .from .ctx { color: var(--ink-3); font-size: 10px; display: block; margin-top: 1px; }
+  .conn-row .to { font-family: var(--font-mono); font-size: 11px; }
+  .conn-row .to.missing { color: var(--danger); }
+  .conn-row .to.exists { color: var(--success); }
+  .conn-row .to .ctx { color: var(--ink-3); font-size: 10px; display: block; margin-top: 1px; }
+  .conn-row .arrow { color: var(--primary); font-family: var(--font-mono); font-size: 14px; }
+
+  /* Decision card */
+  .decision {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--r-md); padding: var(--s-5);
+    border-left: 3px solid var(--accent);
+    margin-bottom: var(--s-3);
+  }
+  .decision h4 { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 16px; margin: 0 0 var(--s-2); color: var(--accent); }
+  .decision .q { font-size: 13px; color: var(--ink); line-height: 1.55; margin-bottom: var(--s-3); }
+  .decision .opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--s-3); }
+  .decision .opt { padding: var(--s-3) var(--s-4); background: var(--bg-deep); border-radius: var(--r-sm); }
+  .decision .opt .h { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--primary); margin-bottom: 4px; }
+  .decision .opt .b { font-size: 12px; color: var(--ink-2); line-height: 1.5; }
+
+  /* Stat strip */
+  .strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 0; border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden; background: var(--surface); margin-top: var(--s-4); }
+  .strip .cell { padding: var(--s-4) var(--s-5); border-right: 1px solid var(--line); }
+  .strip .cell:last-child { border-right: none; }
+  .strip .cell .l { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.1em; }
+  .strip .cell .n { font-family: var(--font-display); font-weight: 500; font-style: italic; font-size: 32px; line-height: 1; margin-top: 6px; letter-spacing: -0.02em; color: var(--primary); }
+  .strip .cell .d { font-size: 11px; color: var(--ink-3); margin-top: 4px; }
+</style></head>
+<body data-theme="subscriber">
+<div class="page">
+  <div class="crumb"><a href="index.html">← Index</a> · Audit de couverture pré-implémentation</div>
+
+  <h1>Audit de <em>couverture</em>.<br>Avant tout code.</h1>
+  <p class="lede">Pré-implémentation — vérification systématique que toutes les surfaces référencées par l'IA sont conçues, que tous les boutons mènent à un écran existant, et que les transitions inter-applications sont explicitement documentées. L'objectif est zéro devinette par les ingénieurs en aval.</p>
+
+  <!-- ===================================================== -->
+  <!-- TL;DR EXECUTIVE                                        -->
+  <!-- ===================================================== -->
+  <div class="tldr">
+    <h3>Résumé exécutif</h3>
+    <p style="font-size: 13px; color: rgba(255,255,255,0.85); line-height: 1.55; max-width: 64ch; margin: 0 0 var(--s-4)">Trois apps. <b style="color:var(--primary-tint)">61 surfaces</b> hi-fi livrées sur <b style="color:var(--primary-tint)">81</b>. Subscriber et Worker quasi-complets ; <b style="color:var(--primary-tint)">l'opérateur a 17 surfaces non-livrées</b>, dont plusieurs critiques (profils 360°, file laveuses, audit). Pas de blocker pour démarrer le subscriber + worker côté code, mais l'opérateur nécessite ~5 décisions produit avant qu'on continue.</p>
+
+    <div class="tldr-grid">
+      <div class="tldr-cell">
+        <div class="l">SUBSCRIBER · X</div>
+        <div class="n">33 / 35</div>
+        <div class="d">94% · 2 manquants (X-09, X-25)</div>
+      </div>
+      <div class="tldr-cell">
+        <div class="l">WORKER · W</div>
+        <div class="n">21 / 22</div>
+        <div class="d">95% · 1 manquant (W-12) + 4 sous-modales</div>
+      </div>
+      <div class="tldr-cell">
+        <div class="l">OPERATOR · O</div>
+        <div class="n">7 / 24</div>
+        <div class="d">29% · 17 surfaces non-livrées</div>
+      </div>
+      <div class="tldr-cell">
+        <div class="l">CONNEXIONS</div>
+        <div class="n">25</div>
+        <div class="d">CTA qui pointent vers du non-existant</div>
+      </div>
+    </div>
+
+    <div style="margin-top: var(--s-7)">
+      <div class="bar-row">
+        <span class="l">Subscriber</span>
+        <div class="bar"><div class="filled" style="width:94%"></div><div class="empty" style="width:6%"></div></div>
+        <span class="n">33 / 35</span>
+      </div>
+      <div class="bar-row">
+        <span class="l">Worker</span>
+        <div class="bar"><div class="filled" style="width:95%"></div><div class="empty" style="width:5%"></div></div>
+        <span class="n">21 / 22</span>
+      </div>
+      <div class="bar-row">
+        <span class="l">Operator</span>
+        <div class="bar"><div class="filled" style="width:29%"></div><div class="empty" style="width:71%"></div></div>
+        <span class="n">7 / 24</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================== -->
+  <!-- LÉGENDE                                                -->
+  <!-- ===================================================== -->
+  <section class="section">
+    <div class="num">00 · LÉGENDE</div>
+    <h2>Trois niveaux de gravité</h2>
+    <div class="legend">
+      <div class="li"><span class="pip blocker"></span><b>Blocker</b> — un ingénieur ne peut pas livrer la fonctionnalité sans cet écran. Doit être conçu avant le code.</div>
+      <div class="li"><span class="pip important"></span><b>Important</b> — l'ingénieur livrera mais devra deviner. Risque de retravail. Concevoir avant la PR.</div>
+      <div class="li"><span class="pip defer"></span><b>Defer</b> — peut attendre v1.1 si la décision produit n'est pas prise. Dérivable d'un autre écran.</div>
+    </div>
+  </section>
+
+  <!-- ===================================================== -->
+  <!-- 01 · SUBSCRIBER GAPS                                   -->
+  <!-- ===================================================== -->
+  <section class="section">
+    <div class="num">01 · APPLICATION ABONNÉ</div>
+    <h2>Manques explicites</h2>
+    <p class="sub">Surfaces que l'IA mentionne mais qui ne sont pas hi-fi.</p>
+
+    <table class="gaps">
+      <thead><tr>
+        <th style="width:80px">ID</th>
+        <th>Écran manquant</th>
+        <th>Pourquoi c'est un manque</th>
+        <th style="width:120px">Gravité</th>
+        <th>Recommandation</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="id">X-09</td>
+          <td><div class="what">Tour guidé première session</div><div class="why">L'utilisateur arrive sur X-10 (hub) sans contexte — il ne sait pas quelle est la prochaine action, ce que sont les photos avant/après, comment trouver son ticket de support.</div></td>
+          <td class="reco">Optionnel mais recommandé. <code>X-09</code> doit superposer 3 bulles d'aide sur X-10 lors du premier lancement après inscription.</td>
+          <td><span class="sev important">IMPORTANT</span></td>
+          <td>Concevoir 3 écrans de tour superposés sur X-10. Skippable avec « Compris ».</td>
+        </tr>
+        <tr>
+          <td class="id">X-25</td>
+          <td><div class="what">Modifier l'adresse</div><div class="why">X-24 profil pointe vers X-25 mais aucune hi-fi n'existe. La modification d'adresse est non-triviale : nouvelle vérification bureau requise (ré-déclenche workflow opérateur).</div></td>
+          <td class="reco">Modale full-screen avec champ + carte + avertissement « le bureau vous rappellera ».</td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Concevoir la modale + l'état d'attente après soumission.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Modales et sous-flux référencés mais non livrés</h3>
+    <table class="gaps">
+      <thead><tr>
+        <th style="width:80px">ID</th>
+        <th>Modale</th>
+        <th>Déclencheur</th>
+        <th style="width:120px">Gravité</th>
+        <th>Recommandation</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="id">X-11.M</td>
+          <td><div class="what">Reporter cette visite</div><div class="why">Sheet remontante ouverte par tap « Reporter » sur X-11. L'IA y fait référence, mais aucune hi-fi n'existe.</div></td>
+          <td class="reco">Bouton « Reporter » de X-11.</td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Sheet : 3 dates suggérées, contact bureau, raison facultative.</td>
+        </tr>
+        <tr>
+          <td class="id">X-11.S</td>
+          <td><div class="what">Signaler un souci avant la visite</div><div class="why">Signalement <i>pré-visite</i> (laveuse en retard, urgence) — distinct de X-15.S qui est post-visite.</div></td>
+          <td class="reco">Bouton « Signaler » dans X-11 / X-12 / X-13.</td>
+          <td><span class="sev important">IMPORTANT</span></td>
+          <td>Sheet à 4 catégories : « En retard », « N'est pas venue », « Annuler maintenant », « Autre urgence ».</td>
+        </tr>
+        <tr>
+          <td class="id">X-21.M</td>
+          <td><div class="what">Ajouter un fournisseur Mobile Money</div><div class="why">X-21 liste les fournisseurs avec « + Ajouter un Flooz » mais aucune saisie pour le nouveau numéro n'est conçue.</div></td>
+          <td class="reco">Tap sur une ligne « ajouter ».</td>
+          <td><span class="sev important">IMPORTANT</span></td>
+          <td>Modale : numéro + vérification OTP du fournisseur.</td>
+        </tr>
+        <tr>
+          <td class="id">X-22.A</td>
+          <td><div class="what">Confirmation post-pause</div><div class="why">Après tap « Mettre en pause » sur X-22, quel est l'écran de confirmation ? Comment rassurer (« vous pouvez reprendre quand vous voulez ») ?</div></td>
+          <td class="reco">Submit de X-22.</td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Écran plein avec date de reprise possible + récap impact.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Connexions cassées (CTA → écran inexistant)</h3>
+    <table class="gaps">
+      <thead><tr>
+        <th style="width:120px">Origine</th>
+        <th>CTA</th>
+        <th>Destination attendue</th>
+        <th style="width:120px">Gravité</th>
+        <th>Recommandation</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="id">X-19</td>
+          <td><div class="what">« Passer à 2 visites »</div></td>
+          <td><div class="why">Aucune destination. Devrait ouvrir le flux de changement de tarif (preview du prorata, confirmation MM, message au bureau si visites supplémentaires à planifier).</div></td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Concevoir <code>X-19.U</code> (upgrade) : preview prorata · confirmer · contact bureau auto-créé.</td>
+        </tr>
+        <tr>
+          <td class="id">X-18</td>
+          <td><div class="what">« Demander un changement »</div></td>
+          <td><div class="why">Pas d'écran. Crée un ticket bureau pour changer de laveuse. Implication : que dire à la cliente sur le délai ? Qui voit ça côté ops ?</div></td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Concevoir <code>X-18.C</code> · ticket pré-rempli · délai annoncé.</td>
+        </tr>
+        <tr>
+          <td class="id">X-22 (post-pause)</td>
+          <td><div class="what">Reprendre l'abonnement</div></td>
+          <td><div class="why">Aucun écran ne montre la <i>reprise</i> d'un compte en pause. Quand la cliente revient, où voit-elle « Reprendre » ? Sur X-19 ? X-23 banner ?</div></td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Variant de X-19 « état pausé » avec CTA primary « Reprendre » + redémarrage MM.</td>
+        </tr>
+        <tr>
+          <td class="id">X-29</td>
+          <td><div class="what">Tap sur une FAQ</div></td>
+          <td><div class="why">Comportement non précisé. Accordéon expand sur place ? Ou page détail ? Pas de hi-fi pour les deux options.</div></td>
+          <td><span class="sev important">IMPORTANT</span></td>
+          <td>Décision produit : accordion (préféré, plus simple) vs sub-page. Si accordion, ajouter un état « ouvert » à X-29.</td>
+        </tr>
+        <tr>
+          <td class="id">X-30 (submit)</td>
+          <td><div class="what">Après envoi du contact</div></td>
+          <td><div class="why">L'utilisateur tape « Envoyer au bureau » et… ? Retour sur X-31 avec nouveau ticket ? Toast confirmation ? Modale « Reçu, on vous rappelle » ?</div></td>
+          <td><span class="sev important">IMPORTANT</span></td>
+          <td>Toast vert + redirection automatique vers X-31 avec nouveau ticket en haut.</td>
+        </tr>
+        <tr>
+          <td class="id">X-23</td>
+          <td><div class="what">« Recharger »</div></td>
+          <td><div class="why">Bouton sur la bannière échec paiement. Suppose un deep-link vers l'app TMoney/Mixx/Flooz native, mais le retour vers Washed après recharge n'est pas conçu.</div></td>
+          <td><span class="sev important">IMPORTANT</span></td>
+          <td>Documenter le pattern : redirection externe + écran d'attente Washed à l'ouverture suivante (« Vérification du solde… »).</td>
+        </tr>
+        <tr>
+          <td class="id">X-15.S (submit)</td>
+          <td><div class="what">Après envoi du signalement</div></td>
+          <td><div class="why">L'utilisateur ajoute photos et tape envoi. Confirmation ? Création directe d'un ticket X-32 ? Que voit-il ?</div></td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Confirmation full-screen + ticket auto-créé visible dans X-31. Lien vers X-32.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ===================================================== -->
+  <!-- 02 · WORKER GAPS                                       -->
+  <!-- ===================================================== -->
+  <section class="section">
+    <div class="num">02 · APPLICATION LAVEUSE</div>
+    <h2>Manques explicites</h2>
+
+    <table class="gaps">
+      <thead><tr>
+        <th style="width:80px">ID</th>
+        <th>Écran manquant</th>
+        <th>Pourquoi c'est un manque</th>
+        <th style="width:120px">Gravité</th>
+        <th>Recommandation</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="id">W-12</td>
+          <td><div class="what">Pause &amp; reprise pendant visite</div><div class="why">L'IA prévoit que la laveuse puisse mettre en pause une visite (urgence personnelle, attente eau). Pas conçu. Que devient le timer ? Le geofence ? La photo « avant » déjà prise ?</div></td>
+          <td class="reco">Décision produit : la pause est-elle une fonctionnalité v1, ou supportée seulement par appel bureau ?</td>
+          <td><span class="sev important">IMPORTANT</span></td>
+          <td>Si v1 : modale 3 raisons (urgence, eau, autre) + bouton « reprendre » qui ramène à l'étape en cours.</td>
+        </tr>
+        <tr>
+          <td class="id">W-13.M</td>
+          <td><div class="what">Modale retrait Mobile Money</div><div class="why">W-13 affiche solde + CTA « Retirer » mais le formulaire de retrait (montant, fournisseur MM, OTP, confirmation) n'est pas conçu.</div></td>
+          <td class="reco">Tap « Retirer » sur W-13.</td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Sheet : montant (slider ou clavier), fournisseur, OTP de validation, confirmation succès/échec.</td>
+        </tr>
+        <tr>
+          <td class="id">W-14.M</td>
+          <td><div class="what">Demander un congé</div><div class="why">W-14 affiche « congé demandé » comme état mais le formulaire de demande (dates, raison, validation bureau) n'existe pas.</div></td>
+          <td class="reco">Tap « Demander un congé » sur W-14 ou W-22.</td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Sheet : sélection dates (du / au) + raison facultative + envoi → ticket bureau.</td>
+        </tr>
+        <tr>
+          <td class="id">W-15.D</td>
+          <td><div class="what">Détail foyer régulier</div><div class="why">W-15 liste les foyers réguliers (« Mme Adjoa K. — 8 mois ») et chaque ligne semble cliquable, mais la page de détail (visites passées, notes du foyer, contact bureau pour ce foyer) n'est pas conçue.</div></td>
+          <td class="reco">Tap sur une ligne foyer dans W-15.</td>
+          <td><span class="sev important">IMPORTANT</span></td>
+          <td>Page profil foyer : historique visites + photos + notes opérateur partagées + bouton signaler.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Connexions cassées</h3>
+    <table class="gaps">
+      <thead><tr>
+        <th style="width:120px">Origine</th>
+        <th>CTA / déclencheur</th>
+        <th>Destination attendue</th>
+        <th style="width:120px">Gravité</th>
+        <th>Recommandation</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="id">push.work.assignment</td>
+          <td><div class="what">« Nouvelle visite proposée 9h00, Tokoin »</div></td>
+          <td><div class="why">La copie de push existe mais l'écran que la laveuse voit en tappant n'est pas conçu. C'est le moment-clé du flux d'assignation : preview de la visite + accept/decline + compte à rebours 5 min.</div></td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Concevoir <code>W-04.P</code> (proposal) : carte visite preview + bouton Accepter (vert) / Refuser (gris) + minuteur 5 min visible.</td>
+        </tr>
+        <tr>
+          <td class="id">W-19 (submit)</td>
+          <td><div class="what">Après « Envoyer au bureau »</div></td>
+          <td><div class="why">Le signalement est envoyé. La laveuse retourne où ? État d'attente avec « Le bureau vous rappelle dans 30 min » ?</div></td>
+          <td><span class="sev important">IMPORTANT</span></td>
+          <td>Confirmation full-screen avec engagement délai + retour à W-03 tournée.</td>
+        </tr>
+        <tr>
+          <td class="id">W-22</td>
+          <td><div class="what">Tap sur une question FAQ</div></td>
+          <td><div class="why">Idem côté abonné — comportement non précisé. Accordion expand ? Page dédiée ?</div></td>
+          <td><span class="sev defer">DEFER</span></td>
+          <td>Décision : accordion (alignement avec X-29).</td>
+        </tr>
+        <tr>
+          <td class="id">W-02 (forgot PIN)</td>
+          <td><div class="what">« Appelez le bureau · 90 00 00 00 »</div></td>
+          <td><div class="why">La laveuse appelle. Le bureau réinitialise. Comment retourne-t-elle dans l'app ? Quel écran voit-elle au prochain lancement ?</div></td>
+          <td><span class="sev important">IMPORTANT</span></td>
+          <td>Concevoir <code>W-02.R</code> : nouveau PIN à définir (envoyé par SMS bureau) + écran de confirmation.</td>
+        </tr>
+        <tr>
+          <td class="id">W-01 (1ère install)</td>
+          <td><div class="what">Premier lancement après inscription bureau</div></td>
+          <td><div class="why">Aucun flux d'onboarding laveuse. Comment la laveuse définit son PIN initial ? Sa préférence Mobile Money pour les retraits ? Où est le « tour guidé » du worker ?</div></td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Concevoir le flux laveuse première-fois : <code>W-01.O1</code> définir PIN, <code>W-01.O2</code> choisir MM payouts, <code>W-01.O3</code> tour guidé court (3 écrans).</td>
+        </tr>
+        <tr>
+          <td class="id">W-15</td>
+          <td><div class="what">« Modifier mes infos »</div></td>
+          <td><div class="why">La laveuse a-t-elle accès à modifier son numéro Mobile Money de payout ? Sa photo de profil ? Aucune section « paramètres laveuse » n'existe.</div></td>
+          <td><span class="sev important">IMPORTANT</span></td>
+          <td>Ajouter section paramètres dans W-15 ou créer <code>W-15.S</code>.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ===================================================== -->
+  <!-- 03 · OPERATOR GAPS                                     -->
+  <!-- ===================================================== -->
+  <section class="section">
+    <div class="num">03 · CONSOLE OPÉRATEUR</div>
+    <h2>17 surfaces non-livrées</h2>
+    <p class="sub">Le plus gros chantier. La console opérateur a 7 hi-fi sur 24 ; les écrans manquants couvrent les workflows support, les profils 360°, et l'administration.</p>
+
+    <table class="gaps">
+      <thead><tr>
+        <th style="width:80px">ID</th>
+        <th>Écran manquant</th>
+        <th>Pourquoi c'est un manque</th>
+        <th style="width:120px">Gravité</th>
+        <th>Recommandation</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="id">O-01</td>
+          <td><div class="what">Connexion 2FA opérateur</div><div class="why">Authentification email + OTP. Wireframe seulement. Sans hi-fi, le dev devine la mise en page (centrée modale ? plein écran ? avec illustration ?).</div></td>
+          <td class="reco">Convention typique SaaS B2B : carte centrée 400px max, logo + email + OTP step.</td>
+          <td><span class="sev important">IMPORTANT</span></td>
+          <td>Hi-fi 2 écrans (email · OTP).</td>
+        </tr>
+        <tr>
+          <td class="id">O-06</td>
+          <td><div class="what">Détail visite live (drawer)</div><div class="why">Tap sur un pin dans O-05 live ops. Le drawer existe en placeholder dans O-02 (vue dashboard) mais le drawer spécifique « visite en cours en direct » avec timeline temps réel + photos uploadées par la laveuse n'est pas conçu.</div></td>
+          <td class="reco">Tap sur un pin O-05.</td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Drawer : timeline temps réel + photos uploadées + actions (appel laveuse, appel cliente, intervenir).</td>
+        </tr>
+        <tr>
+          <td class="id">O-07</td>
+          <td><div class="what">Liste des abonnés</div><div class="why">L'opérateur a besoin d'une vue tabulaire de tous les abonnés pour : recherche, filtres (actif/pause/litige), bulk actions (relance email).</div></td>
+          <td class="reco">Section principale, accédée par sidebar.</td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Hi-fi tableau avec filtres par état + colonne forfait + colonne dernier paiement + colonne prochaine visite.</td>
+        </tr>
+        <tr>
+          <td class="id">O-08</td>
+          <td><div class="what">Profil abonné 360°</div><div class="why">L'écran le plus critique du support. Vue complète d'un abonné : visites passées, paiements, tickets, historique communications, notes opérateur. Sans cet écran, le dev va construire un patchwork.</div></td>
+          <td class="reco">Tap sur une ligne O-07 ou via deep-link email.</td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Hi-fi page complète : header avatar + 4 onglets (Visites, Paiements, Tickets, Notes).</td>
+        </tr>
+        <tr>
+          <td class="id">O-09</td>
+          <td><div class="what">Liste des laveuses</div><div class="why">Pareil pour les laveuses : qui est libre, qui est en pause, qui a un retard, qui est en formation. Vue carte (avec map) + vue liste.</div></td>
+          <td class="reco">Section sidebar.</td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Hi-fi avec filtres : disponible/occupée/pause/SOS, charge du jour, foyers actifs.</td>
+        </tr>
+        <tr>
+          <td class="id">O-10</td>
+          <td><div class="what">Profil laveuse 360°</div><div class="why">Symétrique à O-08. Tournée du jour, gains, foyers, historique signalements, notes RH. Critique pour gestion des litiges.</div></td>
+          <td class="reco">Tap sur ligne O-09 ou drawer O-21 SOS « Ouvrir le dossier ».</td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Hi-fi 4 onglets : Tournée, Gains, Foyers, Historique.</td>
+        </tr>
+        <tr>
+          <td class="id">O-14</td>
+          <td><div class="what">Versements aux laveuses</div><div class="why">Vue financière dédiée. Quand est-ce que chaque laveuse a été payée ? Quel est le total dû ? Est-ce que des retraits ont échoué ?</div></td>
+          <td class="reco">Sidebar Finances.</td>
+          <td><span class="sev important">IMPORTANT</span></td>
+          <td>Hi-fi tableau ressemblant à O-13 mais filtré sur les payouts.</td>
+        </tr>
+        <tr>
+          <td class="id">O-15</td>
+          <td><div class="what">Notifications outbound (templates)</div><div class="why">L'opérateur configure les templates SMS/push (rappel J-1, échec MM, etc.). Sans cet écran, comment édite-t-il la copie qui part à 1000+ utilisateurs ?</div></td>
+          <td class="reco">Sidebar Org.</td>
+          <td><span class="sev important">IMPORTANT</span></td>
+          <td>Hi-fi liste des templates + éditeur avec variables ICU + preview.</td>
+        </tr>
+        <tr>
+          <td class="id">O-16</td>
+          <td><div class="what">Rapports</div><div class="why">Wireframe existe (graphique + 3 KPI). Sans hi-fi, le dev choisit librement entre Recharts/Chart.js/native SVG. Et quels filtres exacts ? Période, segment, comparaison ?</div></td>
+          <td class="reco">Sidebar Finances ou Org.</td>
+          <td><span class="sev important">IMPORTANT</span></td>
+          <td>Hi-fi avec graphique mensuel + filtres période/segment + export CSV.</td>
+        </tr>
+        <tr>
+          <td class="id">O-17</td>
+          <td><div class="what">Audit log</div><div class="why">Wireframe seulement. Pour la conformité (et pour résoudre les conflits internes), chaque action opérateur destructive doit être tracée. Le dev a besoin d'un layout précis : qui, quand, quoi, pourquoi (commentaire requis).</div></td>
+          <td class="reco">Sidebar Org · admin uniquement.</td>
+          <td><span class="sev important">IMPORTANT</span></td>
+          <td>Hi-fi tableau filtrable par utilisateur/action/date avec drawer détail.</td>
+        </tr>
+        <tr>
+          <td class="id">O-18</td>
+          <td><div class="what">Paramètres organisation</div><div class="why">Brand, fuseau horaire, devise (XOF par défaut), heures d'ouverture, n° du bureau, escalade SOS. Aucune hi-fi.</div></td>
+          <td class="reco">Sidebar Org · owner uniquement.</td>
+          <td><span class="sev defer">DEFER</span></td>
+          <td>Configuration interne · faible visibilité utilisateur. v1.1 acceptable.</td>
+        </tr>
+        <tr>
+          <td class="id">O-19</td>
+          <td><div class="what">Rôles &amp; permissions</div><div class="why">Owner / Admin / Lecteur. Qui peut faire quoi (cf. matrice dans 03 IA section 08). L'écran de gestion des rôles est manquant.</div></td>
+          <td class="reco">Sidebar Org · owner uniquement.</td>
+          <td><span class="sev defer">DEFER</span></td>
+          <td>v1 : rôles hard-codés en config. v1.1 : UI d'invitation membres.</td>
+        </tr>
+        <tr>
+          <td class="id">O-22</td>
+          <td><div class="what">Onboarding laveuse (multi-step)</div><div class="why">Quand une nouvelle laveuse est recrutée, l'opérateur saisit ses infos (état civil, photo, pièce d'identité, contact urgence, zone d'intervention, MM payouts). C'est un flux multi-étapes — sans hi-fi, le dev compose ad-hoc.</div></td>
+          <td class="reco">Bouton « + Ajouter laveuse » sur O-09.</td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Hi-fi 4 étapes : Identité · Documents · Zone &amp; horaires · Mobile Money. Validation finale + envoi SMS d'activation à la laveuse.</td>
+        </tr>
+        <tr>
+          <td class="id">O-23</td>
+          <td><div class="what">Vérification abonné</div><div class="why">Après inscription X-07, l'abonné est en attente. L'opérateur doit appeler, valider l'adresse, planifier la première visite. Cet écran de validation manuelle n'est pas conçu.</div></td>
+          <td class="reco">File « Abonnés à valider » sur O-07 ou O-02.</td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Page de validation : checklist (adresse OK, créneau confirmé, paiement testé) + assignation laveuse initiale.</td>
+        </tr>
+        <tr>
+          <td class="id">O-24</td>
+          <td><div class="what">État vide premier-run</div><div class="why">Quand l'org démarre Washed (jour 1), aucun abonné, aucune laveuse, aucune visite. Que voit l'opérateur sur O-02 ? Sans état vide, le dashboard ressemble à un bug.</div></td>
+          <td class="reco">État de O-02 quand <code>count = 0</code>.</td>
+          <td><span class="sev important">IMPORTANT</span></td>
+          <td>État vide chaleureux : message d'accueil + 3 prochaines actions (ajouter une laveuse, inviter abonnés, configurer SMS).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Connexions cassées dans les 7 hi-fi déjà livrés</h3>
+    <table class="gaps">
+      <thead><tr>
+        <th style="width:120px">Origine</th>
+        <th>CTA / élément</th>
+        <th>Destination attendue</th>
+        <th style="width:120px">Gravité</th>
+        <th>Recommandation</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="id">O-04</td>
+          <td><div class="what">« Envoyer la proposition »</div></td>
+          <td><div class="why">L'opérateur envoie. La file O-03 doit refléter l'état (« en attente acceptation laveuse · 4:32 »). Cet état intermédiaire n'est pas montré.</div></td>
+          <td><span class="sev important">IMPORTANT</span></td>
+          <td>Variante de O-03 avec ligne en état « proposition envoyée » + minuteur.</td>
+        </tr>
+        <tr>
+          <td class="id">O-04</td>
+          <td><div class="what">Laveuse refuse la proposition</div></td>
+          <td><div class="why">Si la laveuse tape « Refuser » dans W-04.P, l'opérateur reçoit notification ? Voit la file mise à jour ? Quel délai avant ré-assignation ?</div></td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Toast push opérateur + ligne O-03 retourne en « à assigner ».</td>
+        </tr>
+        <tr>
+          <td class="id">O-12</td>
+          <td><div class="what">« Crédit goodwill »</div></td>
+          <td><div class="why">Action déclenche un crédit côté abonné. Mais : montant fixe ? Choix dans une liste ? Justification écrite obligatoire ? Apparition côté abonné où (X-19, banner, push) ?</div></td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Modale crédit : montant prédéfini (multiples du tarif) + justification + apparition immédiate sur X-19 forfait + push abonné.</td>
+        </tr>
+        <tr>
+          <td class="id">O-13</td>
+          <td><div class="what">« Suspendre l'abonnement »</div></td>
+          <td><div class="why">Bouton danger dans drawer. Confirmation modale ? Visible côté abonné comme X-23 ? Que se passe-t-il pour les visites en cours ?</div></td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Modale confirmation 2-étapes (cf. components.html) + impact visible : X-23 banner abonné + W-18 push laveuse.</td>
+        </tr>
+        <tr>
+          <td class="id">O-21</td>
+          <td><div class="what">« Ouvrir le dossier »</div></td>
+          <td><div class="why">CTA pendant SOS, doit ouvrir O-10 profil laveuse. Mais cet écran n'est pas livré.</div></td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Conçoit O-10 d'abord. Sans, le bouton ne mène nulle part.</td>
+        </tr>
+        <tr>
+          <td class="id">O-21</td>
+          <td><div class="what">Marquer SOS « résolu »</div></td>
+          <td><div class="why">Le protocole prévoit 6 étapes mais aucun bouton « marquer résolu » n'est visible. Comment l'opérateur clôture-t-il l'incident ? Notes finales obligatoires ?</div></td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+          <td>Bouton « Marquer résolu » + modale rapport post-incident obligatoire (notes + horodatage).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ===================================================== -->
+  <!-- 04 · CROSS-APP CONNECTIVITY                            -->
+  <!-- ===================================================== -->
+  <section class="section">
+    <div class="num">04 · CONNECTIVITÉ INTER-APPLICATIONS</div>
+    <h2>Les passerelles entre les trois apps</h2>
+    <p class="sub">Une action dans une app déclenche un changement dans les deux autres. Les chaînes critiques où une étape manque cassent l'expérience.</p>
+
+    <div class="conn-block">
+      <h4>Flux 1 · Inscription abonné → première visite</h4>
+      <div class="conn-row">
+        <div class="from">X-07 confirmer l'abonnement<span class="ctx">subscriber tape "Confirmer"</span></div>
+        <div class="arrow">→</div>
+        <div class="to exists">push.ops.new_subscriber<span class="ctx">opérateur shift de garde notifié</span></div>
+        <div><span class="sev defer">OK</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">opérateur reçoit push<span class="ctx">tape la notification</span></div>
+        <div class="arrow">→</div>
+        <div class="to missing">O-23 vérification abonné<span class="ctx">écran non-livré</span></div>
+        <div><span class="sev blocker">BLOCKER</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">O-23 valide adresse + assigne laveuse<span class="ctx">opérateur tape "Valider"</span></div>
+        <div class="arrow">→</div>
+        <div class="to missing">push.sub.welcome<span class="ctx">copie existe, pattern push abonné non-conçu</span></div>
+        <div><span class="sev important">IMPORTANT</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">subscriber reçoit push « visite confirmée »<span class="ctx">tape la notification</span></div>
+        <div class="arrow">→</div>
+        <div class="to exists">X-10 hub (avec prochaine visite)<span class="ctx">deeplink ✓</span></div>
+        <div><span class="sev defer">OK</span></div>
+      </div>
+    </div>
+
+    <div class="conn-block">
+      <h4>Flux 2 · Assignation laveuse · le plus critique</h4>
+      <div class="conn-row">
+        <div class="from">O-04 propose laveuse<span class="ctx">opérateur tape "Envoyer la proposition"</span></div>
+        <div class="arrow">→</div>
+        <div class="to exists">push.work.assignment<span class="ctx">copie existe</span></div>
+        <div><span class="sev defer">OK</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">laveuse reçoit push<span class="ctx">tape la notification</span></div>
+        <div class="arrow">→</div>
+        <div class="to missing">W-04.P proposition + accept/decline<span class="ctx">écran NON-CONÇU</span></div>
+        <div><span class="sev blocker">BLOCKER</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">laveuse tape "Accepter"<span class="ctx">dans W-04.P</span></div>
+        <div class="arrow">→</div>
+        <div class="to missing">O-03 mise à jour ligne<span class="ctx">état "confirmé" — non-conçu</span></div>
+        <div><span class="sev important">IMPORTANT</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">laveuse tape "Refuser"<span class="ctx">dans W-04.P</span></div>
+        <div class="arrow">→</div>
+        <div class="to missing">O-03 retourne en file<span class="ctx">+ raison refus saisie — non-conçu</span></div>
+        <div><span class="sev blocker">BLOCKER</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">timeout 5 min sans réponse<span class="ctx">push.work.assignment.expires</span></div>
+        <div class="arrow">→</div>
+        <div class="to missing">O-03 ré-assignation auto<span class="ctx">comportement défini ?</span></div>
+        <div><span class="sev important">IMPORTANT</span></div>
+      </div>
+    </div>
+
+    <div class="conn-block">
+      <h4>Flux 3 · Cycle de visite · subscriber miroir</h4>
+      <div class="conn-row">
+        <div class="from">W-05 laveuse en route<span class="ctx">geofence sortie domicile</span></div>
+        <div class="arrow">→</div>
+        <div class="to exists">push.sub.worker_enroute<span class="ctx">copie existe</span></div>
+        <div><span class="sev defer">OK</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">subscriber reçoit push<span class="ctx">tape la notification</span></div>
+        <div class="arrow">→</div>
+        <div class="to exists">X-12 suivi en route<span class="ctx">deeplink ✓</span></div>
+        <div><span class="sev defer">OK</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">W-07 photo "avant" validée<span class="ctx">laveuse capture</span></div>
+        <div class="arrow">→</div>
+        <div class="to exists">push.sub.visit_started<span class="ctx">copie existe</span></div>
+        <div><span class="sev defer">OK</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">subscriber reçoit push<span class="ctx">tape la notification</span></div>
+        <div class="arrow">→</div>
+        <div class="to exists">X-13 visite en cours<span class="ctx">deeplink ✓</span></div>
+        <div><span class="sev defer">OK</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">W-09 photo "après" + W-10 check-out<span class="ctx">laveuse termine</span></div>
+        <div class="arrow">→</div>
+        <div class="to exists">push.sub.visit_done<span class="ctx">copie existe</span></div>
+        <div><span class="sev defer">OK</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">subscriber reçoit push<span class="ctx">2h après fin</span></div>
+        <div class="arrow">→</div>
+        <div class="to exists">X-14 reveal photos avant/après<span class="ctx">deeplink ✓</span></div>
+        <div><span class="sev defer">OK</span></div>
+      </div>
+    </div>
+
+    <div class="conn-block">
+      <h4>Flux 4 · Litige · subscriber → ops → worker</h4>
+      <div class="conn-row">
+        <div class="from">X-15.S subscriber signale<span class="ctx">après visite, photos jointes</span></div>
+        <div class="arrow">→</div>
+        <div class="to exists">O-11 nouveau ticket en file<span class="ctx">priorité auto-évaluée</span></div>
+        <div><span class="sev defer">OK</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">opérateur traite le ticket<span class="ctx">O-12 propose crédit goodwill</span></div>
+        <div class="arrow">→</div>
+        <div class="to missing">modale crédit goodwill<span class="ctx">flux non-conçu</span></div>
+        <div><span class="sev blocker">BLOCKER</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">crédit appliqué<span class="ctx">opérateur confirme</span></div>
+        <div class="arrow">→</div>
+        <div class="to missing">notice crédit côté abonné<span class="ctx">apparaît où ? push ? badge X-19 ?</span></div>
+        <div><span class="sev blocker">BLOCKER</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">opérateur formation laveuse<span class="ctx">si fautive</span></div>
+        <div class="arrow">→</div>
+        <div class="to missing">notice formation côté laveuse<span class="ctx">comment ? W-22 ? notification ?</span></div>
+        <div><span class="sev important">IMPORTANT</span></div>
+      </div>
+    </div>
+
+    <div class="conn-block">
+      <h4>Flux 5 · Paiement échoué</h4>
+      <div class="conn-row">
+        <div class="from">tentative MM échoue<span class="ctx">webhook serveur</span></div>
+        <div class="arrow">→</div>
+        <div class="to exists">sms.sub.payment_failed<span class="ctx">copie existe</span></div>
+        <div><span class="sev defer">OK</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">subscriber ouvre l'app<span class="ctx">après SMS</span></div>
+        <div class="arrow">→</div>
+        <div class="to exists">X-23 bandeau échec<span class="ctx">deeplink ✓</span></div>
+        <div><span class="sev defer">OK</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">3e tentative échoue<span class="ctx">après 72h</span></div>
+        <div class="arrow">→</div>
+        <div class="to missing">suspension auto + notification<span class="ctx">flux côté abonné non-conçu</span></div>
+        <div><span class="sev blocker">BLOCKER</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">visite annulée par suspension<span class="ctx">déclenche W-18</span></div>
+        <div class="arrow">→</div>
+        <div class="to exists">W-18 annulation laveuse<span class="ctx">écran existe</span></div>
+        <div><span class="sev defer">OK</span></div>
+      </div>
+    </div>
+
+    <div class="conn-block">
+      <h4>Flux 6 · Pause &amp; reprise abonnement</h4>
+      <div class="conn-row">
+        <div class="from">X-22 subscriber met en pause<span class="ctx">tape "Mettre en pause"</span></div>
+        <div class="arrow">→</div>
+        <div class="to missing">X-22.A confirmation pause<span class="ctx">non-conçu</span></div>
+        <div><span class="sev blocker">BLOCKER</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">pause active<span class="ctx">visites annulées, débit stoppé</span></div>
+        <div class="arrow">→</div>
+        <div class="to missing">notice côté ops<span class="ctx">O-08 doit refléter "pausé"</span></div>
+        <div><span class="sev important">IMPORTANT</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">notice côté laveuse<span class="ctx">si visite hebdo annulée</span></div>
+        <div class="arrow">→</div>
+        <div class="to exists">W-18 annulation cliente<span class="ctx">écran existe</span></div>
+        <div><span class="sev defer">OK</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">subscriber veut reprendre<span class="ctx">ouvre l'app</span></div>
+        <div class="arrow">→</div>
+        <div class="to missing">variant X-19 "pausé" avec CTA reprise<span class="ctx">non-conçu</span></div>
+        <div><span class="sev blocker">BLOCKER</span></div>
+      </div>
+    </div>
+
+    <div class="conn-block">
+      <h4>Flux 7 · SOS · le plus sensible</h4>
+      <div class="conn-row">
+        <div class="from">W-16 laveuse déclenche SOS<span class="ctx">tape catégorie</span></div>
+        <div class="arrow">→</div>
+        <div class="to exists">push.ops.sos<span class="ctx">copie existe</span></div>
+        <div><span class="sev defer">OK</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">opérateur shift de garde<span class="ctx">reçoit push prioritaire</span></div>
+        <div class="arrow">→</div>
+        <div class="to exists">O-21 alerte SOS<span class="ctx">écran existe ✓</span></div>
+        <div><span class="sev defer">OK</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">opérateur tape "Ouvrir le dossier"<span class="ctx">dans O-21</span></div>
+        <div class="arrow">→</div>
+        <div class="to missing">O-10 profil laveuse 360°<span class="ctx">non-conçu</span></div>
+        <div><span class="sev blocker">BLOCKER</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">opérateur termine protocole<span class="ctx">6 étapes complétées</span></div>
+        <div class="arrow">→</div>
+        <div class="to missing">marquer SOS résolu<span class="ctx">CTA non-conçu</span></div>
+        <div><span class="sev blocker">BLOCKER</span></div>
+      </div>
+      <div class="conn-row">
+        <div class="from">notice fin SOS côté laveuse<span class="ctx">elle doit savoir que le bureau a clôturé</span></div>
+        <div class="arrow">→</div>
+        <div class="to missing">push + notice W-20<span class="ctx">non-conçu</span></div>
+        <div><span class="sev important">IMPORTANT</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================== -->
+  <!-- 05 · FUNCTIONAL/UX GAPS                                -->
+  <!-- ===================================================== -->
+  <section class="section">
+    <div class="num">05 · FONCTIONS NON ADRESSÉES</div>
+    <h2>Décisions produit en attente</h2>
+    <p class="sub">Au-delà des écrans, certaines fonctionnalités importantes n'ont jamais été décidées. À traiter avant code.</p>
+
+    <div class="decision">
+      <h4>D-01 · Politique de remboursement</h4>
+      <p class="q">Si un abonné annule en milieu de mois, est-il remboursé au prorata ? Quelle est la politique en cas de litige (linge endommagé) — crédit visite suivante ? remboursement intégral du mois ?</p>
+      <div class="opts">
+        <div class="opt"><div class="h">OPTION A</div><div class="b">Pas de remboursement v1 · uniquement crédit visite suivante. Simple, anti-abus.</div></div>
+        <div class="opt"><div class="h">OPTION B</div><div class="b">Remboursement au prorata si annulation, crédit ou remboursement au choix de l'opérateur si litige.</div></div>
+        <div class="opt"><div class="h">OPTION C</div><div class="b">Pas de remboursement, mais crédit jusqu'à 3 mois en cas de litige reconnu.</div></div>
+      </div>
+    </div>
+
+    <div class="decision">
+      <h4>D-02 · Tier change · prorata vs cycle complet</h4>
+      <p class="q">Quand l'abonné passe de T1 à T2 en milieu de mois, paie-t-il le prorata immédiat ou attend-il le prochain cycle ? Et si T2 → T1 ?</p>
+      <div class="opts">
+        <div class="opt"><div class="h">OPTION A</div><div class="b">Effet au cycle suivant (1er du mois) · simple côté MM, pas d'écran de prorata.</div></div>
+        <div class="opt"><div class="h">OPTION B</div><div class="b">Effet immédiat avec prorata · plus juste mais nécessite un écran de calcul.</div></div>
+      </div>
+    </div>
+
+    <div class="decision">
+      <h4>D-03 · Création manuelle de visite par l'opérateur</h4>
+      <p class="q">L'opérateur peut-il ajouter une visite hors-cycle (urgence, demande spéciale, recovery après échec) ? Si oui, est-ce facturé immédiatement ?</p>
+      <div class="opts">
+        <div class="opt"><div class="h">OPTION A</div><div class="b">Pas de création manuelle v1 · toutes les visites passent par le cycle automatique.</div></div>
+        <div class="opt"><div class="h">OPTION B</div><div class="b">Création manuelle possible (admin uniquement) · facturée optionnelle.</div></div>
+      </div>
+    </div>
+
+    <div class="decision">
+      <h4>D-04 · Pause maximum &amp; auto-cancellation</h4>
+      <p class="q">Combien de temps un abonné peut-il rester en pause ? Au-delà, son compte est-il automatiquement clôturé ? Récupère-t-il ses photos historiques ?</p>
+      <div class="opts">
+        <div class="opt"><div class="h">OPTION A</div><div class="b">Pause illimitée · rien ne se passe automatiquement.</div></div>
+        <div class="opt"><div class="h">OPTION B</div><div class="b">Pause max 6 mois · email d'avertissement à 5 mois · clôture auto à 6 mois.</div></div>
+        <div class="opt"><div class="h">OPTION C</div><div class="b">Pause max 3 mois · pour la laveuse (perte de relation).</div></div>
+      </div>
+    </div>
+
+    <div class="decision">
+      <h4>D-05 · Worker assignment timeout · réassignation</h4>
+      <p class="q">Si la laveuse ne répond pas à la proposition en 5 minutes, on ré-assigne. À qui ? La 2ème dans la liste ? Et si toutes refusent — escalade humain ou message d'erreur abonné ?</p>
+      <div class="opts">
+        <div class="opt"><div class="h">OPTION A</div><div class="b">Round-robin auto sur les 3 premières · puis fallback humain.</div></div>
+        <div class="opt"><div class="h">OPTION B</div><div class="b">Pas d'auto-réassignation · l'opérateur reçoit alerte et choisit manuellement.</div></div>
+      </div>
+    </div>
+
+    <div class="decision">
+      <h4>D-06 · Multi-langue device EN / mixed</h4>
+      <p class="q">Si l'utilisateur a son téléphone en anglais (de plus en plus courant à Lomé), la copie reste-t-elle en français ? Y a-t-il un message d'avertissement « Washed est en français pour le moment » ?</p>
+      <div class="opts">
+        <div class="opt"><div class="h">OPTION A</div><div class="b">Tout en FR sans avertissement · l'utilisateur le comprend.</div></div>
+        <div class="opt"><div class="h">OPTION B</div><div class="b">Bandeau X-01 « Bientôt en anglais » uniquement.</div></div>
+        <div class="opt"><div class="h">OPTION C</div><div class="b">EN partiellement (CTAs) avec textes longs en FR · v1.5 transitoire.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================== -->
+  <!-- 06 · EDGE CASES                                        -->
+  <!-- ===================================================== -->
+  <section class="section">
+    <div class="num">06 · CAS LIMITES NON CONÇUS</div>
+    <h2>Scénarios rares mais inévitables</h2>
+    <p class="sub">Cas qui arrivent peu mais qu'on rencontrera dans le 1er mois. À designer pour éviter les pannes silencieuses.</p>
+
+    <table class="gaps">
+      <thead><tr>
+        <th>Scénario</th>
+        <th>Apps concernées</th>
+        <th>Pourquoi ça compte</th>
+        <th style="width:120px">Gravité</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td><div class="what">Premier paiement MM échoue pendant signup</div><div class="why">Au moment de X-06 → X-07, le débit MM échoue. Que voit l'abonné ? Compte créé en attente ? Inscription annulée ?</div></td>
+          <td><span class="sev defer">SUB · OPS</span></td>
+          <td>Sans écran, le dev devine. Probablement compte en « pending payment » avec retry → sinon X-23 banner dès X-08.</td>
+          <td><span class="sev important">IMPORTANT</span></td>
+        </tr>
+        <tr>
+          <td><div class="what">Adresse rejetée par l'opérateur</div><div class="why">L'opérateur, après appel, juge l'adresse invalide (zone non couverte, fausse adresse). Que voit l'abonné ? Refund auto ? Réessai ?</div></td>
+          <td><span class="sev defer">SUB · OPS</span></td>
+          <td>Cas rare mais critique. Décision produit + écran « Adresse non couverte ».</td>
+          <td><span class="sev important">IMPORTANT</span></td>
+        </tr>
+        <tr>
+          <td><div class="what">Aucune laveuse disponible pour une demande</div><div class="why">Tous les candidats refusent ou sont surchargés. Cas rare mais arrive. Subscriber voit quoi ? Visite décalée ? Refund partiel ?</div></td>
+          <td><span class="sev defer">SUB · OPS · WORK</span></td>
+          <td>Décision : escalade automatique → visite repoussée + push « décalage planning » à l'abonné.</td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+        </tr>
+        <tr>
+          <td><div class="what">Worker onboarding rejeté</div><div class="why">L'opérateur refuse l'inscription d'une laveuse (documents non valides, antécédents). Que voit la laveuse ? Comment fait-elle appel ?</div></td>
+          <td><span class="sev defer">WORK · OPS</span></td>
+          <td>Cas sensible (légal · RH). Concevoir politique de notification + droit de réponse.</td>
+          <td><span class="sev important">IMPORTANT</span></td>
+        </tr>
+        <tr>
+          <td><div class="what">App crash mid-visite</div><div class="why">La laveuse a fait W-07 photo avant, l'app crashe (batterie morte, OS kill). Au redémarrage, où est-elle dans le flux ? Est-elle revenue à W-03 ? Reprise de W-08 ?</div></td>
+          <td><span class="sev defer">WORK</span></td>
+          <td>Comportement critique pour l'offline-first. Reprise au point exact du flux + notification opérateur si crash détecté.</td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+        </tr>
+        <tr>
+          <td><div class="what">GPS refusé pendant la visite</div><div class="why">La laveuse révoque les permissions GPS au milieu d'une visite. Le geofence ne marche plus. Peut-elle terminer ? Audit refuse la visite ?</div></td>
+          <td><span class="sev defer">WORK · OPS</span></td>
+          <td>Politique : continue la visite mais marque la photo « non-vérifiée GPS » dans l'audit.</td>
+          <td><span class="sev important">IMPORTANT</span></td>
+        </tr>
+        <tr>
+          <td><div class="what">Photo refusée par l'utilisateur</div><div class="why">La cliente refuse que la laveuse photographie son linge (vie privée). Quelle alternative ? Visite invalidée ?</div></td>
+          <td><span class="sev defer">WORK · SUB · OPS</span></td>
+          <td>Décision : photo obligatoire (bypass impossible) ou marquer visite « sans preuve » avec impact contractuel.</td>
+          <td><span class="sev blocker">BLOCKER</span></td>
+        </tr>
+        <tr>
+          <td><div class="what">Maintenance broadcast</div><div class="why">L'opérateur déclenche X-34 maintenance prévue. Mais où ? Quel screen O-* permet ça ?</div></td>
+          <td><span class="sev defer">OPS</span></td>
+          <td>Concevoir O-18 paramètres avec section "Maintenance" + broadcast push à tous les utilisateurs.</td>
+          <td><span class="sev defer">DEFER</span></td>
+        </tr>
+        <tr>
+          <td><div class="what">Compte abonné/laveuse banni</div><div class="why">Cas limite : un utilisateur viole les CGU. Comment l'opérateur le bannit ? Que voit l'utilisateur banni à la prochaine ouverture ?</div></td>
+          <td><span class="sev defer">SUB · WORK · OPS</span></td>
+          <td>Écran « Compte suspendu · contactez le bureau » pour subscriber + équivalent worker.</td>
+          <td><span class="sev important">IMPORTANT</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ===================================================== -->
+  <!-- 07 · PRIORITISATION                                    -->
+  <!-- ===================================================== -->
+  <section class="section">
+    <div class="num">07 · ORDRE DE TRAVAIL RECOMMANDÉ</div>
+    <h2>Avant code, après code, après v1</h2>
+    <p class="sub">Plan séquentiel pour traiter ces gaps. La règle : aucun blocker ne reste avant que les ingénieurs commencent l'implémentation correspondante.</p>
+
+    <div class="strip">
+      <div class="cell"><div class="l">SPRINT 0 — AVANT CODE</div><div class="n">14</div><div class="d">blockers à concevoir avant ingénierie · ~2 sem design</div></div>
+      <div class="cell"><div class="l">SPRINT 1 — PARALLÈLE</div><div class="n">13</div><div class="d">important · à concevoir pendant que le subscriber+worker démarrent</div></div>
+      <div class="cell"><div class="l">SPRINT 2+ — AVANT V1</div><div class="n">9</div><div class="d">defer ok pour v1 mais à clôturer avant lancement public</div></div>
+      <div class="cell"><div class="l">DÉCISIONS PRODUIT</div><div class="n">6</div><div class="d">discussions à avoir cette semaine · bloquent design</div></div>
+    </div>
+
+    <h3>Sprint 0 · les 14 blockers à clôturer</h3>
+    <ol style="margin: var(--s-4) 0; padding-left: var(--s-6); font-size: 13px; line-height: 1.7; color: var(--ink-2);">
+      <li><b>X-25</b> · modale modifier l'adresse (subscriber)</li>
+      <li><b>X-11.M</b> · modale reporter une visite (subscriber)</li>
+      <li><b>X-22.A</b> · confirmation post-pause (subscriber)</li>
+      <li><b>X-19.U</b> · changement de tarif avec preview (subscriber)</li>
+      <li><b>X-18.C</b> · demande de changement de laveuse (subscriber)</li>
+      <li><b>X-19.R</b> · variant pausé avec CTA reprise (subscriber)</li>
+      <li><b>X-15.S</b> · confirmation post-signalement (subscriber)</li>
+      <li><b>W-13.M</b> · modale retrait Mobile Money (worker)</li>
+      <li><b>W-14.M</b> · modale demande de congé (worker)</li>
+      <li><b>W-04.P</b> · proposition d'assignation accept/decline (worker)</li>
+      <li><b>W-01.O*</b> · onboarding première fois laveuse (worker, 3 écrans)</li>
+      <li><b>O-06</b> · drawer détail visite live (operator)</li>
+      <li><b>O-07/O-08/O-09/O-10</b> · listes &amp; profils 360° abonné/laveuse (operator)</li>
+      <li><b>O-22/O-23</b> · onboarding laveuse + vérification abonné (operator)</li>
+      <li><b>O-12.G</b> · modale crédit goodwill (operator)</li>
+      <li><b>O-13.S</b> · modale suspendre l'abonnement (operator)</li>
+      <li><b>O-21.R</b> · marquer SOS résolu + rapport (operator)</li>
+    </ol>
+    <div class="annot"><b>Volume estimé Sprint 0</b>~22 nouveaux écrans hi-fi (en comptant les sous-modales). À ce rythme (8-10/jour avec le pattern existant), c'est <b>2 à 3 jours de design</b>. Aucun n'est complexe — la majorité réutilise les patterns déjà construits dans worker/operator hi-fi.</div>
+
+    <h3>Décisions produit avant Sprint 0</h3>
+    <p class="sub">6 questions où le design est bloqué tant que le produit n'a pas tranché. À discuter cette semaine si possible.</p>
+    <ol style="margin: var(--s-4) 0; padding-left: var(--s-6); font-size: 13px; line-height: 1.7; color: var(--ink-2);">
+      <li><b>D-01</b> · politique de remboursement (3 options)</li>
+      <li><b>D-02</b> · prorata vs cycle complet sur tier change (2 options)</li>
+      <li><b>D-03</b> · création manuelle de visite par opérateur (2 options)</li>
+      <li><b>D-04</b> · pause max + auto-cancellation (3 options)</li>
+      <li><b>D-05</b> · politique de réassignation laveuse (2 options)</li>
+      <li><b>D-06</b> · multi-langue device EN (3 options)</li>
+    </ol>
+
+    <h3>Sprint 1 · pendant que les apps démarrent</h3>
+    <ul style="margin: var(--s-4) 0; padding-left: var(--s-6); font-size: 13px; line-height: 1.7; color: var(--ink-2);">
+      <li>X-09 tour guidé première session</li>
+      <li>X-21.M ajouter fournisseur MM</li>
+      <li>X-29 accordion FAQ avec état ouvert</li>
+      <li>W-12 pause/reprise pendant visite</li>
+      <li>W-15.D détail foyer régulier</li>
+      <li>W-15.S paramètres laveuse (changer numéro, MM payouts)</li>
+      <li>W-02.R reset PIN après appel bureau</li>
+      <li>W-19 confirmation post-signalement</li>
+      <li>O-01 connexion 2FA hi-fi</li>
+      <li>O-14 versements aux laveuses</li>
+      <li>O-15 templates notifications</li>
+      <li>O-16 rapports avec graph</li>
+      <li>O-17 audit log filtré</li>
+    </ul>
+
+    <h3>Sprint 2+ · à boucler avant lancement v1</h3>
+    <ul style="margin: var(--s-4) 0; padding-left: var(--s-6); font-size: 13px; line-height: 1.7; color: var(--ink-2);">
+      <li>O-18 paramètres organisation</li>
+      <li>O-19 rôles &amp; permissions</li>
+      <li>O-24 état vide premier-run</li>
+      <li>Edge cases : adresse rejetée · aucune laveuse · onboarding rejeté · app crash · GPS refusé · photo refusée · banni</li>
+    </ul>
+  </section>
+
+  <!-- ===================================================== -->
+  <!-- 08 · COVERAGE FINALE TARGET                            -->
+  <!-- ===================================================== -->
+  <section class="section">
+    <div class="num">08 · OBJECTIF DE COUVERTURE V1</div>
+    <h2>État cible avant code</h2>
+    <p class="sub">Voici à quoi ressemblera la couverture une fois Sprint 0 + Sprint 1 traités.</p>
+
+    <div class="strip">
+      <div class="cell"><div class="l">SUBSCRIBER · CIBLE</div><div class="n">35 / 35</div><div class="d">100% · X-09 et X-25 ajoutés</div></div>
+      <div class="cell"><div class="l">WORKER · CIBLE</div><div class="n">22 / 22</div><div class="d">100% · W-12 + sous-modales + onboarding</div></div>
+      <div class="cell"><div class="l">OPERATOR · CIBLE</div><div class="n">22 / 24</div><div class="d">92% · 2 reportés en v1.1 (O-18, O-19)</div></div>
+      <div class="cell"><div class="l">SOUS-MODALES</div><div class="n">12 +</div><div class="d">tous les CTA mènent à un écran existant</div></div>
+    </div>
+
+    <div class="annot" style="margin-top:var(--s-7)"><b>Engagement design</b>À l'issue du Sprint 0, aucun bouton dans aucune des trois apps ne pointe vers un écran inexistant. Tous les flux inter-applications sont documentés écran-par-écran. Les 6 décisions produit sont tranchées et reflétées dans les hi-fi. À ce moment, et seulement à ce moment, l'ingénierie peut démarrer sans deviner.</div>
+  </section>
+
+  <p style="margin-top: var(--s-10); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.12em;">— Audit conduit le 2026-05-02 · à mettre à jour à mesure que les sprints avancent · v2.0 · 2026</p>
+</div>
+</body></html>
