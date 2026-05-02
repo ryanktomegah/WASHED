@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="fr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Washed — Subscriber Hi-Fi</title>
+<link rel="stylesheet" href="../shared/tokens.css">
+<style>
+  body { background: var(--bg); }
+  .page { max-width: 1440px; margin: 0 auto; padding: var(--s-9) var(--s-6) var(--s-11); }
+  .crumb { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3); margin-bottom: var(--s-6); }
+  .crumb a { color: var(--ink-3); text-decoration: none; }
+  h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(40px, 6vw, 64px); letter-spacing: -0.02em; line-height: 1.05; margin: 0 0 var(--s-5); }
+  h1 em { font-style: italic; color: var(--primary); }
+  .lede { font-size: var(--text-lg); color: var(--ink-2); max-width: 60ch; line-height: 1.55; margin: 0 0 var(--s-9); }
+  .section { margin-top: var(--s-10); padding-top: var(--s-7); border-top: 1px solid var(--line); }
+  .section h2 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-2xl); letter-spacing: -0.01em; margin: 0 0 var(--s-2); }
+  .num { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); letter-spacing: 0.12em; margin-bottom: var(--s-2); }
+
+  /* Phone */
+  .row { display: flex; gap: var(--s-7); flex-wrap: wrap; align-items: flex-start; }
+  .phone {
+    width: 280px; height: 580px; background: #0A0807; border-radius: 36px; padding: 10px;
+    box-shadow: 0 30px 60px -20px rgba(28,18,8,0.4), 0 0 0 1px rgba(255,255,255,0.06) inset;
+    position: relative; flex-shrink: 0;
+  }
+  .phone .screen { width: 100%; height: 100%; border-radius: 26px; overflow: hidden; background: var(--surface); position: relative; }
+  .phone .notch { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); width: 90px; height: 22px; background: #0A0807; border-radius: 999px; z-index: 5; }
+  .phone .home { position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); width: 80px; height: 3px; background: rgba(255,255,255,0.4); border-radius: 999px; z-index: 5; }
+  .phone-cap { width: 280px; flex-shrink: 0; }
+  .phone-cap .id { font-family: var(--font-mono); font-size: 10px; color: var(--primary); letter-spacing: 0.1em; text-transform: uppercase; margin-top: var(--s-3); }
+  .phone-cap .name { font-family: var(--font-body); font-weight: 500; font-size: 13px; margin-top: 2px; }
+  .phone-cap .notes { font-size: 11px; color: var(--ink-3); margin-top: 4px; line-height: 1.4; }
+
+  .sb { height: 36px; padding: 12px 18px 0; display: flex; justify-content: space-between; align-items: flex-end; font-size: 11px; font-weight: 600; font-family: var(--font-body); }
+  .sb svg { width: 12px; height: 12px; }
+  .sb .right { display: flex; gap: 4px; align-items: center; }
+
+  /* App content */
+  .body { padding: 18px 18px 20px; height: calc(100% - 36px); display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+  .h-sm { font-size: 10px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-3); }
+  .h-md { font-family: var(--font-display); font-weight: 500; font-size: 22px; letter-spacing: -0.02em; line-height: 1.1; color: var(--ink-1); }
+  .h-lg { font-family: var(--font-display); font-weight: 500; font-size: 32px; letter-spacing: -0.02em; line-height: 1; color: var(--ink-1); }
+  .h-xl { font-family: var(--font-display); font-weight: 500; font-size: 56px; letter-spacing: -0.04em; line-height: 0.9; color: var(--ink-1); }
+  .h-xl em { font-style: italic; color: var(--primary); }
+  .p { font-size: 13px; color: var(--ink-2); line-height: 1.45; }
+  .p-sm { font-size: 11px; color: var(--ink-3); line-height: 1.45; }
+  .btn { background: var(--ink-1); color: var(--surface); border-radius: 999px; padding: 13px 18px; font-size: 13px; font-weight: 500; text-align: center; }
+  .btn.alt { background: transparent; color: var(--ink-1); border: 1px solid var(--ink-1); }
+  .btn.primary { background: var(--primary); color: white; }
+  .row2 { display: flex; gap: 8px; }
+  .row2 > * { flex: 1; }
+  .card { border: 1px solid var(--line); border-radius: 14px; padding: 14px; background: var(--surface); }
+  .card.dark { background: var(--ink-1); color: var(--surface); border-color: transparent; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 999px; background: var(--bg-deep); font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-2); }
+  .chip.green { background: oklch(0.94 0.04 145); color: var(--success); }
+  .chip.primary { background: var(--primary); color: white; }
+  .input { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font-size: 13px; background: var(--surface); color: var(--ink-1); }
+  .nav { display: flex; justify-content: space-around; padding: 10px 0 8px; border-top: 1px solid var(--line); margin: auto -18px 0; padding-left: 18px; padding-right: 18px; }
+  .nav .item { font-size: 9px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .nav .item.active { color: var(--primary); }
+  .nav .dot { width: 4px; height: 4px; border-radius: 999px; background: currentColor; }
+
+  /* Photo placeholder */
+  .photo { background: var(--surface-2); border-radius: 10px; display: grid; place-items: center; color: var(--ink-3); font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .avatar { width: 36px; height: 36px; border-radius: 999px; background: linear-gradient(135deg, var(--primary), var(--accent)); flex-shrink: 0; }
+
+  .key { font-family: var(--font-mono); font-size: 10px; padding: 2px 6px; background: var(--bg-deep); border-radius: 4px; color: var(--ink-2); }
+  .annot {
+    background: var(--bg-deep); border-left: 3px solid var(--primary); padding: var(--s-4) var(--s-5);
+    border-radius: 0 var(--r-sm) var(--r-sm) 0; margin: var(--s-5) 0;
+    font-size: var(--text-sm); color: var(--ink-2); line-height: 1.55;
+  }
+  .annot b { color: var(--primary); font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; display: block; margin-bottom: 4px; }
+</style></head>
+<body data-theme="subscriber">
+<div class="page">
+  <div class="crumb"><a href="../index.html">← Index</a> · 05 Subscriber Hi-Fi</div>
+
+  <h1>Subscriber app — <em>iPhone</em></h1>
+  <p class="lede">Hi-fi des écrans clés côté abonné. Le hub (X-10) et le détail visite (X-11) ouvrent 90% des sessions. Les autres écrans sont en /05-subscriber/&lt;id&gt;.html.</p>
+
+  <div class="annot"><b>Vocabulaire visuel</b>Crème (#FAFAF7) sur tous les écrans. Fraunces 500 italique pour le héros et les chiffres-fierté (gain, semaine en cours). Aucune ombre — uniquement des bordures #E8E2D5 1px. Boutons primaires en charbon (#1C1208), pas en couleur de marque.</div>
+
+  <!-- Onboarding row -->
+  <section class="section">
+    <div class="num">01 · ONBOARDING</div>
+    <h2>X-01 → X-08 · les 90 secondes décisives</h2>
+
+    <div class="row" style="margin-top: var(--s-7)">
+
+      <!-- Splash -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>9:41</span><div class="right">●●●● 5G ▮</div></div>
+        <div class="body" style="background: var(--ink-1); color: var(--surface)">
+          <div style="flex: 1"></div>
+          <div style="text-align:center">
+            <div style="font-family:var(--font-display);font-weight:500;font-style:italic;font-size:64px;letter-spacing:-0.04em;color:var(--surface)">Washed.</div>
+            <div style="font-family:var(--font-mono);font-size:10px;color:rgba(250,250,247,0.5);letter-spacing:0.2em;margin-top:8px">LOMÉ — TOGO</div>
+          </div>
+          <div style="flex: 1"></div>
+          <div class="row2">
+            <div class="btn" style="background: var(--surface); color: var(--ink-1)">Français</div>
+            <div class="btn alt" style="border-color: rgba(250,250,247,0.3); color: rgba(250,250,247,0.6)">English</div>
+          </div>
+          <div class="p-sm" style="text-align:center;color:rgba(250,250,247,0.4);margin-top:8px">EN bientôt disponible</div>
+        </div>
+      </div></div>
+      <div class="id">X-01</div><div class="name">Splash</div><div class="notes">EN désactivé v1. Reste 1.2s.</div></div>
+
+      <!-- Phone input -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>9:41</span><div class="right">●●●● 5G ▮</div></div>
+        <div class="body">
+          <div class="h-sm">ÉTAPE 1 / 4</div>
+          <div class="h-md">Votre numéro<br>de téléphone.</div>
+          <div class="p">On vous envoie un code par SMS pour confirmer.</div>
+          <div style="margin-top:14px">
+            <div class="h-sm" style="margin-bottom:6px">NUMÉRO</div>
+            <div class="input" style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono)">
+              <span style="color:var(--ink-3)">+228</span>
+              <span style="color:var(--ink-1)">90 12 34 56</span>
+              <span style="margin-left:auto;width:6px;height:14px;background:var(--primary);animation:none"></span>
+            </div>
+            <div class="p-sm" style="margin-top:6px">T-Money & Flooz acceptés</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn">Recevoir le code</div>
+        </div>
+      </div></div>
+      <div class="id">X-02</div><div class="name">Téléphone</div><div class="notes">Auto-format +228</div></div>
+
+      <!-- OTP -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>9:41</span><div class="right">●●●● 5G ▮</div></div>
+        <div class="body">
+          <div class="h-sm">ÉTAPE 2 / 4</div>
+          <div class="h-md">Le code à<br>6 chiffres.</div>
+          <div class="p">Envoyé au +228 90 12 34 56. <span style="color:var(--primary)">Modifier</span></div>
+          <div style="display:flex;gap:6px;margin-top:18px">
+            <div class="input" style="width:34px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px">4</div>
+            <div class="input" style="width:34px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px">8</div>
+            <div class="input" style="width:34px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px;border-color:var(--primary);border-width:2px">2</div>
+            <div class="input" style="width:34px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px;color:var(--ink-3)">_</div>
+            <div class="input" style="width:34px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px;color:var(--ink-3)">_</div>
+            <div class="input" style="width:34px;text-align:center;padding:12px 0;font-family:var(--font-mono);font-size:18px;color:var(--ink-3)">_</div>
+          </div>
+          <div class="p-sm" style="margin-top:14px">Renvoyer dans <span style="font-family:var(--font-mono)">0:28</span></div>
+          <div style="flex:1"></div>
+          <div class="p-sm" style="text-align:center">Pas reçu ? <span style="color:var(--primary)">Appeler</span></div>
+        </div>
+      </div></div>
+      <div class="id">X-03</div><div class="name">OTP</div><div class="notes">3 essais → assistance WhatsApp</div></div>
+
+      <!-- Plans -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>9:41</span><div class="right">●●●● 5G ▮</div></div>
+        <div class="body">
+          <div class="h-sm">ÉTAPE 3 / 4</div>
+          <div class="h-md">Choisissez<br>votre formule.</div>
+
+          <div class="card" style="margin-top:8px;border-color:var(--ink-1);border-width:2px;padding:12px">
+            <div style="display:flex;justify-content:space-between;align-items:start">
+              <div>
+                <div style="font-weight:500;font-size:13px">Hebdomadaire</div>
+                <div class="p-sm">1 visite / semaine · ~1.5h</div>
+              </div>
+              <div class="chip">recommandé</div>
+            </div>
+            <div style="font-family:var(--font-display);font-weight:500;font-size:24px;letter-spacing:-0.02em;margin-top:8px">2 500 <span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-3)">F·CFA</span></div>
+          </div>
+
+          <div class="card" style="padding:12px">
+            <div style="font-weight:500;font-size:13px">Hebdomadaire +</div>
+            <div class="p-sm">+ aspirateur intérieur</div>
+            <div style="font-family:var(--font-display);font-weight:500;font-size:24px;letter-spacing:-0.02em;margin-top:8px">4 500 <span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-3)">F·CFA</span></div>
+          </div>
+
+          <div style="flex:1"></div>
+          <div class="btn">Continuer · 2 500 F</div>
+        </div>
+      </div></div>
+      <div class="id">X-05</div><div class="name">Plans</div><div class="notes">Sticky CTA reflète sélection</div></div>
+
+    </div>
+  </section>
+
+  <!-- Hub row -->
+  <section class="section">
+    <div class="num">02 · LE HUB</div>
+    <h2>X-10 → X-13 · 90% des sessions</h2>
+
+    <div class="row" style="margin-top: var(--s-7)">
+
+      <!-- Home / next visit -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>9:41</span><div class="right">●●●● 5G ▮</div></div>
+        <div class="body">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="h-sm">BONJOUR, KOFFI</div>
+            <div class="avatar" style="width:28px;height:28px"></div>
+          </div>
+
+          <div style="margin-top:8px">
+            <div class="p-sm">Prochaine visite</div>
+            <div class="h-xl" style="margin-top:4px"><em>jeudi.</em></div>
+            <div class="h-md" style="font-style:normal;font-size:18px;color:var(--ink-2);margin-top:-4px">14 avril · 8h–10h</div>
+          </div>
+
+          <div class="card" style="margin-top:6px;display:flex;gap:10px;align-items:center;padding:12px">
+            <div class="avatar"></div>
+            <div style="flex:1">
+              <div style="font-weight:500;font-size:13px">Adjo K.</div>
+              <div class="p-sm">★ 4.9 · 142 visites</div>
+            </div>
+            <div class="chip green">prête</div>
+          </div>
+
+          <div class="row2" style="margin-top:6px">
+            <div class="btn alt" style="padding:11px 14px;font-size:12px">Détail</div>
+            <div class="btn" style="padding:11px 14px;font-size:12px">Calendrier</div>
+          </div>
+
+          <div style="margin-top:12px">
+            <div class="h-sm" style="margin-bottom:6px">CETTE SEMAINE</div>
+            <div style="display:flex;gap:6px">
+              <div class="card" style="flex:1;padding:8px"><div class="p-sm">visites</div><div style="font-family:var(--font-display);font-size:20px;font-weight:500">1<span style="color:var(--ink-3);font-size:12px">/1</span></div></div>
+              <div class="card" style="flex:1;padding:8px"><div class="p-sm">payé</div><div style="font-family:var(--font-display);font-size:20px;font-weight:500">2 500</div></div>
+            </div>
+          </div>
+
+          <div class="nav">
+            <div class="item active"><div class="dot"></div>Accueil</div>
+            <div class="item"><div class="dot"></div>Visites</div>
+            <div class="item"><div class="dot"></div>Paiement</div>
+            <div class="item"><div class="dot"></div>Profil</div>
+          </div>
+        </div>
+      </div></div>
+      <div class="id">X-10 ★</div><div class="name">Accueil — prochaine visite</div><div class="notes">Le hub. Ouvre 80% des sessions.</div></div>
+
+      <!-- Visit detail -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>9:41</span><div class="right">●●●● 5G ▮</div></div>
+        <div class="body">
+          <div style="display:flex;align-items:center;gap:10px"><span style="font-family:var(--font-mono);font-size:14px">←</span><div class="h-sm">VISITE · 7 AVRIL</div></div>
+
+          <div class="photo" style="height:140px;margin-top:6px">avant · après</div>
+
+          <div style="margin-top:6px">
+            <div class="chip green" style="margin-bottom:6px">terminée · 1h 38min</div>
+            <div class="h-md">Adjo a passé<br><em style="color:var(--primary)">98 minutes</em><br>sur votre voiture.</div>
+          </div>
+
+          <div class="card" style="padding:12px">
+            <div style="display:flex;justify-content:space-between;font-size:12px"><span class="p-sm">arrivée</span><span style="font-family:var(--font-mono)">8:02</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px"><span class="p-sm">lavage</span><span style="font-family:var(--font-mono)">42 min</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px"><span class="p-sm">séchage</span><span style="font-family:var(--font-mono)">28 min</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px"><span class="p-sm">finition</span><span style="font-family:var(--font-mono)">28 min</span></div>
+          </div>
+
+          <div style="flex:1"></div>
+          <div class="row2">
+            <div class="btn alt">Reporter</div>
+            <div class="btn">Signaler</div>
+          </div>
+        </div>
+      </div></div>
+      <div class="id">X-11 ★</div><div class="name">Détail visite</div><div class="notes">Avant/après · timeline · CTA réparation</div></div>
+
+      <!-- Calendar -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>9:41</span><div class="right">●●●● 5G ▮</div></div>
+        <div class="body">
+          <div class="h-sm">AVRIL 2026</div>
+          <div class="h-md">Vos prochaines<br>visites.</div>
+
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;font-family:var(--font-mono);font-size:9px;color:var(--ink-3);margin-top:6px;text-align:center">
+            <div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div><div>D</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;font-family:var(--font-mono);font-size:11px;text-align:center">
+            <div style="padding:8px;color:var(--ink-3)">31</div>
+            <div style="padding:8px">1</div><div style="padding:8px">2</div><div style="padding:8px">3</div><div style="padding:8px">4</div><div style="padding:8px">5</div><div style="padding:8px">6</div>
+            <div style="padding:8px">7</div>
+            <div style="padding:8px;background:var(--bg-deep);border-radius:6px">8</div>
+            <div style="padding:8px">9</div><div style="padding:8px">10</div><div style="padding:8px">11</div><div style="padding:8px">12</div><div style="padding:8px">13</div>
+            <div style="padding:8px;background:var(--ink-1);color:var(--surface);border-radius:6px;font-weight:600">14</div>
+            <div style="padding:8px">15</div><div style="padding:8px">16</div><div style="padding:8px">17</div><div style="padding:8px">18</div><div style="padding:8px">19</div><div style="padding:8px">20</div>
+            <div style="padding:8px">21</div>
+            <div style="padding:8px;border:1px solid var(--line);border-radius:6px">22</div>
+            <div style="padding:8px">23</div><div style="padding:8px">24</div><div style="padding:8px">25</div><div style="padding:8px">26</div><div style="padding:8px">27</div>
+          </div>
+
+          <div class="card" style="margin-top:auto;padding:10px">
+            <div class="p-sm">jeudi 14 avril</div>
+            <div style="font-weight:500;font-size:13px;margin-top:2px">8h–10h · Adjo K.</div>
+          </div>
+          <div class="btn alt" style="margin-top:6px">Demander un report</div>
+        </div>
+      </div></div>
+      <div class="id">X-12</div><div class="name">Calendrier</div><div class="notes">Mois courant · pluie 22 = report auto</div></div>
+
+      <!-- Payment -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>9:41</span><div class="right">●●●● 5G ▮</div></div>
+        <div class="body">
+          <div class="h-sm">PAIEMENT</div>
+          <div class="h-md">Compte bon<br>jusqu'au <em style="color:var(--primary);font-style:italic">30 avril</em>.</div>
+
+          <div class="card dark" style="padding:14px">
+            <div class="p-sm" style="color:rgba(250,250,247,0.6)">forfait actif</div>
+            <div style="font-weight:500;margin-top:4px">Hebdomadaire · 2 500 F·CFA / sem</div>
+            <div style="display:flex;justify-content:space-between;align-items:end;margin-top:14px">
+              <div class="p-sm" style="color:rgba(250,250,247,0.6)">prochain prélèvement</div>
+              <div style="font-family:var(--font-mono);font-size:11px">2 mai · auto</div>
+            </div>
+          </div>
+
+          <div style="margin-top:8px">
+            <div class="h-sm" style="margin-bottom:6px">HISTORIQUE</div>
+            <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)"><div><div style="font-size:12px;font-weight:500">25 avr.</div><div class="p-sm">T-Money · ★1234</div></div><div style="font-family:var(--font-mono);font-size:13px">2 500 F</div></div>
+            <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)"><div><div style="font-size:12px;font-weight:500">18 avr.</div><div class="p-sm">T-Money · ★1234</div></div><div style="font-family:var(--font-mono);font-size:13px">2 500 F</div></div>
+            <div style="display:flex;justify-content:space-between;padding:10px 0"><div><div style="font-size:12px;font-weight:500">11 avr.</div><div class="p-sm">T-Money · ★1234</div></div><div style="font-family:var(--font-mono);font-size:13px">2 500 F</div></div>
+          </div>
+
+          <div style="flex:1"></div>
+          <div class="btn alt">Changer de moyen</div>
+        </div>
+      </div></div>
+      <div class="id">X-13</div><div class="name">Paiement</div><div class="notes">"Compte bon" · ton positif</div></div>
+
+    </div>
+  </section>
+
+  <!-- Edge cases -->
+  <section class="section">
+    <div class="num">03 · MOMENTS DE VÉRITÉ</div>
+    <h2>X-21 · X-25 · X-30 · les sales écrans qui font les bons produits</h2>
+
+    <div class="row" style="margin-top: var(--s-7)">
+
+      <!-- Rain reschedule -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>9:41</span><div class="right">●●●● 5G ▮</div></div>
+        <div class="body">
+          <div style="margin-top:50px">
+            <div class="chip primary" style="background:var(--primary);color:white">il pleut sur Lomé</div>
+            <div class="h-md" style="margin-top:14px">On reporte<br><em style="color:var(--primary);font-style:italic">à demain</em><br>vendredi 15.</div>
+            <div class="p" style="margin-top:10px">Adjo passe vendredi 8h–10h. Aucun frais — c'est sur nous.</div>
+          </div>
+
+          <div class="card" style="margin-top:14px;padding:12px">
+            <div class="p-sm">nouveau créneau</div>
+            <div style="font-weight:500;font-size:14px;margin-top:4px">vendredi 15 avril · 8h–10h</div>
+            <div class="p-sm" style="margin-top:6px">prévision : 28°, ensoleillé</div>
+          </div>
+
+          <div style="flex:1"></div>
+          <div class="row2">
+            <div class="btn alt" style="padding:11px;font-size:12px">Autre créneau</div>
+            <div class="btn" style="padding:11px;font-size:12px">Confirmer</div>
+          </div>
+        </div>
+      </div></div>
+      <div class="id">X-21</div><div class="name">Pluie · report auto</div><div class="notes">Push proactif · ton chaleureux</div></div>
+
+      <!-- Dispute -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>9:41</span><div class="right">●●●● 5G ▮</div></div>
+        <div class="body">
+          <div style="display:flex;align-items:center;gap:10px"><span style="font-family:var(--font-mono);font-size:14px">←</span><div class="h-sm">SIGNALER · 7 AVRIL</div></div>
+
+          <div class="h-md" style="margin-top:8px">Qu'est-ce<br>qui ne va pas ?</div>
+          <div class="p">On vous rembourse ou on revient — vous choisissez.</div>
+
+          <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px">
+            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-1);border-radius:999px"></div><div style="font-size:12px">Voiture pas propre</div></div>
+            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px;border-color:var(--ink-1);border-width:2px"><div style="width:14px;height:14px;border:2px solid var(--ink-1);border-radius:999px;background:var(--ink-1)"></div><div style="font-size:12px;font-weight:500">Rayure ou dommage</div></div>
+            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-1);border-radius:999px"></div><div style="font-size:12px">Adjo n'est pas venue</div></div>
+            <div class="card" style="padding:11px;display:flex;align-items:center;gap:10px"><div style="width:14px;height:14px;border:2px solid var(--ink-1);border-radius:999px"></div><div style="font-size:12px">Autre</div></div>
+          </div>
+
+          <div style="flex:1"></div>
+          <div class="btn">Suivant · ajouter photos</div>
+        </div>
+      </div></div>
+      <div class="id">X-25</div><div class="name">Litige · catégorie</div><div class="notes">SLA 15 min · réponse humaine</div></div>
+
+      <!-- Payment failed -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>9:41</span><div class="right">●●●● 5G ▮</div></div>
+        <div class="body">
+          <div style="margin-top:40px">
+            <div class="chip" style="background:oklch(0.94 0.04 30);color:var(--alert)">paiement non passé</div>
+            <div class="h-md" style="margin-top:14px">Solde T-Money<br>insuffisant.</div>
+            <div class="p" style="margin-top:10px">On a essayé deux fois, sans succès. La visite de jeudi est en attente — vous avez 48h pour régulariser.</div>
+          </div>
+
+          <div class="card" style="margin-top:14px;padding:12px">
+            <div style="display:flex;justify-content:space-between;font-size:13px"><span class="p-sm">à payer</span><span style="font-family:var(--font-mono);font-weight:600">2 500 F</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:4px"><span class="p-sm">solde T-Money</span><span style="font-family:var(--font-mono);color:var(--alert)">1 800 F</span></div>
+          </div>
+
+          <div style="flex:1"></div>
+          <div class="btn primary" style="background:var(--primary)">Recharger T-Money</div>
+          <div class="btn alt">Essayer Flooz</div>
+        </div>
+      </div></div>
+      <div class="id">X-30</div><div class="name">Échec paiement</div><div class="notes">Pas de honte. Issue claire.</div></div>
+
+      <!-- Offline state -->
+      <div class="phone-cap"><div class="phone"><div class="notch"></div><div class="home"></div><div class="screen">
+        <div class="sb"><span>9:41</span><div class="right">○ HORS LIGNE ▮</div></div>
+        <div class="body">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="h-sm">BONJOUR, KOFFI</div>
+            <div class="avatar" style="width:28px;height:28px"></div>
+          </div>
+
+          <div class="card" style="background:var(--bg-deep);padding:10px;border-color:transparent">
+            <div class="p-sm" style="display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;background:var(--ink-3);border-radius:999px"></span>HORS LIGNE — DERNIÈRE MAJ 9:38</div>
+          </div>
+
+          <div style="margin-top:4px">
+            <div class="p-sm">Prochaine visite</div>
+            <div class="h-xl" style="margin-top:4px"><em>jeudi.</em></div>
+            <div class="h-md" style="font-style:normal;font-size:18px;color:var(--ink-2);margin-top:-4px">14 avril · 8h–10h</div>
+          </div>
+
+          <div class="card" style="margin-top:6px;padding:12px;opacity:0.6">
+            <div class="p-sm">infos cachées</div>
+            <div style="font-weight:500;font-size:13px;margin-top:4px">Adjo K. · ★ 4.9</div>
+          </div>
+
+          <div style="flex:1"></div>
+          <div class="p-sm" style="text-align:center">on vérifie le réseau toutes les 30s</div>
+          <div class="btn alt">Réessayer</div>
+        </div>
+      </div></div>
+      <div class="id">X-OFF</div><div class="name">Hors-ligne</div><div class="notes">Cache 7 jours · jamais d'écran blanc</div></div>
+
+    </div>
+  </section>
+
+  <p style="margin-top: var(--s-10); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.12em;">— 10 écrans clés sur 35 · iOS 17 · cible iPhone SE → 15 Pro · v2.0 · 2026</p>
+</div>
+</body></html>

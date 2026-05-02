@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="fr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Washed — Marque &amp; voix</title>
+<link rel="stylesheet" href="../shared/tokens.css">
+<style>
+  body { background: var(--bg); }
+  .page { max-width: 1100px; margin: 0 auto; padding: var(--s-9) var(--s-6) var(--s-11); }
+  .crumb { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3); margin-bottom: var(--s-6); }
+  .crumb a { color: var(--ink-3); text-decoration: none; }
+  .crumb a:hover { color: var(--primary); }
+  h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(40px, 6vw, 72px); letter-spacing: -0.02em; line-height: 1.05; margin: 0 0 var(--s-6); }
+  h1 em { font-style: italic; color: var(--primary); }
+  .lede { font-size: var(--text-lg); color: var(--ink-2); max-width: 60ch; line-height: 1.55; margin: 0 0 var(--s-9); }
+  .section { margin-top: var(--s-10); padding-top: var(--s-7); border-top: 1px solid var(--line); }
+  .section h2 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-2xl); letter-spacing: -0.01em; margin: 0 0 var(--s-6); }
+  .num { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); letter-spacing: 0.12em; margin-bottom: var(--s-3); }
+
+  /* logo lockup */
+  .logo-lab { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: var(--s-9) var(--s-7); display: flex; align-items: center; justify-content: center; gap: var(--s-7); flex-wrap: wrap; margin-bottom: var(--s-6); }
+  .mark-glyph { width: 96px; height: 96px; border-radius: 999px; background: var(--primary); color: var(--surface); display: grid; place-items: center; font-family: var(--font-display); font-style: italic; font-weight: 600; font-size: 60px; }
+  .wordmark { font-family: var(--font-display); font-weight: 500; font-size: 80px; letter-spacing: -0.025em; }
+  .wordmark .dot { color: var(--primary); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-5); }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-5); }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-4); }
+
+  .swatch { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-5); }
+  .swatch .chip { width: 100%; height: 80px; border-radius: var(--r-sm); margin-bottom: var(--s-3); }
+  .swatch .name { font-family: var(--font-display); font-size: var(--text-md); font-weight: 500; }
+  .swatch .hex { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); margin-top: 2px; }
+
+  .quote { background: var(--ink); color: var(--surface); padding: var(--s-9) var(--s-7); border-radius: var(--r-lg); }
+  .quote .q { font-family: var(--font-display); font-style: italic; font-size: var(--text-3xl); line-height: 1.25; margin: 0 0 var(--s-5); letter-spacing: -0.01em; }
+  .quote .q em { color: var(--primary-tint); font-style: italic; }
+  .quote .by { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; color: rgba(255,255,255,0.5); }
+
+  .voice-pair { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+  .voice-pair .row { padding: var(--s-5); border-bottom: 1px solid var(--line); }
+  .voice-pair .row:last-child { border-bottom: none; }
+  .voice-pair .lab { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: var(--s-2); }
+  .voice-pair .bad .lab { color: var(--danger); }
+  .voice-pair .good .lab { color: var(--success); }
+  .voice-pair .text { font-size: var(--text-md); line-height: 1.5; }
+  .voice-pair .bad .text { color: var(--ink-3); text-decoration: line-through; text-decoration-color: var(--danger); }
+
+  .pill-list { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-top: var(--s-3); }
+  .pill { font-family: var(--font-mono); font-size: var(--text-xs); padding: 6px 12px; border-radius: 999px; }
+  .pill.use { background: var(--success-soft); color: var(--success); }
+  .pill.dont { background: var(--danger-soft); color: var(--danger); text-decoration: line-through; }
+
+  .principle-row { display: grid; grid-template-columns: 80px 1fr; gap: var(--s-5); padding: var(--s-5) 0; border-bottom: 1px solid var(--line); }
+  .principle-row:last-child { border-bottom: none; }
+  .principle-row .num2 { font-family: var(--font-display); font-size: var(--text-3xl); color: var(--primary); font-style: italic; line-height: 1; }
+  .principle-row h4 { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 500; margin: 0 0 var(--s-2); }
+  .principle-row p { color: var(--ink-3); margin: 0; line-height: 1.55; }
+
+  @media (max-width: 720px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } }
+</style></head>
+<body data-theme="subscriber">
+<div class="page">
+  <div class="crumb"><a href="../index.html">← Index</a> · 00 Foundations · Marque &amp; voix</div>
+
+  <h1>La marque <em>Washed</em>.<br>Une promesse, pas un service.</h1>
+  <p class="lede">Washed n'est pas une application de blanchisserie. C'est la formalisation respectueuse d'une relation existante — celle entre une famille togolaise et la laveuse qui revient chaque semaine. La marque doit honorer cette relation. Tout le système visuel découle de là.</p>
+
+  <!-- LOGO -->
+  <section class="section">
+    <div class="num">01 · LOCKUP</div>
+    <h2>Marque visuelle</h2>
+    <div class="logo-lab">
+      <div class="mark-glyph">w</div>
+      <div class="wordmark">washed<span class="dot">.</span></div>
+    </div>
+    <div class="grid-3">
+      <div class="swatch"><div class="chip" style="background:var(--surface); border: 1px solid var(--line); display:grid;place-items:center"><div class="mark-glyph" style="width:48px;height:48px;font-size:32px"></div></div><div class="name">Glyphe seul</div><div class="hex">favicon · app icon · avatar</div></div>
+      <div class="swatch"><div class="chip" style="background:var(--surface); border: 1px solid var(--line); display:flex;align-items:center;justify-content:center;gap:8px"><div class="mark-glyph" style="width:32px;height:32px;font-size:22px">w</div><div style="font-family:var(--font-display);font-size:24px;letter-spacing:-0.02em">washed<span style="color:var(--primary)">.</span></div></div><div class="name">Lockup horizontal</div><div class="hex">en-tête · pied de page</div></div>
+      <div class="swatch"><div class="chip" style="background:var(--ink);display:flex;align-items:center;justify-content:center;gap:8px"><div class="mark-glyph" style="width:32px;height:32px;font-size:22px;background:var(--primary-tint);color:var(--ink)">w</div><div style="font-family:var(--font-display);font-size:24px;letter-spacing:-0.02em;color:var(--surface)">washed<span style="color:var(--primary)">.</span></div></div><div class="name">Inversé</div><div class="hex">fond sombre · uniformes</div></div>
+    </div>
+    <p style="color:var(--ink-3); font-size: var(--text-sm); margin-top: var(--s-5); line-height: 1.6;">Le glyphe est un <b>w</b> en italique Fraunces, dans un disque terracotta. L'italique évoque l'écriture manuscrite — la signature personnelle d'une artisane. Le point qui suit "washed" est délibéré : c'est une déclaration, pas une question.</p>
+  </section>
+
+  <!-- PALETTE -->
+  <section class="section">
+    <div class="num">02 · COULEURS</div>
+    <h2>Palette de marque</h2>
+    <p style="color:var(--ink-2); max-width:60ch; line-height:1.6; margin:0 0 var(--s-6)">Trois palettes auditoires, une seule famille. La terracotta est le pouls de la marque — une couleur de terre, présente dans l'argile togolaise, dans le pagne traditionnel, dans le coucher de soleil sur le golfe.</p>
+    <div class="grid-4">
+      <div class="swatch"><div class="chip" style="background:#C4622D"></div><div class="name">Terracotta</div><div class="hex">#C4622D · primary</div></div>
+      <div class="swatch"><div class="chip" style="background:#B8870A"></div><div class="name">Ocre</div><div class="hex">#B8870A · accent</div></div>
+      <div class="swatch"><div class="chip" style="background:#1C1208"></div><div class="name">Espresso</div><div class="hex">#1C1208 · ink</div></div>
+      <div class="swatch"><div class="chip" style="background:#FAF6F0; border:1px solid var(--line)"></div><div class="name">Crème chaud</div><div class="hex">#FAF6F0 · bg</div></div>
+      <div class="swatch"><div class="chip" style="background:#1A5C34"></div><div class="name">Forêt</div><div class="hex">#1A5C34 · worker</div></div>
+      <div class="swatch"><div class="chip" style="background:#3B1F7A"></div><div class="name">Aubergine</div><div class="hex">#3B1F7A · operator</div></div>
+      <div class="swatch"><div class="chip" style="background:#4A7C3F"></div><div class="name">Olive</div><div class="hex">#4A7C3F · success</div></div>
+      <div class="swatch"><div class="chip" style="background:#C03020"></div><div class="name">Rouge brique</div><div class="hex">#C03020 · danger</div></div>
+    </div>
+  </section>
+
+  <!-- VOIX -->
+  <section class="section">
+    <div class="num">03 · VOIX</div>
+    <h2>Comment Washed parle</h2>
+    <div class="quote">
+      <p class="q">«&nbsp;On <em>s'occupe de tout</em>.<br>Vous ouvrez la porte, on s'occupe du reste.&nbsp;»</p>
+      <div class="by">— Phrase fondatrice · le ton de toute communication abonné</div>
+    </div>
+
+    <div class="grid-2" style="margin-top: var(--s-7)">
+      <div>
+        <h3 style="font-family:var(--font-display);font-size:var(--text-lg);font-weight:500;margin:0 0 var(--s-3)">À utiliser</h3>
+        <p style="color:var(--ink-3);font-size:var(--text-sm);margin:0 0 var(--s-4)">Vocabulaire approuvé. Mots qui respectent le métier et la relation.</p>
+        <div class="pill-list">
+          <span class="pill use">laveuse</span>
+          <span class="pill use">visite</span>
+          <span class="pill use">à domicile</span>
+          <span class="pill use">votre laveuse</span>
+          <span class="pill use">prochaine visite</span>
+          <span class="pill use">elle vient</span>
+          <span class="pill use">vous · formel</span>
+          <span class="pill use">on s'occupe</span>
+          <span class="pill use">litige</span>
+          <span class="pill use">crédit</span>
+          <span class="pill use">remboursement</span>
+          <span class="pill use">paiement Mobile Money</span>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-family:var(--font-display);font-size:var(--text-lg);font-weight:500;margin:0 0 var(--s-3)">À éviter</h3>
+        <p style="color:var(--ink-3);font-size:var(--text-sm);margin:0 0 var(--s-4)">Vocabulaire interdit. Termes techniques, paternalistes, ou impersonnels.</p>
+        <div class="pill-list">
+          <span class="pill dont">bonne</span>
+          <span class="pill dont">domestique</span>
+          <span class="pill dont">prestataire</span>
+          <span class="pill dont">utilisateur</span>
+          <span class="pill dont">tu · informel</span>
+          <span class="pill dont">soumettre</span>
+          <span class="pill dont">workflow</span>
+          <span class="pill dont">tâche</span>
+          <span class="pill dont">commander</span>
+          <span class="pill dont">livraison</span>
+          <span class="pill dont">ticket</span>
+          <span class="pill dont">échec</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AVANT / APRÈS -->
+  <section class="section">
+    <div class="num">04 · AVANT / APRÈS</div>
+    <h2>Réécriture en pratique</h2>
+    <div class="grid-2">
+      <div class="voice-pair">
+        <div class="row bad"><div class="lab">❌ AVANT</div><div class="text">Échec du paiement. Code 402. Veuillez contacter le support.</div></div>
+        <div class="row good"><div class="lab">✓ APRÈS</div><div class="text">Le paiement n'a pas abouti. Vérifiez votre solde T-Money ou essayez Flooz. Besoin d'aide ? On vous rappelle.</div></div>
+      </div>
+      <div class="voice-pair">
+        <div class="row bad"><div class="lab">❌ AVANT</div><div class="text">Votre prestataire arrive dans 15 minutes. Veuillez vous tenir prêt.</div></div>
+        <div class="row good"><div class="lab">✓ APRÈS</div><div class="text">Akouvi est en route. Elle arrive dans 15 min.</div></div>
+      </div>
+      <div class="voice-pair">
+        <div class="row bad"><div class="lab">❌ AVANT</div><div class="text">Aucun travailleur n'a été assigné à votre compte. Veuillez patienter.</div></div>
+        <div class="row good"><div class="lab">✓ APRÈS</div><div class="text">On cherche votre laveuse. Vous saurez son nom dans 4 h au plus tard.</div></div>
+      </div>
+      <div class="voice-pair">
+        <div class="row bad"><div class="lab">❌ AVANT</div><div class="text">Voulez-vous vraiment annuler votre abonnement ? Cette action est irréversible.</div></div>
+        <div class="row good"><div class="lab">✓ APRÈS</div><div class="text">Vous arrêtez votre abonnement. Akouvi ne reviendra plus, et le prélèvement de 4 500 XOF s'arrête. C'est sûr&nbsp;?</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRINCIPES ÉDITORIAUX -->
+  <section class="section">
+    <div class="num">05 · RÈGLES ÉDITORIALES</div>
+    <h2>Sept règles qui ne plient jamais</h2>
+
+    <div class="principle-row">
+      <div class="num2"><em>1</em></div>
+      <div><h4>Toujours "vous", jamais "tu"</h4><p>Le tutoiement n'est pas perçu comme amical au Togo dans un contexte de service — il est perçu comme un manque de respect. Le "vous" formel est la norme, indépendamment de l'âge ou du statut.</p></div>
+    </div>
+    <div class="principle-row">
+      <div class="num2"><em>2</em></div>
+      <div><h4>Le sujet est l'humain, pas le système</h4><p>« Akouvi est en route » et non « Le travailleur a été notifié ». La laveuse a un nom. L'abonné a un foyer. Le système est invisible.</p></div>
+    </div>
+    <div class="principle-row">
+      <div class="num2"><em>3</em></div>
+      <div><h4>Direct sans être brusque</h4><p>Pas de circonlocutions, pas de jargon. Mais on prend le temps d'expliquer ce qui se passe et pourquoi. La concision n'est pas la sécheresse.</p></div>
+    </div>
+    <div class="principle-row">
+      <div class="num2"><em>4</em></div>
+      <div><h4>Ne jamais s'excuser sans réparer</h4><p>« Désolé » seul est une insulte. Toujours associé à un acte concret : crédit, remplacement, rappel sous X heures.</p></div>
+    </div>
+    <div class="principle-row">
+      <div class="num2"><em>5</em></div>
+      <div><h4>L'argent en chiffres clairs</h4><p>« 2 500 XOF/mois », jamais « XOF 2,500.00 ». Espace fine comme séparateur de milliers, sans virgule décimale (XOF n'en a pas).</p></div>
+    </div>
+    <div class="principle-row">
+      <div class="num2"><em>6</em></div>
+      <div><h4>Les heures locales, pas UTC</h4><p>« mardi 9 h » et non « 09:00 Africa/Lome ». L'heure togolaise est l'heure par défaut, partout.</p></div>
+    </div>
+    <div class="principle-row">
+      <div class="num2"><em>7</em></div>
+      <div><h4>Aucun emoji, sauf exception négociée</h4><p>Les emoji créent une fausse familiarité et vieillissent vite. Préférer les pictogrammes line-icon de la bibliothèque. Le caractère vient de la typographie, pas des smileys.</p></div>
+    </div>
+  </section>
+
+  <p style="margin-top: var(--s-10); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.12em;">— Fin · v2.0 · 2026</p>
+</div>
+</body></html>

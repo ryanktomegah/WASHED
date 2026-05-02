@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="fr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Washed — Typographie</title>
+<link rel="stylesheet" href="../shared/tokens.css">
+<style>
+  body { background: var(--bg); }
+  .page { max-width: 1100px; margin: 0 auto; padding: var(--s-9) var(--s-6) var(--s-11); }
+  .crumb { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3); margin-bottom: var(--s-6); }
+  .crumb a { color: var(--ink-3); text-decoration: none; }
+  h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(40px, 6vw, 72px); letter-spacing: -0.02em; line-height: 1.05; margin: 0 0 var(--s-5); }
+  h1 em { font-style: italic; color: var(--primary); }
+  .lede { font-size: var(--text-lg); color: var(--ink-2); max-width: 60ch; line-height: 1.55; margin: 0 0 var(--s-9); }
+  .section { margin-top: var(--s-10); padding-top: var(--s-7); border-top: 1px solid var(--line); }
+  .section h2 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-2xl); letter-spacing: -0.01em; margin: 0 0 var(--s-2); }
+  .section .sub { color: var(--ink-3); margin: 0 0 var(--s-6); max-width: 60ch; }
+  .num { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); letter-spacing: 0.12em; margin-bottom: var(--s-2); }
+
+  .specimen { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: var(--s-7); margin-bottom: var(--s-5); }
+  .specimen .role { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; color: var(--primary); margin-bottom: var(--s-3); }
+  .specimen .name { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 500; margin-bottom: var(--s-2); }
+  .specimen .meta { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); margin-bottom: var(--s-5); }
+  .specimen .display-line { font-family: var(--font-display); font-size: 88px; font-weight: 500; letter-spacing: -0.025em; line-height: 1; color: var(--ink); margin: 0 0 var(--s-4); }
+  .specimen .display-line em { font-style: italic; color: var(--primary); }
+  .specimen .body-line { font-family: var(--font-body); font-size: var(--text-md); line-height: 1.55; color: var(--ink-2); margin: 0; max-width: 60ch; }
+  .specimen .mono-line { font-family: var(--font-mono); font-size: var(--text-base); color: var(--ink); margin: 0; }
+  .specimen .glyphs { font-family: inherit; font-size: 32px; color: var(--ink); letter-spacing: 0.02em; margin-top: var(--s-5); border-top: 1px solid var(--line); padding-top: var(--s-5); }
+  .specimen.disp .glyphs { font-family: var(--font-display); }
+  .specimen.body .glyphs { font-family: var(--font-body); }
+  .specimen.mono .glyphs { font-family: var(--font-mono); }
+
+  /* Scale */
+  .scale-row { display: grid; grid-template-columns: 100px 80px 1fr; gap: var(--s-5); align-items: baseline; padding: var(--s-3) 0; border-bottom: 1px solid var(--line); }
+  .scale-row .token { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.08em; }
+  .scale-row .px { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); }
+  .scale-row .sample { font-family: var(--font-display); color: var(--ink); font-weight: 500; letter-spacing: -0.015em; }
+
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-5); }
+  @media (max-width: 720px) { .pair { grid-template-columns: 1fr; } .scale-row { grid-template-columns: 1fr; } }
+
+  .rule { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-5); }
+  .rule h4 { font-family: var(--font-display); font-size: var(--text-md); font-weight: 500; margin: 0 0 var(--s-2); }
+  .rule p { color: var(--ink-3); font-size: var(--text-sm); line-height: 1.55; margin: 0; }
+  .rule .ex { font-family: var(--font-display); font-style: italic; font-size: var(--text-xl); color: var(--primary); margin-top: var(--s-3); }
+</style></head>
+<body data-theme="subscriber">
+<div class="page">
+  <div class="crumb"><a href="../index.html">← Index</a> · 00 Foundations · Typographie</div>
+
+  <h1>Trois familles, <em>une voix</em>.</h1>
+  <p class="lede">Fraunces pour la signature et les chiffres-clés. Inter pour tout le texte courant. JetBrains Mono pour les jetons techniques, identifiants, montants alignés. La hiérarchie est portée par le poids, l'italique et la taille — jamais par la couleur seule.</p>
+
+  <!-- Specimens -->
+  <section class="section">
+    <div class="num">01 · SPÉCIMENS</div>
+    <h2>Les trois familles</h2>
+
+    <div class="specimen disp">
+      <div class="role">DISPLAY · titres, montants signature, citations</div>
+      <div class="name">Fraunces</div>
+      <div class="meta">opsz 9..144 · 400/500/600/700 · roman + italic</div>
+      <div class="display-line">Mardi <em>9 h</em></div>
+      <p class="body-line" style="font-family: var(--font-display); font-style: italic; font-size: var(--text-xl); color: var(--ink-2);">«&nbsp;On s'occupe de tout, vous ouvrez la porte.&nbsp;»</p>
+      <div class="glyphs">AaBbCc · 0123456789 · «&nbsp;»&nbsp;— · /'{}() · éàèêç</div>
+    </div>
+
+    <div class="specimen body">
+      <div class="role">BODY · interface, copie, listes, formulaires</div>
+      <div class="name">Inter</div>
+      <div class="meta">variable · 400/500/600/700 · features tnum, ss01</div>
+      <p class="body-line" style="font-size: var(--text-md);">Akouvi est en route. Elle arrive dans 15 minutes. Vous pouvez préparer le linge, ou la laisser sonner — la concierge a la clé.</p>
+      <p class="body-line" style="font-size: var(--text-sm); color: var(--ink-3); margin-top: var(--s-3);">Visite hebdomadaire · 8 mois de relation · 32 visites accomplies</p>
+      <div class="glyphs">AaBbCc · 0123456789 · «&nbsp;»&nbsp;— · /'{}() · éàèêç</div>
+    </div>
+
+    <div class="specimen mono">
+      <div class="role">MONO · montants, identifiants, code, métadonnées</div>
+      <div class="name">JetBrains Mono</div>
+      <div class="meta">400/500 · variant ss20 · ligatures off</div>
+      <p class="mono-line">2&nbsp;500 XOF/mois · S-7841 · 2026-04-12 09:00 GMT</p>
+      <p class="mono-line" style="color: var(--ink-3); margin-top: var(--s-3); font-size: var(--text-sm);">subscription.cancel.title · payment.overdue.banner</p>
+      <div class="glyphs">AaBbCc · 0123456789 · «&nbsp;»&nbsp;— · /'{}() · éàèêç</div>
+    </div>
+  </section>
+
+  <!-- Échelle -->
+  <section class="section">
+    <div class="num">02 · ÉCHELLE</div>
+    <h2>Onze paliers</h2>
+    <p class="sub">Une seule échelle, partagée par les trois applications. La densité change avec le contexte — l'opérateur utilise les paliers du bas, l'abonné ceux du haut.</p>
+    <div>
+      <div class="scale-row"><span class="token">--text-6xl</span><span class="px">84 px</span><span class="sample" style="font-size:84px; line-height: 1;">Mardi 9 h</span></div>
+      <div class="scale-row"><span class="token">--text-5xl</span><span class="px">64 px</span><span class="sample" style="font-size:64px; line-height: 1.05;">Mardi 9 h</span></div>
+      <div class="scale-row"><span class="token">--text-4xl</span><span class="px">48 px</span><span class="sample" style="font-size:48px; line-height: 1.1;">Mardi 9 h</span></div>
+      <div class="scale-row"><span class="token">--text-3xl</span><span class="px">38 px</span><span class="sample" style="font-size:38px; line-height: 1.15;">Mardi 9 h</span></div>
+      <div class="scale-row"><span class="token">--text-2xl</span><span class="px">30 px</span><span class="sample" style="font-size:30px; line-height: 1.2;">Mardi 9 h</span></div>
+      <div class="scale-row"><span class="token">--text-xl</span><span class="px">24 px</span><span class="sample" style="font-size:24px; line-height: 1.3;">Mardi 9 h</span></div>
+      <div class="scale-row"><span class="token">--text-lg</span><span class="px">20 px</span><span class="sample" style="font-size:20px; line-height: 1.4;">Mardi 9 h</span></div>
+      <div class="scale-row"><span class="token">--text-md</span><span class="px">17 px</span><span class="sample" style="font-size:17px; line-height: 1.5; font-family: var(--font-body); font-weight: 400; letter-spacing: 0;">Akouvi est en route. Elle arrive dans 15 minutes.</span></div>
+      <div class="scale-row"><span class="token">--text-base</span><span class="px">15 px</span><span class="sample" style="font-size:15px; line-height: 1.55; font-family: var(--font-body); font-weight: 400; letter-spacing: 0;">Akouvi est en route. Elle arrive dans 15 minutes.</span></div>
+      <div class="scale-row"><span class="token">--text-sm</span><span class="px">13 px</span><span class="sample" style="font-size:13px; line-height: 1.55; font-family: var(--font-body); font-weight: 400; letter-spacing: 0; color: var(--ink-3);">Visite hebdomadaire · 8 mois de relation · 32 visites accomplies</span></div>
+      <div class="scale-row"><span class="token">--text-xs</span><span class="px">11 px</span><span class="sample" style="font-size:11px; line-height: 1.5; font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3);">PROCHAINE VISITE · S-7841 · 2026-04-12</span></div>
+    </div>
+  </section>
+
+  <!-- Règles -->
+  <section class="section">
+    <div class="num">03 · RÈGLES D'USAGE</div>
+    <h2>Quand utiliser quoi</h2>
+    <div class="pair">
+      <div class="rule">
+        <h4>L'italique Fraunces est la signature</h4>
+        <p>Réservé aux moments d'humanité — un nom, un horaire, un montant qui compte. Jamais en bloc. Jamais comme ornement. Si on le voit partout, il ne signifie plus rien.</p>
+        <p class="ex">«&nbsp;Mardi 9 h, Akouvi&nbsp;»</p>
+      </div>
+      <div class="rule">
+        <h4>Le mono est pour la machine</h4>
+        <p>Identifiants, codes, montants à comparer en colonne, métadonnées, clés de chaîne i18n. Si un humain doit le lire en diagonale, c'est Inter. S'il doit le copier-coller, c'est mono.</p>
+        <p class="ex" style="font-family: var(--font-mono); font-style: normal; font-size: var(--text-md); color: var(--ink);">2&nbsp;500 XOF · S-7841</p>
+      </div>
+      <div class="rule">
+        <h4>Inter porte 95 % du texte</h4>
+        <p>Tout le corps, les listes, les formulaires, les boutons, les badges. Variable, donc une seule famille couvre tous les poids. <span class="mono">tnum</span> activé sur les chiffres en tableau.</p>
+        <p class="ex" style="font-family: var(--font-body); font-style: normal; font-weight: 500; font-size: var(--text-md); color: var(--ink);">Confirmer le paiement</p>
+      </div>
+      <div class="rule">
+        <h4>La hiérarchie sans couleur</h4>
+        <p>Un titre est plus grand. Un secondaire est plus léger. Un tertiaire est plus petit et plus terne. La couleur ne porte jamais seule la hiérarchie — un daltonien doit pouvoir scanner la page.</p>
+        <p class="ex" style="font-family: var(--font-body); font-style: normal; font-size: var(--text-sm); color: var(--ink-3);">Hiérarchie : taille → poids → couleur</p>
+      </div>
+      <div class="rule">
+        <h4>Les chiffres XOF ont leur grammaire</h4>
+        <p>Espace fine pour séparer les milliers, jamais de virgule. Pas de décimales. <span class="mono">2&nbsp;500&nbsp;XOF</span> et non <span class="mono">2,500.00 FCFA</span>. <span class="mono">font-variant-numeric: tabular-nums</span> obligatoire en colonne.</p>
+        <p class="ex" style="font-family: var(--font-mono); font-style: normal; font-size: var(--text-md); color: var(--ink);">2&nbsp;500 · 4&nbsp;500 · 12&nbsp;000</p>
+      </div>
+      <div class="rule">
+        <h4>Le « vous » porte une majuscule en tête</h4>
+        <p>Mais pas en milieu de phrase, contrairement à l'allemand. La capitalisation française standard s'applique. Pas de Title Case anglais — « Confirmer le paiement », pas « Confirmer Le Paiement ».</p>
+        <p class="ex" style="font-family: var(--font-body); font-style: normal; font-weight: 500; font-size: var(--text-md); color: var(--ink);">Confirmer le paiement</p>
+      </div>
+    </div>
+  </section>
+
+  <p style="margin-top: var(--s-10); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.12em;">— Fin · v2.0 · 2026</p>
+</div>
+</body></html>

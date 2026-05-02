@@ -1,0 +1,849 @@
+<!doctype html>
+<html lang="fr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Washed — Worker Hi-Fi</title>
+<link rel="stylesheet" href="../shared/tokens.css">
+<style>
+  body { background: var(--bg); color: var(--ink); }
+  .page { max-width: 1440px; margin: 0 auto; padding: var(--s-9) var(--s-6) var(--s-11); }
+  .crumb { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3); margin-bottom: var(--s-6); }
+  .crumb a { color: var(--ink-3); text-decoration: none; }
+  h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(40px, 6vw, 64px); letter-spacing: -0.02em; line-height: 1.05; margin: 0 0 var(--s-5); }
+  h1 em { font-style: italic; color: var(--primary); }
+  .lede { font-size: var(--text-lg); color: var(--ink-2); max-width: 64ch; line-height: 1.55; margin: 0 0 var(--s-9); }
+  .section { margin-top: var(--s-10); padding-top: var(--s-7); border-top: 1px solid var(--line); }
+  .section h2 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-2xl); letter-spacing: -0.01em; margin: 0 0 var(--s-2); }
+  .num { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); letter-spacing: 0.12em; margin-bottom: var(--s-2); }
+
+  /* Android phone frame — Tecno-class, no notch, punch-hole camera */
+  .row { display: flex; gap: var(--s-7); flex-wrap: wrap; align-items: flex-start; }
+  .phone {
+    width: 268px; height: 560px; background: #050807; border-radius: 28px; padding: 8px;
+    box-shadow: 0 30px 60px -20px rgba(14,26,18,0.45), 0 0 0 1px rgba(255,255,255,0.05) inset;
+    position: relative; flex-shrink: 0;
+  }
+  .phone .screen { width: 100%; height: 100%; border-radius: 22px; overflow: hidden; background: var(--surface); position: relative; }
+  .phone .punch { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); width: 10px; height: 10px; background: #050807; border-radius: 999px; z-index: 5; }
+  .phone-cap { width: 268px; flex-shrink: 0; }
+  .phone-cap .id { font-family: var(--font-mono); font-size: 10px; color: var(--primary); letter-spacing: 0.1em; text-transform: uppercase; margin-top: var(--s-3); }
+  .phone-cap .name { font-family: var(--font-body); font-weight: 500; font-size: 13px; margin-top: 2px; }
+  .phone-cap .notes { font-size: 11px; color: var(--ink-3); margin-top: 4px; line-height: 1.4; }
+
+  /* Status bar — Android style: time left, dot indicators right */
+  .sb { height: 28px; padding: 8px 14px 0; display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-weight: 600; font-family: var(--font-body); color: var(--ink); }
+  .sb .right { display: flex; gap: 4px; align-items: center; }
+  .sb .right svg { width: 11px; height: 11px; }
+
+  /* App content */
+  .body { padding: 14px 14px 14px; height: calc(100% - 28px); display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+  .body.tight { gap: 6px; }
+  .h-sm { font-size: 9px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-3); }
+  .h-md { font-family: var(--font-display); font-weight: 500; font-size: 22px; letter-spacing: -0.02em; line-height: 1.1; color: var(--ink); }
+  .h-lg { font-family: var(--font-display); font-weight: 500; font-size: 30px; letter-spacing: -0.02em; line-height: 1; color: var(--ink); }
+  .h-xl { font-family: var(--font-display); font-weight: 500; font-size: 50px; letter-spacing: -0.04em; line-height: 0.9; color: var(--ink); }
+  .h-xl em { font-style: italic; color: var(--primary); }
+  .p { font-size: 12px; color: var(--ink-2); line-height: 1.45; }
+  .p-sm { font-size: 10px; color: var(--ink-3); line-height: 1.45; }
+  .btn { background: var(--ink); color: var(--surface); border-radius: 999px; padding: 12px 14px; font-size: 12px; font-weight: 600; text-align: center; }
+  .btn.alt { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
+  .btn.primary { background: var(--primary); color: white; }
+  .btn.danger { background: var(--danger); color: white; }
+  .btn.ghost { background: var(--bg-deep); color: var(--ink); }
+  .btn.full { width: 100%; box-sizing: border-box; }
+  .btn.lg { padding: 16px 16px; font-size: 13px; }
+  .row2 { display: flex; gap: 8px; }
+  .row2 > * { flex: 1; }
+  .card { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--surface); }
+  .card.dark { background: var(--ink); color: var(--surface); border-color: transparent; }
+  .card.green { background: var(--primary-soft); border-color: var(--primary-tint); }
+  .card.warn { background: var(--accent-soft); border-color: #F0DFAF; }
+  .card.danger { background: var(--danger-soft); border-color: #F4C8C2; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 999px; background: var(--bg-deep); font-size: 10px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-2); }
+  .chip.green { background: var(--success-soft); color: var(--success); }
+  .chip.primary { background: var(--primary); color: white; }
+  .chip.danger { background: var(--danger-soft); color: var(--danger); }
+  .chip.warn { background: var(--accent-soft); color: var(--accent); }
+  .chip.dark { background: var(--ink); color: var(--surface); }
+  .input { border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; font-size: 12px; background: var(--surface); color: var(--ink); }
+  .nav { display: flex; justify-content: space-around; padding: 10px 0 8px; border-top: 1px solid var(--line); margin: auto -14px 0; padding-left: 14px; padding-right: 14px; background: var(--surface); }
+  .nav .item { font-size: 9px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .nav .item.active { color: var(--primary); }
+  .nav .glyph { width: 16px; height: 16px; border-radius: 4px; background: currentColor; opacity: 0.5; }
+  .nav .item.active .glyph { opacity: 1; }
+
+  /* Photo placeholder */
+  .photo { background: var(--surface-2); border: 1px dashed var(--line-2); border-radius: 10px; display: grid; place-items: center; color: var(--ink-3); font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .photo.captured { background: linear-gradient(135deg, #2C3A30 0%, #0E1A12 100%); color: rgba(255,255,255,0.6); border: none; }
+  .avatar { width: 36px; height: 36px; border-radius: 999px; background: linear-gradient(135deg, var(--primary), var(--accent)); flex-shrink: 0; }
+  .avatar.lg { width: 56px; height: 56px; }
+
+  /* Map placeholder — striped */
+  .map {
+    background-image: repeating-linear-gradient(135deg, var(--line) 0, var(--line) 1px, transparent 1px, transparent 8px);
+    background-color: var(--surface-2);
+    border-radius: 10px; position: relative; overflow: hidden;
+  }
+  .map .pin { position: absolute; width: 12px; height: 12px; border-radius: 999px; background: var(--primary); box-shadow: 0 0 0 4px rgba(26,92,52,0.18); }
+  .map .pin.me { background: #1E90FF; box-shadow: 0 0 0 4px rgba(30,144,255,0.2); }
+  .map .path { position: absolute; height: 2px; background: var(--primary); border-radius: 2px; }
+
+  /* Annotation block */
+  .annot {
+    background: var(--bg-deep); border-left: 3px solid var(--primary); padding: var(--s-4) var(--s-5);
+    border-radius: 0 var(--r-sm) var(--r-sm) 0; margin: var(--s-5) 0;
+    font-size: var(--text-sm); color: var(--ink-2); line-height: 1.55;
+  }
+  .annot b { color: var(--primary); font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; display: block; margin-bottom: 4px; }
+
+  /* Big timer ring */
+  .timer-ring { position: relative; width: 160px; height: 160px; margin: 0 auto; }
+  .timer-ring .num { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 44px; color: var(--ink); }
+
+  /* Visit list rows */
+  .visit { display: flex; gap: 10px; padding: 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); align-items: center; }
+  .visit.done { background: var(--bg-deep); opacity: 0.7; }
+  .visit.now { background: var(--primary-soft); border-color: var(--primary); }
+  .visit .when { font-family: var(--font-display); font-weight: 500; font-size: 18px; line-height: 1; color: var(--ink); width: 44px; }
+  .visit .who { font-size: 12px; font-weight: 600; color: var(--ink); }
+  .visit .where { font-size: 10px; color: var(--ink-3); margin-top: 2px; }
+  .visit .arrow { margin-left: auto; color: var(--ink-3); }
+
+  /* Earnings */
+  .earn-num { font-family: var(--font-display); font-weight: 500; font-style: italic; font-size: 56px; line-height: 1; color: var(--primary); letter-spacing: -0.02em; }
+  .earn-num small { font-size: 22px; color: var(--ink-3); font-style: normal; }
+
+  /* Offline ribbon */
+  .ribbon { background: var(--ink); color: var(--surface); padding: 6px 12px; font-size: 10px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; }
+  .ribbon .dot { width: 6px; height: 6px; border-radius: 999px; background: var(--accent); }
+</style></head>
+<body data-theme="worker">
+<div class="page">
+  <div class="crumb"><a href="../index.html">← Index</a> · 06 Worker Hi-Fi</div>
+
+  <h1>Worker app — <em>Android</em></h1>
+  <p class="lede">Hi-fi des écrans clés côté laveuse. Outil de travail. Tecno-class Android, hors-ligne d'abord, gestes simples, cibles tactiles ≥48dp. Cycle de visite (W-05 → W-12) ouvre 95% des sessions. SOS atteignable en 2 taps depuis n'importe quel écran.</p>
+
+  <div class="annot"><b>Vocabulaire visuel — Forêt</b>Vert profond #1A5C34 comme primaire (action, validation, monnaie). Crème blanche #F8FBF8 sur fond. Aucune dégradation. Boutons primaires en charbon foncé #0E1A12 pour les actions destructives ou la confirmation, vert pour les actions principales (« Démarrer », « Photo », « Terminer »). La photo est l'asset hero — toute capture est plein-écran, format carré 1:1. Pas d'illustrations, pas d'emoji.</div>
+
+  <!-- =================================================== -->
+  <!-- ROW 01 — DÉMARRAGE & TOURNÉE                       -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">01 · DÉMARRAGE</div>
+    <h2>W-01 → W-04 · Lancer la journée</h2>
+
+    <div class="row" style="margin-top: var(--s-7)">
+
+      <!-- W-01 SPLASH -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>06:42</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body" style="background: var(--ink); color: var(--surface); justify-content: center; align-items: center;">
+          <div style="text-align:center">
+            <div style="font-family:var(--font-display);font-weight:500;font-style:italic;font-size:54px;letter-spacing:-0.04em;color:var(--surface)">Washed.</div>
+            <div style="font-family:var(--font-mono);font-size:9px;color:rgba(248,251,248,0.5);letter-spacing:0.2em;margin-top:8px">L'APPLI LAVEUSE</div>
+            <div style="margin-top: 90px; font-family: var(--font-mono); font-size: 9px; color: rgba(248,251,248,0.4); letter-spacing: 0.15em">SYNCHRONISATION...</div>
+            <div style="margin-top: 12px; width: 80px; height: 2px; background: rgba(248,251,248,0.1); border-radius: 999px; overflow: hidden">
+              <div style="width: 60%; height: 100%; background: var(--primary)"></div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">W-01</div><div class="name">Splash</div><div class="notes">Sync silencieuse. Vérifie tournée locale puis tente réseau.</div></div></div>
+
+      <!-- W-02 LOGIN -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>06:43</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body">
+          <div class="h-sm">CONNEXION</div>
+          <div class="h-md">Bonjour.<br>Votre numéro ?</div>
+          <div class="p">Le numéro inscrit chez Washed.</div>
+          <div style="margin-top:8px">
+            <div class="h-sm" style="margin-bottom:6px">NUMÉRO</div>
+            <div class="input" style="display:flex;align-items:center;gap:8px;font-family:var(--font-mono)">
+              <span style="color:var(--ink-3)">+228</span>
+              <span style="color:var(--ink)">99 87 65 43</span>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <div class="h-sm" style="margin-bottom:6px">CODE PIN — 4 CHIFFRES</div>
+            <div style="display:flex;gap:6px">
+              <div style="flex:1;height:44px;border:1px solid var(--ink);border-radius:8px;display:grid;place-items:center;font-family:var(--font-mono);font-size:18px">●</div>
+              <div style="flex:1;height:44px;border:1px solid var(--ink);border-radius:8px;display:grid;place-items:center;font-family:var(--font-mono);font-size:18px">●</div>
+              <div style="flex:1;height:44px;border:1px solid var(--line);border-radius:8px"></div>
+              <div style="flex:1;height:44px;border:1px solid var(--line);border-radius:8px"></div>
+            </div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn primary full lg">Entrer</div>
+          <div class="p-sm" style="text-align:center">PIN oublié ? Appelez le bureau · 90 00 00 00</div>
+        </div>
+      </div></div>
+      <div><div class="id">W-02</div><div class="name">Connexion PIN</div><div class="notes">PIN local, jamais envoyé. Vérifié contre hash stocké à l'inscription.</div></div></div>
+
+      <!-- W-03 TOURNÉE DU JOUR -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>06:44</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body tight">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div class="h-sm">MARDI 5 MAI</div>
+              <div class="h-md" style="margin-top:2px">Bonjour Akouvi.</div>
+            </div>
+            <div class="avatar"></div>
+          </div>
+          <div class="card" style="padding:10px 12px;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div class="p-sm" style="margin:0">Votre journée</div>
+              <div style="font-family:var(--font-display);font-weight:500;font-size:24px;letter-spacing:-0.02em">5 visites</div>
+            </div>
+            <div style="text-align:right">
+              <div class="p-sm" style="margin:0">À gagner</div>
+              <div style="font-family:var(--font-display);font-weight:500;font-style:italic;font-size:22px;color:var(--primary)">7 500 <small style="font-size:11px;color:var(--ink-3);font-style:normal">XOF</small></div>
+            </div>
+          </div>
+          <div class="h-sm" style="margin-top:4px">PROCHAINE</div>
+          <div class="visit now">
+            <div class="when">9<span style="font-size:12px">h</span></div>
+            <div>
+              <div class="who">Mme Adjoa K.</div>
+              <div class="where">Tokoin Casablanca · 800m</div>
+            </div>
+            <div class="arrow">›</div>
+          </div>
+          <div class="visit">
+            <div class="when">10<span style="font-size:12px">h30</span></div>
+            <div>
+              <div class="who">M. Kossi A.</div>
+              <div class="where">Bè · 1.2 km</div>
+            </div>
+            <div class="arrow">›</div>
+          </div>
+          <div class="visit">
+            <div class="when">12<span style="font-size:12px">h</span></div>
+            <div>
+              <div class="who">Mme Esi T.</div>
+              <div class="where">Adidogomé · 2.4 km</div>
+            </div>
+            <div class="arrow">›</div>
+          </div>
+          <div class="nav">
+            <div class="item active"><div class="glyph"></div><span>Tournée</span></div>
+            <div class="item"><div class="glyph"></div><span>Gains</span></div>
+            <div class="item"><div class="glyph"></div><span>Profil</span></div>
+            <div class="item"><div class="glyph"></div><span>Aide</span></div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">W-03</div><div class="name">Tournée du jour</div><div class="notes">Hub par défaut. Trié chronologiquement. Premier élément = état actif.</div></div></div>
+
+      <!-- W-04 DÉTAIL VISITE À VENIR -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>06:45</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body">
+          <div class="h-sm">↩ TOURNÉE · VISITE 1 / 5</div>
+          <div class="h-md">Mme Adjoa K.</div>
+          <div style="display:flex;gap:8px;margin-top:2px;flex-wrap:wrap">
+            <span class="chip green">8e mois</span>
+            <span class="chip">Tarif T1</span>
+            <span class="chip">800m</span>
+          </div>
+          <div class="card" style="padding:10px 12px">
+            <div class="h-sm" style="margin-bottom:6px">QUAND</div>
+            <div style="font-family:var(--font-display);font-weight:500;font-size:20px;line-height:1.1">Mardi 5 mai · 9h00</div>
+          </div>
+          <div class="card" style="padding:10px 12px">
+            <div class="h-sm" style="margin-bottom:6px">OÙ</div>
+            <div style="font-size:12px;font-weight:600">Tokoin Casablanca, rue 254</div>
+            <div class="p-sm">Maison bleue, portail vert. Sonner 2 fois.</div>
+          </div>
+          <div class="card warn" style="padding:10px 12px">
+            <div class="h-sm" style="margin-bottom:4px;color:var(--accent)">NOTE DE LA CLIENTE</div>
+            <div style="font-size:12px">« Le portail est ouvert le mardi matin, entrez directement. »</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn primary full lg">Démarrer la route</div>
+          <div class="row2">
+            <div class="btn ghost">Itinéraire</div>
+            <div class="btn ghost">Appeler bureau</div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">W-04</div><div class="name">Détail visite</div><div class="notes">Pas d'appel direct cliente — toujours via bureau (politique no-direct-comms v1).</div></div></div>
+
+    </div>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- ROW 02 — CYCLE DE VISITE                            -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">02 · CYCLE DE VISITE</div>
+    <h2>W-05 → W-12 · Le cœur du métier</h2>
+
+    <div class="row" style="margin-top: var(--s-7)">
+
+      <!-- W-05 EN ROUTE -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>08:48</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body tight">
+          <div class="h-sm">EN ROUTE · 9H00 — MME ADJOA</div>
+          <div class="map" style="height:280px">
+            <div class="path" style="left:30px;top:80px;width:160px;transform:rotate(15deg)"></div>
+            <div class="path" style="left:90px;top:160px;width:120px;transform:rotate(-25deg)"></div>
+            <div class="pin me" style="left:24px;top:210px"></div>
+            <div class="pin" style="left:200px;top:60px"></div>
+            <div style="position:absolute;left:24px;top:230px;font-family:var(--font-mono);font-size:9px;color:var(--ink);background:white;padding:2px 6px;border-radius:4px">VOUS</div>
+            <div style="position:absolute;left:148px;top:42px;font-family:var(--font-mono);font-size:9px;color:white;background:var(--primary);padding:2px 6px;border-radius:4px">MME ADJOA</div>
+          </div>
+          <div class="card" style="padding:12px;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div class="p-sm" style="margin:0">Distance</div>
+              <div style="font-family:var(--font-display);font-weight:500;font-size:18px">800 m</div>
+            </div>
+            <div>
+              <div class="p-sm" style="margin:0">Arrivée prévue</div>
+              <div style="font-family:var(--font-display);font-weight:500;font-size:18px">8h58</div>
+            </div>
+          </div>
+          <div class="row2">
+            <div class="btn ghost">Pause</div>
+            <div class="btn primary">J'arrive</div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">W-05</div><div class="name">En route</div><div class="notes">Carte en cache. Si hors-ligne, distance grise mais visite reste valide.</div></div></div>
+
+      <!-- W-06 ARRIVÉE / GEOFENCE -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>08:59</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body" style="justify-content:center;align-items:center">
+          <div style="text-align:center;width:100%">
+            <div style="width:80px;height:80px;border-radius:999px;background:var(--primary-soft);border:2px solid var(--primary);display:grid;place-items:center;margin:0 auto 16px">
+              <div style="width:24px;height:24px;border-radius:999px;background:var(--primary)"></div>
+            </div>
+            <div class="h-sm" style="color:var(--primary)">VOUS ÊTES ARRIVÉE</div>
+            <div class="h-md" style="margin-top:4px">Chez Mme Adjoa</div>
+            <div class="p" style="margin-top:8px">GPS confirmé à 8m près.<br>Vous pouvez démarrer la visite.</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn primary full lg">Démarrer la visite</div>
+          <div class="p-sm" style="text-align:center">Mauvais endroit ? <span style="color:var(--primary);font-weight:600">Signaler</span></div>
+        </div>
+      </div></div>
+      <div><div class="id">W-06</div><div class="name">Geofence détecté</div><div class="notes">Tolérance 50m. Bouton désactivé hors-zone (avec lien signaler).</div></div></div>
+
+      <!-- W-07 CHECK-IN -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>09:01</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body">
+          <div class="h-sm">VISITE EN COURS · ÉTAPE 1 / 5</div>
+          <div class="h-md">Photo « avant »<br>du linge.</div>
+          <div class="p">Photographiez le panier de linge sale, posé près de la bassine. Une seule photo.</div>
+          <div class="photo" style="aspect-ratio:1;margin-top:6px;flex:1">— Aperçu caméra</div>
+          <div style="display:flex;justify-content:center;align-items:center;gap:14px;margin-top:6px">
+            <div style="width:32px;height:32px;border-radius:6px;background:var(--bg-deep)" title="galerie"></div>
+            <div style="width:64px;height:64px;border-radius:999px;background:white;border:4px solid var(--ink);box-shadow:0 0 0 2px white inset"></div>
+            <div style="width:32px;height:32px;border-radius:6px;background:var(--bg-deep)" title="flash"></div>
+          </div>
+          <div class="p-sm" style="text-align:center">Il faut une photo claire pour valider.</div>
+        </div>
+      </div></div>
+      <div><div class="id">W-07</div><div class="name">Photo avant</div><div class="notes">Photo obligatoire. EXIF + GPS + horodatage signés côté client.</div></div></div>
+
+      <!-- W-08 PHASE LAVAGE -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>09:02</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body">
+          <div class="h-sm">VISITE EN COURS · ÉTAPE 2 / 5</div>
+          <div class="h-md">Lavage en cours.</div>
+          <div class="p">Pas besoin de regarder l'écran. L'application tourne en arrière-plan.</div>
+          <div style="flex:1"></div>
+          <div class="timer-ring">
+            <svg viewBox="0 0 160 160" width="160" height="160">
+              <circle cx="80" cy="80" r="68" fill="none" stroke="var(--bg-deep)" stroke-width="8"/>
+              <circle cx="80" cy="80" r="68" fill="none" stroke="var(--primary)" stroke-width="8" stroke-linecap="round" stroke-dasharray="427" stroke-dashoffset="180" transform="rotate(-90 80 80)"/>
+            </svg>
+            <div class="num">42:18</div>
+          </div>
+          <div class="p-sm" style="text-align:center">Démarré à 9h02 · estimé 1h00</div>
+          <div style="flex:1"></div>
+          <div class="btn primary full lg">Linge prêt — photo après</div>
+          <div class="btn ghost">Pause / signaler un souci</div>
+        </div>
+      </div></div>
+      <div><div class="id">W-08</div><div class="name">Phase lavage</div><div class="notes">Compteur libre. La laveuse décide quand passer. Pas d'arrêt forcé.</div></div></div>
+
+      <!-- W-09 PHOTO APRÈS -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>10:04</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body tight">
+          <div class="h-sm">VISITE EN COURS · ÉTAPE 3 / 5</div>
+          <div class="h-md">Photo « après »<br>du linge propre.</div>
+          <div class="row2" style="margin-top:6px">
+            <div class="photo captured" style="aspect-ratio:1">AVANT · 9h01</div>
+            <div class="photo" style="aspect-ratio:1">APRÈS — capturer</div>
+          </div>
+          <div class="p-sm" style="text-align:center;margin-top:4px">Côte à côte aide la cliente à voir le résultat.</div>
+          <div style="flex:1"></div>
+          <div style="display:flex;justify-content:center;align-items:center;gap:14px">
+            <div style="width:32px;height:32px;border-radius:6px;background:var(--bg-deep)"></div>
+            <div style="width:64px;height:64px;border-radius:999px;background:white;border:4px solid var(--primary)"></div>
+            <div style="width:32px;height:32px;border-radius:6px;background:var(--bg-deep)"></div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">W-09</div><div class="name">Photo après</div><div class="notes">Affichage côte-à-côte = signature visuelle Washed. Comparaison auto-généré dans hub abonné.</div></div></div>
+
+      <!-- W-10 CHECK-OUT -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>10:08</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body">
+          <div class="h-sm">VISITE EN COURS · ÉTAPE 4 / 5</div>
+          <div class="h-md">Tout s'est bien passé ?</div>
+          <div class="p">Une note rapide pour le bureau. La cliente ne le voit pas.</div>
+          <div class="card" style="padding:10px 12px">
+            <div class="h-sm" style="margin-bottom:6px">COMMENT C'ÉTAIT ?</div>
+            <div style="display:flex;gap:6px">
+              <div style="flex:1;padding:10px;border:1px solid var(--primary);background:var(--primary-soft);border-radius:8px;text-align:center;font-size:11px;font-weight:600;color:var(--primary)">Tout va bien</div>
+              <div style="flex:1;padding:10px;border:1px solid var(--line);border-radius:8px;text-align:center;font-size:11px">Petit souci</div>
+              <div style="flex:1;padding:10px;border:1px solid var(--line);border-radius:8px;text-align:center;font-size:11px">Gros souci</div>
+            </div>
+          </div>
+          <div class="card" style="padding:10px 12px">
+            <div class="h-sm" style="margin-bottom:6px">DURÉE</div>
+            <div style="font-family:var(--font-display);font-weight:500;font-size:20px">1h 06min</div>
+            <div class="p-sm">9h01 → 10h07</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn primary full lg">Confirmer fin de visite</div>
+        </div>
+      </div></div>
+      <div><div class="id">W-10</div><div class="name">Check-out</div><div class="notes">Trois niveaux. « Petit/gros souci » ouvre formulaire libre + alerte opérateur.</div></div></div>
+
+      <!-- W-11 RÉCAP -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>10:09</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body" style="justify-content:center;align-items:center;text-align:center">
+          <div style="flex:1"></div>
+          <div class="chip green" style="margin-bottom:14px">VISITE 1 / 5 TERMINÉE</div>
+          <div class="h-xl">+ 1 500 <em>XOF</em></div>
+          <div class="p" style="margin-top:8px;color:var(--ink-2)">crédité dans votre solde</div>
+          <div style="margin-top:24px;width:60%;height:1px;background:var(--line)"></div>
+          <div class="p-sm" style="margin-top:14px;color:var(--ink-3)">Prochaine visite</div>
+          <div style="font-family:var(--font-display);font-weight:500;font-size:18px;color:var(--ink)">M. Kossi · 10h30</div>
+          <div class="p-sm" style="margin-top:2px">1.2 km · 6 min en moto</div>
+          <div style="flex:1"></div>
+          <div class="row2" style="width:100%">
+            <div class="btn ghost">Pause</div>
+            <div class="btn primary">Continuer</div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">W-11</div><div class="name">Récap visite</div><div class="notes">Moment-de-fierté. Animation count-up sur le gain (480ms emphasis curve).</div></div></div>
+
+    </div>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- ROW 03 — GAINS, PROFIL, PLANNING                    -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">03 · VIE PRO</div>
+    <h2>W-13 → W-17 · Gains, planning, profil, SOS</h2>
+
+    <div class="row" style="margin-top: var(--s-7)">
+
+      <!-- W-13 GAINS -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>14:32</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body tight">
+          <div class="h-sm">VOS GAINS</div>
+          <div class="h-md">Cette semaine</div>
+          <div class="card" style="padding:14px;text-align:center">
+            <div class="earn-num">22 500<small> XOF</small></div>
+            <div class="p-sm" style="margin-top:4px">15 visites · lundi → vendredi</div>
+          </div>
+          <div class="card" style="padding:10px 12px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div class="p-sm" style="margin:0">Solde disponible</div>
+                <div style="font-family:var(--font-display);font-weight:500;font-size:22px">12 000 <span style="color:var(--ink-3);font-size:12px">XOF</span></div>
+              </div>
+              <div class="btn primary" style="padding:8px 12px;font-size:11px">Retirer</div>
+            </div>
+          </div>
+          <div class="h-sm" style="margin-top:4px">CETTE SEMAINE EN DÉTAIL</div>
+          <div style="display:flex;gap:6px;align-items:flex-end;height:60px;padding:0 4px">
+            <div style="flex:1;background:var(--primary);height:80%;border-radius:4px 4px 0 0"></div>
+            <div style="flex:1;background:var(--primary);height:60%;border-radius:4px 4px 0 0"></div>
+            <div style="flex:1;background:var(--primary);height:90%;border-radius:4px 4px 0 0"></div>
+            <div style="flex:1;background:var(--primary);height:75%;border-radius:4px 4px 0 0"></div>
+            <div style="flex:1;background:var(--primary-tint);height:50%;border-radius:4px 4px 0 0"></div>
+            <div style="flex:1;background:var(--bg-deep);height:30%;border-radius:4px 4px 0 0"></div>
+            <div style="flex:1;background:var(--bg-deep);height:30%;border-radius:4px 4px 0 0"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:9px;color:var(--ink-3);padding:0 4px">
+            <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+          </div>
+          <div class="nav">
+            <div class="item"><div class="glyph"></div><span>Tournée</span></div>
+            <div class="item active"><div class="glyph"></div><span>Gains</span></div>
+            <div class="item"><div class="glyph"></div><span>Profil</span></div>
+            <div class="item"><div class="glyph"></div><span>Aide</span></div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">W-13</div><div class="name">Gains</div><div class="notes">Retrait Mobile Money instantané. Chaque visite = micro-virement, jamais d'attente fin-de-mois.</div></div></div>
+
+      <!-- W-14 PLANNING -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>14:33</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body tight">
+          <div class="h-sm">PLANNING</div>
+          <div class="h-md">Semaine du 11 mai</div>
+          <div class="card" style="padding:10px 12px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div class="p-sm" style="margin:0">Visites prévues</div>
+                <div style="font-family:var(--font-display);font-weight:500;font-size:22px">17</div>
+              </div>
+              <div style="text-align:right">
+                <div class="p-sm" style="margin:0">Estimé</div>
+                <div style="font-family:var(--font-display);font-weight:500;font-style:italic;font-size:20px;color:var(--primary)">25 500</div>
+              </div>
+            </div>
+          </div>
+          <div class="visit"><div class="when">L</div><div><div class="who">Lundi 11</div><div class="where">3 visites · 9h-13h</div></div><div class="arrow">›</div></div>
+          <div class="visit"><div class="when">M</div><div><div class="who">Mardi 12</div><div class="where">4 visites · 8h-15h</div></div><div class="arrow">›</div></div>
+          <div class="visit"><div class="when">M</div><div><div class="who">Merc. 13</div><div class="where">3 visites · 9h-12h</div></div><div class="arrow">›</div></div>
+          <div class="visit"><div class="when">J</div><div><div class="who">Jeudi 14</div><div class="where">4 visites · 8h-14h</div></div><div class="arrow">›</div></div>
+          <div class="card warn" style="padding:8px 12px;margin-top:4px">
+            <div class="h-sm" style="color:var(--accent);margin-bottom:2px">VENDREDI</div>
+            <div style="font-size:11px">Vous avez demandé congé. Confirmé.</div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">W-14</div><div class="name">Planning</div><div class="notes">Vue 7 jours. Le bureau peut ajuster mais jamais sans appeler la laveuse d'abord.</div></div></div>
+
+      <!-- W-15 PROFIL -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>14:34</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body tight">
+          <div style="display:flex;gap:12px;align-items:center;margin-top:4px">
+            <div class="avatar lg"></div>
+            <div>
+              <div class="h-md">Akouvi K.</div>
+              <div class="p-sm">Laveuse depuis sep. 2025</div>
+            </div>
+          </div>
+          <div class="card" style="padding:10px 12px;display:flex;justify-content:space-between;text-align:center">
+            <div><div style="font-family:var(--font-display);font-weight:500;font-size:22px">238</div><div class="p-sm" style="margin:0">Visites</div></div>
+            <div><div style="font-family:var(--font-display);font-weight:500;font-size:22px">98%</div><div class="p-sm" style="margin:0">Confiance</div></div>
+            <div><div style="font-family:var(--font-display);font-weight:500;font-size:22px">14</div><div class="p-sm" style="margin:0">Foyers</div></div>
+          </div>
+          <div class="h-sm" style="margin-top:4px">FOYERS RÉGULIERS</div>
+          <div class="visit">
+            <div class="avatar" style="width:32px;height:32px"></div>
+            <div style="margin-left:4px">
+              <div class="who">Mme Adjoa K.</div>
+              <div class="where">8 mois · 32 visites</div>
+            </div>
+            <div class="chip green" style="margin-left:auto;padding:3px 7px">★★★</div>
+          </div>
+          <div class="visit">
+            <div class="avatar" style="width:32px;height:32px"></div>
+            <div style="margin-left:4px">
+              <div class="who">M. Kossi A.</div>
+              <div class="where">5 mois · 18 visites</div>
+            </div>
+            <div class="chip green" style="margin-left:auto;padding:3px 7px">★★</div>
+          </div>
+          <div class="visit">
+            <div class="avatar" style="width:32px;height:32px"></div>
+            <div style="margin-left:4px">
+              <div class="who">Mme Esi T.</div>
+              <div class="where">2 mois · 8 visites</div>
+            </div>
+            <div class="chip" style="margin-left:auto;padding:3px 7px">★</div>
+          </div>
+          <div class="nav">
+            <div class="item"><div class="glyph"></div><span>Tournée</span></div>
+            <div class="item"><div class="glyph"></div><span>Gains</span></div>
+            <div class="item active"><div class="glyph"></div><span>Profil</span></div>
+            <div class="item"><div class="glyph"></div><span>Aide</span></div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">W-15</div><div class="name">Profil &amp; foyers</div><div class="notes">Tenure-with-household = signature stickiness. Étoiles = relation, pas notation.</div></div></div>
+
+      <!-- W-16 SOS -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>09:24</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body" style="background:var(--ink);color:var(--surface)">
+          <div class="h-sm" style="color:rgba(248,251,248,0.5)">URGENCE</div>
+          <div style="font-family:var(--font-display);font-weight:500;font-size:30px;color:var(--surface)">Que se passe-t-il ?</div>
+          <div class="p" style="color:rgba(248,251,248,0.7);margin-top:4px">Le bureau vous appelle dans 30 secondes.</div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+            <div class="card" style="background:var(--danger);border:none;color:white;padding:14px">
+              <div style="font-size:13px;font-weight:600">Je suis en danger</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.85);margin-top:2px">Alerte immédiate + GPS partagé</div>
+            </div>
+            <div class="card" style="background:rgba(255,255,255,0.08);border:none;color:white;padding:14px">
+              <div style="font-size:13px;font-weight:600">Problème avec la cliente</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:2px">Refus, agressivité, malentendu</div>
+            </div>
+            <div class="card" style="background:rgba(255,255,255,0.08);border:none;color:white;padding:14px">
+              <div style="font-size:13px;font-weight:600">Accident / blessure</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:2px">Médical · transport</div>
+            </div>
+            <div class="card" style="background:rgba(255,255,255,0.08);border:none;color:white;padding:14px">
+              <div style="font-size:13px;font-weight:600">Autre · besoin d'aide</div>
+            </div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn full" style="background:rgba(255,255,255,0.12);color:white">Annuler</div>
+        </div>
+      </div></div>
+      <div><div class="id">W-16</div><div class="name">SOS</div><div class="notes">Bouton flottant rouge sur tous les écrans. 1 tap. L'opérateur reçoit appel + dernière position GPS.</div></div></div>
+
+      <!-- W-17 HORS-LIGNE -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>11:15</span><span class="right" style="color:var(--accent)">⚡ HORS LIGNE</span></div>
+        <div class="body tight">
+          <div class="ribbon" style="margin-top:4px"><span class="dot"></span> HORS LIGNE · 12 ACTIONS EN ATTENTE</div>
+          <div class="h-sm" style="margin-top:8px">VISITE EN COURS</div>
+          <div class="card" style="padding:10px 12px">
+            <div class="h-md">M. Kossi A.</div>
+            <div class="p-sm">Bè · démarrée à 10h32</div>
+            <div class="row2" style="margin-top:8px">
+              <div class="btn primary" style="padding:8px;font-size:11px">Photo après</div>
+              <div class="btn ghost" style="padding:8px;font-size:11px">Terminer</div>
+            </div>
+          </div>
+          <div class="card warn" style="padding:10px 12px">
+            <div class="h-sm" style="color:var(--accent);margin-bottom:4px">ENREGISTRÉ LOCALEMENT</div>
+            <ul style="margin:0;padding-left:14px;font-size:11px;color:var(--ink-2);line-height:1.6">
+              <li>Photo avant — Mme Adjoa · 9h01</li>
+              <li>Photo après — Mme Adjoa · 10h04</li>
+              <li>Visite terminée — Mme Adjoa · 10h08</li>
+              <li>Photo avant — M. Kossi · 10h32</li>
+            </ul>
+            <div class="p-sm" style="margin-top:6px;color:var(--ink-3)">Sera envoyé dès que le réseau revient.</div>
+          </div>
+          <div class="p-sm" style="text-align:center;color:var(--ink-3);margin-top:auto">Vous pouvez continuer normalement. Tout est sauvegardé.</div>
+        </div>
+      </div></div>
+      <div><div class="id">W-17</div><div class="name">Hors-ligne</div><div class="notes">Aucun blocage. Cycle visite intégralement utilisable hors-ligne. Sync à la reconnexion (background).</div></div></div>
+
+    </div>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- ROW 04 — INCIDENTS, FIN DE JOURNÉE, AIDE             -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">04 · CAS LIMITES &amp; FIN DE JOURNÉE</div>
+    <h2>W-18 → W-22 · Annulations, signalements, aide, fin</h2>
+
+    <div class="row" style="margin-top: var(--s-7)">
+
+      <!-- W-18 ANNULATION CLIENTE -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>08:30</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body">
+          <div class="ribbon" style="background:var(--danger);"><span class="dot" style="background:white"></span> CHANGEMENT DE TOURNÉE</div>
+          <div class="h-md" style="margin-top:8px">Mme Adjoa a annulé.</div>
+          <div class="p">Sa visite de 9h00 est reportée à mardi prochain. Le bureau l'a confirmé avec elle.</div>
+          <div class="card" style="padding:10px 12px">
+            <div class="h-sm" style="margin-bottom:4px">CE QUI CHANGE</div>
+            <ul style="margin:0;padding-left:14px;font-size:11px;line-height:1.6">
+              <li>Votre visite de 9h est annulée</li>
+              <li>Vous gardez votre forfait journalier</li>
+              <li>Prochaine visite reste 10h30 — M. Kossi</li>
+            </ul>
+          </div>
+          <div class="card green" style="padding:10px 12px">
+            <div class="h-sm" style="color:var(--primary);margin-bottom:4px">À NOTER</div>
+            <div style="font-size:11px">Vous avez été prévenue à temps. Pas de pénalité, pas de perte.</div>
+          </div>
+          <div style="flex:1"></div>
+          <div class="btn primary full lg">D'accord</div>
+          <div class="btn ghost">Appeler le bureau</div>
+        </div>
+      </div></div>
+      <div><div class="id">W-18</div><div class="name">Annulation cliente</div><div class="notes">Push silencieux. Le forfait journalier protège la laveuse — politique opérateur.</div></div></div>
+
+      <!-- W-19 SIGNALER UN SOUCI -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>10:08</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body">
+          <div class="h-sm">↩ VISITE · CHEZ M. KOSSI</div>
+          <div class="h-md">Que s'est-il passé ?</div>
+          <div class="p">Le bureau vous rappelle dans la journée pour en parler.</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+            <div class="card" style="padding:10px 12px;border:2px solid var(--primary);background:var(--primary-soft)">
+              <div style="font-size:12px;font-weight:600">Pas d'eau / pas de savon</div>
+              <div class="p-sm" style="margin:0">La cliente n'avait pas le nécessaire</div>
+            </div>
+            <div class="card" style="padding:10px 12px">
+              <div style="font-size:12px;font-weight:600">Personne sur place</div>
+              <div class="p-sm" style="margin:0">J'ai sonné, attendu 10 min</div>
+            </div>
+            <div class="card" style="padding:10px 12px">
+              <div style="font-size:12px;font-weight:600">Conflit / ambiance difficile</div>
+            </div>
+            <div class="card" style="padding:10px 12px">
+              <div style="font-size:12px;font-weight:600">Linge endommagé</div>
+            </div>
+            <div class="card" style="padding:10px 12px">
+              <div style="font-size:12px;font-weight:600">Autre</div>
+            </div>
+          </div>
+          <div class="btn primary full lg" style="margin-top:auto">Envoyer au bureau</div>
+        </div>
+      </div></div>
+      <div><div class="id">W-19</div><div class="name">Signaler un souci</div><div class="notes">5 catégories pré-remplies + champ libre. Ouvre ticket opérateur (priorité moyenne).</div></div></div>
+
+      <!-- W-20 NOTIFICATIONS -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>14:35</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body tight">
+          <div class="h-sm">NOTIFICATIONS</div>
+          <div class="h-md">À l'instant</div>
+          <div class="card green" style="padding:10px 12px">
+            <div class="h-sm" style="color:var(--primary);margin-bottom:4px">RETRAIT EFFECTUÉ</div>
+            <div style="font-size:12px">12 000 XOF envoyés sur Mixx By Yas · 90 87 65 43</div>
+            <div class="p-sm" style="margin-top:2px">Référence MM-78423190</div>
+          </div>
+          <div class="h-sm" style="margin-top:8px">CETTE SEMAINE</div>
+          <div class="visit">
+            <div class="avatar" style="width:32px;height:32px;background:var(--success)"></div>
+            <div style="margin-left:4px">
+              <div class="who">Bonus régularité</div>
+              <div class="where">+ 2 000 XOF · 5 jours sans annulation</div>
+            </div>
+          </div>
+          <div class="visit">
+            <div class="avatar" style="width:32px;height:32px;background:var(--accent)"></div>
+            <div style="margin-left:4px">
+              <div class="who">Planning ajusté</div>
+              <div class="where">Mardi prochain · +1 visite</div>
+            </div>
+          </div>
+          <div class="visit">
+            <div class="avatar" style="width:32px;height:32px"></div>
+            <div style="margin-left:4px">
+              <div class="who">Mme Esi a confirmé</div>
+              <div class="where">Visite du 12 mai à 14h</div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">W-20</div><div class="name">Notifications</div><div class="notes">Trois catégories: paie, planning, foyer. Pas de marketing, pas de gamification superflue.</div></div></div>
+
+      <!-- W-21 FIN DE JOURNÉE -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>17:12</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body" style="text-align:center;justify-content:center;align-items:center">
+          <div style="flex:1"></div>
+          <div class="chip green" style="margin-bottom:14px">JOURNÉE TERMINÉE</div>
+          <div class="h-xl">+ 7 500 <em>XOF</em></div>
+          <div class="p" style="margin-top:8px;color:var(--ink-2)">5 visites · 8h12 → 17h00</div>
+          <div style="display:flex;gap:8px;margin-top:18px;justify-content:center;flex-wrap:wrap">
+            <div class="chip green">100% terminées</div>
+            <div class="chip green">0 annulation</div>
+            <div class="chip green">0 retard</div>
+          </div>
+          <div style="margin-top:18px;width:60%;height:1px;background:var(--line)"></div>
+          <div class="p-sm" style="margin-top:14px;color:var(--ink-3)">Demain · mercredi</div>
+          <div style="font-family:var(--font-display);font-weight:500;font-size:18px;color:var(--ink)">3 visites prévues</div>
+          <div class="p-sm" style="margin-top:2px">Première à 9h00 — Mme Yaa</div>
+          <div style="flex:1"></div>
+          <div class="btn primary full lg">Bonne soirée</div>
+        </div>
+      </div></div>
+      <div><div class="id">W-21</div><div class="name">Fin de journée</div><div class="notes">Chiffre fierté. Streak silencieux ("0 annulation" = positif sans crier).</div></div></div>
+
+      <!-- W-22 AIDE -->
+      <div class="phone-cap"><div class="phone"><div class="punch"></div><div class="screen">
+        <div class="sb"><span>14:36</span><span class="right">●●●● 4G ▮</span></div>
+        <div class="body tight">
+          <div class="h-sm">AIDE</div>
+          <div class="h-md">Comment ça marche ?</div>
+          <div class="card" style="padding:10px 12px;display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <div style="font-size:12px;font-weight:600">📞 Appeler le bureau</div>
+              <div class="p-sm" style="margin:0">90 00 00 00 · 7h-19h</div>
+            </div>
+            <div style="color:var(--primary);font-size:18px">›</div>
+          </div>
+          <div class="card" style="padding:10px 12px">
+            <div style="font-size:12px;font-weight:600">Comment toucher ma paie ?</div>
+            <div class="p-sm" style="margin:0">Mobile Money · TMoney ou Mixx</div>
+          </div>
+          <div class="card" style="padding:10px 12px">
+            <div style="font-size:12px;font-weight:600">La cliente est absente</div>
+          </div>
+          <div class="card" style="padding:10px 12px">
+            <div style="font-size:12px;font-weight:600">Pas d'eau / pas de savon</div>
+          </div>
+          <div class="card" style="padding:10px 12px">
+            <div style="font-size:12px;font-weight:600">Mon planning a changé</div>
+          </div>
+          <div class="card" style="padding:10px 12px">
+            <div style="font-size:12px;font-weight:600">Demander un congé</div>
+          </div>
+          <div class="card danger" style="padding:10px 12px">
+            <div style="font-size:12px;font-weight:600;color:var(--danger)">🆘 Urgence — bouton SOS</div>
+            <div class="p-sm" style="margin:0;color:var(--ink-2)">À tenir 1 seconde n'importe où</div>
+          </div>
+          <div class="nav">
+            <div class="item"><div class="glyph"></div><span>Tournée</span></div>
+            <div class="item"><div class="glyph"></div><span>Gains</span></div>
+            <div class="item"><div class="glyph"></div><span>Profil</span></div>
+            <div class="item active"><div class="glyph"></div><span>Aide</span></div>
+          </div>
+        </div>
+      </div></div>
+      <div><div class="id">W-22</div><div class="name">Aide</div><div class="notes">Appel téléphonique en premier — la laveuse n'est pas censée chater. FAQ 5 entrées max.</div></div></div>
+
+    </div>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- COUVERTURE — IDS COMPLETS                           -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">05 · COUVERTURE COMPLÈTE</div>
+    <h2>22 surfaces · 100 % cartographiées</h2>
+    <p class="lede" style="font-size: var(--text-base); margin-top: var(--s-3); margin-bottom: var(--s-6)">Liste de référence pour ingénierie. Chaque ID est implémenté ou explicitement marqué hors-périmètre v1.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--s-3);font-family:var(--font-mono);font-size:var(--text-xs);color:var(--ink-2)">
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-01</b> · Splash &amp; sync</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-02</b> · Connexion PIN</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-03</b> · Tournée du jour</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-04</b> · Détail visite</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-05</b> · En route</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-06</b> · Geofence détecté</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-07</b> · Photo avant</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-08</b> · Phase lavage</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-09</b> · Photo après</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-10</b> · Check-out</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-11</b> · Récap visite</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-12</b> · Pause &amp; reprise</span><span style="color:var(--ink-3)">wireframe</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-13</b> · Gains</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-14</b> · Planning</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-15</b> · Profil &amp; foyers</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-16</b> · SOS</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-17</b> · Hors-ligne</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-18</b> · Annulation cliente</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-19</b> · Signaler un souci</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-20</b> · Notifications</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-21</b> · Fin de journée</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">W-22</b> · Aide</span><span style="color:var(--success)">livré</span></div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

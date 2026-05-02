@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="fr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Washed — Copy Deck FR</title>
+<link rel="stylesheet" href="../shared/tokens.css">
+<style>
+  body { background: var(--bg); color: var(--ink); }
+  .page { max-width: 1280px; margin: 0 auto; padding: var(--s-9) var(--s-6) var(--s-11); }
+  .crumb { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3); margin-bottom: var(--s-6); }
+  .crumb a { color: var(--ink-3); text-decoration: none; }
+  h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(40px, 6vw, 64px); letter-spacing: -0.02em; line-height: 1.05; margin: 0 0 var(--s-5); }
+  h1 em { font-style: italic; color: var(--primary); }
+  .lede { font-size: var(--text-lg); color: var(--ink-2); max-width: 64ch; line-height: 1.55; margin: 0 0 var(--s-9); }
+  .section { margin-top: var(--s-9); padding-top: var(--s-6); border-top: 1px solid var(--line); }
+  .section h2 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-2xl); letter-spacing: -0.01em; margin: 0 0 var(--s-2); }
+  .section h3 { font-family: var(--font-display); font-weight: 500; font-style: italic; font-size: var(--text-xl); margin: var(--s-7) 0 var(--s-3); color: var(--primary); }
+  .num { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); letter-spacing: 0.12em; margin-bottom: var(--s-2); }
+  .note { font-size: var(--text-sm); color: var(--ink-2); line-height: 1.55; max-width: 72ch; }
+
+  .annot { background: var(--bg-deep); border-left: 3px solid var(--primary); padding: var(--s-4) var(--s-5); border-radius: 0 var(--r-sm) var(--r-sm) 0; margin: var(--s-5) 0; font-size: var(--text-sm); color: var(--ink-2); line-height: 1.55; }
+  .annot b { color: var(--primary); font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; display: block; margin-bottom: 4px; }
+
+  /* Voice rules grid */
+  .rules { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-5); margin-top: var(--s-5); }
+  .rule { padding: var(--s-5); border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); }
+  .rule.do { border-left: 3px solid var(--success); }
+  .rule.dont { border-left: 3px solid var(--danger); }
+  .rule h4 { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; margin: 0 0 var(--s-3); }
+  .rule.do h4 { color: var(--success); }
+  .rule.dont h4 { color: var(--danger); }
+  .rule ul { margin: 0; padding-left: var(--s-5); }
+  .rule li { font-size: var(--text-sm); margin-bottom: 4px; line-height: 1.55; }
+  .rule .ex { font-family: var(--font-display); font-style: italic; font-size: var(--text-md); margin-top: var(--s-3); padding: var(--s-3); background: var(--bg); border-radius: var(--r-xs); }
+
+  /* Strings table */
+  .deck { width: 100%; border-collapse: collapse; font-size: var(--text-sm); margin-top: var(--s-3); }
+  .deck thead th {
+    text-align: left; font-family: var(--font-mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-3);
+    font-weight: 500; padding: 10px 14px; border-bottom: 2px solid var(--line);
+    background: var(--bg);
+    position: sticky; top: 0;
+  }
+  .deck tbody td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .deck tbody tr:hover { background: var(--surface-2); }
+  .deck .key {
+    font-family: var(--font-mono); font-size: 11px; color: var(--ink-3);
+    background: var(--bg-deep); padding: 2px 6px; border-radius: 3px;
+    display: inline-block; white-space: nowrap;
+  }
+  .deck .fr { font-family: var(--font-display); font-style: italic; font-size: 15px; color: var(--ink); line-height: 1.4; }
+  .deck .fr.body { font-family: var(--font-body); font-style: normal; font-size: 13px; color: var(--ink); line-height: 1.5; }
+  .deck .ctx { font-size: 11px; color: var(--ink-3); line-height: 1.5; }
+  .deck .lim { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); white-space: nowrap; }
+  .deck .lim.tight { color: var(--danger); }
+
+  /* Vocab pills */
+  .vocab { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-top: var(--s-3); }
+  .vocab .pill {
+    font-family: var(--font-mono); font-size: 11px; padding: 4px 10px;
+    border-radius: 999px; background: var(--surface); border: 1px solid var(--line);
+  }
+  .vocab .pill.ban { background: var(--danger-soft); color: var(--danger); border-color: transparent; text-decoration: line-through; }
+  .vocab .pill.use { background: var(--success-soft); color: var(--success); border-color: transparent; }
+
+  /* App tag */
+  .app-tag {
+    font-family: var(--font-mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.1em; padding: 3px 8px; border-radius: 4px; display: inline-block;
+  }
+  .app-tag.sub { background: #FFF3EE; color: #C4622D; }
+  .app-tag.work { background: #EAF6EE; color: #1A5C34; }
+  .app-tag.ops { background: #F0EBFF; color: #3B1F7A; }
+  .app-tag.shared { background: var(--bg-deep); color: var(--ink-2); }
+
+  /* TOC */
+  .toc {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--r-sm); padding: var(--s-5);
+    margin: var(--s-7) 0;
+    columns: 3; column-gap: var(--s-7);
+  }
+  .toc a {
+    display: block; padding: 5px 0; font-size: var(--text-sm);
+    color: var(--ink-2); text-decoration: none;
+    break-inside: avoid;
+  }
+  .toc a:hover { color: var(--primary); }
+  .toc a .ct { float: right; font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); }
+</style></head>
+<body data-theme="subscriber">
+<div class="page">
+  <div class="crumb"><a href="../index.html">← Index</a> · 09 Copy Deck FR</div>
+
+  <h1>Copy deck — <em>français</em></h1>
+  <p class="lede">Toutes les chaînes des trois applications, classées par app et surface. Chaque entrée a une clé i18n, un contexte d'usage, une limite de caractères, et le texte FR validé. Vocabulaire approuvé, vocabulaire interdit. Source de vérité pour <code style="font-family:var(--font-mono);font-size:13px;background:var(--bg-deep);padding:1px 5px;border-radius:3px">packages/i18n/fr.json</code>.</p>
+
+  <div class="annot"><b>Comment lire ce document</b>Les clés i18n suivent un schéma <code style="font-family:var(--font-mono)">scope.surface.element</code>. Exemple : <code style="font-family:var(--font-mono)">subscriber.dashboard.next_visit_label</code>. Les variables sont en {accolades}. Pluralisation gérée via ICU MessageFormat. Limites de caractères = visuel + accessibilité (200% dynamic type). Si vous dépassez, le design refuse la chaîne.</div>
+
+  <!-- =================================================== -->
+  <!-- VOICE & TONE                                         -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">00 · VOIX &amp; TON</div>
+    <h2>Le ton Washed en français</h2>
+    <p class="note">Le « vous » est non-négociable. Le tutoiement n'est jamais utilisé, même dans les apps internes — l'usage du « tu » envers une laveuse en français togolais est connoté de manière inappropriée. Le ton est respectueux, factuel, sans excuses inutiles. Un message Washed dit ce qui se passe et ce qu'il faut faire.</p>
+
+    <div class="rules">
+      <div class="rule do">
+        <h4>✓ Faire</h4>
+        <ul>
+          <li>Employer le « vous » de politesse partout</li>
+          <li>Phrases courtes (≤14 mots)</li>
+          <li>Verbes d'action concrets (« confirmer », « envoyer », « démarrer »)</li>
+          <li>Heures au format 24h sans zéros : <b>9 h 00</b></li>
+          <li>Devises avec espace : <b>2 500 XOF</b></li>
+          <li>Italique pour les chiffres-fierté (gain, semaine, mois)</li>
+          <li>Premier prénom + initiale du nom de famille (« Akouvi K. »)</li>
+        </ul>
+        <div class="ex">« Mardi 9 h 00 — Akouvi K. arrive chez vous. »</div>
+      </div>
+      <div class="rule dont">
+        <h4>✗ Ne pas faire</h4>
+        <ul>
+          <li>Tutoyer, jamais</li>
+          <li>S'excuser inutilement (« Désolé, mais… »)</li>
+          <li>Employer du jargon SaaS (« utilisateur », « onboarding »)</li>
+          <li>Anglicismes (« cool », « ok », « shopper »)</li>
+          <li>Emoji dans la copie système (sauf chiffres unicode pour SOS)</li>
+          <li>Formules paternalistes (« Pas de panique ! »)</li>
+          <li>Capitales criantes (« ATTENTION », « URGENT »)</li>
+        </ul>
+        <div class="ex" style="text-decoration:line-through;color:var(--ink-3)">« Désolé, ton paiement a échoué. Pas de panique, ressaye ! »</div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:var(--s-7)">Vocabulaire</h3>
+    <p class="note">Chaque mot vit longtemps. Cette liste tranche les disputes en avance.</p>
+
+    <div class="vocab">
+      <span class="pill use">visite</span>
+      <span class="pill use">laveuse</span>
+      <span class="pill use">abonné · abonnée</span>
+      <span class="pill use">forfait</span>
+      <span class="pill use">tournée</span>
+      <span class="pill use">le bureau</span>
+      <span class="pill use">solde</span>
+      <span class="pill use">retrait</span>
+      <span class="pill use">photo avant · photo après</span>
+      <span class="pill use">foyer régulier</span>
+      <span class="pill use">crédit</span>
+      <span class="pill ban">prestation</span>
+      <span class="pill ban">prestataire</span>
+      <span class="pill ban">user</span>
+      <span class="pill ban">client final</span>
+      <span class="pill ban">support</span>
+      <span class="pill ban">push</span>
+      <span class="pill ban">notif</span>
+      <span class="pill ban">staff</span>
+      <span class="pill ban">cash</span>
+      <span class="pill ban">freelance</span>
+      <span class="pill ban">on-demand</span>
+      <span class="pill ban">assignation auto</span>
+    </div>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- TOC                                                  -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">01 · TABLE DES MATIÈRES</div>
+    <h2>147 chaînes · 3 apps</h2>
+    <div class="toc">
+      <a href="#sub-on">Abonné · Onboarding<span class="ct">21</span></a>
+      <a href="#sub-hub">Abonné · Hub<span class="ct">14</span></a>
+      <a href="#sub-vis">Abonné · Cycle visite<span class="ct">12</span></a>
+      <a href="#sub-pay">Abonné · Paiement<span class="ct">10</span></a>
+      <a href="#sub-sub">Abonné · Abonnement<span class="ct">8</span></a>
+      <a href="#sub-spt">Abonné · Support<span class="ct">7</span></a>
+      <a href="#wrk-on">Laveuse · Connexion<span class="ct">8</span></a>
+      <a href="#wrk-tour">Laveuse · Tournée<span class="ct">11</span></a>
+      <a href="#wrk-vis">Laveuse · Cycle visite<span class="ct">14</span></a>
+      <a href="#wrk-earn">Laveuse · Gains<span class="ct">7</span></a>
+      <a href="#wrk-sos">Laveuse · SOS<span class="ct">5</span></a>
+      <a href="#ops-mtch">Opérateur · Matching<span class="ct">9</span></a>
+      <a href="#ops-tk">Opérateur · Tickets<span class="ct">6</span></a>
+      <a href="#err">États d'erreur partagés<span class="ct">9</span></a>
+      <a href="#nots">Notifications push<span class="ct">12</span></a>
+    </div>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- SUBSCRIBER · ONBOARDING                             -->
+  <!-- =================================================== -->
+  <section class="section" id="sub-on">
+    <div class="num">02 · ABONNÉ · ONBOARDING <span class="app-tag sub">SUBSCRIBER</span></div>
+    <h2>X-01 → X-08 · Les 90 secondes décisives</h2>
+    <p class="note">L'objectif : que la première visite soit confirmée avant que l'abonné ne ferme l'app. Chaque écran a une seule action principale.</p>
+
+    <table class="deck">
+      <thead><tr>
+        <th style="width:22%">Clé</th>
+        <th>Texte FR</th>
+        <th style="width:25%">Contexte / usage</th>
+        <th style="width:80px">Limite</th>
+      </tr></thead>
+      <tbody>
+        <tr><td><span class="key">subscriber.splash.tagline</span></td><td><span class="fr body">L'appli laveuse pour Lomé.</span></td><td><span class="ctx">Sous le wordmark sur splash. Pas de point ailleurs sur cet écran.</span></td><td><span class="lim">28 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.splash.lang.fr</span></td><td><span class="fr body">Français</span></td><td><span class="ctx">Bouton sélection langue (par défaut)</span></td><td><span class="lim">10 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.splash.lang.en</span></td><td><span class="fr body">English</span></td><td><span class="ctx">Désactivé v1. Étiquette grise.</span></td><td><span class="lim">10 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.splash.lang.en_disabled_note</span></td><td><span class="fr body">Bientôt disponible</span></td><td><span class="ctx">Sous le bouton EN désactivé</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.signup.step_indicator</span></td><td><span class="fr body">Étape {current} sur {total}</span></td><td><span class="ctx">Header de chaque écran d'inscription. ICU.</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.signup.phone.title</span></td><td><span class="fr">Votre numéro de téléphone.</span></td><td><span class="ctx">X-02. Présent simple, point final.</span></td><td><span class="lim">32 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.signup.phone.body</span></td><td><span class="fr body">On vous envoie un code par SMS pour confirmer.</span></td><td><span class="ctx">Sous le titre. Explique pourquoi le numéro.</span></td><td><span class="lim">60 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.signup.phone.input_label</span></td><td><span class="fr body">Numéro</span></td><td><span class="ctx">Étiquette champ. Format auto +228.</span></td><td><span class="lim">10 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.signup.phone.cta</span></td><td><span class="fr body">Recevoir le code</span></td><td><span class="ctx">Bouton primaire</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.signup.otp.title</span></td><td><span class="fr">Le code reçu par SMS.</span></td><td><span class="ctx">X-03</span></td><td><span class="lim">32 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.signup.otp.body</span></td><td><span class="fr body">Six chiffres envoyés au {phone}.</span></td><td><span class="ctx">Variable affichée masquée : « +228 90 ●● ●● 56 »</span></td><td><span class="lim">48 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.signup.otp.resend</span></td><td><span class="fr body">Renvoyer dans {seconds} s</span></td><td><span class="ctx">Compteur 30s puis bouton actif</span></td><td><span class="lim">26 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.signup.address.title</span></td><td><span class="fr">Où passe la laveuse ?</span></td><td><span class="ctx">X-04</span></td><td><span class="lim">28 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.signup.address.body</span></td><td><span class="fr body">Quartier puis détail (rue, repère). Le bureau valide avec vous au téléphone.</span></td><td><span class="ctx">Explique le pourquoi du téléphone du bureau</span></td><td><span class="lim">96 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.signup.tier.title</span></td><td><span class="fr">Combien de visites par mois ?</span></td><td><span class="ctx">X-05. Choix tarif.</span></td><td><span class="lim">36 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.signup.tier.t1.label</span></td><td><span class="fr body">Une visite</span></td><td><span class="ctx">T1 · 2 500 XOF</span></td><td><span class="lim">14 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.signup.tier.t1.price</span></td><td><span class="fr body">2 500 XOF / mois</span></td><td><span class="ctx">Espace insécable entre nombre et XOF</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.signup.tier.t2.label</span></td><td><span class="fr body">Deux visites</span></td><td><span class="ctx">T2 · 4 500 XOF</span></td><td><span class="lim">14 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.signup.tier.t2.price</span></td><td><span class="fr body">4 500 XOF / mois</span></td><td><span class="ctx">Avec mention « économie 500 XOF » optionnelle</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.signup.payment.title</span></td><td><span class="fr">Le moyen de paiement.</span></td><td><span class="ctx">X-06. Mobile Money uniquement.</span></td><td><span class="lim">32 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.signup.payment.body</span></td><td><span class="fr body">TMoney, Mixx by Yas ou Flooz. Pas de carte, pas d'espèces.</span></td><td><span class="ctx">Explique le « no cash »</span></td><td><span class="lim">80 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.signup.review.title</span></td><td><span class="fr">Tout est bon ?</span></td><td><span class="ctx">X-07 récap</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.signup.review.cta</span></td><td><span class="fr body">Confirmer l'abonnement</span></td><td><span class="ctx">CTA déclenche débit MM + planification première visite</span></td><td><span class="lim">28 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.signup.welcome.title</span></td><td><span class="fr">Bienvenue chez Washed.</span></td><td><span class="ctx">X-08. Italique sur « Bienvenue »</span></td><td><span class="lim">32 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.signup.welcome.body</span></td><td><span class="fr body">Votre première visite est planifiée. On vous appelle d'abord pour finaliser l'adresse.</span></td><td><span class="ctx">Pose le contact téléphonique opérateur</span></td><td><span class="lim">110 ch</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- SUBSCRIBER · HUB                                     -->
+  <!-- =================================================== -->
+  <section class="section" id="sub-hub">
+    <div class="num">03 · ABONNÉ · HUB <span class="app-tag sub">SUBSCRIBER</span></div>
+    <h2>X-10 · Tableau de bord — la prochaine visite</h2>
+
+    <table class="deck">
+      <thead><tr><th style="width:22%">Clé</th><th>Texte FR</th><th style="width:25%">Contexte</th><th style="width:80px">Limite</th></tr></thead>
+      <tbody>
+        <tr><td><span class="key">subscriber.dashboard.greeting.morning</span></td><td><span class="fr">Bonjour {name}.</span></td><td><span class="ctx">Salutation 5h-12h</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.dashboard.greeting.afternoon</span></td><td><span class="fr">Bon après-midi {name}.</span></td><td><span class="ctx">12h-18h</span></td><td><span class="lim">28 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.dashboard.greeting.evening</span></td><td><span class="fr">Bonsoir {name}.</span></td><td><span class="ctx">18h-24h</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.dashboard.next_visit.label</span></td><td><span class="fr body">Prochaine visite</span></td><td><span class="ctx">Eyebrow mono. Tjs sing.</span></td><td><span class="lim">20 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.dashboard.next_visit.day</span></td><td><span class="fr">{weekday}</span></td><td><span class="ctx">« Mardi », « Mercredi »… italique</span></td><td><span class="lim">10 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.dashboard.next_visit.time</span></td><td><span class="fr">{hour} h {min}</span></td><td><span class="ctx">9 h 00 — espaces insécables</span></td><td><span class="lim">8 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.dashboard.next_visit.countdown</span></td><td><span class="fr body">Dans {days} jours · {hours} h</span></td><td><span class="ctx">ICU plurals. Si {days}=0, montrer heures+min.</span></td><td><span class="lim">28 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.dashboard.worker.tenure</span></td><td><span class="fr body">{neighborhood} · {months} mois chez vous</span></td><td><span class="ctx">Sous nom laveuse. ICU pluriel mois.</span></td><td><span class="lim">36 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.dashboard.worker.tenure_first</span></td><td><span class="fr body">Première visite chez vous</span></td><td><span class="ctx">Si months=0</span></td><td><span class="lim">32 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.dashboard.cta_detail</span></td><td><span class="fr body">Voir le détail</span></td><td><span class="ctx">Bouton primaire</span></td><td><span class="lim">18 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.dashboard.streak.label</span></td><td><span class="fr body">{count} visites avec {name}</span></td><td><span class="ctx">Élément stickiness. Italique sur le chiffre.</span></td><td><span class="lim">36 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.dashboard.last_visit.label</span></td><td><span class="fr body">Dernière visite · {date}</span></td><td><span class="ctx">Carte récap visite passée</span></td><td><span class="lim">36 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.dashboard.tab.home</span></td><td><span class="fr body">Accueil</span></td><td><span class="ctx">Nav bottom</span></td><td><span class="lim">10 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.dashboard.tab.history</span></td><td><span class="fr body">Historique</span></td><td><span class="ctx">Nav</span></td><td><span class="lim">12 ch</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- SUBSCRIBER · CYCLE                                   -->
+  <!-- =================================================== -->
+  <section class="section" id="sub-vis">
+    <div class="num">04 · ABONNÉ · CYCLE VISITE <span class="app-tag sub">SUBSCRIBER</span></div>
+    <h2>X-11 → X-15 · La laveuse arrive, lave, repart</h2>
+
+    <table class="deck">
+      <thead><tr><th style="width:22%">Clé</th><th>Texte FR</th><th style="width:25%">Contexte</th><th style="width:80px">Limite</th></tr></thead>
+      <tbody>
+        <tr><td><span class="key">subscriber.visit.morning.banner</span></td><td><span class="fr body">{name} arrive aujourd'hui à {time}.</span></td><td><span class="ctx">Notif jour-J · 7h</span></td><td><span class="lim">52 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.visit.enroute.title</span></td><td><span class="fr">{name} est en route.</span></td><td><span class="ctx">Push. Ouvre carte de suivi.</span></td><td><span class="lim">40 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.visit.arrived.toast</span></td><td><span class="fr body">{name} est devant chez vous.</span></td><td><span class="ctx">Toast. Geofence détecté.</span></td><td><span class="lim">42 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.visit.in_progress.title</span></td><td><span class="fr">Le linge est entre de bonnes mains.</span></td><td><span class="ctx">Pendant lavage. Pas de timer affiché côté abonné.</span></td><td><span class="lim">52 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.visit.in_progress.body</span></td><td><span class="fr body">Vous pouvez fermer l'app. On vous prévient quand c'est fini.</span></td><td><span class="ctx">Rassure. Désincite la sur-vérification.</span></td><td><span class="lim">82 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.visit.complete.toast</span></td><td><span class="fr body">Visite terminée. {name} est partie.</span></td><td><span class="ctx">Toast fin de visite</span></td><td><span class="lim">48 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.visit.reveal.title</span></td><td><span class="fr">Voilà ce que ça donne.</span></td><td><span class="ctx">Reveal photo avant/après — moment signature</span></td><td><span class="lim">28 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.visit.reveal.before</span></td><td><span class="fr body">Avant — {hour} h {min}</span></td><td><span class="ctx">Étiquette photo avant</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.visit.reveal.after</span></td><td><span class="fr body">Après — {hour} h {min}</span></td><td><span class="ctx">Étiquette photo après</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.visit.feedback.prompt</span></td><td><span class="fr">Tout s'est bien passé ?</span></td><td><span class="ctx">Affiché 2h après visite</span></td><td><span class="lim">28 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.visit.feedback.good</span></td><td><span class="fr body">Tout va bien</span></td><td><span class="ctx">Bouton</span></td><td><span class="lim">14 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.visit.feedback.issue</span></td><td><span class="fr body">Signaler un souci</span></td><td><span class="ctx">Ouvre formulaire libre</span></td><td><span class="lim">22 ch</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- SUBSCRIBER · PAIEMENT                                -->
+  <!-- =================================================== -->
+  <section class="section" id="sub-pay">
+    <div class="num">05 · ABONNÉ · PAIEMENT <span class="app-tag sub">SUBSCRIBER</span></div>
+    <h2>X-19 → X-22 · Encaissement Mobile Money</h2>
+
+    <table class="deck">
+      <thead><tr><th style="width:22%">Clé</th><th>Texte FR</th><th style="width:25%">Contexte</th><th style="width:80px">Limite</th></tr></thead>
+      <tbody>
+        <tr><td><span class="key">subscriber.payment.method.title</span></td><td><span class="fr">Mobile Money</span></td><td><span class="ctx">Section paramètres</span></td><td><span class="lim">18 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.payment.method.body</span></td><td><span class="fr body">L'argent quitte votre Mobile Money le 1er de chaque mois.</span></td><td><span class="ctx">Explique le débit récurrent</span></td><td><span class="lim">76 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.payment.success.toast</span></td><td><span class="fr body">{amount} XOF prélevés. Référence {ref}.</span></td><td><span class="ctx">Confirmation débit</span></td><td><span class="lim">52 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.payment.failed.title</span></td><td><span class="fr">Le paiement n'a pas abouti.</span></td><td><span class="ctx">X-20 — banner. Sec, factuel.</span></td><td><span class="lim">36 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.payment.failed.body</span></td><td><span class="fr body">Solde Mobile Money insuffisant. Rechargez puis nous réessayons demain.</span></td><td><span class="ctx">Pas d'excuse, pas de panique. Action claire.</span></td><td><span class="lim">100 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.payment.failed.cta</span></td><td><span class="fr body">Réessayer maintenant</span></td><td><span class="ctx">Si user veut forcer</span></td><td><span class="lim">28 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.payment.overdue.banner</span></td><td><span class="fr body">3 tentatives échouées. Visite en pause jusqu'au paiement.</span></td><td><span class="ctx">Sec. Conséquence claire.</span></td><td><span class="lim">90 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.payment.history.empty</span></td><td><span class="fr body">Aucun paiement encore.</span></td><td><span class="ctx">État vide historique</span></td><td><span class="lim">28 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.payment.receipt.title</span></td><td><span class="fr">Reçu</span></td><td><span class="ctx">Header PDF/screen</span></td><td><span class="lim">10 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.payment.cancel.title</span></td><td><span class="fr">Vous êtes sûr ?</span></td><td><span class="ctx">Confirm annulation. Sans point d'exclamation.</span></td><td><span class="lim">22 ch</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- WORKER · CONNEXION                                   -->
+  <!-- =================================================== -->
+  <section class="section" id="wrk-on">
+    <div class="num">06 · LAVEUSE · CONNEXION <span class="app-tag work">WORKER</span></div>
+    <h2>W-01 → W-02 · Démarrer la journée</h2>
+    <p class="note">Ton plus chaleureux pour la laveuse — elle ouvre l'app à 6h45, parfois sous le tonnerre, on la traite avec le respect d'un collègue.</p>
+
+    <table class="deck">
+      <thead><tr><th style="width:22%">Clé</th><th>Texte FR</th><th style="width:25%">Contexte</th><th style="width:80px">Limite</th></tr></thead>
+      <tbody>
+        <tr><td><span class="key">worker.splash.tagline</span></td><td><span class="fr body">L'appli laveuse</span></td><td><span class="ctx">Sous wordmark</span></td><td><span class="lim">18 ch</span></td></tr>
+        <tr><td><span class="key">worker.splash.sync</span></td><td><span class="fr body">Synchronisation…</span></td><td><span class="ctx">Pendant chargement</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">worker.login.greeting</span></td><td><span class="fr">Bonjour.</span></td><td><span class="ctx">Sec. Pas de prénom (pas encore connecté).</span></td><td><span class="lim">14 ch</span></td></tr>
+        <tr><td><span class="key">worker.login.prompt</span></td><td><span class="fr">Votre numéro ?</span></td><td><span class="ctx">Question simple</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">worker.login.help</span></td><td><span class="fr body">Le numéro inscrit chez Washed.</span></td><td><span class="ctx">Précision</span></td><td><span class="lim">38 ch</span></td></tr>
+        <tr><td><span class="key">worker.login.pin_label</span></td><td><span class="fr body">Code PIN — 4 chiffres</span></td><td><span class="ctx">Étiquette PIN</span></td><td><span class="lim">28 ch</span></td></tr>
+        <tr><td><span class="key">worker.login.cta</span></td><td><span class="fr body">Entrer</span></td><td><span class="ctx">Bouton primaire</span></td><td><span class="lim">10 ch</span></td></tr>
+        <tr><td><span class="key">worker.login.forgot</span></td><td><span class="fr body">PIN oublié ? Appelez le bureau · 90 00 00 00</span></td><td><span class="ctx">Lien d'aide</span></td><td><span class="lim">62 ch</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- WORKER · TOURNÉE                                     -->
+  <!-- =================================================== -->
+  <section class="section" id="wrk-tour">
+    <div class="num">07 · LAVEUSE · TOURNÉE <span class="app-tag work">WORKER</span></div>
+    <h2>W-03 → W-04 · La journée à venir</h2>
+
+    <table class="deck">
+      <thead><tr><th style="width:22%">Clé</th><th>Texte FR</th><th style="width:25%">Contexte</th><th style="width:80px">Limite</th></tr></thead>
+      <tbody>
+        <tr><td><span class="key">worker.tour.greeting</span></td><td><span class="fr">Bonjour {name}.</span></td><td><span class="ctx">Header W-03</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">worker.tour.day_label</span></td><td><span class="fr body">{weekday} {day} {month}</span></td><td><span class="ctx">« Mardi 5 mai »</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">worker.tour.summary.visits</span></td><td><span class="fr body">{count} visites</span></td><td><span class="ctx">ICU pluriel</span></td><td><span class="lim">14 ch</span></td></tr>
+        <tr><td><span class="key">worker.tour.summary.earn_label</span></td><td><span class="fr body">À gagner</span></td><td><span class="ctx">Eyebrow mono</span></td><td><span class="lim">14 ch</span></td></tr>
+        <tr><td><span class="key">worker.tour.next_label</span></td><td><span class="fr body">Prochaine</span></td><td><span class="ctx">Étiquette première visite</span></td><td><span class="lim">14 ch</span></td></tr>
+        <tr><td><span class="key">worker.tour.empty.title</span></td><td><span class="fr">Pas de visite aujourd'hui.</span></td><td><span class="ctx">État vide. Sec, sans excuse.</span></td><td><span class="lim">36 ch</span></td></tr>
+        <tr><td><span class="key">worker.tour.empty.body</span></td><td><span class="fr body">Le bureau vous prévient dès qu'une cliente confirme.</span></td><td><span class="ctx">Rassure</span></td><td><span class="lim">72 ch</span></td></tr>
+        <tr><td><span class="key">worker.tour.detail.tier_label</span></td><td><span class="fr body">Tarif T{n}</span></td><td><span class="ctx">Chip</span></td><td><span class="lim">10 ch</span></td></tr>
+        <tr><td><span class="key">worker.tour.detail.tenure</span></td><td><span class="fr body">{months}<sup>e</sup> mois</span></td><td><span class="ctx">Tenure-with-household. ICU.</span></td><td><span class="lim">14 ch</span></td></tr>
+        <tr><td><span class="key">worker.tour.detail.first_visit</span></td><td><span class="fr body">Première visite</span></td><td><span class="ctx">Si tenure=0</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">worker.tour.detail.cta_start</span></td><td><span class="fr body">Démarrer la route</span></td><td><span class="ctx">Bouton primaire</span></td><td><span class="lim">22 ch</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- WORKER · CYCLE                                       -->
+  <!-- =================================================== -->
+  <section class="section" id="wrk-vis">
+    <div class="num">08 · LAVEUSE · CYCLE VISITE <span class="app-tag work">WORKER</span></div>
+    <h2>W-05 → W-12 · Le cœur du métier</h2>
+
+    <table class="deck">
+      <thead><tr><th style="width:22%">Clé</th><th>Texte FR</th><th style="width:25%">Contexte</th><th style="width:80px">Limite</th></tr></thead>
+      <tbody>
+        <tr><td><span class="key">worker.visit.enroute.label</span></td><td><span class="fr body">EN ROUTE · {time} — {name}</span></td><td><span class="ctx">Header W-05</span></td><td><span class="lim">42 ch</span></td></tr>
+        <tr><td><span class="key">worker.visit.enroute.cta_arrived</span></td><td><span class="fr body">J'arrive</span></td><td><span class="ctx">Bouton fin de trajet</span></td><td><span class="lim">14 ch</span></td></tr>
+        <tr><td><span class="key">worker.visit.geofence.title</span></td><td><span class="fr">Vous êtes arrivée</span></td><td><span class="ctx">W-06. Confirme GPS.</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">worker.visit.geofence.body</span></td><td><span class="fr body">GPS confirmé à {meters} m près. Vous pouvez démarrer la visite.</span></td><td><span class="ctx">Rassure sur la précision</span></td><td><span class="lim">86 ch</span></td></tr>
+        <tr><td><span class="key">worker.visit.geofence.wrong_place</span></td><td><span class="fr body">Mauvais endroit ? Signaler</span></td><td><span class="ctx">Lien</span></td><td><span class="lim">28 ch</span></td></tr>
+        <tr><td><span class="key">worker.visit.photo_before.title</span></td><td><span class="fr">Photo « avant » du linge.</span></td><td><span class="ctx">W-07. Guillemets français.</span></td><td><span class="lim">36 ch</span></td></tr>
+        <tr><td><span class="key">worker.visit.photo_before.body</span></td><td><span class="fr body">Photographiez le panier de linge sale, posé près de la bassine.</span></td><td><span class="ctx">Instructions claires</span></td><td><span class="lim">82 ch</span></td></tr>
+        <tr><td><span class="key">worker.visit.washing.title</span></td><td><span class="fr">Lavage en cours.</span></td><td><span class="ctx">W-08</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">worker.visit.washing.body</span></td><td><span class="fr body">Pas besoin de regarder l'écran. L'application tourne en arrière-plan.</span></td><td><span class="ctx">Rassure : pas de stress timer</span></td><td><span class="lim">90 ch</span></td></tr>
+        <tr><td><span class="key">worker.visit.washing.cta_done</span></td><td><span class="fr body">Linge prêt — photo après</span></td><td><span class="ctx">Bouton primaire</span></td><td><span class="lim">32 ch</span></td></tr>
+        <tr><td><span class="key">worker.visit.checkout.title</span></td><td><span class="fr">Tout s'est bien passé ?</span></td><td><span class="ctx">W-10</span></td><td><span class="lim">28 ch</span></td></tr>
+        <tr><td><span class="key">worker.visit.checkout.option_good</span></td><td><span class="fr body">Tout va bien</span></td><td><span class="ctx">Option positive</span></td><td><span class="lim">14 ch</span></td></tr>
+        <tr><td><span class="key">worker.visit.checkout.option_minor</span></td><td><span class="fr body">Petit souci</span></td><td><span class="ctx">Option mineure</span></td><td><span class="lim">14 ch</span></td></tr>
+        <tr><td><span class="key">worker.visit.checkout.option_major</span></td><td><span class="fr body">Gros souci</span></td><td><span class="ctx">Option majeure</span></td><td><span class="lim">14 ch</span></td></tr>
+        <tr><td><span class="key">worker.visit.recap.completed</span></td><td><span class="fr body">VISITE {n} / {total} TERMINÉE</span></td><td><span class="ctx">Chip succès</span></td><td><span class="lim">28 ch</span></td></tr>
+        <tr><td><span class="key">worker.visit.recap.earn</span></td><td><span class="fr">+ {amount} XOF</span></td><td><span class="ctx">Italique sur XOF. Espaces insécables.</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">worker.visit.recap.credited</span></td><td><span class="fr body">crédité dans votre solde</span></td><td><span class="ctx">Sous le chiffre</span></td><td><span class="lim">36 ch</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- WORKER · GAINS                                       -->
+  <!-- =================================================== -->
+  <section class="section" id="wrk-earn">
+    <div class="num">09 · LAVEUSE · GAINS <span class="app-tag work">WORKER</span></div>
+    <h2>W-13 · Solde, retraits, semaine</h2>
+
+    <table class="deck">
+      <thead><tr><th style="width:22%">Clé</th><th>Texte FR</th><th style="width:25%">Contexte</th><th style="width:80px">Limite</th></tr></thead>
+      <tbody>
+        <tr><td><span class="key">worker.earn.title</span></td><td><span class="fr body">Vos gains</span></td><td><span class="ctx">Eyebrow mono</span></td><td><span class="lim">14 ch</span></td></tr>
+        <tr><td><span class="key">worker.earn.this_week</span></td><td><span class="fr">Cette semaine</span></td><td><span class="ctx">H-md</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">worker.earn.balance.label</span></td><td><span class="fr body">Solde disponible</span></td><td><span class="ctx">Carte solde</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">worker.earn.withdraw.cta</span></td><td><span class="fr body">Retirer</span></td><td><span class="ctx">Bouton primaire</span></td><td><span class="lim">10 ch</span></td></tr>
+        <tr><td><span class="key">worker.earn.withdraw.confirmed</span></td><td><span class="fr body">{amount} XOF envoyés sur {provider}</span></td><td><span class="ctx">Toast</span></td><td><span class="lim">52 ch</span></td></tr>
+        <tr><td><span class="key">worker.earn.bonus.regularity</span></td><td><span class="fr body">Bonus régularité · + {amount} XOF</span></td><td><span class="ctx">5 jours sans annulation</span></td><td><span class="lim">42 ch</span></td></tr>
+        <tr><td><span class="key">worker.earn.empty</span></td><td><span class="fr body">Pas encore de gains cette semaine.</span></td><td><span class="ctx">État vide</span></td><td><span class="lim">42 ch</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- WORKER · SOS                                         -->
+  <!-- =================================================== -->
+  <section class="section" id="wrk-sos">
+    <div class="num">10 · LAVEUSE · SOS <span class="app-tag work">WORKER</span></div>
+    <h2>W-16 · Urgence — bouton flottant</h2>
+
+    <table class="deck">
+      <thead><tr><th style="width:22%">Clé</th><th>Texte FR</th><th style="width:25%">Contexte</th><th style="width:80px">Limite</th></tr></thead>
+      <tbody>
+        <tr><td><span class="key">worker.sos.title</span></td><td><span class="fr">Que se passe-t-il ?</span></td><td><span class="ctx">Question, pas commande.</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">worker.sos.callback</span></td><td><span class="fr body">Le bureau vous appelle dans 30 secondes.</span></td><td><span class="ctx">Engagement clair · délai défini</span></td><td><span class="lim">52 ch</span></td></tr>
+        <tr><td><span class="key">worker.sos.option.danger</span></td><td><span class="fr body">Je suis en danger</span></td><td><span class="ctx">Première option · prio max</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">worker.sos.option.client_issue</span></td><td><span class="fr body">Problème avec la cliente</span></td><td><span class="ctx">2e option</span></td><td><span class="lim">28 ch</span></td></tr>
+        <tr><td><span class="key">worker.sos.option.medical</span></td><td><span class="fr body">Accident / blessure</span></td><td><span class="ctx">3e option</span></td><td><span class="lim">22 ch</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- OPS · MATCHING                                       -->
+  <!-- =================================================== -->
+  <section class="section" id="ops-mtch">
+    <div class="num">11 · OPÉRATEUR · MATCHING <span class="app-tag ops">OPERATOR</span></div>
+    <h2>O-03 · Assignation laveuse</h2>
+    <p class="note">Vocabulaire ops : plus dense, plus technique. L'opérateur sait ce qu'est un SLA.</p>
+
+    <table class="deck">
+      <thead><tr><th style="width:22%">Clé</th><th>Texte FR</th><th style="width:25%">Contexte</th><th style="width:80px">Limite</th></tr></thead>
+      <tbody>
+        <tr><td><span class="key">ops.matching.queue.title</span></td><td><span class="fr body">{count} en attente</span></td><td><span class="ctx">Header file</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">ops.matching.candidates.title</span></td><td><span class="fr body">Candidates — triées par proximité &amp; charge</span></td><td><span class="ctx">Section candidates</span></td><td><span class="lim">62 ch</span></td></tr>
+        <tr><td><span class="key">ops.matching.cta_propose</span></td><td><span class="fr body">Proposer</span></td><td><span class="ctx">Bouton primaire row</span></td><td><span class="lim">12 ch</span></td></tr>
+        <tr><td><span class="key">ops.matching.cta_send</span></td><td><span class="fr body">Envoyer la proposition</span></td><td><span class="ctx">Bouton drawer</span></td><td><span class="lim">28 ch</span></td></tr>
+        <tr><td><span class="key">ops.matching.score.label</span></td><td><span class="fr body">Score</span></td><td><span class="ctx">Header colonne</span></td><td><span class="lim">10 ch</span></td></tr>
+        <tr><td><span class="key">ops.matching.status.full</span></td><td><span class="fr body">PLEIN</span></td><td><span class="ctx">Chip indispo</span></td><td><span class="lim">10 ch</span></td></tr>
+        <tr><td><span class="key">ops.matching.status.almost_full</span></td><td><span class="fr body">CHARGE PRESQUE PLEINE</span></td><td><span class="ctx">Chip warn</span></td><td><span class="lim">28 ch</span></td></tr>
+        <tr><td><span class="key">ops.matching.sla.warning</span></td><td><span class="fr body">SLA {hours}h{minutes}</span></td><td><span class="ctx">Compteur SLA assignation</span></td><td><span class="lim">12 ch</span></td></tr>
+        <tr><td><span class="key">ops.matching.empty</span></td><td><span class="fr body">Aucune demande en attente.</span></td><td><span class="ctx">État vide. Sec, factuel.</span></td><td><span class="lim">36 ch</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- OPS · TICKETS                                        -->
+  <!-- =================================================== -->
+  <section class="section" id="ops-tk">
+    <div class="num">12 · OPÉRATEUR · TICKETS <span class="app-tag ops">OPERATOR</span></div>
+    <h2>O-11 · Conversations support</h2>
+
+    <table class="deck">
+      <thead><tr><th style="width:22%">Clé</th><th>Texte FR</th><th style="width:25%">Contexte</th><th style="width:80px">Limite</th></tr></thead>
+      <tbody>
+        <tr><td><span class="key">ops.tickets.title</span></td><td><span class="fr body">Tickets</span></td><td><span class="ctx">Page header</span></td><td><span class="lim">10 ch</span></td></tr>
+        <tr><td><span class="key">ops.tickets.priority.high</span></td><td><span class="fr body">HAUTE</span></td><td><span class="ctx">Chip danger</span></td><td><span class="lim">8 ch</span></td></tr>
+        <tr><td><span class="key">ops.tickets.priority.normal</span></td><td><span class="fr body">NORMALE</span></td><td><span class="ctx">Chip neutre</span></td><td><span class="lim">10 ch</span></td></tr>
+        <tr><td><span class="key">ops.tickets.action.goodwill</span></td><td><span class="fr body">Crédit goodwill ({amount} XOF)</span></td><td><span class="ctx">Bouton spécial — log audit</span></td><td><span class="lim">42 ch</span></td></tr>
+        <tr><td><span class="key">ops.tickets.empty</span></td><td><span class="fr body">Aucun ticket ouvert.</span></td><td><span class="ctx">État vide bonheur</span></td><td><span class="lim">28 ch</span></td></tr>
+        <tr><td><span class="key">ops.tickets.policy.label</span></td><td><span class="fr body">Politique</span></td><td><span class="ctx">Header drawer</span></td><td><span class="lim">14 ch</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- ERRORS                                                -->
+  <!-- =================================================== -->
+  <section class="section" id="err">
+    <div class="num">13 · ERREURS PARTAGÉES <span class="app-tag shared">SHARED</span></div>
+    <h2>États d'erreur — toutes apps</h2>
+    <p class="note">Aucune erreur ne s'affiche sans dire ce qu'il faut faire ensuite. Pas de message technique brut.</p>
+
+    <table class="deck">
+      <thead><tr><th style="width:22%">Clé</th><th>Texte FR</th><th style="width:25%">Contexte</th><th style="width:80px">Limite</th></tr></thead>
+      <tbody>
+        <tr><td><span class="key">error.network.title</span></td><td><span class="fr">Pas de réseau.</span></td><td><span class="ctx">Sec.</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">error.network.body</span></td><td><span class="fr body">Vous pouvez continuer. Tout est sauvegardé. Synchronisation dès que possible.</span></td><td><span class="ctx">Hors-ligne app laveuse · rassure</span></td><td><span class="lim">100 ch</span></td></tr>
+        <tr><td><span class="key">error.server.title</span></td><td><span class="fr">Petit problème de notre côté.</span></td><td><span class="ctx">5xx</span></td><td><span class="lim">38 ch</span></td></tr>
+        <tr><td><span class="key">error.server.body</span></td><td><span class="fr body">Réessayez dans une minute. Si ça persiste, appelez le bureau.</span></td><td><span class="ctx">Action claire</span></td><td><span class="lim">82 ch</span></td></tr>
+        <tr><td><span class="key">error.gps.title</span></td><td><span class="fr">GPS introuvable.</span></td><td><span class="ctx">Cycle visite bloqué</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">error.gps.body</span></td><td><span class="fr body">Vérifiez que la localisation est activée. Sortez en plein air si besoin.</span></td><td><span class="ctx">Action concrète</span></td><td><span class="lim">82 ch</span></td></tr>
+        <tr><td><span class="key">error.permission.camera.title</span></td><td><span class="fr">Accès caméra refusé.</span></td><td><span class="ctx">Photo avant/après bloqué</span></td><td><span class="lim">28 ch</span></td></tr>
+        <tr><td><span class="key">error.permission.camera.cta</span></td><td><span class="fr body">Activer dans les paramètres</span></td><td><span class="ctx">Deep-link</span></td><td><span class="lim">36 ch</span></td></tr>
+        <tr><td><span class="key">error.retry.cta</span></td><td><span class="fr body">Réessayer</span></td><td><span class="ctx">Bouton générique</span></td><td><span class="lim">12 ch</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- NOTIFICATIONS PUSH                                    -->
+  <!-- =================================================== -->
+  <section class="section" id="nots">
+    <div class="num">14 · NOTIFICATIONS PUSH <span class="app-tag shared">SHARED</span></div>
+    <h2>SMS &amp; push — chaînes critiques</h2>
+    <p class="note">SMS limités à 160 ch (un seul SMS). Push limités à 100 ch pour rester lisibles à l'écran de verrouillage. Aucun lien dans les SMS sortants — politique anti-phishing.</p>
+
+    <table class="deck">
+      <thead><tr><th style="width:22%">Clé</th><th>Texte FR</th><th style="width:25%">Contexte</th><th style="width:80px">Limite</th></tr></thead>
+      <tbody>
+        <tr><td><span class="key">push.sub.visit_tomorrow</span></td><td><span class="fr body">{name} arrive demain à {time}.</span></td><td><span class="ctx">J-1 · 18h</span></td><td><span class="lim tight">160 ch SMS</span></td></tr>
+        <tr><td><span class="key">push.sub.visit_today</span></td><td><span class="fr body">{name} arrive aujourd'hui à {time}.</span></td><td><span class="ctx">J · 7h matin</span></td><td><span class="lim">100 ch</span></td></tr>
+        <tr><td><span class="key">push.sub.worker_enroute</span></td><td><span class="fr body">{name} est en route.</span></td><td><span class="ctx">Geofence sortie</span></td><td><span class="lim">100 ch</span></td></tr>
+        <tr><td><span class="key">push.sub.visit_started</span></td><td><span class="fr body">{name} a commencé la visite.</span></td><td><span class="ctx">Photo avant validée</span></td><td><span class="lim">100 ch</span></td></tr>
+        <tr><td><span class="key">push.sub.visit_done</span></td><td><span class="fr body">Visite terminée. Voilà ce que ça donne.</span></td><td><span class="ctx">Ouvre reveal photos</span></td><td><span class="lim">100 ch</span></td></tr>
+        <tr><td><span class="key">sms.sub.payment_failed</span></td><td><span class="fr body">Washed : prélèvement de {amount} XOF refusé. Solde Mobile Money insuffisant. Nouvelle tentative demain.</span></td><td><span class="ctx">SMS — pas de lien.</span></td><td><span class="lim tight">160 ch SMS</span></td></tr>
+        <tr><td><span class="key">push.work.assignment</span></td><td><span class="fr body">Nouvelle visite proposée : {time} chez {name} ({neighborhood}).</span></td><td><span class="ctx">Push laveuse</span></td><td><span class="lim">100 ch</span></td></tr>
+        <tr><td><span class="key">push.work.assignment.expires</span></td><td><span class="fr body">Acceptez avant {time} sinon réassignée.</span></td><td><span class="ctx">5 min après push initial</span></td><td><span class="lim">100 ch</span></td></tr>
+        <tr><td><span class="key">push.work.payout_received</span></td><td><span class="fr body">+ {amount} XOF reçus sur {provider}.</span></td><td><span class="ctx">Confirmation MM</span></td><td><span class="lim">100 ch</span></td></tr>
+        <tr><td><span class="key">sms.work.cancel_tomorrow</span></td><td><span class="fr body">Washed : la visite chez {name} demain {time} est annulée. Votre forfait journalier est maintenu. Bureau 90 00 00 00.</span></td><td><span class="ctx">SMS · annulation cliente</span></td><td><span class="lim tight">160 ch SMS</span></td></tr>
+        <tr><td><span class="key">push.ops.sos</span></td><td><span class="fr body">🆘 SOS — {worker} chez {client}, {neighborhood}</span></td><td><span class="ctx">Push opérateur shift de garde</span></td><td><span class="lim">100 ch</span></td></tr>
+        <tr><td><span class="key">push.ops.sla_breach</span></td><td><span class="fr body">SLA dépassé · {client} {time} non assignée.</span></td><td><span class="ctx">Push opérateur</span></td><td><span class="lim">100 ch</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section">
+    <div class="num">15 · IMPORT / EXPORT</div>
+    <h2>Format de livraison</h2>
+    <p class="note">Cette page existe en deux formats:</p>
+    <ul style="font-size:var(--text-sm);color:var(--ink-2);line-height:1.7;max-width:72ch">
+      <li><b style="font-family:var(--font-mono);font-size:13px">copy.html</b> — ce document, source de vérité humaine. Prime sur tout.</li>
+      <li><b style="font-family:var(--font-mono);font-size:13px">packages/i18n/src/fr.json</b> — généré à partir de ce deck. Format ICU MessageFormat. Synchronisé via <code style="font-family:var(--font-mono);font-size:13px;background:var(--bg-deep);padding:1px 5px;border-radius:3px">pnpm i18n:sync</code>.</li>
+      <li><b style="font-family:var(--font-mono);font-size:13px">packages/i18n/src/en.json</b> — vide en v1. Réservé pour v2.</li>
+    </ul>
+    <div class="annot" style="margin-top:var(--s-5)"><b>Règle d'or</b>Toute chaîne en production doit avoir une clé dans ce deck. Si un dev a besoin d'une chaîne qui n'existe pas ici, il l'ajoute en PR à ce document AVANT d'écrire le code. Pas l'inverse.</div>
+  </section>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="fr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Washed — Mouvement</title>
+<link rel="stylesheet" href="../shared/tokens.css">
+<style>
+  body { background: var(--bg); }
+  .page { max-width: 1100px; margin: 0 auto; padding: var(--s-9) var(--s-6) var(--s-11); }
+  .crumb { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3); margin-bottom: var(--s-6); }
+  .crumb a { color: var(--ink-3); text-decoration: none; }
+  h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(40px, 6vw, 64px); letter-spacing: -0.02em; line-height: 1.05; margin: 0 0 var(--s-5); }
+  h1 em { font-style: italic; color: var(--primary); }
+  .lede { font-size: var(--text-lg); color: var(--ink-2); max-width: 60ch; line-height: 1.55; margin: 0 0 var(--s-9); }
+  .section { margin-top: var(--s-10); padding-top: var(--s-7); border-top: 1px solid var(--line); }
+  .section h2 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-2xl); letter-spacing: -0.01em; margin: 0 0 var(--s-2); }
+  .section .sub { color: var(--ink-3); margin: 0 0 var(--s-6); max-width: 60ch; }
+  .num { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); letter-spacing: 0.12em; margin-bottom: var(--s-2); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-5); }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-5); }
+  @media (max-width: 720px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  .ease-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-5); }
+  .ease-card .name { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; color: var(--primary); margin-bottom: var(--s-2); }
+  .ease-card .label { font-family: var(--font-display); font-size: var(--text-md); font-weight: 500; }
+  .ease-card .curve-wrap { background: var(--bg-deep); border-radius: var(--r-sm); margin: var(--s-4) 0; height: 140px; position: relative; overflow: hidden; }
+  .ease-card svg { width: 100%; height: 100%; }
+  .ease-card .demo { display: flex; align-items: center; gap: var(--s-3); margin-top: var(--s-3); }
+  .ease-card .demo .track { flex: 1; height: 2px; background: var(--line); position: relative; border-radius: 999px; }
+  .ease-card .ball { position: absolute; left: 0; top: 50%; width: 16px; height: 16px; border-radius: 999px; background: var(--primary); transform: translate(-50%, -50%); }
+  .ease-card .play { background: var(--ink); color: var(--surface); border: none; border-radius: 999px; font-family: var(--font-mono); font-size: var(--text-xs); padding: 6px 14px; cursor: pointer; }
+  .ease-card .desc { color: var(--ink-3); font-size: var(--text-sm); line-height: 1.5; margin: var(--s-3) 0 0; }
+
+  .duration-row { display: grid; grid-template-columns: 100px 80px 1fr; gap: var(--s-5); align-items: center; padding: var(--s-3) 0; border-bottom: 1px solid var(--line); }
+  .duration-row .token { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--ink); }
+  .duration-row .ms { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); }
+  .duration-row .use { color: var(--ink-3); font-size: var(--text-sm); }
+
+  .rule-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-5); }
+  .rule-card h4 { font-family: var(--font-display); font-size: var(--text-md); font-weight: 500; margin: 0 0 var(--s-2); }
+  .rule-card p { color: var(--ink-3); font-size: var(--text-sm); line-height: 1.55; margin: 0; }
+  .rule-card .verdict { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: var(--s-2); }
+  .rule-card.do .verdict { color: var(--success); }
+  .rule-card.dont .verdict { color: var(--danger); }
+</style></head>
+<body data-theme="subscriber">
+<div class="page">
+  <div class="crumb"><a href="../index.html">← Index</a> · 00 Foundations · Mouvement</div>
+
+  <h1>Le mouvement <em>doit dire</em><br>quelque chose.</h1>
+  <p class="lede">L'animation n'existe que pour montrer une relation de cause à effet, ou la trajectoire d'un objet. Si elle ne fait que décorer, elle est de la dette. Trois courbes, quatre durées, six règles.</p>
+
+  <!-- Easings -->
+  <section class="section">
+    <div class="num">01 · COURBES</div>
+    <h2>Trois courbes d'easing</h2>
+    <p class="sub">Le linéaire est interdit (sauf chargements en boucle). Toute autre transition utilise l'une des trois.</p>
+
+    <div class="grid-3">
+      <div class="ease-card">
+        <div class="name">--ease-standard</div>
+        <div class="label">Standard</div>
+        <div class="curve-wrap">
+          <svg viewBox="0 0 200 140" preserveAspectRatio="none">
+            <line x1="0" y1="120" x2="200" y2="120" stroke="#EAE0D5" stroke-width="1"/>
+            <line x1="0" y1="20" x2="200" y2="20" stroke="#EAE0D5" stroke-width="1" stroke-dasharray="2 2"/>
+            <path d="M 0 120 C 40 120, 40 20, 200 20" stroke="#C4622D" stroke-width="2" fill="none"/>
+          </svg>
+        </div>
+        <div class="demo">
+          <div class="track"><div class="ball" data-anim="standard"></div></div>
+          <button class="play" onclick="playAnim('standard')">▶</button>
+        </div>
+        <p class="desc">cubic-bezier(0.2, 0.8, 0.2, 1). Démarre vite, finit doucement. Pour 95% des transitions UI : ouvertures, hovers, transitions de pages.</p>
+      </div>
+
+      <div class="ease-card">
+        <div class="name">--ease-emphasized</div>
+        <div class="label">Emphasized</div>
+        <div class="curve-wrap">
+          <svg viewBox="0 0 200 140" preserveAspectRatio="none">
+            <line x1="0" y1="120" x2="200" y2="120" stroke="#EAE0D5" stroke-width="1"/>
+            <line x1="0" y1="20" x2="200" y2="20" stroke="#EAE0D5" stroke-width="1" stroke-dasharray="2 2"/>
+            <path d="M 0 120 C 64 144, 0 -16, 200 20" stroke="#C4622D" stroke-width="2" fill="none"/>
+          </svg>
+        </div>
+        <div class="demo">
+          <div class="track"><div class="ball" data-anim="emphasized"></div></div>
+          <button class="play" onclick="playAnim('emphasized')">▶</button>
+        </div>
+        <p class="desc">cubic-bezier(0.32, 0.72, 0, 1). Plus expressif. Pour les transitions importantes — première confirmation, sheet d'erreur critique, succès.</p>
+      </div>
+
+      <div class="ease-card">
+        <div class="name">--ease-snap</div>
+        <div class="label">Snap</div>
+        <div class="curve-wrap">
+          <svg viewBox="0 0 200 140" preserveAspectRatio="none">
+            <line x1="0" y1="120" x2="200" y2="120" stroke="#EAE0D5" stroke-width="1"/>
+            <line x1="0" y1="20" x2="200" y2="20" stroke="#EAE0D5" stroke-width="1" stroke-dasharray="2 2"/>
+            <path d="M 0 120 C 80 120, 120 20, 200 20" stroke="#C4622D" stroke-width="2" fill="none"/>
+          </svg>
+        </div>
+        <div class="demo">
+          <div class="track"><div class="ball" data-anim="snap"></div></div>
+          <button class="play" onclick="playAnim('snap')">▶</button>
+        </div>
+        <p class="desc">cubic-bezier(0.4, 0, 0.2, 1). Symétrique, mécanique. Pour les actions de toggle — switch, accordéons, segmented controls.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Durations -->
+  <section class="section">
+    <div class="num">02 · DURÉES</div>
+    <h2>Quatre vitesses</h2>
+    <p class="sub">La durée correspond à la distance parcourue par l'élément. Plus la transition est ample, plus elle est lente — mais jamais au-delà de 480&nbsp;ms.</p>
+    <div>
+      <div class="duration-row"><span class="token">--d-fast</span><span class="ms">120 ms</span><span class="use">micro-feedback : hover, focus, ripple, état pressé</span></div>
+      <div class="duration-row"><span class="token">--d-base</span><span class="ms">200 ms</span><span class="use">par défaut : ouverture menu, fade, transition de couleur</span></div>
+      <div class="duration-row"><span class="token">--d-slow</span><span class="ms">320 ms</span><span class="use">éléments larges : sheets, modales, drawers</span></div>
+      <div class="duration-row"><span class="token">--d-emphasis</span><span class="ms">480 ms</span><span class="use">transitions narratives : succès, célébration, onboarding</span></div>
+    </div>
+  </section>
+
+  <!-- Rules -->
+  <section class="section">
+    <div class="num">03 · RÈGLES</div>
+    <h2>Six règles non-négociables</h2>
+    <div class="grid-2">
+      <div class="rule-card do"><div class="verdict">✓ FAIRE</div><h4>Anime la cause, pas la conséquence</h4><p>Quand on tape un bouton, c'est le bouton qui s'enfonce. La sheet qui s'ouvre suit, sans ralentir. Ne pas inverser.</p></div>
+      <div class="rule-card do"><div class="verdict">✓ FAIRE</div><h4>Respecte prefers-reduced-motion</h4><p>Si l'utilisateur a désactivé les animations, on remplace toute transition par un fade de 100&nbsp;ms. Pas de translate, pas de scale.</p></div>
+      <div class="rule-card do"><div class="verdict">✓ FAIRE</div><h4>Anime des transformations, pas des layouts</h4><p>Toujours <span class="mono">transform</span> et <span class="mono">opacity</span>. Jamais <span class="mono">width</span>, <span class="mono">height</span>, <span class="mono">top</span> en animation continue. Le GPU doit tenir 60&nbsp;fps sur un Android d'entrée de gamme.</p></div>
+      <div class="rule-card dont"><div class="verdict">✗ NE PAS FAIRE</div><h4>Pas de bounce, pas de spring</h4><p>Washed est un service domestique, pas un jouet. Aucun rebond, aucun overshoot. La précision de l'easing standard suffit.</p></div>
+      <div class="rule-card dont"><div class="verdict">✗ NE PAS FAIRE</div><h4>Pas d'animation continue en arrière-plan</h4><p>Loaders, "pulses", "shimmer" décoratifs : interdits sauf pour signaler un état actif (chargement réel). Sinon ça épuise la batterie et l'attention.</p></div>
+      <div class="rule-card dont"><div class="verdict">✗ NE PAS FAIRE</div><h4>Pas plus de 480&nbsp;ms, jamais</h4><p>Au-delà, l'utilisateur attend. Si la transition est trop ample, on la coupe en deux : un mouvement rapide (200&nbsp;ms) puis un settle (200&nbsp;ms).</p></div>
+    </div>
+  </section>
+
+  <p style="margin-top: var(--s-10); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.12em;">— Fin · v2.0 · 2026</p>
+</div>
+
+<script>
+function playAnim(kind) {
+  const ease = {
+    standard: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
+    emphasized: 'cubic-bezier(0.32, 0.72, 0, 1)',
+    snap: 'cubic-bezier(0.4, 0, 0.2, 1)',
+  }[kind];
+  document.querySelectorAll(`[data-anim="${kind}"]`).forEach(el => {
+    el.animate(
+      [{ left: '0%' }, { left: '100%' }, { left: '100%' }, { left: '0%' }],
+      { duration: 1600, easing: ease, fill: 'forwards' }
+    );
+  });
+}
+// Auto-play on load for delight
+window.addEventListener('load', () => {
+  setTimeout(() => playAnim('standard'), 400);
+  setTimeout(() => playAnim('emphasized'), 700);
+  setTimeout(() => playAnim('snap'), 1000);
+});
+</script>
+</body></html>

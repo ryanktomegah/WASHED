@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="fr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Washed — Design system</title>
+<link rel="stylesheet" href="../shared/tokens.css">
+<style>
+  body { background: var(--bg); }
+  .page { max-width: 1280px; margin: 0 auto; padding: var(--s-9) var(--s-6) var(--s-11); }
+  .crumb { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3); margin-bottom: var(--s-6); }
+  .crumb a { color: var(--ink-3); text-decoration: none; }
+  h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(40px, 6vw, 64px); letter-spacing: -0.02em; line-height: 1.05; margin: 0 0 var(--s-5); }
+  h1 em { font-style: italic; color: var(--primary); }
+  .lede { font-size: var(--text-lg); color: var(--ink-2); max-width: 60ch; line-height: 1.55; margin: 0 0 var(--s-9); }
+  .section { margin-top: var(--s-10); padding-top: var(--s-7); border-top: 1px solid var(--line); }
+  .section h2 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-2xl); letter-spacing: -0.01em; margin: 0 0 var(--s-2); }
+  .section .sub { color: var(--ink-3); margin: 0 0 var(--s-6); max-width: 70ch; }
+  .num { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); letter-spacing: 0.12em; margin-bottom: var(--s-2); }
+
+  .lab { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-6); margin-bottom: var(--s-5); }
+  .lab .title-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: var(--s-5); }
+  .lab h3 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-lg); margin: 0; letter-spacing: -0.01em; }
+  .lab .id { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-4); padding: var(--s-3) 0; border-bottom: 1px dashed var(--line); }
+  .row:last-child { border-bottom: none; }
+  .row .label { width: 120px; font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); flex-shrink: 0; }
+
+  /* BUTTONS */
+  .btn { font-family: var(--font-body); font-weight: 600; font-size: 15px; padding: 12px 22px; border-radius: 999px; border: 1px solid transparent; min-height: 44px; cursor: pointer; transition: all var(--d-base) var(--ease-standard); display: inline-flex; align-items: center; gap: 8px; }
+  .btn.primary { background: var(--primary); color: var(--surface); }
+  .btn.primary:hover { background: var(--primary-deep); }
+  .btn.primary:active { transform: scale(0.97); }
+  .btn.primary[disabled] { background: var(--line-2); color: var(--ink-4); cursor: not-allowed; }
+  .btn.secondary { background: var(--surface); border-color: var(--ink); color: var(--ink); }
+  .btn.secondary:hover { background: var(--bg-deep); }
+  .btn.tertiary { background: transparent; color: var(--primary); padding: 12px 8px; }
+  .btn.tertiary:hover { background: var(--primary-soft); }
+  .btn.danger { background: var(--danger); color: var(--surface); }
+  .btn.loading { position: relative; color: transparent; pointer-events: none; }
+  .btn.loading::after { content: ''; position: absolute; inset: 50% auto auto 50%; width: 16px; height: 16px; border: 2px solid var(--primary-soft); border-top-color: var(--primary); border-radius: 999px; transform: translate(-50%, -50%); animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+  .btn.focus-ring { box-shadow: var(--focus-ring); }
+
+  /* FIELDS */
+  .field { display: flex; flex-direction: column; gap: 6px; min-width: 240px; }
+  .field label { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-3); }
+  .field input, .field textarea, .field select { font-family: var(--font-body); font-size: 15px; padding: 12px 14px; border: 1px solid var(--line-2); border-radius: var(--r-sm); background: var(--surface); color: var(--ink); min-height: 44px; transition: all var(--d-base); outline: none; }
+  .field input:focus, .field textarea:focus { border-color: var(--primary); box-shadow: var(--focus-ring); }
+  .field input[aria-invalid="true"] { border-color: var(--danger); background: var(--danger-soft); }
+  .field .help { font-size: var(--text-xs); color: var(--ink-3); }
+  .field .err { font-size: var(--text-xs); color: var(--danger); }
+
+  /* OTP */
+  .otp { display: flex; gap: 8px; }
+  .otp input { width: 44px; height: 56px; text-align: center; font-family: var(--font-mono); font-size: 22px; font-weight: 600; border: 1px solid var(--line-2); border-radius: var(--r-sm); background: var(--surface); }
+  .otp input:focus { border-color: var(--primary); box-shadow: var(--focus-ring); outline: none; }
+
+  /* BADGES */
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
+  .badge.success { background: var(--success-soft); color: var(--success); }
+  .badge.warn { background: var(--warn-soft); color: var(--warn); }
+  .badge.danger { background: var(--danger-soft); color: var(--danger); }
+  .badge.neutral { background: var(--bg-deep); color: var(--ink-2); }
+  .badge.brand { background: var(--primary-soft); color: var(--primary-deep); }
+  .badge .dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+
+  /* CARD */
+  .card-d { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-5); display: flex; gap: var(--s-4); align-items: center; }
+  .avatar { width: 48px; height: 48px; border-radius: 999px; background: var(--primary-tint); display: grid; place-items: center; font-family: var(--font-display); font-style: italic; font-weight: 600; font-size: 22px; color: var(--primary-deep); flex-shrink: 0; }
+  .card-d .body h4 { font-family: var(--font-body); font-weight: 600; font-size: 15px; margin: 0 0 2px; }
+  .card-d .body .sub { font-size: 13px; color: var(--ink-3); }
+
+  /* TOAST */
+  .toast { display: inline-flex; align-items: center; gap: 12px; background: var(--ink); color: var(--surface); padding: 12px 18px; border-radius: var(--r-pill); box-shadow: var(--shadow-elevated); font-size: 14px; }
+  .toast.success { background: var(--success); }
+  .toast.danger { background: var(--danger); }
+  .toast .ic { width: 20px; height: 20px; border-radius: 999px; background: rgba(255,255,255,0.18); display: grid; place-items: center; font-size: 11px; }
+
+  /* LIST ITEM */
+  .li { display: grid; grid-template-columns: 48px 1fr auto; gap: 14px; align-items: center; padding: 14px 4px; border-bottom: 1px solid var(--line); }
+  .li:last-child { border-bottom: none; }
+  .li .meta { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); }
+
+  /* SEGMENTED */
+  .seg { display: inline-flex; background: var(--bg-deep); padding: 4px; border-radius: 999px; }
+  .seg button { background: transparent; border: 0; padding: 8px 16px; font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink-3); border-radius: 999px; cursor: pointer; min-height: 36px; }
+  .seg button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-card); }
+
+  /* TABLE (operator) */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tbl th { text-align: left; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  .tbl td { padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  .tbl tr:hover td { background: var(--surface-2); }
+
+  /* STATES grid */
+  .states { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--s-4); }
+  .state-tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-5); min-height: 200px; display: flex; flex-direction: column; gap: var(--s-3); position: relative; }
+  .state-tile .stamp { position: absolute; top: var(--s-3); right: var(--s-3); font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.08em; }
+  .state-tile .glyph { width: 40px; height: 40px; border-radius: var(--r-sm); display: grid; place-items: center; }
+  .state-tile h5 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-md); margin: 0; }
+  .state-tile p { font-size: 13px; color: var(--ink-3); margin: 0; line-height: 1.5; }
+  .state-tile .copy { font-family: var(--font-mono); font-size: 11px; padding: 8px; background: var(--bg-deep); border-radius: var(--r-xs); color: var(--ink-2); }
+
+  .skel { background: linear-gradient(90deg, var(--line) 0%, var(--bg-deep) 50%, var(--line) 100%); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; border-radius: var(--r-xs); }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  @media (max-width: 880px) { .states { grid-template-columns: 1fr 1fr; } }
+</style></head>
+<body data-theme="subscriber">
+<div class="page">
+  <div class="crumb"><a href="../index.html">← Index</a> · 01 Design System · Composants &amp; états</div>
+
+  <h1>Composants <em>& états</em>.</h1>
+  <p class="lede">Les primitives partagées par les trois applications. Chaque composant existe en sept états (default, hover, pressed, focus, disabled, loading, error). Pas un composant n'est livrable sans sa matrice d'états documentée.</p>
+
+  <!-- BUTTONS -->
+  <section class="section">
+    <div class="num">01.1 · ACTION</div>
+    <h2>Boutons</h2>
+    <p class="sub">Quatre variantes. Une seule primary par écran. Le tertiary est un lien renforcé, pas un bouton réel — pour les actions secondaires non-destructives.</p>
+    <div class="lab">
+      <div class="title-row"><h3>Primary · ovale terracotta</h3><span class="id">Button · primary</span></div>
+      <div class="row"><span class="label">DEFAULT</span><button class="btn primary">Confirmer le paiement</button></div>
+      <div class="row"><span class="label">HOVER</span><button class="btn primary" style="background: var(--primary-deep)">Confirmer le paiement</button></div>
+      <div class="row"><span class="label">FOCUS</span><button class="btn primary focus-ring">Confirmer le paiement</button></div>
+      <div class="row"><span class="label">LOADING</span><button class="btn primary loading">Confirmer le paiement</button></div>
+      <div class="row"><span class="label">DISABLED</span><button class="btn primary" disabled>Confirmer le paiement</button></div>
+    </div>
+
+    <div class="lab">
+      <div class="title-row"><h3>Secondary · contour ink</h3><span class="id">Button · secondary</span></div>
+      <div class="row"><span class="label">DEFAULT</span><button class="btn secondary">Annuler</button><button class="btn secondary" style="background: var(--bg-deep)">Hover</button><button class="btn secondary focus-ring">Focus</button></div>
+    </div>
+
+    <div class="lab">
+      <div class="title-row"><h3>Tertiary · texte primary</h3><span class="id">Button · tertiary</span></div>
+      <div class="row"><span class="label">VARIANTES</span><button class="btn tertiary">En savoir plus</button><button class="btn tertiary" style="background: var(--primary-soft)">Hover</button><button class="btn danger">Supprimer mon compte</button></div>
+    </div>
+  </section>
+
+  <!-- FIELDS -->
+  <section class="section">
+    <div class="num">01.2 · SAISIE</div>
+    <h2>Champs</h2>
+    <div class="lab">
+      <div class="title-row"><h3>Champ texte</h3><span class="id">TextField</span></div>
+      <div class="row" style="gap: var(--s-5)">
+        <div class="field"><label>NUMÉRO MOBILE MONEY</label><input type="tel" inputmode="numeric" placeholder="90 12 34 56"><span class="help">T-Money ou Flooz · format togolais</span></div>
+        <div class="field"><label>EMAIL</label><input type="email" value="contact@washed.tg" style="border-color: var(--primary); box-shadow: var(--focus-ring)"><span class="help">Focus visible</span></div>
+        <div class="field"><label>QUARTIER</label><input type="text" value="tokoinX" aria-invalid="true"><span class="err">Quartier non reconnu — vérifiez l'orthographe</span></div>
+      </div>
+    </div>
+
+    <div class="lab">
+      <div class="title-row"><h3>OTP · 6 chiffres</h3><span class="id">OTPField</span></div>
+      <div class="row"><span class="label">DEFAULT</span>
+        <div class="otp">
+          <input value="9"><input value="0"><input value="2"><input style="border-color: var(--primary); box-shadow: var(--focus-ring)"><input><input>
+        </div>
+      </div>
+    </div>
+
+    <div class="lab">
+      <div class="title-row"><h3>Segmented</h3><span class="id">Segmented</span></div>
+      <div class="row">
+        <div class="seg">
+          <button aria-selected="true">Hebdomadaire</button>
+          <button>Bi-hebdomadaire</button>
+          <button>Mensuelle</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BADGES + CARDS -->
+  <section class="section">
+    <div class="num">01.3 · INFORMATION</div>
+    <h2>Cartes, badges, listes, toasts</h2>
+
+    <div class="lab">
+      <div class="title-row"><h3>Badges d'état</h3><span class="id">Badge</span></div>
+      <div class="row" style="gap: 10px">
+        <span class="badge success"><span class="dot"></span>Confirmé</span>
+        <span class="badge warn"><span class="dot"></span>En attente</span>
+        <span class="badge danger"><span class="dot"></span>Litige</span>
+        <span class="badge neutral"><span class="dot"></span>Brouillon</span>
+        <span class="badge brand"><span class="dot"></span>Premium</span>
+      </div>
+    </div>
+
+    <div class="lab">
+      <div class="title-row"><h3>Carte laveuse</h3><span class="id">WorkerCard</span></div>
+      <div class="row" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4); border: none">
+        <div class="card-d">
+          <div class="avatar">A</div>
+          <div class="body"><h4>Akouvi K.</h4><div class="sub">Tokoin · 8 mois ensemble</div></div>
+          <span class="badge success" style="margin-left:auto"><span class="dot"></span>Confirmé</span>
+        </div>
+        <div class="card-d">
+          <div class="avatar" style="background: var(--bg-deep); color: var(--ink-3)">?</div>
+          <div class="body"><h4>Recherche en cours</h4><div class="sub">Réponse sous 4 h</div></div>
+          <span class="badge warn" style="margin-left:auto"><span class="dot"></span>En attente</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="lab">
+      <div class="title-row"><h3>Liste de visites</h3><span class="id">VisitList</span></div>
+      <div>
+        <div class="li"><div class="avatar">A</div><div><h4 style="margin:0;font-weight:600;font-size:15px">Mardi 9 h — Akouvi K.</h4><div style="color: var(--ink-3); font-size: 13px">Tokoin · visite hebdomadaire</div></div><span class="badge success"><span class="dot"></span>Confirmé</span></div>
+        <div class="li"><div class="avatar">M</div><div><h4 style="margin:0;font-weight:600;font-size:15px">Vendredi 14 h — Mawu A.</h4><div style="color: var(--ink-3); font-size: 13px">Bè · première visite</div></div><span class="badge warn"><span class="dot"></span>À confirmer</span></div>
+        <div class="li"><div class="avatar" style="background:var(--danger-soft); color: var(--danger)">!</div><div><h4 style="margin:0;font-weight:600;font-size:15px">Lundi 11 h — visite annulée</h4><div style="color: var(--ink-3); font-size: 13px">Crédit de 1 125 XOF appliqué</div></div><span class="badge danger"><span class="dot"></span>Annulée</span></div>
+      </div>
+    </div>
+
+    <div class="lab">
+      <div class="title-row"><h3>Toasts</h3><span class="id">Toast</span></div>
+      <div class="row" style="gap: 12px; flex-direction: column; align-items: flex-start">
+        <div class="toast success"><span class="ic">✓</span>Visite terminée. Akouvi est partie.</div>
+        <div class="toast"><span class="ic">i</span>Crédit de 1 125 XOF appliqué à votre prochain mois.</div>
+        <div class="toast danger"><span class="ic">!</span>Le paiement n'a pas abouti. <a href="#" style="color: white; text-decoration: underline">Réessayer</a></div>
+      </div>
+    </div>
+
+    <div class="lab">
+      <div class="title-row"><h3>Tableau opérateur</h3><span class="id">DataTable</span></div>
+      <table class="tbl">
+        <thead><tr><th>Abonné</th><th>Quartier</th><th>Plan</th><th>Statut</th><th>Prochaine visite</th></tr></thead>
+        <tbody>
+          <tr><td>Yawa Ahuvi</td><td>Tokoin</td><td class="mono tnum">4 500 XOF</td><td><span class="badge success"><span class="dot"></span>Actif</span></td><td class="mono">2026-04-12 09:00</td></tr>
+          <tr><td>Komla Bessa</td><td>Bè</td><td class="mono tnum">2 500 XOF</td><td><span class="badge warn"><span class="dot"></span>Retard</span></td><td class="mono">2026-04-13 14:00</td></tr>
+          <tr><td>Adjoa Kossi</td><td>Adidogomé</td><td class="mono tnum">4 500 XOF</td><td><span class="badge danger"><span class="dot"></span>Litige</span></td><td class="mono">— suspendue</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- STATES -->
+  <section class="section">
+    <div class="num">02 · BIBLIOTHÈQUE D'ÉTATS</div>
+    <h2>Cinq états par liste, sans exception</h2>
+    <p class="sub">La règle non-négociable : chaque écran qui contient une liste doit documenter ses cinq états. Si un état n'est pas explicitement traité, il est traité par défaut — c'est-à-dire mal.</p>
+
+    <div class="states">
+      <div class="state-tile">
+        <div class="stamp">01 / 05</div>
+        <div class="glyph" style="background: var(--bg-deep); color: var(--ink-3)">○</div>
+        <h5>Vide — premier usage</h5>
+        <p>Le contenu n'existe pas encore. On guide vers la création.</p>
+        <div class="copy">«&nbsp;Vous n'avez pas encore de laveuse. On vous en trouve une en 4 heures.&nbsp;»</div>
+      </div>
+
+      <div class="state-tile">
+        <div class="stamp">02 / 05</div>
+        <div class="glyph" style="background: var(--bg-deep);"><div class="skel" style="width:24px;height:8px"></div></div>
+        <h5>Chargement</h5>
+        <p>Squelette de la forme attendue. Pas de spinner sauf en dernier recours.</p>
+        <div style="display: flex; flex-direction: column; gap: 6px; margin-top: auto">
+          <div class="skel" style="height: 12px; width: 60%"></div>
+          <div class="skel" style="height: 8px; width: 80%"></div>
+          <div class="skel" style="height: 8px; width: 40%"></div>
+        </div>
+      </div>
+
+      <div class="state-tile">
+        <div class="stamp">03 / 05</div>
+        <div class="glyph" style="background: var(--danger-soft); color: var(--danger)">!</div>
+        <h5>Erreur</h5>
+        <p>Quelque chose a échoué côté serveur ou réseau. On explique et on propose une action.</p>
+        <div class="copy">«&nbsp;Impossible de charger vos visites. <u>Réessayer</u>&nbsp;»</div>
+      </div>
+
+      <div class="state-tile">
+        <div class="stamp">04 / 05</div>
+        <div class="glyph" style="background: var(--warn-soft); color: var(--warn)">⚡</div>
+        <h5>Hors-ligne</h5>
+        <p>Pas de réseau. On affiche le cache local et on avertit que c'est figé.</p>
+        <div class="copy">«&nbsp;Hors-ligne. Données du 12 avril 8&nbsp;h&nbsp;15.&nbsp;»</div>
+      </div>
+
+      <div class="state-tile">
+        <div class="stamp">05 / 05</div>
+        <div class="glyph" style="background: var(--success-soft); color: var(--success)">✓</div>
+        <h5>Fin de liste</h5>
+        <p>L'utilisateur a tout vu. On clôt avec une note discrète, pas un mur.</p>
+        <div class="copy">«&nbsp;Vous avez vu vos 32 visites. Bravo Akouvi.&nbsp;»</div>
+      </div>
+    </div>
+  </section>
+
+  <p style="margin-top: var(--s-10); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.12em;">— Fin · v2.0 · 2026</p>
+</div>
+</body></html>

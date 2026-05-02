@@ -1,0 +1,1046 @@
+<!doctype html>
+<html lang="fr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Washed — Operator Console Hi-Fi</title>
+<link rel="stylesheet" href="../shared/tokens.css">
+<style>
+  body { background: var(--bg); color: var(--ink); }
+  .page { max-width: 1640px; margin: 0 auto; padding: var(--s-9) var(--s-6) var(--s-11); }
+  .crumb { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3); margin-bottom: var(--s-6); }
+  .crumb a { color: var(--ink-3); text-decoration: none; }
+  h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(40px, 6vw, 64px); letter-spacing: -0.02em; line-height: 1.05; margin: 0 0 var(--s-5); }
+  h1 em { font-style: italic; color: var(--primary); }
+  .lede { font-size: var(--text-lg); color: var(--ink-2); max-width: 64ch; line-height: 1.55; margin: 0 0 var(--s-9); }
+  .section { margin-top: var(--s-10); padding-top: var(--s-7); border-top: 1px solid var(--line); }
+  .section h2 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-2xl); letter-spacing: -0.01em; margin: 0 0 var(--s-2); }
+  .num { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); letter-spacing: 0.12em; margin-bottom: var(--s-2); }
+
+  .annot {
+    background: var(--bg-deep); border-left: 3px solid var(--primary); padding: var(--s-4) var(--s-5);
+    border-radius: 0 var(--r-sm) var(--r-sm) 0; margin: var(--s-5) 0;
+    font-size: var(--text-sm); color: var(--ink-2); line-height: 1.55;
+  }
+  .annot b { color: var(--primary); font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; display: block; margin-bottom: 4px; }
+
+  /* Desktop window — macOS-style chrome */
+  .win {
+    background: var(--surface);
+    border-radius: var(--r-md);
+    box-shadow: 0 30px 60px -20px rgba(21,19,29,0.30), 0 0 0 1px var(--line);
+    overflow: hidden;
+    margin-top: var(--s-7);
+  }
+  .win-cap { font-family: var(--font-mono); font-size: 10px; color: var(--primary); letter-spacing: 0.1em; text-transform: uppercase; margin-top: var(--s-3); }
+  .win-name { font-family: var(--font-body); font-weight: 500; font-size: 13px; margin-top: 2px; }
+  .win-notes { font-size: 11px; color: var(--ink-3); margin-top: 4px; line-height: 1.4; max-width: 64ch; }
+  .chrome {
+    height: 36px; background: var(--bg-deep);
+    display: flex; align-items: center; gap: 8px; padding: 0 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .chrome .dots { display: flex; gap: 6px; }
+  .chrome .dot { width: 11px; height: 11px; border-radius: 999px; }
+  .chrome .dot.r { background: #FF5F57; }
+  .chrome .dot.y { background: #FEBC2E; }
+  .chrome .dot.g { background: #28C840; }
+  .chrome .url {
+    flex: 1; text-align: center;
+    font-family: var(--font-mono); font-size: 11px; color: var(--ink-3);
+    letter-spacing: 0.05em;
+  }
+  .chrome .right { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); display: flex; gap: 10px; }
+
+  /* App layout: sidebar + main + right panel */
+  .app { display: grid; grid-template-columns: 220px 1fr 340px; min-height: 720px; }
+  .app.no-right { grid-template-columns: 220px 1fr; }
+  .app.compact { min-height: 560px; }
+  .sidebar {
+    background: var(--ink); color: var(--surface); padding: var(--s-5) var(--s-3);
+    border-right: 1px solid rgba(255,255,255,0.06);
+  }
+  .brand { display: flex; align-items: center; gap: 8px; margin: 0 var(--s-3) var(--s-6); }
+  .brand-glyph {
+    width: 24px; height: 24px; border-radius: 999px; background: var(--primary);
+    display: grid; place-items: center;
+    font-family: var(--font-display); font-style: italic; font-weight: 600;
+    font-size: 14px; color: white;
+  }
+  .brand-name { font-family: var(--font-display); font-weight: 500; font-size: 15px; }
+  .nav-grp { margin-bottom: var(--s-5); }
+  .nav-grp .nav-h {
+    font-family: var(--font-mono); font-size: 9px;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.4);
+    padding: 0 var(--s-3); margin-bottom: var(--s-2);
+  }
+  .nav-i {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px var(--s-3); border-radius: 6px;
+    font-size: 12px; color: rgba(255,255,255,0.7);
+    margin-bottom: 1px;
+  }
+  .nav-i.active { background: rgba(255,255,255,0.08); color: white; }
+  .nav-i .glyph { width: 14px; height: 14px; background: currentColor; border-radius: 3px; opacity: 0.7; }
+  .nav-i.active .glyph { opacity: 1; }
+  .nav-i .badge {
+    margin-left: auto;
+    font-family: var(--font-mono); font-size: 10px;
+    background: var(--primary); color: white;
+    padding: 1px 6px; border-radius: 999px;
+  }
+  .nav-i .badge.warn { background: var(--accent); }
+  .nav-i .badge.danger { background: var(--danger); }
+
+  /* Main area */
+  .main { padding: var(--s-6) var(--s-7); overflow: hidden; min-width: 0; }
+  .main-hd { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s-5); margin-bottom: var(--s-5); }
+  .main-hd h3 {
+    font-family: var(--font-display); font-weight: 500; font-style: italic;
+    font-size: 28px; letter-spacing: -0.01em; margin: 0;
+  }
+  .main-hd .crumb-i { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .main-hd .actions { display: flex; gap: 8px; }
+  .btn {
+    background: var(--ink); color: var(--surface);
+    border: none; border-radius: 8px;
+    padding: 8px 14px; font-size: 12px; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn.primary { background: var(--primary); color: white; }
+  .btn.alt { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+  .btn.ghost { background: transparent; color: var(--ink-2); border: 1px solid var(--line); }
+  .btn.danger { background: var(--danger); color: white; }
+  .kbd {
+    font-family: var(--font-mono); font-size: 10px;
+    background: var(--bg-deep); color: var(--ink-3);
+    padding: 1px 5px; border-radius: 3px; border: 1px solid var(--line);
+    margin-left: 4px;
+  }
+
+  /* Stats strip */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden; margin-bottom: var(--s-5); background: var(--surface); }
+  .stat { padding: var(--s-4) var(--s-5); border-right: 1px solid var(--line); }
+  .stat:last-child { border-right: none; }
+  .stat .l { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.1em; }
+  .stat .n { font-family: var(--font-display); font-weight: 500; font-size: 26px; line-height: 1; margin-top: 6px; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+  .stat .d { font-size: 11px; color: var(--ink-3); margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .stat .d.up { color: var(--success); }
+  .stat .d.down { color: var(--danger); }
+
+  /* Tables */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .tbl thead th {
+    text-align: left; font-family: var(--font-mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--ink-3); font-weight: 500;
+    padding: 10px 12px; border-bottom: 1px solid var(--line);
+  }
+  .tbl tbody td {
+    padding: 10px 12px; border-bottom: 1px solid var(--line);
+    color: var(--ink); font-variant-numeric: tabular-nums;
+  }
+  .tbl tbody tr:hover { background: var(--surface-2); }
+  .tbl tbody tr.selected { background: var(--primary-soft); }
+  .tbl tbody tr.selected td { color: var(--primary); }
+  .tbl .who { display: flex; align-items: center; gap: 8px; }
+  .tbl .av { width: 22px; height: 22px; border-radius: 999px; background: linear-gradient(135deg, var(--primary), var(--accent)); flex-shrink: 0; }
+
+  /* Chips */
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 999px; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; background: var(--bg-deep); color: var(--ink-2); }
+  .chip.live { background: var(--success-soft); color: var(--success); }
+  .chip.warn { background: var(--accent-soft); color: var(--accent); }
+  .chip.danger { background: var(--danger-soft); color: var(--danger); }
+  .chip.primary { background: var(--primary-soft); color: var(--primary); }
+  .chip.dot::before { content: ''; width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+
+  /* Right panel */
+  .rpanel {
+    background: var(--surface-2); border-left: 1px solid var(--line);
+    padding: var(--s-5) var(--s-5); overflow: hidden;
+  }
+  .rpanel h4 { font-family: var(--font-display); font-weight: 500; font-style: italic; font-size: 18px; margin: 0 0 var(--s-3); }
+  .field { margin-bottom: var(--s-3); }
+  .field .l { font-family: var(--font-mono); font-size: 9px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 3px; }
+  .field .v { font-size: 12px; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .field .v.big { font-family: var(--font-display); font-weight: 500; font-size: 22px; line-height: 1; letter-spacing: -0.01em; }
+  .divider { height: 1px; background: var(--line); margin: var(--s-4) 0; }
+
+  /* Map view (live ops) */
+  .map {
+    background-image: repeating-linear-gradient(135deg, var(--line) 0, var(--line) 1px, transparent 1px, transparent 8px);
+    background-color: var(--surface-2);
+    border: 1px solid var(--line); border-radius: var(--r-sm);
+    position: relative; overflow: hidden; min-height: 400px;
+  }
+  .map .pin { position: absolute; width: 10px; height: 10px; border-radius: 999px; background: var(--primary); box-shadow: 0 0 0 4px rgba(59,31,122,0.18); }
+  .map .pin.warn { background: var(--accent); box-shadow: 0 0 0 4px rgba(212,144,14,0.18); }
+  .map .pin.danger { background: var(--danger); box-shadow: 0 0 0 4px rgba(190,48,48,0.20); animation: pulse 1.2s ease-out infinite; }
+  .map .pin.idle { background: var(--ink-3); box-shadow: 0 0 0 4px rgba(104,98,117,0.18); }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 4px rgba(190,48,48,0.20); } 50% { box-shadow: 0 0 0 12px rgba(190,48,48,0.0); } }
+  .map .lbl { position: absolute; font-family: var(--font-mono); font-size: 9px; background: white; color: var(--ink); padding: 2px 6px; border-radius: 3px; border: 1px solid var(--line); white-space: nowrap; }
+  .map-legend { position: absolute; left: 12px; bottom: 12px; background: white; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-family: var(--font-mono); font-size: 9px; color: var(--ink-2); display: flex; gap: 12px; }
+  .map-legend .li { display: flex; align-items: center; gap: 4px; }
+  .map-legend .pip { width: 8px; height: 8px; border-radius: 999px; }
+
+  /* Cmd palette overlay */
+  .palette-bg {
+    position: relative;
+    background: rgba(21,19,29,0.55);
+    backdrop-filter: blur(8px);
+    padding: var(--s-7) var(--s-6) var(--s-9);
+  }
+  .palette {
+    max-width: 600px; margin: 0 auto;
+    background: var(--surface); border-radius: var(--r-md);
+    box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+    overflow: hidden;
+  }
+  .palette-input {
+    padding: var(--s-4) var(--s-5);
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--font-mono); font-size: 13px; color: var(--ink-3);
+  }
+  .palette-input input {
+    flex: 1; border: none; outline: none; background: transparent;
+    font-family: var(--font-mono); font-size: 14px; color: var(--ink);
+  }
+  .palette-grp { padding: var(--s-3) 0; }
+  .palette-grp-h { font-family: var(--font-mono); font-size: 9px; color: var(--ink-3); letter-spacing: 0.12em; text-transform: uppercase; padding: 4px var(--s-5); }
+  .palette-i { display: flex; align-items: center; padding: 8px var(--s-5); font-size: 13px; color: var(--ink); gap: 10px; }
+  .palette-i.active { background: var(--primary-soft); color: var(--primary); }
+  .palette-i .pre { font-family: var(--font-mono); color: var(--ink-3); font-size: 11px; }
+  .palette-i.active .pre { color: var(--primary); }
+  .palette-i .kbd { margin-left: auto; }
+
+  /* SOS overlay */
+  .sos {
+    background: var(--danger);
+    padding: var(--s-5) var(--s-7);
+    color: white;
+    display: flex; align-items: center; justify-content: space-between; gap: var(--s-6);
+  }
+  .sos .l-bit { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.85; }
+  .sos h5 { font-family: var(--font-display); font-weight: 500; font-style: italic; font-size: 22px; margin: 4px 0 0; }
+  .sos .who-info { display: flex; gap: var(--s-5); margin-top: 4px; font-size: 12px; opacity: 0.9; font-variant-numeric: tabular-nums; }
+  .sos .actions { display: flex; gap: 8px; }
+  .sos .actions .btn { background: white; color: var(--danger); }
+  .sos .actions .btn.alt { background: rgba(255,255,255,0.16); color: white; }
+
+  /* Timeline */
+  .timeline { position: relative; padding-left: 18px; }
+  .timeline::before { content: ''; position: absolute; left: 5px; top: 4px; bottom: 4px; width: 2px; background: var(--line); }
+  .timeline .ev { position: relative; padding-bottom: var(--s-4); }
+  .timeline .ev::before { content: ''; position: absolute; left: -16px; top: 4px; width: 8px; height: 8px; border-radius: 999px; background: var(--primary); border: 2px solid var(--surface); }
+  .timeline .ev .t { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.05em; }
+  .timeline .ev .h { font-size: 12px; font-weight: 500; margin-top: 2px; }
+  .timeline .ev .d { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: var(--s-5); border-bottom: 1px solid var(--line); margin-bottom: var(--s-4); }
+  .tabs .tab { padding: 8px 0; font-size: 12px; color: var(--ink-3); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tabs .tab.active { color: var(--primary); border-color: var(--primary); }
+</style></head>
+<body data-theme="operator">
+<div class="page">
+  <div class="crumb"><a href="../index.html">← Index</a> · 07 Operator Console Hi-Fi</div>
+
+  <h1>Operator console — <em>desktop</em></h1>
+  <p class="lede">Hi-fi des écrans clés côté opérateur. Outil dense, raccourcis clavier prioritaires (palette de commandes ⌘K), vue à 3 colonnes (sidebar — table — drawer). Le jugement humain au cœur : aucun matching automatisé non-supervisé.</p>
+
+  <div class="annot"><b>Vocabulaire visuel — Admin</b>Surface neutre #FAFAFD. Violet #3B1F7A comme accent unique (action principale, lien actif, mise en évidence). Densité Linear-grade : 12px texte, lignes de tableau 36-40px de hauteur. Tabular-nums sur tous les chiffres. Aucune carte arrondie inutile dans les vues opérationnelles — on optimise pour le scanning rapide. Ombres uniquement pour overlays modaux.</div>
+
+  <!-- =================================================== -->
+  <!-- O-02 DASHBOARD                                       -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">01 · TABLEAU DE BORD</div>
+    <h2>O-02 · Vue du jour pour le shift de garde</h2>
+
+    <div class="win">
+      <div class="chrome">
+        <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="url">ops.washed.tg / aujourdhui</div>
+        <div class="right"><span>Ama Mensah · Shift A</span><span>06:00 → 14:00</span></div>
+      </div>
+      <div class="app">
+        <aside class="sidebar">
+          <div class="brand"><div class="brand-glyph">w</div><div class="brand-name">Washed Ops</div></div>
+          <div class="nav-grp">
+            <div class="nav-h">Aujourd'hui</div>
+            <div class="nav-i active"><span class="glyph"></span>Tableau de bord</div>
+            <div class="nav-i"><span class="glyph"></span>Live ops<span class="badge warn">3</span></div>
+            <div class="nav-i"><span class="glyph"></span>Matching<span class="badge">12</span></div>
+            <div class="nav-i"><span class="glyph"></span>Tickets<span class="badge danger">2</span></div>
+          </div>
+          <div class="nav-grp">
+            <div class="nav-h">Personnes</div>
+            <div class="nav-i"><span class="glyph"></span>Abonnés</div>
+            <div class="nav-i"><span class="glyph"></span>Laveuses</div>
+            <div class="nav-i"><span class="glyph"></span>Onboarding<span class="badge warn">5</span></div>
+          </div>
+          <div class="nav-grp">
+            <div class="nav-h">Finances</div>
+            <div class="nav-i"><span class="glyph"></span>Paiements</div>
+            <div class="nav-i"><span class="glyph"></span>Versements</div>
+            <div class="nav-i"><span class="glyph"></span>Rapports</div>
+          </div>
+          <div class="nav-grp">
+            <div class="nav-h">Org</div>
+            <div class="nav-i"><span class="glyph"></span>Notifications</div>
+            <div class="nav-i"><span class="glyph"></span>Audit</div>
+            <div class="nav-i"><span class="glyph"></span>Paramètres</div>
+          </div>
+        </aside>
+
+        <main class="main">
+          <div class="main-hd">
+            <div>
+              <div class="crumb-i">MARDI 5 MAI · 06:42</div>
+              <h3>Bonjour Ama. La journée commence.</h3>
+            </div>
+            <div class="actions">
+              <button class="btn ghost">Filtrer<span class="kbd">F</span></button>
+              <button class="btn primary">Composer<span class="kbd">⌘K</span></button>
+            </div>
+          </div>
+
+          <div class="stats">
+            <div class="stat"><div class="l">Visites du jour</div><div class="n">87</div><div class="d up">+12 vs lundi</div></div>
+            <div class="stat"><div class="l">À assigner</div><div class="n">12</div><div class="d">SLA 4h · 3 critiques</div></div>
+            <div class="stat"><div class="l">En cours</div><div class="n">14</div><div class="d up">tout dans la fenêtre</div></div>
+            <div class="stat"><div class="l">Tickets ouverts</div><div class="n">2</div><div class="d down">1 priorité haute</div></div>
+          </div>
+
+          <div class="tabs">
+            <div class="tab active">Tout (87)</div>
+            <div class="tab">À risque (3)</div>
+            <div class="tab">Sans laveuse (12)</div>
+            <div class="tab">Modifiées (5)</div>
+          </div>
+
+          <table class="tbl">
+            <thead><tr>
+              <th style="width:60px">Heure</th>
+              <th>Abonné</th>
+              <th>Quartier</th>
+              <th>Laveuse</th>
+              <th>État</th>
+              <th>SLA</th>
+              <th style="width:40px"></th>
+            </tr></thead>
+            <tbody>
+              <tr class="selected"><td><b>09:00</b></td><td><div class="who"><div class="av"></div>Adjoa K. <span class="chip" style="margin-left:6px">8e mois</span></div></td><td>Tokoin</td><td><div class="who"><div class="av" style="background:#1A5C34"></div>Akouvi K.</div></td><td><span class="chip live dot">CONFIRMÉ</span></td><td>—</td><td>›</td></tr>
+              <tr><td><b>09:30</b></td><td><div class="who"><div class="av"></div>Yaa M.</div></td><td>Bè-Klikamé</td><td><span class="chip danger">— SANS LAVEUSE</span></td><td><span class="chip warn">EN ATTENTE</span></td><td><b style="color:var(--danger)">2h12</b></td><td>›</td></tr>
+              <tr><td><b>10:00</b></td><td><div class="who"><div class="av"></div>Kossi A. <span class="chip" style="margin-left:6px">5e mois</span></div></td><td>Bè</td><td><div class="who"><div class="av" style="background:#1A5C34"></div>Akouvi K.</div></td><td><span class="chip live dot">CONFIRMÉ</span></td><td>—</td><td>›</td></tr>
+              <tr><td><b>10:30</b></td><td><div class="who"><div class="av"></div>Esi T.</div></td><td>Adidogomé</td><td><div class="who"><div class="av" style="background:#1A5C34"></div>Mawu E.</div></td><td><span class="chip live dot">CONFIRMÉ</span></td><td>—</td><td>›</td></tr>
+              <tr><td><b>11:00</b></td><td><div class="who"><div class="av"></div>Sika D.</div></td><td>Hédzranawoé</td><td><span class="chip warn">PROPOSITION ENVOYÉE</span></td><td><span class="chip warn">EN ATTENTE</span></td><td>1h04</td><td>›</td></tr>
+              <tr><td><b>11:30</b></td><td><div class="who"><div class="av"></div>Foli N. <span class="chip" style="margin-left:6px">PREMIER</span></div></td><td>Agoé</td><td><span class="chip danger">— SANS LAVEUSE</span></td><td><span class="chip warn">URGENT</span></td><td><b style="color:var(--danger)">0h44</b></td><td>›</td></tr>
+              <tr><td><b>12:00</b></td><td><div class="who"><div class="av"></div>Akua P.</div></td><td>Tokoin</td><td><div class="who"><div class="av" style="background:#1A5C34"></div>Afi T.</div></td><td><span class="chip live dot">CONFIRMÉ</span></td><td>—</td><td>›</td></tr>
+              <tr><td><b>13:00</b></td><td><div class="who"><div class="av"></div>Mawuli B.</div></td><td>Cacavéli</td><td><div class="who"><div class="av" style="background:#1A5C34"></div>Délali K.</div></td><td><span class="chip live dot">CONFIRMÉ</span></td><td>—</td><td>›</td></tr>
+            </tbody>
+          </table>
+        </main>
+
+        <aside class="rpanel">
+          <h4>Adjoa Komlan</h4>
+          <div style="font-size:11px;color:var(--ink-3)">Abonnée · T1 · 8 mois</div>
+          <div class="divider"></div>
+          <div class="field"><div class="l">Visite du jour</div><div class="v">Mardi 9h00 · Tokoin Casablanca</div></div>
+          <div class="field"><div class="l">Laveuse assignée</div><div class="v">Akouvi Komlan · Forêt</div></div>
+          <div class="field"><div class="l">Tarif</div><div class="v big">2 500 <span style="color:var(--ink-3);font-size:13px;font-weight:400">XOF / mois</span></div></div>
+          <div class="divider"></div>
+          <div class="field"><div class="l">Historique</div></div>
+          <div class="timeline">
+            <div class="ev"><div class="t">5 MAI 06:30</div><div class="h">Confirmation envoyée par SMS</div><div class="d">Auto-confirmation J-1</div></div>
+            <div class="ev"><div class="t">28 AVR 09:01</div><div class="h">Visite terminée par Akouvi</div><div class="d">+ photos avant/après · pas de souci</div></div>
+            <div class="ev"><div class="t">21 AVR 09:00</div><div class="h">Visite terminée par Akouvi</div></div>
+            <div class="ev"><div class="t">14 AVR 09:00</div><div class="h">Visite terminée par Akouvi</div></div>
+          </div>
+          <div class="divider"></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn alt" style="font-size:11px;padding:6px 10px">Appeler</button>
+            <button class="btn alt" style="font-size:11px;padding:6px 10px">SMS modèle</button>
+            <button class="btn ghost" style="font-size:11px;padding:6px 10px">Voir profil →</button>
+          </div>
+        </aside>
+      </div>
+    </div>
+    <div class="win-cap">O-02</div><div class="win-name">Tableau de bord du shift</div><div class="win-notes">Première vue à l'arrivée. Stats du jour + table chronologique + drawer contextuel. Sélection clavier J/K. Filtre F. Composer ⌘K.</div>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- O-03 MATCHING                                        -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">02 · MATCHING</div>
+    <h2>O-03 / O-04 · Assigner une laveuse à une visite</h2>
+
+    <div class="win">
+      <div class="chrome">
+        <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="url">ops.washed.tg / matching / 0993-FOLI</div>
+        <div class="right"><span>Ama Mensah</span></div>
+      </div>
+      <div class="app">
+        <aside class="sidebar">
+          <div class="brand"><div class="brand-glyph">w</div><div class="brand-name">Washed Ops</div></div>
+          <div class="nav-grp">
+            <div class="nav-h">Aujourd'hui</div>
+            <div class="nav-i"><span class="glyph"></span>Tableau de bord</div>
+            <div class="nav-i"><span class="glyph"></span>Live ops<span class="badge warn">3</span></div>
+            <div class="nav-i active"><span class="glyph"></span>Matching<span class="badge">12</span></div>
+            <div class="nav-i"><span class="glyph"></span>Tickets<span class="badge danger">2</span></div>
+          </div>
+          <div class="nav-grp">
+            <div class="nav-h">File de matching</div>
+            <div class="nav-i" style="background:rgba(255,255,255,0.06);color:white">‣ Foli N. · 11h30 · Agoé</div>
+            <div class="nav-i">Yaa M. · 09h30 · Bè</div>
+            <div class="nav-i">Sika D. · 11h00 · Hédzranawoé</div>
+            <div class="nav-i">Komi G. · 14h00 · Adidogomé</div>
+            <div class="nav-i">Akoss T. · 15h00 · Bè</div>
+            <div class="nav-i">+ 7 autres</div>
+          </div>
+        </aside>
+
+        <main class="main">
+          <div class="main-hd">
+            <div>
+              <div class="crumb-i">MATCHING · DEMANDE 0993</div>
+              <h3>Foli Nyaho · 1<sup style="font-size:14px">re</sup> visite</h3>
+            </div>
+            <div class="actions">
+              <button class="btn ghost">Reporter<span class="kbd">R</span></button>
+              <button class="btn alt">Notes</button>
+              <button class="btn primary">Confirmer<span class="kbd">↵</span></button>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--s-4);margin-bottom:var(--s-5)">
+            <div style="padding:var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm)">
+              <div class="l" style="font-family:var(--font-mono);font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.1em">DEMANDE</div>
+              <div style="margin-top:6px;font-size:13px"><b>Foli Nyaho</b> · Agoé Logopé</div>
+              <div style="font-family:var(--font-mono);font-size:11px;color:var(--ink-3);margin-top:4px">+228 90 11 22 33</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+                <span class="chip">T1 · 2 500</span>
+                <span class="chip primary">PREMIÈRE VISITE</span>
+                <span class="chip warn">SLA 0h44</span>
+              </div>
+            </div>
+            <div style="padding:var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm)">
+              <div class="l" style="font-family:var(--font-mono);font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.1em">CRÉNEAU</div>
+              <div style="margin-top:6px;font-size:13px"><b>Mardi 5 mai · 11h30 → 13h30</b></div>
+              <div style="font-family:var(--font-mono);font-size:11px;color:var(--ink-3);margin-top:4px">Confirmé par l'abonnée · 06:12</div>
+              <div style="margin-top:8px;font-size:11px;color:var(--ink-2)">« Première fois — la cliente préfère qu'on prévienne 5 min avant »</div>
+            </div>
+          </div>
+
+          <div class="l" style="font-family:var(--font-mono);font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">CANDIDATES — TRIÉES PAR PROXIMITÉ &amp; CHARGE</div>
+
+          <table class="tbl">
+            <thead><tr>
+              <th>Laveuse</th>
+              <th>Distance</th>
+              <th>Charge du jour</th>
+              <th>Confiance</th>
+              <th>Dispo</th>
+              <th>Score</th>
+              <th></th>
+            </tr></thead>
+            <tbody>
+              <tr class="selected">
+                <td><div class="who"><div class="av" style="background:#1A5C34"></div><b>Mawu Edem</b><span class="chip" style="margin-left:6px">2 ans</span></div></td>
+                <td>1.2 km</td>
+                <td>3 / 5 visites</td>
+                <td>97%</td>
+                <td><span class="chip live dot">LIBRE</span></td>
+                <td><b style="color:var(--primary)">94</b></td>
+                <td><button class="btn primary" style="padding:5px 10px;font-size:11px">Proposer</button></td>
+              </tr>
+              <tr>
+                <td><div class="who"><div class="av" style="background:#1A5C34"></div>Délali K.</div></td>
+                <td>2.4 km</td>
+                <td>2 / 5</td>
+                <td>92%</td>
+                <td><span class="chip live dot">LIBRE</span></td>
+                <td>81</td>
+                <td><button class="btn alt" style="padding:5px 10px;font-size:11px">Proposer</button></td>
+              </tr>
+              <tr>
+                <td><div class="who"><div class="av" style="background:#1A5C34"></div>Afi Tetteh</div></td>
+                <td>3.1 km</td>
+                <td>4 / 5</td>
+                <td>98%</td>
+                <td><span class="chip warn">CHARGE PRESQUE PLEINE</span></td>
+                <td>72</td>
+                <td><button class="btn alt" style="padding:5px 10px;font-size:11px">Proposer</button></td>
+              </tr>
+              <tr>
+                <td><div class="who"><div class="av" style="background:#1A5C34"></div>Akouvi K.</div></td>
+                <td>4.8 km</td>
+                <td>5 / 5</td>
+                <td>98%</td>
+                <td><span class="chip danger">PLEIN</span></td>
+                <td>—</td>
+                <td><button class="btn ghost" disabled style="padding:5px 10px;font-size:11px;opacity:0.5">Indispo</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </main>
+
+        <aside class="rpanel">
+          <h4>Mawu Edem</h4>
+          <div style="font-size:11px;color:var(--ink-3)">Laveuse · Forêt · 2 ans</div>
+          <div class="divider"></div>
+          <div class="field"><div class="l">Téléphone</div><div class="v">+228 92 34 56 78</div></div>
+          <div class="field"><div class="l">Visites totales</div><div class="v big">412</div></div>
+          <div class="field"><div class="l">Foyers réguliers</div><div class="v">17 · 3 nouveaux ce mois</div></div>
+          <div class="divider"></div>
+          <div class="field"><div class="l">Pourquoi elle ?</div></div>
+          <ul style="margin:0;padding-left:14px;font-size:11px;color:var(--ink-2);line-height:1.7">
+            <li>1.2 km · ~6 min en moto-taxi</li>
+            <li>Charge actuelle compatible (3/5)</li>
+            <li>A déjà fait 4 premières visites ce mois — taux conversion 100%</li>
+            <li>Parle ewe + français — adapté à la zone</li>
+          </ul>
+          <div class="divider"></div>
+          <div class="field"><div class="l">Aujourd'hui — sa tournée</div></div>
+          <div class="timeline">
+            <div class="ev"><div class="t">9:00 ✓</div><div class="h">Adjoa K. — Tokoin</div></div>
+            <div class="ev"><div class="t">10:30 ✓</div><div class="h">Kossi A. — Bè</div></div>
+            <div class="ev" style="opacity:0.5"><div class="t">11:30 ?</div><div class="h">Foli N. — Agoé · proposé</div></div>
+            <div class="ev"><div class="t">14:00</div><div class="h">— libre —</div></div>
+            <div class="ev"><div class="t">15:30</div><div class="h">Yawa T. — Bè</div></div>
+          </div>
+          <div class="divider"></div>
+          <button class="btn primary" style="width:100%">Envoyer la proposition <span class="kbd" style="background:rgba(255,255,255,0.2);color:white;border:none">↵</span></button>
+        </aside>
+      </div>
+    </div>
+    <div class="win-cap">O-03 · O-04</div><div class="win-name">File matching + détail demande</div><div class="win-notes">Score = pondération distance + charge + confiance + langue. Affiché mais jamais auto-décidé. L'opérateur valide. Envoi proposition = SMS à la laveuse, qui accepte/refuse en 5 min.</div>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- O-05 LIVE OPS                                        -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">03 · LIVE OPS</div>
+    <h2>O-05 · La carte de la ville en temps réel</h2>
+
+    <div class="win">
+      <div class="chrome">
+        <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="url">ops.washed.tg / live</div>
+        <div class="right"><span>Mise à jour : il y a 4 s</span></div>
+      </div>
+      <div class="app">
+        <aside class="sidebar">
+          <div class="brand"><div class="brand-glyph">w</div><div class="brand-name">Washed Ops</div></div>
+          <div class="nav-grp">
+            <div class="nav-h">Aujourd'hui</div>
+            <div class="nav-i"><span class="glyph"></span>Tableau de bord</div>
+            <div class="nav-i active"><span class="glyph"></span>Live ops<span class="badge warn">3</span></div>
+            <div class="nav-i"><span class="glyph"></span>Matching<span class="badge">12</span></div>
+            <div class="nav-i"><span class="glyph"></span>Tickets<span class="badge danger">2</span></div>
+          </div>
+          <div class="nav-grp">
+            <div class="nav-h">À surveiller</div>
+            <div class="nav-i" style="color:var(--accent)">⚠ Mawu E. · 12 min en retard</div>
+            <div class="nav-i" style="color:var(--accent)">⚠ Délali K. · hors-zone</div>
+            <div class="nav-i" style="color:var(--danger)">🆘 — aucune alerte</div>
+          </div>
+          <div class="nav-grp">
+            <div class="nav-h">Filtres</div>
+            <div class="nav-i" style="color:white">☑ En cours (14)</div>
+            <div class="nav-i">☐ Confirmées</div>
+            <div class="nav-i">☐ Terminées (23)</div>
+            <div class="nav-i">☐ En attente</div>
+          </div>
+        </aside>
+
+        <main class="main" style="padding:0">
+          <div style="padding:var(--s-5) var(--s-6);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div class="crumb-i">LIVE — LOMÉ</div>
+              <h3 style="margin-top:4px">14 visites en cours</h3>
+            </div>
+            <div class="actions">
+              <button class="btn ghost">Plein écran<span class="kbd">F</span></button>
+              <button class="btn alt">Liste</button>
+            </div>
+          </div>
+          <div style="position:relative;height:540px">
+            <div class="map" style="height:100%;border:none;border-radius:0">
+              <!-- Pins scattered to suggest a city -->
+              <div class="pin" style="left:23%;top:34%"></div><div class="lbl" style="left:25%;top:38%">Akouvi · Tokoin</div>
+              <div class="pin" style="left:38%;top:48%"></div><div class="lbl" style="left:40%;top:52%">Mawu · Bè</div>
+              <div class="pin warn" style="left:47%;top:30%"></div><div class="lbl" style="left:49%;top:34%" >⚠ Délali · hors-zone</div>
+              <div class="pin idle" style="left:55%;top:60%"></div><div class="lbl" style="left:57%;top:64%">Afi · pause</div>
+              <div class="pin" style="left:31%;top:62%"></div><div class="lbl" style="left:33%;top:66%">Yawa · Hédz.</div>
+              <div class="pin" style="left:62%;top:42%"></div><div class="lbl" style="left:64%;top:46%">Esi · Adido.</div>
+              <div class="pin" style="left:71%;top:55%"></div><div class="lbl" style="left:73%;top:59%">Mawuli · Cacav.</div>
+              <div class="pin" style="left:49%;top:66%"></div>
+              <div class="pin" style="left:58%;top:38%"></div>
+              <div class="pin warn" style="left:77%;top:32%"></div><div class="lbl" style="left:79%;top:36%">⚠ Mawu E. · +12 min</div>
+              <div class="pin" style="left:40%;top:24%"></div>
+              <div class="pin" style="left:33%;top:48%"></div>
+              <div class="pin" style="left:46%;top:54%"></div>
+              <div class="pin" style="left:67%;top:28%"></div>
+
+              <div class="map-legend">
+                <div class="li"><span class="pip" style="background:var(--primary)"></span>En cours</div>
+                <div class="li"><span class="pip" style="background:var(--accent)"></span>À surveiller</div>
+                <div class="li"><span class="pip" style="background:var(--ink-3)"></span>Pause</div>
+                <div class="li"><span class="pip" style="background:var(--danger)"></span>SOS</div>
+              </div>
+
+              <div style="position:absolute;right:14px;top:14px;background:white;border:1px solid var(--line);border-radius:6px;padding:10px 14px;font-size:11px;display:flex;flex-direction:column;gap:4px;font-variant-numeric:tabular-nums;min-width:180px">
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-3)">En cours</span><b>14</b></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-3)">Terminées</span><b>23</b></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--ink-3)">À venir</span><b>50</b></div>
+                <div style="display:flex;justify-content:space-between;color:var(--accent)"><span>À surveiller</span><b>3</b></div>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <aside class="rpanel">
+          <h4>⚠ Mawu Edem · retard</h4>
+          <div style="font-size:11px;color:var(--ink-3)">Foli Nyaho · 11h30 · Agoé Logopé</div>
+          <div class="divider"></div>
+          <div class="field"><div class="l">Retard</div><div class="v big" style="color:var(--accent)">+ 12 min</div></div>
+          <div class="field"><div class="l">Position</div><div class="v">2.1 km du foyer · à pied</div></div>
+          <div class="field"><div class="l">Dernière mise à jour GPS</div><div class="v">il y a 1 min</div></div>
+          <div class="divider"></div>
+          <div class="field"><div class="l">Suggestions</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <button class="btn alt" style="font-size:11px;justify-content:flex-start">📞 Appeler Mawu (1 tap)</button>
+            <button class="btn alt" style="font-size:11px;justify-content:flex-start">📱 SMS « Tout va bien ? »</button>
+            <button class="btn alt" style="font-size:11px;justify-content:flex-start">📞 Prévenir Foli Nyaho</button>
+            <button class="btn ghost" style="font-size:11px;justify-content:flex-start">Réassigner la visite</button>
+          </div>
+          <div class="divider"></div>
+          <div class="field"><div class="l">Auto-règle</div></div>
+          <div style="font-size:11px;color:var(--ink-2);line-height:1.5">Si retard ≥ 15 min, alerte rouge déclenchée. SMS auto envoyé à l'abonnée pour expliquer. Opérateur peut désactiver pour ce cas.</div>
+        </aside>
+      </div>
+    </div>
+    <div class="win-cap">O-05</div><div class="win-name">Live ops · carte temps-réel</div><div class="win-notes">Polling 4s. Mise à jour incrémentale par WebSocket. Pin SOS pulse en continu. La carte de Lomé est cachée (Mapbox Studio). Hors-ligne opérateur = lecture seule + dernier état connu.</div>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- O-13 PAYMENTS                                        -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">04 · FINANCES</div>
+    <h2>O-13 · Paiements Mobile Money</h2>
+
+    <div class="win">
+      <div class="chrome">
+        <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="url">ops.washed.tg / paiements</div>
+        <div class="right"><span>5 mai · 14:32</span></div>
+      </div>
+      <div class="app">
+        <aside class="sidebar">
+          <div class="brand"><div class="brand-glyph">w</div><div class="brand-name">Washed Ops</div></div>
+          <div class="nav-grp">
+            <div class="nav-h">Aujourd'hui</div>
+            <div class="nav-i"><span class="glyph"></span>Tableau de bord</div>
+            <div class="nav-i"><span class="glyph"></span>Live ops</div>
+            <div class="nav-i"><span class="glyph"></span>Matching</div>
+            <div class="nav-i"><span class="glyph"></span>Tickets</div>
+          </div>
+          <div class="nav-grp">
+            <div class="nav-h">Finances</div>
+            <div class="nav-i active"><span class="glyph"></span>Paiements<span class="badge warn">4</span></div>
+            <div class="nav-i"><span class="glyph"></span>Versements</div>
+            <div class="nav-i"><span class="glyph"></span>Rapports</div>
+          </div>
+        </aside>
+
+        <main class="main">
+          <div class="main-hd">
+            <div>
+              <div class="crumb-i">PAIEMENTS · MOIS DE MAI</div>
+              <h3>87% encaissés · 4 exceptions</h3>
+            </div>
+            <div class="actions">
+              <button class="btn ghost">Exporter</button>
+              <button class="btn alt">Filtrer</button>
+              <button class="btn primary">Relance manuelle</button>
+            </div>
+          </div>
+
+          <div class="stats">
+            <div class="stat"><div class="l">Encaissé · mai</div><div class="n">2 174 500</div><div class="d">XOF · 87% du dû</div></div>
+            <div class="stat"><div class="l">En retard</div><div class="n">312 500</div><div class="d down">— 4 abonnés</div></div>
+            <div class="stat"><div class="l">Versé aux laveuses</div><div class="n">1 250 000</div><div class="d up">100% des visites livrées</div></div>
+            <div class="stat"><div class="l">Marge brute</div><div class="n">621 750</div><div class="d up">+ 8% vs avril</div></div>
+          </div>
+
+          <div class="tabs">
+            <div class="tab active">Encaissements (167)</div>
+            <div class="tab">Exceptions (4)</div>
+            <div class="tab">Versements (89)</div>
+            <div class="tab">Litiges (1)</div>
+          </div>
+
+          <table class="tbl">
+            <thead><tr>
+              <th>Date</th>
+              <th>Abonné</th>
+              <th>Tarif</th>
+              <th>Méthode</th>
+              <th>Réf MM</th>
+              <th>Montant</th>
+              <th>État</th>
+            </tr></thead>
+            <tbody>
+              <tr><td>5 MAI 06:01</td><td><div class="who"><div class="av"></div>Adjoa K.</div></td><td>T1</td><td>TMoney</td><td style="font-family:var(--font-mono);font-size:11px;color:var(--ink-3)">MM-78423190</td><td>2 500</td><td><span class="chip live dot">PAYÉ</span></td></tr>
+              <tr><td>5 MAI 05:58</td><td><div class="who"><div class="av"></div>Kossi A.</div></td><td>T2</td><td>Mixx by Yas</td><td style="font-family:var(--font-mono);font-size:11px;color:var(--ink-3)">MM-78423185</td><td>4 500</td><td><span class="chip live dot">PAYÉ</span></td></tr>
+              <tr style="background:var(--danger-soft)"><td>4 MAI 17:23</td><td><div class="who"><div class="av"></div>Yaa M.</div></td><td>T1</td><td>TMoney</td><td style="font-family:var(--font-mono);font-size:11px;color:var(--ink-3)">—</td><td>2 500</td><td><span class="chip danger dot">REFUSÉ · SOLDE INSUFFISANT</span></td></tr>
+              <tr><td>4 MAI 12:01</td><td><div class="who"><div class="av"></div>Esi T.</div></td><td>T1</td><td>Flooz</td><td style="font-family:var(--font-mono);font-size:11px;color:var(--ink-3)">MM-78421042</td><td>2 500</td><td><span class="chip live dot">PAYÉ</span></td></tr>
+              <tr style="background:var(--accent-soft)"><td>3 MAI 06:00</td><td><div class="who"><div class="av"></div>Sika D.</div></td><td>T2</td><td>—</td><td style="font-family:var(--font-mono);font-size:11px;color:var(--ink-3)">—</td><td>4 500</td><td><span class="chip warn dot">EN ATTENTE · 2 RELANCES</span></td></tr>
+              <tr><td>3 MAI 06:01</td><td><div class="who"><div class="av"></div>Mawuli B.</div></td><td>T1</td><td>TMoney</td><td style="font-family:var(--font-mono);font-size:11px;color:var(--ink-3)">MM-78420993</td><td>2 500</td><td><span class="chip live dot">PAYÉ</span></td></tr>
+            </tbody>
+          </table>
+        </main>
+
+        <aside class="rpanel">
+          <h4>⚠ Yaa Mensah · refus</h4>
+          <div style="font-size:11px;color:var(--ink-3)">Abonnée T1 · 3 mois · Bè-Klikamé</div>
+          <div class="divider"></div>
+          <div class="field"><div class="l">Solde dû</div><div class="v big" style="color:var(--danger)">2 500 <span style="color:var(--ink-3);font-size:13px;font-weight:400">XOF</span></div></div>
+          <div class="field"><div class="l">Cause</div><div class="v">Solde Mobile Money insuffisant à 17h23 hier</div></div>
+          <div class="field"><div class="l">Tentatives</div><div class="v">2 / 3 · prochaine demain 06:00</div></div>
+          <div class="divider"></div>
+          <div class="field"><div class="l">Visite du jour ?</div><div class="v" style="color:var(--accent)">Maintenue jusqu'au refus définitif (3<sup>e</sup> tentative)</div></div>
+          <div class="divider"></div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <button class="btn alt" style="font-size:11px;justify-content:flex-start">📱 SMS modèle « Solde insuffisant »</button>
+            <button class="btn alt" style="font-size:11px;justify-content:flex-start">📞 Appeler Yaa</button>
+            <button class="btn alt" style="font-size:11px;justify-content:flex-start">↻ Retenter maintenant</button>
+            <button class="btn danger" style="font-size:11px;justify-content:flex-start">Suspendre l'abonnement</button>
+          </div>
+        </aside>
+      </div>
+    </div>
+    <div class="win-cap">O-13</div><div class="win-name">Paiements &amp; exceptions</div><div class="win-notes">Mobile Money en source de vérité. 3 tentatives, 24h espacement. Suspension = action manuelle. Le drawer guide l'opérateur dans la marche à suivre — aucun jargon technique.</div>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- O-11 TICKETS                                         -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">05 · SUPPORT</div>
+    <h2>O-11 · Tickets — file unifiée</h2>
+
+    <div class="win">
+      <div class="chrome">
+        <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="url">ops.washed.tg / tickets</div>
+        <div class="right"><span>2 ouverts · 1 prio haute</span></div>
+      </div>
+      <div class="app">
+        <aside class="sidebar">
+          <div class="brand"><div class="brand-glyph">w</div><div class="brand-name">Washed Ops</div></div>
+          <div class="nav-grp">
+            <div class="nav-h">Aujourd'hui</div>
+            <div class="nav-i"><span class="glyph"></span>Tableau de bord</div>
+            <div class="nav-i"><span class="glyph"></span>Live ops</div>
+            <div class="nav-i"><span class="glyph"></span>Matching</div>
+            <div class="nav-i active"><span class="glyph"></span>Tickets<span class="badge danger">2</span></div>
+          </div>
+          <div class="nav-grp">
+            <div class="nav-h">Filtres rapides</div>
+            <div class="nav-i" style="color:white">‣ Tous (2)</div>
+            <div class="nav-i">Mes tickets (1)</div>
+            <div class="nav-i" style="color:var(--danger)">Priorité haute (1)</div>
+            <div class="nav-i">Bloqué client (0)</div>
+            <div class="nav-i">Sans réponse 24h (0)</div>
+          </div>
+          <div class="nav-grp">
+            <div class="nav-h">Sources</div>
+            <div class="nav-i">App abonné (1)</div>
+            <div class="nav-i">App laveuse (1)</div>
+            <div class="nav-i">Téléphone (0)</div>
+          </div>
+        </aside>
+
+        <main class="main">
+          <div class="main-hd">
+            <div>
+              <div class="crumb-i">TICKETS</div>
+              <h3>2 conversations en cours</h3>
+            </div>
+            <div class="actions">
+              <button class="btn alt">Ouvrir nouveau<span class="kbd">N</span></button>
+            </div>
+          </div>
+
+          <table class="tbl">
+            <thead><tr>
+              <th style="width:60px">#</th>
+              <th>Sujet</th>
+              <th>De</th>
+              <th>Source</th>
+              <th>Priorité</th>
+              <th>Assigné</th>
+              <th>Dernière activité</th>
+            </tr></thead>
+            <tbody>
+              <tr class="selected">
+                <td><b style="font-family:var(--font-mono)">#0421</b></td>
+                <td><b>Linge endommagé · pull rouge décoloré</b></td>
+                <td><div class="who"><div class="av"></div>Akua Pomé</div></td>
+                <td><span class="chip">App abonné</span></td>
+                <td><span class="chip danger">HAUTE</span></td>
+                <td>Ama M.</td>
+                <td>il y a 12 min</td>
+              </tr>
+              <tr>
+                <td><b style="font-family:var(--font-mono)">#0420</b></td>
+                <td>Demande de congé · 12-14 mai</td>
+                <td><div class="who"><div class="av" style="background:#1A5C34"></div>Délali Kouassi</div></td>
+                <td><span class="chip">App laveuse</span></td>
+                <td><span class="chip">NORMALE</span></td>
+                <td>—</td>
+                <td>il y a 1h08</td>
+              </tr>
+            </tbody>
+          </table>
+        </main>
+
+        <aside class="rpanel">
+          <h4>#0421 · Pull décoloré</h4>
+          <div style="font-size:11px;color:var(--ink-3)">Akua Pomé · abonnée T2 · 6 mois</div>
+          <div class="divider"></div>
+          <div class="field"><div class="l">Description</div><div class="v" style="line-height:1.5">« Mon pull rouge a déteint sur deux chemises blanches. La laveuse n'a pas séparé les couleurs. »</div></div>
+          <div class="field"><div class="l">Visite concernée</div><div class="v">3 mai · Mawu Edem · Tokoin</div></div>
+          <div class="field"><div class="l">Photos jointes</div><div class="v">3 photos · pull + chemises</div></div>
+          <div class="divider"></div>
+          <div class="field"><div class="l">Suggestions</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <button class="btn alt" style="font-size:11px;justify-content:flex-start">📸 Voir photos</button>
+            <button class="btn alt" style="font-size:11px;justify-content:flex-start">📋 Voir l'historique de la visite</button>
+            <button class="btn alt" style="font-size:11px;justify-content:flex-start">📞 Appeler Mawu</button>
+            <button class="btn alt" style="font-size:11px;justify-content:flex-start">📞 Appeler Akua</button>
+            <button class="btn primary" style="font-size:11px;justify-content:flex-start">💸 Crédit goodwill (2 500 XOF)</button>
+          </div>
+          <div class="divider"></div>
+          <div class="field"><div class="l">Politique</div></div>
+          <div style="font-size:11px;color:var(--ink-2);line-height:1.5">Litige linge → vérifier photos avant/après · si fautif laveuse, formation + crédit · si abonné, expliquer politique de séparation.</div>
+        </aside>
+      </div>
+    </div>
+    <div class="win-cap">O-11</div><div class="win-name">Tickets</div><div class="win-notes">File unifiée — pas de Zendesk. Tout passe ici. Drawer = guide opérateur (politique + macros + comptes liés). Réponse écrite par l'opérateur, jamais par template envoyé seul.</div>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- O-20 COMMAND PALETTE                                  -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">06 · NAVIGATION CLAVIER</div>
+    <h2>O-20 · Palette de commandes ⌘K</h2>
+
+    <div class="win">
+      <div class="chrome">
+        <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="url">ops.washed.tg / live</div>
+        <div class="right"><span>⌘K ouvert</span></div>
+      </div>
+      <div style="height:520px;position:relative;background:var(--surface)">
+        <!-- background mock -->
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg, var(--bg-deep) 0%, var(--surface) 100%);opacity:0.6"></div>
+        <!-- The actual palette -->
+        <div class="palette-bg" style="position:absolute;inset:0;display:flex;align-items:flex-start;padding-top:80px">
+          <div class="palette" style="width:100%">
+            <div class="palette-input">
+              <span style="color:var(--primary)">›</span>
+              <input value="adjoa" placeholder="Tapez pour chercher ou exécuter…" />
+              <span class="kbd">esc</span>
+            </div>
+            <div class="palette-grp">
+              <div class="palette-grp-h">Personnes · 2 résultats</div>
+              <div class="palette-i active">
+                <span class="pre">aller à</span>
+                <span><b>Adjoa</b> Komlan</span>
+                <span style="color:var(--ink-3);font-size:11px;margin-left:8px">abonnée · T1 · Tokoin</span>
+                <span class="kbd">↵</span>
+              </div>
+              <div class="palette-i">
+                <span class="pre">aller à</span>
+                <span><b>Adjoa</b> Mensah</span>
+                <span style="color:var(--ink-3);font-size:11px;margin-left:8px">laveuse · Forêt · Bè</span>
+              </div>
+            </div>
+            <div class="palette-grp">
+              <div class="palette-grp-h">Actions</div>
+              <div class="palette-i">
+                <span class="pre">faire</span>
+                <span>Créer un ticket pour <b>Adjoa</b> Komlan</span>
+              </div>
+              <div class="palette-i">
+                <span class="pre">faire</span>
+                <span>Envoyer un SMS modèle à <b>Adjoa</b> Komlan</span>
+              </div>
+              <div class="palette-i">
+                <span class="pre">faire</span>
+                <span>Suspendre l'abonnement de <b>Adjoa</b> Komlan</span>
+                <span class="chip danger" style="margin-left:8px">DESTRUCTIF</span>
+              </div>
+            </div>
+            <div class="palette-grp">
+              <div class="palette-grp-h">Aller à</div>
+              <div class="palette-i">
+                <span class="pre">vue</span>
+                <span>Tableau de bord</span>
+                <span class="kbd">G D</span>
+              </div>
+              <div class="palette-i">
+                <span class="pre">vue</span>
+                <span>Live ops</span>
+                <span class="kbd">G L</span>
+              </div>
+              <div class="palette-i">
+                <span class="pre">vue</span>
+                <span>Tickets</span>
+                <span class="kbd">G T</span>
+              </div>
+            </div>
+            <div style="padding:8px var(--s-5);border-top:1px solid var(--line);font-family:var(--font-mono);font-size:10px;color:var(--ink-3);display:flex;justify-content:space-between">
+              <span>↑↓ naviguer · ↵ sélectionner · ⌘↵ ouvrir dans nouvel onglet</span>
+              <span>esc fermer</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="win-cap">O-20</div><div class="win-name">Palette de commandes</div><div class="win-notes">⌘K partout. Cherche personnes + actions + vues. Actions destructrices toujours marquées (chip rouge) et nécessitent confirmation.</div>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- O-21 SOS INCOMING                                    -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">07 · URGENCE</div>
+    <h2>O-21 · Alerte SOS reçue</h2>
+
+    <div class="win">
+      <div class="chrome">
+        <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="url">ops.washed.tg / sos / 4421</div>
+        <div class="right" style="color:var(--danger)"><span>● ALERTE ACTIVE · 06 s</span></div>
+      </div>
+      <div class="sos">
+        <div>
+          <div class="l-bit">SOS · IL Y A 6 SECONDES</div>
+          <h5>Mawu Edem · « Je suis en danger »</h5>
+          <div class="who-info">
+            <span>+228 92 34 56 78</span>
+            <span>Foli Nyaho · 11h30 · Agoé Logopé</span>
+            <span>GPS partagé · 2.1 km du foyer</span>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn">📞 Appeler Mawu</button>
+          <button class="btn">📞 Police 117</button>
+          <button class="btn alt">Ouvrir le dossier</button>
+        </div>
+      </div>
+      <div class="app compact">
+        <aside class="sidebar" style="background:#15131D">
+          <div class="brand"><div class="brand-glyph" style="background:var(--danger)">!</div><div class="brand-name">SOS Active</div></div>
+          <div class="nav-grp">
+            <div class="nav-h" style="color:rgba(255,255,255,0.4)">Protocole</div>
+            <div class="nav-i active" style="background:var(--danger);color:white">‣ 1. Localisation confirmée ✓</div>
+            <div class="nav-i" style="color:white">2. Appeler la laveuse</div>
+            <div class="nav-i">3. Évaluer la situation</div>
+            <div class="nav-i">4. Si danger : 117</div>
+            <div class="nav-i">5. Prévenir les proches</div>
+            <div class="nav-i">6. Rapport post-incident</div>
+          </div>
+        </aside>
+        <main class="main">
+          <div class="main-hd">
+            <div>
+              <div class="crumb-i" style="color:var(--danger)">SUIVI EN DIRECT</div>
+              <h3>Position GPS · Agoé Logopé</h3>
+            </div>
+          </div>
+          <div class="map" style="height:340px">
+            <div class="pin danger" style="left:46%;top:42%"></div>
+            <div class="lbl" style="left:48%;top:46%">Mawu — il y a 6 s</div>
+            <div class="pin" style="left:62%;top:60%"></div>
+            <div class="lbl" style="left:64%;top:64%">Foyer Foli — 2.1 km</div>
+            <div class="map-legend">
+              <div class="li"><span class="pip" style="background:var(--danger)"></span>SOS</div>
+              <div class="li"><span class="pip" style="background:var(--primary)"></span>Foyer prévu</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s-3);margin-top:var(--s-4)">
+            <div class="stat" style="border-radius:var(--r-sm);border:1px solid var(--line)"><div class="l">Vitesse</div><div class="n">0 km/h</div><div class="d">stationnaire 4 min</div></div>
+            <div class="stat" style="border-radius:var(--r-sm);border:1px solid var(--line)"><div class="l">Niveau batterie</div><div class="n">62%</div><div class="d up">stable</div></div>
+            <div class="stat" style="border-radius:var(--r-sm);border:1px solid var(--line)"><div class="l">Signal</div><div class="n">4G</div><div class="d up">bon</div></div>
+          </div>
+        </main>
+        <aside class="rpanel" style="background:#FFF7F6">
+          <h4 style="color:var(--danger)">Contact d'urgence</h4>
+          <div style="font-size:11px;color:var(--ink-3)">Désigné par Mawu à l'inscription</div>
+          <div class="divider"></div>
+          <div class="field"><div class="l">Personne</div><div class="v">Komi Edem · son frère</div></div>
+          <div class="field"><div class="l">Téléphone</div><div class="v">+228 90 88 77 66</div></div>
+          <div class="field"><div class="l">Relation</div><div class="v">Frère · Lomé</div></div>
+          <div class="divider"></div>
+          <button class="btn danger" style="width:100%;margin-bottom:8px">📞 Appeler Komi</button>
+          <button class="btn alt" style="width:100%">📞 Police nationale 117</button>
+          <div class="divider"></div>
+          <div class="field"><div class="l">Notes opérateur</div></div>
+          <textarea style="width:100%;border:1px solid var(--line);border-radius:var(--r-sm);padding:8px;font-size:12px;font-family:var(--font-body);min-height:80px;resize:vertical;background:white" placeholder="Notez tout — heure, action, ce que dit Mawu..."></textarea>
+          <div class="p-sm" style="font-size:10px;color:var(--ink-3);margin-top:6px">Sauvegarde toutes les 3 secondes. Compte rendu auto-archivé.</div>
+        </aside>
+      </div>
+    </div>
+    <div class="win-cap">O-21</div><div class="win-name">SOS reçu</div><div class="win-notes">L'écran prend toute l'attention — protocole en 6 étapes à gauche, GPS au centre, contact d'urgence à droite. Aucune autre action n'est cliquable tant que le ticket n'est pas marqué « résolu ». Audit log complet auto-généré.</div>
+  </section>
+
+  <!-- =================================================== -->
+  <!-- COVERAGE                                             -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">08 · COUVERTURE COMPLÈTE</div>
+    <h2>24 surfaces · 100 % cartographiées</h2>
+    <p class="lede" style="font-size: var(--text-base); margin-top: var(--s-3); margin-bottom: var(--s-6)">Liste de référence pour l'ingénierie et l'équipe ops. Hi-fi livrés ci-dessus marqués <b style="color:var(--success)">livré</b>. Wireframes et redlines couvrent le reste.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s-3);font-family:var(--font-mono);font-size:var(--text-xs);color:var(--ink-2)">
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-01</b> · Connexion 2FA</span><span style="color:var(--ink-3)">wireframe</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-02</b> · Tableau de bord</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-03</b> · File matching</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-04</b> · Détail demande</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-05</b> · Live ops carte</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-06</b> · Détail visite live</span><span style="color:var(--ink-3)">wireframe</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-07</b> · Liste abonnés</span><span style="color:var(--ink-3)">wireframe</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-08</b> · Profil abonné</span><span style="color:var(--ink-3)">wireframe</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-09</b> · Liste laveuses</span><span style="color:var(--ink-3)">wireframe</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-10</b> · Profil laveuse</span><span style="color:var(--ink-3)">wireframe</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-11</b> · Tickets</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-12</b> · Détail ticket</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-13</b> · Paiements</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-14</b> · Versements laveuses</span><span style="color:var(--ink-3)">wireframe</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-15</b> · Notifications outbound</span><span style="color:var(--ink-3)">wireframe</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-16</b> · Rapports</span><span style="color:var(--ink-3)">wireframe</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-17</b> · Audit log</span><span style="color:var(--ink-3)">wireframe</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-18</b> · Paramètres org</span><span style="color:var(--ink-3)">wireframe</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-19</b> · Rôles &amp; permissions</span><span style="color:var(--ink-3)">wireframe</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-20</b> · Palette ⌘K</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-21</b> · SOS reçu</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-22</b> · Onboarding laveuse</span><span style="color:var(--ink-3)">wireframe</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-23</b> · Vérification abonné</span><span style="color:var(--ink-3)">wireframe</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-24</b> · État vide / premier-run</span><span style="color:var(--ink-3)">wireframe</span></div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

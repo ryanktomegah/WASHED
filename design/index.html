@@ -1,0 +1,927 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Washed — Design System & Product Spec</title>
+<link rel="stylesheet" href="shared/tokens.css" />
+<style>
+  body { background: var(--bg); color: var(--ink); }
+  .page { max-width: 1280px; margin: 0 auto; padding: var(--s-9) var(--s-6) var(--s-11); }
+
+  /* Hero */
+  .hero {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: var(--s-9);
+    margin-bottom: var(--s-9);
+  }
+  .crumb {
+    display: flex; align-items: center; gap: var(--s-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-3);
+    margin-bottom: var(--s-6);
+  }
+  .crumb .dot { width: 6px; height: 6px; border-radius: 999px; background: var(--primary); }
+  .h1 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(48px, 7vw, 96px);
+    line-height: 1.0;
+    letter-spacing: -0.025em;
+    margin: 0 0 var(--s-6);
+    color: var(--ink);
+  }
+  .h1 em {
+    font-style: italic;
+    color: var(--primary);
+  }
+  .lede {
+    font-size: var(--text-lg);
+    line-height: 1.55;
+    max-width: 64ch;
+    color: var(--ink-2);
+    margin: 0 0 var(--s-7);
+  }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: var(--s-6) var(--s-8);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-3);
+  }
+  .meta b { color: var(--ink); font-weight: 500; }
+
+  /* Section heads */
+  .section { margin-top: var(--s-10); }
+  .section-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: var(--s-4);
+    margin-bottom: var(--s-7);
+  }
+  .section-head h2 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: var(--text-3xl);
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+  .section-head .num {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--ink-3);
+    letter-spacing: 0.12em;
+  }
+  .section-head .desc {
+    font-size: var(--text-sm);
+    color: var(--ink-3);
+    max-width: 48ch;
+    text-align: right;
+  }
+
+  /* Card grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: var(--s-5);
+  }
+  .card {
+    grid-column: span 4;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    transition: transform var(--d-base) var(--ease-standard),
+                box-shadow var(--d-base) var(--ease-standard),
+                border-color var(--d-base) var(--ease-standard);
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card);
+    border-color: var(--line-2);
+  }
+  .card-cover {
+    aspect-ratio: 16 / 10;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--line);
+  }
+  .card-body { padding: var(--s-5) var(--s-5) var(--s-6); }
+  .card-eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: var(--s-2);
+  }
+  .card h3 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: var(--text-xl);
+    letter-spacing: -0.01em;
+    margin: 0 0 var(--s-3);
+  }
+  .card p {
+    font-size: var(--text-sm);
+    line-height: 1.55;
+    color: var(--ink-3);
+    margin: 0 0 var(--s-4);
+  }
+  .card-foot {
+    margin-top: auto;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+  }
+  .card-foot .arrow {
+    width: 24px; height: 24px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--surface);
+    display: grid; place-items: center;
+    transition: transform var(--d-base) var(--ease-standard);
+  }
+  .card:hover .card-foot .arrow { transform: translateX(2px); }
+  .card .badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 3px 8px;
+    border-radius: 999px;
+    margin-left: var(--s-2);
+    vertical-align: middle;
+  }
+  .badge.live { background: var(--success-soft); color: var(--success); }
+  .badge.wip { background: var(--accent-soft); color: var(--accent); }
+  .badge.draft { background: var(--bg-deep); color: var(--ink-3); }
+
+  /* Variant card sizes */
+  .card.span-6 { grid-column: span 6; }
+  .card.span-8 { grid-column: span 8; }
+  .card.span-12 { grid-column: span 12; }
+
+  /* Cover variants — purely SVG-driven, no images */
+  .cover-tokens { background: linear-gradient(135deg, #C4622D 0%, #9C4A1F 60%, #1C1208 100%); }
+  .cover-system { background: linear-gradient(135deg, #FFF3EE 0%, #F5DDD0 100%); }
+  .cover-flows { background: var(--bg-deep); }
+  .cover-ia { background: #1C1208; }
+  .cover-wires { background: #FAF6F0; }
+  .cover-sub { background: linear-gradient(135deg, #FFF3EE 0%, #C4622D 100%); }
+  .cover-worker { background: linear-gradient(135deg, #EAF6EE 0%, #1A5C34 100%); }
+  .cover-ops { background: linear-gradient(135deg, #F0EBFF 0%, #3B1F7A 100%); }
+  .cover-states { background: var(--bg-deep); }
+  .cover-copy { background: var(--surface); border-bottom-color: var(--line); }
+  .cover-redlines { background: #1C1208; }
+
+  .cover-decor {
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+  }
+  .cover-decor .label {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: rgba(255,255,255,0.85);
+    position: absolute;
+    bottom: var(--s-4); left: var(--s-5);
+  }
+  .cover-decor.dark .label { color: var(--ink-3); }
+
+  /* Decorative SVG sigils for each cover */
+
+  /* Stats strip */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--s-1);
+    background: var(--ink);
+    color: var(--surface);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    margin-top: var(--s-7);
+  }
+  .stat {
+    padding: var(--s-6) var(--s-5);
+    background: var(--ink);
+    border-right: 1px solid rgba(255,255,255,0.08);
+  }
+  .stat:last-child { border-right: none; }
+  .stat .n {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: var(--text-3xl);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: #FFF3EE;
+  }
+  .stat .l {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(255, 243, 238, 0.6);
+    margin-top: var(--s-3);
+  }
+
+  /* Principles */
+  .principles {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--s-5);
+    margin-top: var(--s-6);
+  }
+  .principle {
+    border: 1px solid var(--line);
+    background: var(--surface);
+    border-radius: var(--r-lg);
+    padding: var(--s-6);
+  }
+  .principle .num {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--primary);
+    letter-spacing: 0.12em;
+    margin-bottom: var(--s-3);
+  }
+  .principle h4 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: var(--text-lg);
+    margin: 0 0 var(--s-2);
+    letter-spacing: -0.01em;
+  }
+  .principle p {
+    font-size: var(--text-sm);
+    line-height: 1.55;
+    color: var(--ink-3);
+    margin: 0;
+  }
+
+  /* Foot */
+  .colophon {
+    margin-top: var(--s-11);
+    padding-top: var(--s-7);
+    border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between; gap: var(--s-7);
+    flex-wrap: wrap;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .colophon b { color: var(--ink); }
+
+  /* Mark — Washed wordmark sigil */
+  .mark {
+    display: inline-flex; align-items: center; gap: var(--s-3);
+  }
+  .mark-glyph {
+    width: 36px; height: 36px;
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--surface);
+    display: grid; place-items: center;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 22px;
+  }
+  .mark-name {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: var(--text-lg);
+    letter-spacing: -0.01em;
+  }
+
+  @media (max-width: 880px) {
+    .card, .card.span-6, .card.span-8 { grid-column: span 12; }
+    .principles, .stats { grid-template-columns: 1fr 1fr; }
+    .stat { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  }
+</style>
+</head>
+<body data-theme="subscriber">
+<div class="page">
+
+  <!-- ============== HERO ============== -->
+  <header class="hero">
+    <div class="crumb">
+      <span class="mark">
+        <span class="mark-glyph">w</span>
+        <span class="mark-name">Washed</span>
+      </span>
+      <span class="dot"></span>
+      <span>Design system &amp; product spec</span>
+      <span class="dot"></span>
+      <span>v2.0 · 2026</span>
+    </div>
+
+    <h1 class="h1">
+      La laveuse,<br/>
+      <em>réinventée</em> pour&nbsp;Lomé.
+    </h1>
+
+    <p class="lede">
+      Ce dossier est la source de vérité pour la conception du produit Washed —
+      l'application abonné, l'application laveuse, et la console opérateur. Pensé pour
+      atteindre les standards européens et américains dès le jour&nbsp;1, sans abaisser le niveau
+      parce que le marché est africain. Tout ce dont l'équipe ingénierie a besoin pour livrer.
+    </p>
+
+    <div class="meta">
+      <div><b>Marché&nbsp;v1</b> · Lomé, Togo</div>
+      <div><b>Tarifs</b> · 2&nbsp;500 / 4&nbsp;500&nbsp;XOF&nbsp;/mois</div>
+      <div><b>Langues</b> · FR · EN différé</div>
+      <div><b>Surfaces</b> · 35 / 22 / 24</div>
+      <div><b>Statut</b> · Living spec</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="n">3</div><div class="l">Applications</div></div>
+      <div class="stat"><div class="n">81+</div><div class="l">Surfaces tracées</div></div>
+      <div class="stat"><div class="n">120+</div><div class="l">États couverts</div></div>
+      <div class="stat"><div class="n">4&nbsp;h</div><div class="l">SLA assignation</div></div>
+    </div>
+  </header>
+
+  <!-- ============== PRINCIPES ============== -->
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <span class="num">00 ·</span>
+        <h2 style="display:inline; margin-left: 8px;">Principes de design</h2>
+      </div>
+      <div class="desc">
+        Six règles non-négociables. Toute décision de conception y revient.
+      </div>
+    </div>
+
+    <div class="principles">
+      <div class="principle">
+        <div class="num">01</div>
+        <h4>Respect avant tout</h4>
+        <p>Chaque mot, chaque couleur, chaque illustration honore la dignité des laveuses et la confiance des abonnés. Aucun stéréotype, aucun ton paternaliste.</p>
+      </div>
+      <div class="principle">
+        <div class="num">02</div>
+        <h4>Qualité&nbsp;Lomé&nbsp;=&nbsp;qualité&nbsp;monde</h4>
+        <p>Standards européens et américains. La barre est la même que pour Stripe, Linear, Revolut. Le marché africain n'est jamais une excuse.</p>
+      </div>
+      <div class="principle">
+        <div class="num">03</div>
+        <h4>Calme par défaut</h4>
+        <p>L'application n'aboie pas, ne presse pas, ne supplie pas l'attention. Elle est là quand on l'ouvre, et elle disparaît quand on la ferme.</p>
+      </div>
+      <div class="principle">
+        <div class="num">04</div>
+        <h4>Évidence sur cleverness</h4>
+        <p>Les actions critiques (payer, signaler, annuler) sont toujours visibles, jamais cachées dans un menu. La copie dit ce qui se passe, en français simple.</p>
+      </div>
+      <div class="principle">
+        <div class="num">05</div>
+        <h4>Hors-ligne d'abord</h4>
+        <p>L'application laveuse fonctionne sans réseau. L'abonné voit son prochain rendez-vous même en avion. La synchronisation est invisible et garantie.</p>
+      </div>
+      <div class="principle">
+        <div class="num">06</div>
+        <h4>Une relation, pas un service</h4>
+        <p>Le produit met en lumière la même laveuse, semaine après semaine. La relation est l'actif. Tout le reste — paiement, planning, support — sert cette relation.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== FONDATIONS ============== -->
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <span class="num">01 ·</span>
+        <h2 style="display:inline; margin-left: 8px;">Fondations</h2>
+      </div>
+      <div class="desc">Marque, voix, jetons, typographie, mouvement, accessibilité.</div>
+    </div>
+    <div class="grid">
+
+      <a class="card" href="00-foundations/brand.html">
+        <div class="card-cover cover-tokens">
+          <svg viewBox="0 0 320 200" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+            <circle cx="240" cy="100" r="56" fill="#FFF3EE" opacity="0.12" />
+            <circle cx="240" cy="100" r="36" fill="#FFF3EE" opacity="0.18" />
+            <text x="36" y="120" font-family="Fraunces, serif" font-size="84" font-style="italic" font-weight="500" fill="#FFF3EE">w</text>
+          </svg>
+          <span class="cover-decor"><span class="label">— marque · voix · ton</span></span>
+        </div>
+        <div class="card-body">
+          <div class="card-eyebrow">00.1 · Foundations</div>
+          <h3>Marque &amp; voix <span class="badge live">prêt</span></h3>
+          <p>Logo, signe distinctif, principes de copywriting, ton de voix en français togolais formel, vocabulaire interdit, vocabulaire encouragé.</p>
+          <div class="card-foot"><span>Lire</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="00-foundations/tokens.html">
+        <div class="card-cover cover-system">
+          <svg viewBox="0 0 320 200" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+            <rect x="20" y="20" width="56" height="56" fill="#C4622D" rx="10"/>
+            <rect x="84" y="20" width="56" height="56" fill="#B8870A" rx="10"/>
+            <rect x="148" y="20" width="56" height="56" fill="#1A5C34" rx="10"/>
+            <rect x="212" y="20" width="56" height="56" fill="#3B1F7A" rx="10"/>
+            <rect x="20" y="84" width="56" height="56" fill="#1C1208" rx="10"/>
+            <rect x="84" y="84" width="56" height="56" fill="#FAF6F0" stroke="#EAE0D5" rx="10"/>
+            <rect x="148" y="84" width="56" height="56" fill="#FFFDF8" stroke="#EAE0D5" rx="10"/>
+            <rect x="212" y="84" width="56" height="56" fill="#FDECEA" rx="10"/>
+          </svg>
+          <span class="cover-decor dark"><span class="label">— couleur · espacement · rayon</span></span>
+        </div>
+        <div class="card-body">
+          <div class="card-eyebrow">00.2 · Foundations</div>
+          <h3>Tokens &amp; thèmes <span class="badge live">prêt</span></h3>
+          <p>Trois palettes auditoires (Savane, Forêt, Admin). Échelle d'espacement 4-base, rayons, ombres, mouvement. Source unique avec packages/design-tokens.</p>
+          <div class="card-foot"><span>Lire</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="00-foundations/type.html">
+        <div class="card-cover" style="background: #FFFDF8;">
+          <svg viewBox="0 0 320 200" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+            <text x="40" y="125" font-family="Fraunces, serif" font-style="italic" font-weight="500" font-size="160" fill="#1C1208">Aa</text>
+            <text x="195" y="100" font-family="Inter, sans-serif" font-size="48" font-weight="600" fill="#C4622D">Aa</text>
+            <text x="195" y="160" font-family="JetBrains Mono, monospace" font-size="36" fill="#8C7258">Aa</text>
+          </svg>
+          <span class="cover-decor dark"><span class="label">— display · texte · mono</span></span>
+        </div>
+        <div class="card-body">
+          <div class="card-eyebrow">00.3 · Foundations</div>
+          <h3>Typographie <span class="badge live">prêt</span></h3>
+          <p>Pairing Fraunces (display, italique signature) + Inter (texte) + JetBrains Mono (technique). Échelle, hauteurs de ligne, règles d'usage.</p>
+          <div class="card-foot"><span>Lire</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+      <a class="card span-6" href="00-foundations/motion.html">
+        <div class="card-cover" style="background: #1C1208;">
+          <svg viewBox="0 0 480 200" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+            <path d="M 0 100 Q 120 100, 240 50 T 480 50" stroke="#C4622D" stroke-width="2" fill="none"/>
+            <path d="M 0 100 Q 120 100, 240 130 T 480 130" stroke="#B8870A" stroke-width="2" fill="none"/>
+            <circle cx="0" cy="100" r="4" fill="#FFF3EE"/>
+            <circle cx="480" cy="50" r="4" fill="#C4622D"/>
+            <circle cx="480" cy="130" r="4" fill="#B8870A"/>
+          </svg>
+          <span class="cover-decor"><span class="label">— ease · durations · choreography</span></span>
+        </div>
+        <div class="card-body">
+          <div class="card-eyebrow">00.4 · Foundations</div>
+          <h3>Mouvement <span class="badge wip">en cours</span></h3>
+          <p>Courbes d'easing (standard, emphasized, snap), durées (120/200/320/480ms), choreographie de transitions. Quand animer, quand ne pas.</p>
+          <div class="card-foot"><span>Lire</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+      <a class="card span-6" href="00-foundations/accessibility.html">
+        <div class="card-cover" style="background: var(--surface-2);">
+          <svg viewBox="0 0 480 200" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+            <circle cx="240" cy="100" r="60" fill="none" stroke="#1C1208" stroke-width="2"/>
+            <circle cx="240" cy="74" r="8" fill="#1C1208"/>
+            <line x1="240" y1="84" x2="240" y2="120" stroke="#1C1208" stroke-width="2"/>
+            <line x1="218" y1="100" x2="262" y2="100" stroke="#1C1208" stroke-width="2"/>
+            <line x1="222" y1="140" x2="232" y2="118" stroke="#1C1208" stroke-width="2"/>
+            <line x1="258" y1="140" x2="248" y2="118" stroke="#1C1208" stroke-width="2"/>
+          </svg>
+          <span class="cover-decor dark"><span class="label">— wcag aa · 44pt · voiceover · talkback</span></span>
+        </div>
+        <div class="card-body">
+          <div class="card-eyebrow">00.5 · Foundations</div>
+          <h3>Accessibilité <span class="badge wip">en cours</span></h3>
+          <p>WCAG 2.1 AA, contrastes mesurés, cibles tactiles ≥44pt, dynamic type 200%, focus visible, ordre lecteur d'écran, alternatives non-couleur.</p>
+          <div class="card-foot"><span>Lire</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ============== DESIGN SYSTEM ============== -->
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <span class="num">02 ·</span>
+        <h2 style="display:inline; margin-left: 8px;">Design system</h2>
+      </div>
+      <div class="desc">Composants partagés. Chaque primitive × chaque état.</div>
+    </div>
+    <div class="grid">
+
+      <a class="card span-8" href="01-design-system/components.html">
+        <div class="card-cover" style="background: #FFFDF8;">
+          <svg viewBox="0 0 640 240" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+            <!-- Buttons row -->
+            <rect x="40" y="40" width="120" height="44" rx="22" fill="#C4622D"/>
+            <text x="100" y="68" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="#FFFDF8" text-anchor="middle">Confirmer</text>
+            <rect x="172" y="40" width="120" height="44" rx="22" fill="none" stroke="#1C1208" stroke-width="1.5"/>
+            <text x="232" y="68" font-family="Inter, sans-serif" font-size="14" font-weight="500" fill="#1C1208" text-anchor="middle">Annuler</text>
+            <!-- Field -->
+            <rect x="40" y="104" width="252" height="44" rx="12" fill="#FFFDF8" stroke="#EAE0D5"/>
+            <text x="56" y="132" font-family="Inter, sans-serif" font-size="14" fill="#8C7258">90 12 34 56</text>
+            <!-- Card -->
+            <rect x="320" y="40" width="280" height="160" rx="18" fill="#FAF6F0" stroke="#EAE0D5"/>
+            <rect x="340" y="60" width="40" height="40" rx="20" fill="#C4622D"/>
+            <text x="392" y="76" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="#1C1208">Akouvi K.</text>
+            <text x="392" y="94" font-family="Inter, sans-serif" font-size="11" fill="#8C7258">Prochaine visite — mardi 9h</text>
+            <rect x="340" y="120" width="60" height="22" rx="11" fill="#DFF0DA"/>
+            <text x="370" y="135" font-family="JetBrains Mono, monospace" font-size="10" fill="#4A7C3F" text-anchor="middle">CONFIRMÉ</text>
+          </svg>
+          <span class="cover-decor dark"><span class="label">— buttons · fields · cards · sheets</span></span>
+        </div>
+        <div class="card-body">
+          <div class="card-eyebrow">02.1 · System</div>
+          <h3>Bibliothèque de composants <span class="badge wip">en cours</span></h3>
+          <p>Boutons, champs, OTP, sélecteurs, cartes, listes, modales, sheets, toasts, badges, navigation, tableaux. Chaque composant avec ses états (default · hover · pressed · focus · disabled · loading · error).</p>
+          <div class="card-foot"><span>Lire</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="08-states-library/states.html">
+        <div class="card-cover cover-states">
+          <svg viewBox="0 0 320 200" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+            <rect x="40" y="30" width="80" height="14" rx="3" fill="#EAE0D5"/>
+            <rect x="40" y="50" width="120" height="10" rx="3" fill="#EAE0D5"/>
+            <rect x="40" y="80" width="60" height="60" rx="8" fill="#FFF3EE" stroke="#EAE0D5" stroke-dasharray="4 4"/>
+            <rect x="120" y="80" width="60" height="60" rx="8" fill="#FAF6F0"/>
+            <circle cx="150" cy="110" r="8" fill="#C03020"/>
+            <text x="150" y="115" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#FFFDF8" text-anchor="middle">!</text>
+            <rect x="200" y="80" width="60" height="60" rx="8" fill="#1C1208"/>
+            <circle cx="230" cy="110" r="6" fill="none" stroke="#FFF3EE" stroke-width="2" stroke-dasharray="2 2">
+              <animateTransform attributeName="transform" type="rotate" from="0 230 110" to="360 230 110" dur="1.5s" repeatCount="indefinite"/>
+            </circle>
+          </svg>
+          <span class="cover-decor dark"><span class="label">— empty · loading · error · offline</span></span>
+        </div>
+        <div class="card-body">
+          <div class="card-eyebrow">02.2 · System</div>
+          <h3>Bibliothèque d'états <span class="badge draft">brouillon</span></h3>
+          <p>La règle: chaque liste a 5 états. Cinq variantes documentées par primitive. Avec copies FR prêtes pour l'ingénierie.</p>
+          <div class="card-foot"><span>Lire</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ============== FLOWS / IA / WIREFRAMES ============== -->
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <span class="num">03 ·</span>
+        <h2 style="display:inline; margin-left: 8px;">Flux &amp; architecture</h2>
+      </div>
+      <div class="desc">Comment les écrans s'enchaînent. Pas un seul écran orphelin.</div>
+    </div>
+    <div class="grid">
+
+      <a class="card span-6" href="02-flows/flows.html">
+        <div class="card-cover cover-flows">
+          <svg viewBox="0 0 480 200" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+            <g stroke="#1C1208" stroke-width="1.5" fill="#FFFDF8">
+              <rect x="20" y="50" width="60" height="40" rx="6"/>
+              <rect x="120" y="50" width="60" height="40" rx="6"/>
+              <rect x="220" y="30" width="60" height="40" rx="6"/>
+              <rect x="220" y="80" width="60" height="40" rx="6"/>
+              <rect x="320" y="50" width="60" height="40" rx="6"/>
+              <rect x="420" y="50" width="60" height="40" rx="6"/>
+            </g>
+            <g stroke="#C4622D" stroke-width="1.5" fill="none" marker-end="url(#arrow)">
+              <line x1="80" y1="70" x2="120" y2="70"/>
+              <path d="M 180 70 Q 200 70, 220 50"/>
+              <path d="M 180 70 Q 200 70, 220 100"/>
+              <path d="M 280 50 Q 300 50, 320 70"/>
+              <path d="M 280 100 Q 300 100, 320 70"/>
+              <line x1="380" y1="70" x2="420" y2="70"/>
+            </g>
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#C4622D"/>
+              </marker>
+            </defs>
+          </svg>
+          <span class="cover-decor dark"><span class="label">— signup · visit · dispute · payment · day</span></span>
+        </div>
+        <div class="card-body">
+          <div class="card-eyebrow">03.1 · Architecture</div>
+          <h3>Diagrammes de flux <span class="badge wip">en cours</span></h3>
+          <p>Six flux critiques cartographiés écran-par-écran avec branches d'erreur. Inscription, cycle de visite, litige, paiement en retard, jour-de-laveuse, assignation opérateur.</p>
+          <div class="card-foot"><span>Lire</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+      <a class="card span-6" href="03-information-architecture/sitemap.html">
+        <div class="card-cover cover-ia">
+          <svg viewBox="0 0 480 200" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+            <g fill="#FFF3EE" stroke="#FFF3EE" stroke-width="1">
+              <circle cx="100" cy="100" r="8"/>
+              <circle cx="240" cy="100" r="8"/>
+              <circle cx="380" cy="100" r="8"/>
+            </g>
+            <g stroke="#FFF3EE" stroke-width="1" fill="none" opacity="0.4">
+              <line x1="100" y1="100" x2="60" y2="50"/>
+              <line x1="100" y1="100" x2="60" y2="150"/>
+              <line x1="100" y1="100" x2="140" y2="50"/>
+              <line x1="100" y1="100" x2="140" y2="150"/>
+              <line x1="240" y1="100" x2="200" y2="50"/>
+              <line x1="240" y1="100" x2="200" y2="150"/>
+              <line x1="240" y1="100" x2="280" y2="50"/>
+              <line x1="240" y1="100" x2="280" y2="150"/>
+              <line x1="380" y1="100" x2="340" y2="50"/>
+              <line x1="380" y1="100" x2="340" y2="150"/>
+              <line x1="380" y1="100" x2="420" y2="50"/>
+              <line x1="380" y1="100" x2="420" y2="150"/>
+            </g>
+            <g fill="#FFF3EE">
+              <circle cx="60" cy="50" r="4"/><circle cx="60" cy="150" r="4"/>
+              <circle cx="140" cy="50" r="4"/><circle cx="140" cy="150" r="4"/>
+              <circle cx="200" cy="50" r="4"/><circle cx="200" cy="150" r="4"/>
+              <circle cx="280" cy="50" r="4"/><circle cx="280" cy="150" r="4"/>
+              <circle cx="340" cy="50" r="4"/><circle cx="340" cy="150" r="4"/>
+              <circle cx="420" cy="50" r="4"/><circle cx="420" cy="150" r="4"/>
+            </g>
+          </svg>
+          <span class="cover-decor"><span class="label">— sitemap · 3 apps · 81 surfaces</span></span>
+        </div>
+        <div class="card-body">
+          <div class="card-eyebrow">03.2 · Architecture</div>
+          <h3>Architecture de l'information <span class="badge wip">en cours</span></h3>
+          <p>Plan du site complet pour les trois applications. Chaque écran (X/S/W/O ID) → fichier wireframe + écran hi-fi + redline. Aucun ID orphelin.</p>
+          <div class="card-foot"><span>Lire</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+      <a class="card span-12" href="04-wireframes/wireframes.html">
+        <div class="card-cover cover-wires">
+          <svg viewBox="0 0 1200 240" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+            <g stroke="#1C1208" stroke-width="1" fill="none">
+              <rect x="40" y="30" width="160" height="180" rx="12"/>
+              <rect x="60" y="50" width="120" height="20" rx="4"/>
+              <rect x="60" y="80" width="80" height="14" rx="3"/>
+              <rect x="60" y="110" width="120" height="60" rx="6"/>
+              <rect x="60" y="180" width="120" height="20" rx="10"/>
+
+              <rect x="220" y="30" width="160" height="180" rx="12"/>
+              <rect x="240" y="50" width="120" height="14" rx="3"/>
+              <rect x="240" y="74" width="60" height="14" rx="3"/>
+              <rect x="240" y="100" width="120" height="40" rx="6"/>
+              <rect x="240" y="150" width="120" height="40" rx="6"/>
+
+              <rect x="400" y="30" width="160" height="180" rx="12"/>
+              <circle cx="440" cy="80" r="20"/>
+              <rect x="470" y="68" width="70" height="10" rx="3"/>
+              <rect x="470" y="86" width="50" height="8" rx="3"/>
+              <rect x="420" y="120" width="120" height="14" rx="3"/>
+              <rect x="420" y="142" width="100" height="14" rx="3"/>
+              <rect x="420" y="180" width="120" height="20" rx="10"/>
+
+              <rect x="580" y="30" width="160" height="180" rx="12"/>
+              <rect x="600" y="50" width="120" height="60" rx="6"/>
+              <rect x="600" y="120" width="80" height="14" rx="3"/>
+              <rect x="600" y="142" width="120" height="8" rx="3"/>
+              <rect x="600" y="156" width="100" height="8" rx="3"/>
+              <rect x="600" y="180" width="120" height="20" rx="10"/>
+
+              <rect x="760" y="30" width="160" height="180" rx="12"/>
+              <rect x="780" y="50" width="120" height="14" rx="3"/>
+              <rect x="780" y="80" width="40" height="40" rx="20"/>
+              <rect x="830" y="86" width="70" height="8" rx="3"/>
+              <rect x="830" y="102" width="50" height="8" rx="3"/>
+              <rect x="780" y="140" width="120" height="60" rx="6"/>
+
+              <rect x="940" y="30" width="160" height="180" rx="12"/>
+              <rect x="960" y="50" width="120" height="14" rx="3"/>
+              <rect x="960" y="80" width="120" height="120" rx="6"/>
+            </g>
+          </svg>
+          <span class="cover-decor dark"><span class="label">— low-fi · 81+ écrans · grayscale</span></span>
+        </div>
+        <div class="card-body">
+          <div class="card-eyebrow">03.3 · Architecture</div>
+          <h3>Wireframes — couverture totale <span class="badge wip">en cours</span></h3>
+          <p>Chaque écran à basse fidélité avant la haute fidélité. La règle: aucun écran ne saute l'étape wireframe. Les états (vide / chargement / erreur / hors-ligne / fin de liste) sont annotés. Le ticket d'entrée pour parler design.</p>
+          <div class="card-foot"><span>Voir tous les écrans</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ============== APPS HI-FI ============== -->
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <span class="num">04 ·</span>
+        <h2 style="display:inline; margin-left: 8px;">Prototypes haute&#8209;fidélité</h2>
+      </div>
+      <div class="desc">Cliquables. Réalistes. Pas des images statiques.</div>
+    </div>
+    <div class="grid">
+
+      <a class="card span-6" href="05-subscriber/subscriber.html">
+        <div class="card-cover cover-sub">
+          <svg viewBox="0 0 480 280" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+            <!-- iPhone -->
+            <rect x="160" y="20" width="160" height="280" rx="32" fill="#1C1208"/>
+            <rect x="170" y="30" width="140" height="260" rx="22" fill="#FFFDF8"/>
+            <rect x="170" y="30" width="140" height="28" rx="22" fill="#FFFDF8"/>
+            <rect x="216" y="34" width="48" height="14" rx="7" fill="#1C1208"/>
+            <!-- Screen content -->
+            <text x="184" y="80" font-family="JetBrains Mono, monospace" font-size="7" fill="#8C7258" letter-spacing="1">PROCHAINE VISITE</text>
+            <text x="184" y="108" font-family="Fraunces, serif" font-size="22" font-style="italic" font-weight="500" fill="#1C1208">Mardi</text>
+            <text x="184" y="128" font-family="Fraunces, serif" font-size="22" font-style="italic" font-weight="500" fill="#C4622D">9 h 00</text>
+            <circle cx="194" cy="160" r="14" fill="#F5DDD0"/>
+            <text x="216" y="158" font-family="Inter" font-size="10" font-weight="600" fill="#1C1208">Akouvi K.</text>
+            <text x="216" y="170" font-family="Inter" font-size="8" fill="#8C7258">Tokoin · 8 mois</text>
+            <rect x="184" y="190" width="112" height="32" rx="16" fill="#C4622D"/>
+            <text x="240" y="210" font-family="Inter" font-size="10" font-weight="600" fill="#FFFDF8" text-anchor="middle">Voir le détail</text>
+            <rect x="184" y="232" width="112" height="44" rx="10" fill="#FAF6F0" stroke="#EAE0D5"/>
+          </svg>
+          <span class="cover-decor dark"><span class="label">— iphone · fr · 35 surfaces · savane</span></span>
+        </div>
+        <div class="card-body">
+          <div class="card-eyebrow">04.1 · Prototype</div>
+          <h3>Application Abonné <span class="badge live">prêt</span></h3>
+          <p>iPhone, français. Onboarding, tableau de bord, cycle de visite, abonnement, support, paiement, vie privée. Tous les états documentés.</p>
+          <div class="card-foot"><span>Lancer le prototype</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+      <a class="card span-6" href="06-worker/worker.html">
+        <div class="card-cover cover-worker">
+          <svg viewBox="0 0 480 280" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+            <!-- Android -->
+            <rect x="160" y="20" width="160" height="280" rx="20" fill="#0E1A12"/>
+            <rect x="168" y="28" width="144" height="264" rx="14" fill="#FFFFFF"/>
+            <text x="180" y="56" font-family="JetBrains Mono, monospace" font-size="7" fill="#58685D" letter-spacing="1">AUJOURD'HUI · 5 VISITES</text>
+            <rect x="180" y="68" width="120" height="44" rx="8" fill="#EAF6EE" stroke="#C8ECD5"/>
+            <text x="190" y="84" font-family="Inter" font-size="9" font-weight="600" fill="#1A5C34">9h00 — Mme Adjoa</text>
+            <text x="190" y="98" font-family="Inter" font-size="8" fill="#58685D">Tokoin Casablanca · 800m</text>
+            <rect x="180" y="120" width="120" height="44" rx="8" fill="#FFFFFF" stroke="#DDE8E2"/>
+            <text x="190" y="136" font-family="Inter" font-size="9" font-weight="600" fill="#0E1A12">10h30 — M. Kossi</text>
+            <text x="190" y="150" font-family="Inter" font-size="8" fill="#58685D">Bè · 1.2 km</text>
+            <rect x="180" y="172" width="120" height="44" rx="8" fill="#FFFFFF" stroke="#DDE8E2"/>
+            <text x="190" y="188" font-family="Inter" font-size="9" font-weight="600" fill="#0E1A12">12h00 — Mme Esi</text>
+            <text x="190" y="202" font-family="Inter" font-size="8" fill="#58685D">Adidogomé · 2.4 km</text>
+            <rect x="180" y="252" width="120" height="32" rx="16" fill="#1A5C34"/>
+            <text x="240" y="272" font-family="Inter" font-size="10" font-weight="600" fill="#FFFFFF" text-anchor="middle">Démarrer la journée</text>
+          </svg>
+          <span class="cover-decor dark"><span class="label">— android · fr · 22 surfaces · forêt</span></span>
+        </div>
+        <div class="card-body">
+          <div class="card-eyebrow">04.2 · Prototype</div>
+          <h3>Application Laveuse <span class="badge live">prêt</span></h3>
+          <p>Android, français. Tournée du jour, cycle de visite avec photos &amp; GPS, gains, planning, profil, SOS sur chaque écran. Hors-ligne d'abord.</p>
+          <div class="card-foot"><span>Lancer le prototype</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+      <a class="card span-12" href="07-operator/operator.html">
+        <div class="card-cover cover-ops">
+          <svg viewBox="0 0 1200 320" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+            <!-- Desktop window -->
+            <rect x="40" y="20" width="1120" height="280" rx="12" fill="#FFFFFF"/>
+            <rect x="40" y="20" width="1120" height="36" rx="12" fill="#F7F7FB"/>
+            <circle cx="64" cy="38" r="6" fill="#FF5F57"/>
+            <circle cx="84" cy="38" r="6" fill="#FEBC2E"/>
+            <circle cx="104" cy="38" r="6" fill="#28C840"/>
+            <!-- Sidebar -->
+            <rect x="40" y="56" width="200" height="244" fill="#15131D"/>
+            <rect x="60" y="80" width="160" height="14" rx="3" fill="#3B1F7A"/>
+            <rect x="60" y="106" width="120" height="10" rx="3" fill="rgba(255,255,255,0.3)"/>
+            <rect x="60" y="126" width="140" height="10" rx="3" fill="rgba(255,255,255,0.3)"/>
+            <rect x="60" y="146" width="100" height="10" rx="3" fill="rgba(255,255,255,0.3)"/>
+            <rect x="60" y="166" width="130" height="10" rx="3" fill="rgba(255,255,255,0.3)"/>
+            <!-- Main -->
+            <text x="260" y="90" font-family="Fraunces, serif" font-size="22" font-style="italic" font-weight="500" fill="#15131D">Matching · 12 en attente</text>
+            <rect x="260" y="112" width="600" height="44" rx="8" fill="#FAFAFD" stroke="#E2E1EA"/>
+            <rect x="260" y="166" width="600" height="44" rx="8" fill="#FAFAFD" stroke="#E2E1EA"/>
+            <rect x="260" y="220" width="600" height="44" rx="8" fill="#FAFAFD" stroke="#E2E1EA"/>
+            <!-- Right panel -->
+            <rect x="880" y="80" width="260" height="200" rx="12" fill="#F0EBFF" stroke="#D9D0FF"/>
+            <text x="900" y="106" font-family="JetBrains Mono, monospace" font-size="9" fill="#3B1F7A" letter-spacing="1">CANDIDATS</text>
+            <rect x="900" y="120" width="220" height="36" rx="6" fill="#FFFFFF"/>
+            <rect x="900" y="160" width="220" height="36" rx="6" fill="#FFFFFF"/>
+            <rect x="900" y="200" width="220" height="36" rx="6" fill="#FFFFFF"/>
+          </svg>
+          <span class="cover-decor dark"><span class="label">— desktop · fr · 24 surfaces · admin</span></span>
+        </div>
+        <div class="card-body">
+          <div class="card-eyebrow">04.3 · Prototype</div>
+          <h3>Console Opérateur <span class="badge live">prêt</span></h3>
+          <p>Bureau, français. Matching, Live Ops, support, paiements, laveuses, notifications, audit, rapports. Dense, raccourcis clavier, palette de commandes, sans accès direct base de données.</p>
+          <div class="card-foot"><span>Lancer le prototype</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ============== HANDOFF ============== -->
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <span class="num">05 ·</span>
+        <h2 style="display:inline; margin-left: 8px;">Handoff ingénierie</h2>
+      </div>
+      <div class="desc">Ce que les développeurs reçoivent en plus des écrans.</div>
+    </div>
+    <div class="grid">
+
+      <a class="card" href="09-copy-deck/copy.html">
+        <div class="card-cover cover-copy" style="border-bottom: 1px solid var(--line);">
+          <svg viewBox="0 0 320 200" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+            <g font-family="Inter, sans-serif" fill="#1C1208">
+              <text x="40" y="50" font-size="11" font-weight="600">subscription.cancel.title</text>
+              <text x="40" y="68" font-size="14" font-style="italic" font-family="Fraunces, serif">«&nbsp;Vous êtes sûr ?&nbsp;»</text>
+              <text x="40" y="100" font-size="11" font-weight="600" fill="#8C7258">payment.overdue.banner</text>
+              <text x="40" y="118" font-size="13" fill="#1C1208">Le paiement n'a pas abouti.</text>
+              <text x="40" y="150" font-size="11" font-weight="600" fill="#8C7258">visit.completed.toast</text>
+              <text x="40" y="168" font-size="13" fill="#1C1208">Visite terminée. Akouvi est partie.</text>
+            </g>
+          </svg>
+          <span class="cover-decor dark"><span class="label">— fr strings · keys · context</span></span>
+        </div>
+        <div class="card-body">
+          <div class="card-eyebrow">05.1 · Handoff</div>
+          <h3>Copy deck FR <span class="badge live">prêt</span></h3>
+          <p>Toutes les chaînes des flux héros, par clé. Vocabulaire approuvé, ton "vous" formel, terminologie locale. Prêt pour i18n.</p>
+          <div class="card-foot"><span>Lire</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="10-redlines-handoff/redlines.html">
+        <div class="card-cover cover-redlines">
+          <svg viewBox="0 0 320 200" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+            <rect x="80" y="40" width="160" height="120" rx="12" fill="#FFF3EE"/>
+            <line x1="80" y1="30" x2="80" y2="170" stroke="#C4622D" stroke-width="1" stroke-dasharray="3 3"/>
+            <line x1="240" y1="30" x2="240" y2="170" stroke="#C4622D" stroke-width="1" stroke-dasharray="3 3"/>
+            <line x1="80" y1="40" x2="40" y2="40" stroke="#C4622D" stroke-width="1"/>
+            <line x1="80" y1="160" x2="40" y2="160" stroke="#C4622D" stroke-width="1"/>
+            <text x="40" y="55" font-family="JetBrains Mono, monospace" font-size="9" fill="#FFF3EE">120</text>
+            <text x="40" y="155" font-family="JetBrains Mono, monospace" font-size="9" fill="#FFF3EE">px</text>
+            <text x="160" y="105" font-family="JetBrains Mono, monospace" font-size="10" font-weight="600" fill="#1C1208" text-anchor="middle">--s-7</text>
+          </svg>
+          <span class="cover-decor"><span class="label">— spacing · tokens · usage notes</span></span>
+        </div>
+        <div class="card-body">
+          <div class="card-eyebrow">05.2 · Handoff</div>
+          <h3>Redlines &amp; specs <span class="badge live">prêt</span></h3>
+          <p>Mesures, tokens appliqués, règles d'usage par composant, exceptions. Ce qu'un dev ouvre quand il code l'écran.</p>
+          <div class="card-foot"><span>Lire</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+      <a class="card" href="00-foundations/voice.html">
+        <div class="card-cover" style="background: var(--surface-2);">
+          <svg viewBox="0 0 320 200" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+            <text x="40" y="80" font-family="Fraunces, serif" font-size="20" font-style="italic" fill="#1C1208">«&nbsp;On s'occupe</text>
+            <text x="40" y="106" font-family="Fraunces, serif" font-size="20" font-style="italic" fill="#C4622D">de tout.&nbsp;»</text>
+            <text x="40" y="148" font-family="Inter, sans-serif" font-size="11" fill="#8C7258">— Washed, à l'abonné en retard de paiement</text>
+          </svg>
+          <span class="cover-decor dark"><span class="label">— ton · vocabulaire · interdits</span></span>
+        </div>
+        <div class="card-body">
+          <div class="card-eyebrow">05.3 · Handoff</div>
+          <h3>Voix &amp; ton <span class="badge draft">brouillon</span></h3>
+          <p>Règles éditoriales détaillées. Toujours "vous". Direct, respectueux, sans excuses inutiles. Avec exemples avant/après.</p>
+          <div class="card-foot"><span>Lire</span><span class="arrow">→</span></div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ============== COLOPHON ============== -->
+  <footer class="colophon">
+    <div>
+      <b>Washed Design v2</b> · 2026 · Lomé, Togo<br/>
+      Document vivant. Toute modification passe par revue design + ingénierie.
+    </div>
+    <div>
+      Source de vérité jetons · packages/design-tokens<br/>
+      Source de vérité IA · docs/ux/operator-console-ia.md
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
