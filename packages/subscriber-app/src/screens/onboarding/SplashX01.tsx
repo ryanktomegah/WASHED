@@ -1,0 +1,52 @@
+import { useNavigate } from 'react-router-dom';
+import type { ReactElement } from 'react';
+
+import { translate } from '@washed/i18n';
+
+export function SplashX01(): ReactElement {
+  const navigate = useNavigate();
+
+  const continueInFrench = (): void => {
+    navigate('/signup/phone');
+  };
+
+  return (
+    <main
+      aria-labelledby="x01-headline"
+      className="onboarding-screen dark"
+      data-screen-id="X-01"
+    >
+      <div className="body center">
+        <div>
+          <h1 className="splash-mark" id="x01-headline">
+            washed<span aria-hidden="true">.</span>
+          </h1>
+          <div className="splash-tagline">{translate('subscriber.splash.tagline')}</div>
+        </div>
+      </div>
+      <div className="splash-cta-stack">
+        <div className="row2">
+          <button
+            className="btn full surface"
+            onClick={continueInFrench}
+            type="button"
+          >
+            {translate('subscriber.splash.lang.fr')}
+          </button>
+          <button
+            aria-disabled="true"
+            className="btn full alt"
+            disabled
+            title={translate('subscriber.splash.lang.en_disabled_note')}
+            type="button"
+          >
+            {translate('subscriber.splash.lang.en')}
+          </button>
+        </div>
+        <div className="splash-disabled-note">
+          {translate('subscriber.splash.lang.en_disabled_note')}
+        </div>
+      </div>
+    </main>
+  );
+}
