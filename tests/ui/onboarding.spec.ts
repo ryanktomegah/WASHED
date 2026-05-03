@@ -17,9 +17,7 @@ test('X-02 phone · ÉTAPE 1 / 4, +228 prefix, CTA disabled until 8 digits', asy
 
   await expect(page.locator('[data-screen-id="X-02"]')).toBeVisible();
   await expect(page.getByText('Étape 1 sur 4')).toBeVisible();
-  await expect(
-    page.getByRole('heading', { name: 'Votre numéro de téléphone.' }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Votre numéro de téléphone.' })).toBeVisible();
   await expect(page.getByText('+228')).toBeVisible();
 
   const cta = page.getByRole('button', { name: 'Recevoir le code' });
@@ -33,7 +31,9 @@ test('X-02 phone · ÉTAPE 1 / 4, +228 prefix, CTA disabled until 8 digits', asy
 });
 
 test('X-03 OTP · ÉTAPE 2 / 4, 6 cells, resend timer ticking, modifier link', async ({ page }) => {
-  await page.goto('/#/signup/otp');
+  await page.goto('/#/signup/phone');
+  await page.getByRole('textbox', { name: 'Numéro' }).fill('90123456');
+  await page.getByRole('button', { name: 'Recevoir le code' }).click();
 
   await expect(page.locator('[data-screen-id="X-03"]')).toBeVisible();
   await expect(page.getByText('Étape 2 sur 4')).toBeVisible();
@@ -45,7 +45,7 @@ test('X-03 OTP · ÉTAPE 2 / 4, 6 cells, resend timer ticking, modifier link', a
   await page.screenshot({ path: 'playwright-report/x-03-otp.png', fullPage: true });
 });
 
-test('X-02 → X-03 navigation forwards the +228 phone in router state', async ({ page }) => {
+test('X-02 → X-03 navigation forwards the +228 phone in signup state', async ({ page }) => {
   await page.goto('/#/signup/phone');
 
   await page.getByRole('textbox', { name: 'Numéro' }).fill('90123456');
@@ -54,6 +54,41 @@ test('X-02 → X-03 navigation forwards the +228 phone in router state', async (
   await expect(page).toHaveURL(/#\/signup\/otp/u);
   await expect(page.locator('[data-screen-id="X-03"]')).toBeVisible();
   await expect(page.getByText(/\+228 90 ●● ●● 56/u)).toBeVisible();
+});
+
+test('X-04 → X-08 complete signup flow', async ({ page }) => {
+  await page.goto('/#/signup/phone');
+  await page.getByRole('textbox', { name: 'Numéro' }).fill('90123456');
+  await page.getByRole('button', { name: 'Recevoir le code' }).click();
+
+  await expect(page.locator('[data-screen-id="X-03"]')).toBeVisible();
+  await page.getByLabel('Chiffre 1').fill('123456');
+
+  await expect(page.locator('[data-screen-id="X-04"]')).toBeVisible();
+  await expect(page.getByText('Étape 3 sur 4')).toBeVisible();
+  await page.getByLabel('Quartier').selectOption('Tokoin Forever');
+  await page.getByLabel('Rue / détail').fill('rue 254, maison bleue');
+  await page.getByRole('button', { name: 'Continuer' }).click();
+
+  await expect(page.locator('[data-screen-id="X-05"]')).toBeVisible();
+  await expect(page.getByText('Étape 4 sur 4')).toBeVisible();
+  await page.locator('label.tier-card', { hasText: 'Deux visites' }).click();
+  await page.getByRole('button', { name: /Continuer · 4/u }).click();
+
+  await expect(page.locator('[data-screen-id="X-06"]')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Le moyen de paiement.' })).toBeVisible();
+  await page.locator('label.provider-card', { hasText: 'Flooz' }).click();
+  await page.getByRole('button', { name: 'Continuer' }).click();
+
+  await expect(page.locator('[data-screen-id="X-07"]')).toBeVisible();
+  await expect(page.getByText('Récap')).toBeVisible();
+  await expect(page.getByRole('button', { name: "Confirmer l'abonnement" })).toBeDisabled();
+  await page.getByRole('checkbox').check();
+  await page.getByRole('button', { name: "Confirmer l'abonnement" }).click();
+
+  await expect(page.locator('[data-screen-id="X-08"]')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Bienvenue chez Washed.' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Voir mon accueil' })).toBeDisabled();
 });
 
 test('X-01 Français button routes to X-02 phone', async ({ page }) => {

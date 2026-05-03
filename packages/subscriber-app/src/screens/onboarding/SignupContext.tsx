@@ -34,7 +34,11 @@ export interface SignupContextValue extends SignupState {
   readonly reset: () => void;
 }
 
-const initialState: SignupState = {
+export type SignupInitialState = Partial<
+  Omit<SignupState, 'address'> & { readonly address: Partial<SignupAddress> }
+>;
+
+const defaultSignupState: SignupState = {
   phone: '',
   address: { neighborhood: '', street: '', landmark: '' },
   tier: null,
@@ -44,8 +48,21 @@ const initialState: SignupState = {
 
 const SignupContext = createContext<SignupContextValue | null>(null);
 
-export function SignupProvider({ children }: { readonly children: ReactNode }): ReactElement {
-  const [state, setState] = useState<SignupState>(initialState);
+export function SignupProvider({
+  children,
+  initialState,
+}: {
+  readonly children: ReactNode;
+  readonly initialState?: SignupInitialState;
+}): ReactElement {
+  const [state, setState] = useState<SignupState>(() => ({
+    ...defaultSignupState,
+    ...initialState,
+    address: {
+      ...defaultSignupState.address,
+      ...initialState?.address,
+    },
+  }));
 
   const setPhone = useCallback((phone: string) => {
     setState((current) => ({ ...current, phone }));
@@ -68,7 +85,7 @@ export function SignupProvider({ children }: { readonly children: ReactNode }): 
   }, []);
 
   const reset = useCallback(() => {
-    setState(initialState);
+    setState(defaultSignupState);
   }, []);
 
   const value = useMemo<SignupContextValue>(
