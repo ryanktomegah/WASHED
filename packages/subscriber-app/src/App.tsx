@@ -6,14 +6,12 @@ import {
   BottomNav,
   Button,
   Card,
-  EmptyState,
   ListItem,
   TextField,
   WashedThemeProvider,
 } from '@washed/ui';
 import { formatVisitDate, formatXof, translate, type WashedLocale } from '@washed/i18n';
 import {
-  Banknote,
   Bell,
   CalendarDays,
   Camera,
@@ -30,25 +28,39 @@ import {
   ReceiptText,
   ShieldCheck,
   Star,
+  ArrowRight,
   UserRound,
   WalletCards,
 } from 'lucide-react';
-import type { Dispatch, ReactElement, ReactNode } from 'react';
+import type {
+  CSSProperties,
+  Dispatch,
+  PointerEvent as ReactPointerEvent,
+  ReactElement,
+  ReactNode,
+} from 'react';
 
 import {
   copy,
   onboardingSteps,
-  visitTimeline,
   type AppRoute,
   type LocalizedCopy,
   type PrimaryAppRoute,
+  type SubscriberSheet,
+  type SupportIssueKind,
 } from './appData.js';
 import {
   initialSubscriberState,
   subscriberReducer,
   type SubscriberAction,
+  type SubscriberFeedback,
   type SubscriberState,
 } from './subscriberState.js';
+import {
+  buildSubscriberPipeline,
+  type SubscriberMessageKind,
+  type SubscriberPipeline,
+} from './subscriberPipeline.js';
 
 const navOrder = [
   'home',
@@ -64,14 +76,53 @@ const navIcons = {
   support: <MessageCircle aria-hidden="true" size={18} strokeWidth={2.25} />,
 } as const satisfies Record<PrimaryAppRoute, ReactNode>;
 
+const supportIssueOrder = [
+  'missed_visit',
+  'quality',
+  'damaged_item',
+  'payment',
+  'safety',
+  'other',
+] as const satisfies readonly SupportIssueKind[];
+
 export function App(): ReactElement {
   const [locale, setLocale] = useState<WashedLocale>('fr');
   const [route, setRoute] = useState<AppRoute>('home');
   const [subscriberState, dispatch] = useReducer(subscriberReducer, initialSubscriberState);
+  const [activeSheet, setActiveSheet] = useState<SubscriberSheet | null>(null);
+  const [activeMessage, setActiveMessage] = useState<SubscriberMessageKind | null>(null);
+  const [visibleFeedback, setVisibleFeedback] = useState<SubscriberFeedback | null>(null);
+  const [supportIssue, setSupportIssue] = useState<SupportIssueKind>('quality');
   const t = copy[locale];
+  const pipeline = buildSubscriberPipeline(subscriberState);
 
-  const toggleLocale = (): void => {
-    setLocale((currentLocale) => (currentLocale === 'fr' ? 'en' : 'fr'));
+  const openSheet = (sheet: SubscriberSheet, issue?: SupportIssueKind): void => {
+    if (issue !== undefined) {
+      setSupportIssue(issue);
+    }
+
+    setActiveSheet(sheet);
+  };
+
+  const confirmSheet = (): void => {
+    if (activeSheet === null) return;
+
+    const actionBySheet = {
+      accountDelete: { type: 'account/delete' },
+      cancel: { type: 'subscription/cancel' },
+      dispute: { type: 'visit/dispute' },
+      orderWash: { type: 'order/wash' },
+      paymentRecovery: { type: 'payment/recover' },
+      privacyErasure: { type: 'privacy/erasure' },
+      privacyExport: { type: 'privacy/export' },
+      rating: { type: 'visit/rate' },
+      reschedule: { type: 'visit/reschedule' },
+      skip: { type: 'visit/skip' },
+      workerSwap: { type: 'subscription/requestSwap' },
+    } as const satisfies Record<SubscriberSheet, SubscriberAction>;
+
+    dispatch(actionBySheet[activeSheet]);
+    setActiveSheet(null);
   };
 
   useEffect(() => {
@@ -82,36 +133,37 @@ export function App(): ReactElement {
     }
   }, [route]);
 
+  useEffect(() => {
+    if (subscriberState.lastFeedback === null) return;
+
+    setVisibleFeedback(subscriberState.lastFeedback);
+    const timeout = window.setTimeout(() => setVisibleFeedback(null), 4200);
+
+    return () => window.clearTimeout(timeout);
+  }, [subscriberState.lastFeedback]);
+
   return (
-    <WashedThemeProvider className="app-frame" theme="subscriber">
+    <WashedThemeProvider className="app-frame" theme="worker">
       <div className="phone-shell">
-        <div className="status-bar" aria-hidden="true" hidden>
-          <span>9:41</span>
-          <span>●●● 5G ▰</span>
-        </div>
-
-        <header className="app-header" hidden>
-          <button className="brand-button" onClick={() => setRoute('home')} type="button">
-            <span>{translate('app.name', locale)}</span>
-            <small>Beta Lomé</small>
-          </button>
-          <Button aria-label="Switch language" onClick={toggleLocale} size="sm" variant="secondary">
-            {locale === 'fr' ? 'EN' : 'FR'}
-          </Button>
-        </header>
-
         <main className="subscriber-shell">
-          {subscriberState.lastFeedback === null ? null : (
-            <Alert className="feedback-banner" tone="success">
-              {t.feedback[subscriberState.lastFeedback]}
-            </Alert>
+          {visibleFeedback === null ? null : (
+            <div className="feedback-toast" role="status">
+              <span>{t.feedback[visibleFeedback]}</span>
+              <button
+                aria-label={t.action.close}
+                onClick={() => setVisibleFeedback(null)}
+                type="button"
+              >
+                {t.action.close}
+              </button>
+            </div>
           )}
           {route === 'home' ? (
             <HomeScreen
-              dispatch={dispatch}
               locale={locale}
-              onLocaleToggle={toggleLocale}
               onRouteChange={setRoute}
+              onSheetOpen={openSheet}
+              pipeline={pipeline}
               subscriberState={subscriberState}
               t={t}
             />
@@ -124,42 +176,68 @@ export function App(): ReactElement {
               dispatch={dispatch}
               locale={locale}
               onRouteChange={setRoute}
+              onSheetOpen={openSheet}
+              pipeline={pipeline}
               subscriberState={subscriberState}
               t={t}
             />
           ) : null}
           {route === 'support' ? (
-            <SupportScreen onRouteChange={setRoute} subscriberState={subscriberState} t={t} />
+            <SupportScreen
+              onMessageOpen={setActiveMessage}
+              onRouteChange={setRoute}
+              onSheetOpen={openSheet}
+              pipeline={pipeline}
+              subscriberState={subscriberState}
+              t={t}
+            />
           ) : null}
           {route === 'profile' ? (
-            <ProfileScreen dispatch={dispatch} locale={locale} onRouteChange={setRoute} t={t} />
+            <ProfileScreen
+              locale={locale}
+              onLocaleChange={setLocale}
+              onRouteChange={setRoute}
+              onSheetOpen={openSheet}
+              t={t}
+            />
           ) : null}
           {route === 'visit' ? (
             <VisitDetailScreen
               dispatch={dispatch}
               locale={locale}
+              onRouteChange={setRoute}
+              onSheetOpen={openSheet}
               subscriberState={subscriberState}
               t={t}
             />
           ) : null}
-          {route === 'inbox' ? <InboxScreen subscriberState={subscriberState} t={t} /> : null}
+          {route === 'inbox' ? (
+            <InboxScreen
+              onMessageOpen={setActiveMessage}
+              pipeline={pipeline}
+              subscriberState={subscriberState}
+              t={t}
+            />
+          ) : null}
           {route === 'billing' ? (
             <BillingScreen
-              dispatch={dispatch}
               locale={locale}
+              onSheetOpen={openSheet}
+              pipeline={pipeline}
               subscriberState={subscriberState}
               t={t}
             />
           ) : null}
           {route === 'paymentRecovery' ? (
             <PaymentRecoveryScreen
-              dispatch={dispatch}
               locale={locale}
+              onSheetOpen={openSheet}
+              pipeline={pipeline}
               subscriberState={subscriberState}
               t={t}
             />
           ) : null}
-          {route === 'legal' ? <LegalScreen dispatch={dispatch} t={t} /> : null}
+          {route === 'legal' ? <LegalScreen onSheetOpen={openSheet} t={t} /> : null}
           {route === 'accountRecovery' ? <AccountRecoveryScreen t={t} /> : null}
         </main>
 
@@ -172,38 +250,117 @@ export function App(): ReactElement {
             onClick: () => setRoute(navRoute),
           }))}
         />
+
+        {activeSheet === null ? null : (
+          <ConfirmationSheet
+            activeSheet={activeSheet}
+            onClose={() => setActiveSheet(null)}
+            onConfirm={confirmSheet}
+            onIssueChange={setSupportIssue}
+            supportIssue={supportIssue}
+            t={t}
+          />
+        )}
+        {activeMessage === null ? null : (
+          <MessageDetailSheet
+            message={activeMessage}
+            onClose={() => setActiveMessage(null)}
+            onRouteChange={setRoute}
+            onSheetOpen={openSheet}
+            pipeline={pipeline}
+            t={t}
+          />
+        )}
       </div>
     </WashedThemeProvider>
   );
 }
 
 function HomeScreen({
-  dispatch,
   locale,
-  onLocaleToggle,
   onRouteChange,
+  onSheetOpen,
+  pipeline,
   subscriberState,
   t,
 }: {
-  readonly dispatch: Dispatch<SubscriberAction>;
   readonly locale: WashedLocale;
-  readonly onLocaleToggle: () => void;
   readonly onRouteChange: (route: AppRoute) => void;
+  readonly onSheetOpen: (sheet: SubscriberSheet, issue?: SupportIssueKind) => void;
+  readonly pipeline: SubscriberPipeline;
   readonly subscriberState: SubscriberState;
   readonly t: LocalizedCopy;
 }): ReactElement {
+  const [readinessExpanded, setReadinessExpanded] = useState(false);
   const nextVisit = formatVisitDate(subscriberState.nextVisit.startsAt, locale);
   const trackingIsVisible = subscriberState.nextVisit.stage === 'enRoute';
   const isFrench = locale === 'fr';
-  const nextVisitWindow = isFrench ? '9h00 - 11h00' : '9:00 - 11:00';
-  const subscriptionCadence =
-    subscriberState.subscription.tier === 'T2'
-      ? isFrench
-        ? '2 visites / mois'
-        : '2 visits / month'
-      : isFrench
-        ? '1 visite / mois'
-        : '1 visit / month';
+  const nextVisitWindow = isFrench
+    ? pipeline.visitPlan.nextVisits[0]?.windowFr
+    : pipeline.visitPlan.nextVisits[0]?.windowEn;
+  const paymentNeedsAttention = pipeline.homeIntent === 'paymentRecovery';
+  const statusCopy = isFrench
+    ? `Abonnement actif · ${subscriberState.subscription.tier} · ${
+        paymentNeedsAttention ? 'paiement à régulariser' : 'paiement à jour'
+      }`
+    : `Active plan · ${subscriberState.subscription.tier} · ${
+        paymentNeedsAttention ? 'payment needs attention' : 'payment current'
+      }`;
+  const preparationSummary = paymentNeedsAttention
+    ? isFrench
+      ? 'Paiement · savon · eau · accès'
+      : 'Payment · soap · water · access'
+    : isFrench
+      ? 'Savon · eau · bassine · accès'
+      : 'Soap · water · basin · access';
+  const readinessItems = [
+    {
+      detail: paymentNeedsAttention
+        ? isFrench
+          ? pipeline.billing.nextRetryLabelFr
+          : pipeline.billing.nextRetryLabelEn
+        : isFrench
+          ? 'Aucun blocage de facturation'
+          : 'No billing block',
+      done: !paymentNeedsAttention,
+      label: paymentNeedsAttention
+        ? isFrench
+          ? 'Paiement'
+          : 'Payment'
+        : isFrench
+          ? 'Paiement à jour'
+          : 'Payment current',
+    },
+    {
+      detail: isFrench ? 'Akouvi Koffi est assignée' : 'Akouvi Koffi is assigned',
+      done: true,
+      label: isFrench ? 'Laveuse confirmée' : 'Washerwoman confirmed',
+    },
+    {
+      detail: isFrench ? 'Accès et préférences attachés' : 'Access and preferences attached',
+      done: true,
+      label: isFrench ? 'Consignes envoyées' : 'Notes sent',
+    },
+    {
+      detail: isFrench ? 'Notification prévue avant mardi' : 'Reminder scheduled before Tuesday',
+      done: true,
+      label: isFrench ? 'Rappel programmé' : 'Reminder scheduled',
+    },
+  ];
+
+  useEffect(() => {
+    setReadinessExpanded(false);
+
+    const readinessTimeout = window.setTimeout(() => setReadinessExpanded(false), 120000);
+
+    return () => {
+      window.clearTimeout(readinessTimeout);
+    };
+  }, [subscriberState.nextVisit.startsAt, subscriberState.subscription.paymentStatus]);
+
+  const handlePrepareVisit = (): void => {
+    setReadinessExpanded(true);
+  };
 
   return (
     <>
@@ -211,15 +368,12 @@ function HomeScreen({
         <div>
           <span>{isFrench ? 'Bonjour,' : 'Hello,'}</span>
           <h1 id="subscriber-home-title">Essi Agbodzan</h1>
+          <p className="home-status-pill">{statusCopy}</p>
         </div>
         <div className="subscriber-greeting-actions">
           <button aria-label={t.nav.inbox} onClick={() => onRouteChange('inbox')} type="button">
             <Bell aria-hidden="true" size={16} strokeWidth={2.35} />
             <span className="notification-count">{subscriberState.inboxUnread}</span>
-          </button>
-          <button aria-label="Switch language" onClick={onLocaleToggle} type="button">
-            <Languages aria-hidden="true" size={15} strokeWidth={2.35} />
-            <span>{locale === 'fr' ? 'EN' : 'FR'}</span>
           </button>
           <button
             aria-label={isFrench ? 'Ouvrir le profil Essi' : 'Open Essi profile'}
@@ -231,7 +385,7 @@ function HomeScreen({
         </div>
       </section>
 
-      <section className="home-hero-card" aria-label={t.home.nextVisit}>
+      <section className="home-hero-card home-hero-card-premium" aria-label={t.home.nextVisit}>
         <div className="hero-card-topline">
           <Badge>{isFrench ? 'PROCHAINE VISITE' : 'NEXT VISIT'}</Badge>
           <span>{isFrench ? 'Adidogomé' : 'Adidogome'}</span>
@@ -256,35 +410,85 @@ function HomeScreen({
             {isFrench ? 'Confirmée' : 'Confirmed'}
           </span>
         </div>
-        <div
-          className="visit-assurance-grid"
-          aria-label={isFrench ? 'Préparation de la visite' : 'Visit readiness'}
-        >
-          <span>
-            <ShieldCheck aria-hidden="true" size={15} strokeWidth={2.35} />
-            {isFrench ? 'Affectation validée' : 'Assignment verified'}
-          </span>
-          <span>
-            <Home aria-hidden="true" size={15} strokeWidth={2.35} />
-            {isFrench ? 'Consignes envoyées' : 'Notes sent'}
-          </span>
-        </div>
         <div className="hero-actions">
-          <button
-            className="hero-action-primary"
-            onClick={() => onRouteChange('visit')}
-            type="button"
-          >
-            {isFrench ? 'Voir la visite' : 'View visit'}
-          </button>
-          <button onClick={() => dispatch({ type: 'visit/reschedule' })} type="button">
-            {isFrench ? 'Reporter' : 'Reschedule'}
-          </button>
-          <button onClick={() => onRouteChange('support')} type="button">
-            {isFrench ? 'Messages' : 'Messages'}
-          </button>
+          <SwipePrepareAction isFrench={isFrench} onComplete={handlePrepareVisit} />
         </div>
       </section>
+
+      <section className="home-prep-card" aria-label={isFrench ? 'À préparer' : 'To prepare'}>
+        <span>
+          <strong>{isFrench ? 'À préparer avant mardi' : 'Prepare before Tuesday'}</strong>
+          <small>{preparationSummary}</small>
+        </span>
+        <button
+          onClick={() =>
+            paymentNeedsAttention ? onSheetOpen('paymentRecovery') : setReadinessExpanded(true)
+          }
+          type="button"
+        >
+          {paymentNeedsAttention
+            ? isFrench
+              ? 'Régulariser'
+              : 'Recover'
+            : isFrench
+              ? 'Confirmer'
+              : 'Confirm'}
+        </button>
+      </section>
+
+      {readinessExpanded ? (
+        <section
+          className={`visit-readiness-panel home-prep-details${
+            paymentNeedsAttention ? ' has-pending-item' : ''
+          } is-expanded`}
+          aria-label={isFrench ? 'Préparation de la visite' : 'Visit readiness'}
+        >
+          <div className="readiness-heading">
+            <strong>{isFrench ? 'Préparation de la visite' : 'Visit readiness'}</strong>
+            {paymentNeedsAttention ? (
+              <button onClick={() => onSheetOpen('paymentRecovery')} type="button">
+                {isFrench ? 'Régulariser' : 'Recover'}
+              </button>
+            ) : null}
+          </div>
+          <ul className="visit-readiness-list">
+            {readinessItems.map((item) => (
+              <li className={item.done ? 'is-done' : 'is-pending'} key={item.label}>
+                {item.done ? (
+                  <Check aria-hidden="true" size={13} strokeWidth={3} />
+                ) : (
+                  <span className="readiness-dot" aria-hidden="true" />
+                )}
+                <span>
+                  <strong>{item.label}</strong>
+                  <small>{item.detail}</small>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <section
+        className="home-action-strip"
+        aria-label={isFrench ? 'Actions visite' : 'Visit actions'}
+      >
+        <button onClick={() => onSheetOpen('reschedule')} type="button">
+          {isFrench ? 'Reporter' : 'Reschedule'}
+        </button>
+        <button onClick={() => onSheetOpen('skip')} type="button">
+          {isFrench ? 'Sauter' : 'Skip'}
+        </button>
+        <button onClick={() => onRouteChange('support')} type="button">
+          Support
+        </button>
+      </section>
+
+      {trackingIsVisible ? (
+        <section className="visit-status-card">
+          <BoundedTrackingMap onArrive={() => onSheetOpen('rating')} t={t} />
+        </section>
+      ) : null}
 
       <section
         className="mini-calendar"
@@ -293,127 +497,108 @@ function HomeScreen({
         <div className="section-row">
           <strong>{isFrench ? 'Visites à venir' : 'Upcoming visits'}</strong>
           <button onClick={() => onRouteChange('subscription')} type="button">
-            {isFrench ? 'Tout voir →' : 'View all →'}
+            {isFrench ? 'Tout voir' : 'View all'}
           </button>
         </div>
-        <div className="calendar-strip">
-          {[
-            ['mai', '5', isFrench ? 'Suivante' : 'Next'],
-            ['mai', '19', ''],
-            ['juin', '2', ''],
-            ['juin', '16', ''],
-          ].map(([month, day, label], index) => (
+        <div className="upcoming-visit-list">
+          {pipeline.visitPlan.nextVisits.slice(1).map((visit, index) => (
             <button
               aria-current={index === 0 ? 'date' : undefined}
-              key={`${month}-${day}`}
+              key={visit.id}
               onClick={() => onRouteChange('visit')}
               type="button"
             >
-              <span>{month}</span>
-              <strong>{day}</strong>
-              {label === '' ? null : <em>{label}</em>}
+              <span>
+                <strong>{isFrench ? visit.dateFr : visit.dateEn}</strong>
+                <small>{isFrench ? visit.windowFr : visit.windowEn}</small>
+              </span>
+              <em>{isFrench ? visit.labelFr : visit.labelEn}</em>
             </button>
           ))}
         </div>
       </section>
 
-      <section
-        className="home-overview-grid"
-        aria-label={isFrench ? 'Résumé abonnement' : 'Plan summary'}
+      <button
+        className="home-extra-visit-card"
+        onClick={() => onSheetOpen('orderWash')}
+        type="button"
       >
-        <button onClick={() => onRouteChange('subscription')} type="button">
-          <span>{isFrench ? 'Formule' : 'Plan'}</span>
-          <strong>{subscriberState.subscription.tier}</strong>
-          <small>{subscriptionCadence}</small>
-        </button>
-        <button onClick={() => onRouteChange('billing')} type="button">
-          <span>{isFrench ? 'Paiement' : 'Payment'}</span>
-          <strong>{formatXof(subscriberState.subscription.monthlyPriceXof, locale)}</strong>
-          <small>{isFrench ? 'Prévu le 1 mai' : 'Due May 1'}</small>
-        </button>
-      </section>
-
-      <section className="visit-status-card">
-        {trackingIsVisible ? (
-          <BoundedTrackingMap onArrive={() => dispatch({ type: 'visit/arrive' })} t={t} />
-        ) : (
-          <>
-            <div className="section-row">
-              <strong>{isFrench ? 'Tout est prêt' : 'Everything is ready'}</strong>
-              <Badge tone="success">{t.visitStage[subscriberState.nextVisit.stage]}</Badge>
-            </div>
-            <p>
-              {isFrench
-                ? "Vous serez prévenue quand Akouvi démarre le trajet. Le suivi s'arrête automatiquement à son arrivée."
-                : 'You will be notified when Akouvi starts the trip. Tracking stops automatically when she arrives.'}
-            </p>
-          </>
-        )}
-      </section>
-
-      <section className="message-preview">
-        <div>
-          <span>{isFrench ? 'Dernier message' : 'Latest message'}</span>
-          <strong>{isFrench ? 'Rappel visite mardi' : 'Tuesday visit reminder'}</strong>
-          <p>
-            {isFrench
-              ? 'Akouvi est confirmée pour 9h00 - 11h00. Répondez ici si votre portail ou vos consignes changent.'
-              : 'Akouvi is confirmed for 9:00 - 11:00. Reply here if your gate or notes change.'}
-          </p>
-        </div>
-        <button onClick={() => onRouteChange('support')} type="button">
-          {isFrench ? 'Ouvrir' : 'Open'}
-        </button>
-      </section>
-
-      <section className="recent-activity">
-        <strong>{isFrench ? 'Activité récente' : 'Recent activity'}</strong>
-        {[
-          {
-            body: isFrench ? 'Notée 5★ · Akouvi' : 'Rated 5★ · Akouvi',
-            icon: <Check aria-hidden="true" size={16} strokeWidth={2.5} />,
-            route: 'visit' as const,
-            title: isFrench ? 'Visite complétée — 15 avr' : 'Visit completed — Apr 15',
-          },
-          {
-            body: 'T-Money · Reçu disponible',
-            icon: <Banknote aria-hidden="true" size={17} strokeWidth={2.35} />,
-            route: 'billing' as const,
-            title: `${formatXof(subscriberState.subscription.monthlyPriceXof, locale)} ${isFrench ? 'prélevé — 1 avr' : 'charged — Apr 1'}`,
-          },
-        ].map((item) => (
-          <button key={item.title} onClick={() => onRouteChange(item.route)} type="button">
-            <span>{item.icon}</span>
-            <strong>{item.title}</strong>
-            <small>{item.body}</small>
-          </button>
-        ))}
-      </section>
-
-      <div className="timeline sr-utility" aria-label={t.home.visitControls}>
-        {visitTimeline.map((stage) => (
-          <button
-            aria-label={t.visitStage[stage]}
-            aria-pressed={stage === subscriberState.nextVisit.stage}
-            key={stage}
-            onClick={() =>
-              dispatch(
-                stage === 'enRoute'
-                  ? { type: 'visit/startTracking' }
-                  : stage === 'arrived'
-                    ? { type: 'visit/arrive' }
-                    : stage === 'inProgress'
-                      ? { type: 'visit/startProgress' }
-                      : { type: 'visit/stopTracking' },
-              )
-            }
-            type="button"
-          >
-            {t.visitStage[stage]}
-          </button>
-        ))}
-      </div>
+        <span>
+          <strong>{isFrench ? 'Besoin de plus ce mois-ci ?' : 'Need more this month?'}</strong>
+          <small>{isFrench ? 'Ajouter une visite ponctuelle' : 'Add a one-time visit'}</small>
+        </span>
+        <em>{isFrench ? 'Ajouter' : 'Add'}</em>
+      </button>
     </>
+  );
+}
+
+function SwipePrepareAction({
+  isFrench,
+  onComplete,
+}: {
+  readonly isFrench: boolean;
+  readonly onComplete: () => void;
+}): ReactElement {
+  const [dragStart, setDragStart] = useState<number | null>(null);
+  const [progress, setProgress] = useState(0);
+  const label = isFrench ? 'Préparer ma visite' : 'Prepare my visit';
+  const style = { '--swipe-progress': progress } as CSSProperties;
+
+  const complete = (): void => {
+    setProgress(1);
+    onComplete();
+    window.setTimeout(() => setProgress(0), 520);
+  };
+
+  const handlePointerDown = (event: ReactPointerEvent<HTMLButtonElement>): void => {
+    setDragStart(event.clientX);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handlePointerMove = (event: ReactPointerEvent<HTMLButtonElement>): void => {
+    if (dragStart === null) {
+      return;
+    }
+
+    const distance = Math.max(0, event.clientX - dragStart);
+    setProgress(Math.min(1, distance / 150));
+  };
+
+  const handlePointerUp = (): void => {
+    if (dragStart === null) {
+      return;
+    }
+
+    const shouldComplete = progress >= 0.62;
+    setDragStart(null);
+
+    if (shouldComplete) {
+      complete();
+      return;
+    }
+
+    setProgress(0);
+  };
+
+  return (
+    <button
+      aria-label={label}
+      className="swipe-prepare-action"
+      onClick={complete}
+      onPointerCancel={handlePointerUp}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      style={style}
+      type="button"
+    >
+      <span className="swipe-prepare-fill" aria-hidden="true" />
+      <strong>{label}</strong>
+      <span className="swipe-prepare-thumb" aria-hidden="true">
+        <ArrowRight size={18} strokeWidth={3} />
+      </span>
+    </button>
   );
 }
 
@@ -432,82 +617,8 @@ function OnboardingScreen({
     locale === 'fr' ? 'Mardi · 9-11' : 'Tuesday · 9-11',
   );
   const currentStep = onboardingSteps[stepIndex] ?? 'language';
-  const isFirstStep = stepIndex === 0;
   const isLastStep = stepIndex === onboardingSteps.length - 1;
-  const scheduleSlots =
-    locale === 'fr'
-      ? ['Mardi · 9-11', 'Jeudi · 13-15', 'Samedi · 9-11']
-      : ['Tuesday · 9-11', 'Thursday · 13-15', 'Saturday · 9-11'];
-  const helperCopy =
-    locale === 'fr'
-      ? {
-          addressHint: 'Adidogomé, Tokoin, Agoè...',
-          addressLabel: 'Quartier',
-          back: 'Retour',
-          continue: 'Continuer',
-          landmark: 'Repère et consignes',
-          languageBody: 'Le foyer pourra changer FR / EN plus tard depuis le profil.',
-          momoHint: 'Numéro Mobile Money utilisé pour les prélèvements Washed.',
-          momoLabel: 'Mobile Money',
-          otpHint: 'Entrez le code reçu par SMS.',
-          paymentBody:
-            'Le prélèvement démarre après confirmation. En cas d’échec, vous pourrez régulariser depuis l’app.',
-          phoneHint: 'Format Togo, utilisé pour OTP et support.',
-          scheduleBody: 'Choisissez le créneau habituel; les reports restent possibles 24h avant.',
-          stepPrefix: 'Étape',
-          tierBody: 'La formule pourra être ajustée au prochain cycle depuis Abonnement.',
-        }
-      : {
-          addressHint: 'Adidogome, Tokoin, Agoe...',
-          addressLabel: 'Neighborhood',
-          back: 'Back',
-          continue: 'Continue',
-          landmark: 'Landmark and access notes',
-          languageBody: 'The household can switch FR / EN later from profile.',
-          momoHint: 'Mobile Money number used for Washed collections.',
-          momoLabel: 'Mobile Money',
-          otpHint: 'Enter the code received by SMS.',
-          paymentBody:
-            'Collection starts after confirmation. Failed payments can be fixed in the app.',
-          phoneHint: 'Togo format, used for OTP and support.',
-          scheduleBody: 'Pick the usual window; rescheduling stays available 24h before.',
-          stepPrefix: 'Step',
-          tierBody: 'The tier can be adjusted next cycle from Subscription.',
-        };
-  const stepDescription = {
-    address:
-      locale === 'fr'
-        ? 'Ajoutez les repères qui évitent les appels le jour de la visite.'
-        : 'Add landmarks that prevent calls on visit day.',
-    confirm:
-      locale === 'fr'
-        ? 'Relisez les informations avant l’activation du foyer.'
-        : 'Review the details before the household is activated.',
-    language:
-      locale === 'fr'
-        ? 'Choisissez la langue principale du foyer.'
-        : 'Choose the household’s primary language.',
-    otp:
-      locale === 'fr'
-        ? 'Le code protège l’accès au compte sans mot de passe.'
-        : 'The code protects the account without a password.',
-    payment:
-      locale === 'fr'
-        ? 'Le numéro Mobile Money sert aux prélèvements mensuels.'
-        : 'The Mobile Money number is used for monthly collections.',
-    phone:
-      locale === 'fr'
-        ? 'Ce numéro recevra les rappels, codes et alertes importantes.'
-        : 'This number receives reminders, codes, and important alerts.',
-    schedule:
-      locale === 'fr'
-        ? 'Sélectionnez le créneau que le foyer peut tenir chaque semaine.'
-        : 'Pick the window the household can keep each week.',
-    tier:
-      locale === 'fr'
-        ? 'Comparez le rythme de visite et le prix mensuel.'
-        : 'Compare visit cadence and monthly price.',
-  } satisfies Record<(typeof onboardingSteps)[number], string>;
+  const isFrench = locale === 'fr';
 
   const goNext = (): void => {
     if (isLastStep) {
@@ -518,15 +629,6 @@ function OnboardingScreen({
     setStepIndex((current) => Math.min(current + 1, onboardingSteps.length - 1));
   };
 
-  const goBack = (): void => {
-    if (isFirstStep) {
-      onRouteChange('home');
-      return;
-    }
-
-    setStepIndex((current) => Math.max(current - 1, 0));
-  };
-
   return (
     <ScreenFrame
       action={
@@ -534,7 +636,7 @@ function OnboardingScreen({
           {stepIndex + 1} / {onboardingSteps.length}
         </Badge>
       }
-      eyebrow={locale === 'fr' ? 'Inscription' : 'Signup'}
+      eyebrow={isFrench ? 'Inscription' : 'Signup'}
       title={t.onboarding.title}
     >
       <Card className="onboarding-rail-card" elevated>
@@ -558,10 +660,14 @@ function OnboardingScreen({
         <div className="onboarding-panel">
           <div>
             <span className="eyebrow">
-              {helperCopy.stepPrefix} {stepIndex + 1}
+              {isFrench ? 'Étape' : 'Step'} {stepIndex + 1}
             </span>
             <h2>{t.onboarding[currentStep]}</h2>
-            <p className="onboarding-step-copy">{stepDescription[currentStep]}</p>
+            <p className="onboarding-step-copy">
+              {isFrench
+                ? 'Une information à la fois, pour garder l’inscription claire.'
+                : 'One detail at a time, so setup stays clear.'}
+            </p>
           </div>
 
           {currentStep === 'language' ? (
@@ -577,121 +683,91 @@ function OnboardingScreen({
                   type="button"
                 >
                   <strong>{language}</strong>
-                  <span>{helperCopy.languageBody}</span>
+                  <span>
+                    {isFrench ? 'Modifiable depuis le profil.' : 'Change later in profile.'}
+                  </span>
                 </button>
               ))}
             </div>
           ) : null}
-
           {currentStep === 'phone' ? (
-            <TextField
-              defaultValue="+228 90 00 00 00"
-              hint={helperCopy.phoneHint}
-              inputMode="tel"
-              label={t.onboarding.phone}
-              placeholder="+228"
-            />
+            <TextField defaultValue="+228 90 00 00 00" inputMode="tel" label={t.onboarding.phone} />
           ) : null}
-
           {currentStep === 'otp' ? (
             <TextField
               defaultValue="0426"
-              hint={helperCopy.otpHint}
               inputMode="numeric"
               label={t.onboarding.otp}
               maxLength={6}
             />
           ) : null}
-
           {currentStep === 'address' ? (
             <div className="form-stack">
-              <TextField
-                defaultValue="Adidogomé"
-                hint={helperCopy.addressHint}
-                label={helperCopy.addressLabel}
-              />
+              <TextField defaultValue="Adidogomé" label={isFrench ? 'Quartier' : 'Neighborhood'} />
               <TextField
                 defaultValue="Portail bleu, pharmacie à côté"
-                label={helperCopy.landmark}
+                label={isFrench ? 'Repère' : 'Landmark'}
               />
             </div>
           ) : null}
-
           {currentStep === 'tier' ? (
-            <>
-              <Alert tone="primary">{helperCopy.tierBody}</Alert>
-              <div className="choice-grid" aria-label={t.onboarding.tier}>
-                {[
-                  ['T1', 2500, '1 visite / mois'],
-                  ['T2', 4500, '2 visites / mois'],
-                ].map(([tier, price, cadence]) => (
-                  <button
-                    aria-pressed={tier === selectedTier}
-                    className="choice-card"
-                    key={tier}
-                    onClick={() => setSelectedTier(tier as 'T1' | 'T2')}
-                    type="button"
-                  >
-                    <strong>{tier}</strong>
-                    <span>{cadence}</span>
-                    <Badge>{formatXof(Number(price), locale)}</Badge>
-                  </button>
-                ))}
-              </div>
-            </>
+            <div className="choice-grid" aria-label={t.onboarding.tier}>
+              {[
+                ['T1', 2500, isFrench ? '1 visite / mois' : '1 visit / month'],
+                ['T2', 4500, isFrench ? '2 visites / mois' : '2 visits / month'],
+              ].map(([tier, price, cadence]) => (
+                <button
+                  aria-pressed={tier === selectedTier}
+                  className="choice-card"
+                  key={tier}
+                  onClick={() => setSelectedTier(tier as 'T1' | 'T2')}
+                  type="button"
+                >
+                  <strong>{tier}</strong>
+                  <span>{cadence}</span>
+                  <Badge>{formatXof(Number(price), locale)}</Badge>
+                </button>
+              ))}
+            </div>
           ) : null}
-
           {currentStep === 'schedule' ? (
-            <>
-              <Alert tone="primary">{helperCopy.scheduleBody}</Alert>
-              <div className="choice-grid" aria-label={t.onboarding.schedule}>
-                {scheduleSlots.map((slot) => (
-                  <button
-                    aria-pressed={slot === selectedSchedule}
-                    className="choice-card"
-                    key={slot}
-                    onClick={() => setSelectedSchedule(slot)}
-                    type="button"
-                  >
-                    <strong>{slot}</strong>
-                    <span>{t.onboarding.schedule}</span>
-                  </button>
-                ))}
-              </div>
-            </>
+            <div className="choice-grid" aria-label={t.onboarding.schedule}>
+              {(isFrench
+                ? ['Mardi · 9-11', 'Jeudi · 13-15', 'Samedi · 9-11']
+                : ['Tuesday · 9-11', 'Thursday · 13-15', 'Saturday · 9-11']
+              ).map((slot) => (
+                <button
+                  aria-pressed={slot === selectedSchedule}
+                  className="choice-card"
+                  key={slot}
+                  onClick={() => setSelectedSchedule(slot)}
+                  type="button"
+                >
+                  <strong>{slot}</strong>
+                  <span>{t.onboarding.schedule}</span>
+                </button>
+              ))}
+            </div>
           ) : null}
-
           {currentStep === 'payment' ? (
             <div className="form-stack">
-              <TextField
-                defaultValue="+228 90 00 00 00"
-                hint={helperCopy.momoHint}
-                inputMode="tel"
-                label={helperCopy.momoLabel}
-              />
+              <TextField defaultValue="+228 90 00 00 00" inputMode="tel" label="Mobile Money" />
               <Alert title={t.onboarding.payment} tone="accent">
-                {helperCopy.paymentBody}
+                {isFrench
+                  ? 'Le paiement reste contrôlé par Washed, jamais en espèces avec la laveuse.'
+                  : 'Payment stays controlled by Washed, never cash with the washerwoman.'}
               </Alert>
             </div>
           ) : null}
-
           {currentStep === 'confirm' ? (
             <div className="form-stack">
               <ListItem
                 after={<Badge>{selectedTier}</Badge>}
-                description={`${selectedTier} · ${
-                  selectedTier === 'T1'
-                    ? formatXof(2500, locale)
-                    : selectedTier === 'T2'
-                      ? formatXof(4500, locale)
-                      : formatXof(6500, locale)
-                }`}
-                title={t.onboarding.tier}
+                description={selectedSchedule}
+                title={t.onboarding.confirm}
               />
-              <ListItem description={selectedSchedule} title={t.onboarding.schedule} />
-              <ListItem description="+228 90 00 00 00" title={t.onboarding.phone} />
               <Alert title={t.onboarding.confirm} tone="success">
-                {locale === 'fr'
+                {isFrench
                   ? 'Le foyer est prêt pour validation Washed et première attribution.'
                   : 'The household is ready for Washed review and first assignment.'}
               </Alert>
@@ -700,11 +776,14 @@ function OnboardingScreen({
         </div>
 
         <div className="onboarding-actions">
-          <Button onClick={goBack} variant="secondary">
-            {helperCopy.back}
+          <Button
+            onClick={() => (stepIndex === 0 ? onRouteChange('home') : setStepIndex(stepIndex - 1))}
+            variant="secondary"
+          >
+            {isFrench ? 'Retour' : 'Back'}
           </Button>
           <Button onClick={goNext} variant="primary">
-            {isLastStep ? translate('common.done', locale) : helperCopy.continue}
+            {isLastStep ? translate('common.done', locale) : translate('common.continue', locale)}
           </Button>
         </div>
       </Card>
@@ -716,17 +795,20 @@ function SubscriptionScreen({
   dispatch,
   locale,
   onRouteChange,
+  onSheetOpen,
+  pipeline,
   subscriberState,
   t,
 }: {
   readonly dispatch: Dispatch<SubscriberAction>;
   readonly locale: WashedLocale;
   readonly onRouteChange: (route: AppRoute) => void;
+  readonly onSheetOpen: (sheet: SubscriberSheet) => void;
+  readonly pipeline: SubscriberPipeline;
   readonly subscriberState: SubscriberState;
   readonly t: LocalizedCopy;
 }): ReactElement {
   const price = subscriberState.subscription.monthlyPriceXof;
-  const tier = `${subscriberState.subscription.tier} · ${formatXof(price, locale)}`;
   const isFrench = locale === 'fr';
   const subscriptionCadence =
     subscriberState.subscription.tier === 'T2'
@@ -739,124 +821,144 @@ function SubscriptionScreen({
 
   return (
     <ScreenFrame
-      action={
-        <Button onClick={() => onRouteChange('support')} size="sm" variant="secondary">
-          Support
-        </Button>
-      }
+      action={<Badge tone="success">{isFrench ? 'Actif' : 'Active'}</Badge>}
       eyebrow={isFrench ? 'Service' : 'Service'}
       title={t.subscription.title}
     >
-      <section className="subscription-command-card" aria-label={t.subscription.title}>
-        <div className="subscription-kicker">
-          <div>
-            <Badge tone="success">{subscriberState.subscription.tier}</Badge>
-            <h2>{subscriptionCadence}</h2>
-          </div>
-          <span>{isFrench ? 'Renouvelle le 1 mai' : 'Renews May 1'}</span>
+      <section className="subscription-service-hero" aria-label={t.subscription.title}>
+        <span className="subscription-service-status">
+          {isFrench ? 'Renouvellement le 1 juin' : 'Renews June 1'}
+        </span>
+        <div>
+          <Badge tone="success">{subscriberState.subscription.tier}</Badge>
+          <h2>{subscriptionCadence}</h2>
+          <p>
+            {isFrench
+              ? 'Votre rythme, votre laveuse et les règles de facturation au même endroit.'
+              : 'Your cadence, washerwoman, and billing rules in one place.'}
+          </p>
         </div>
-        <p>
-          {isFrench
-            ? 'Contrôlez les reports, remplacements et paiements sans appeler le support.'
-            : 'Control reschedules, worker changes, and payments without calling support.'}
-        </p>
-        <div className="plan-metrics">
-          <button
-            aria-label={t.action.changeTier}
-            onClick={() => dispatch({ type: 'subscription/changeTier' })}
-            type="button"
-          >
-            <WalletCards aria-hidden="true" size={17} strokeWidth={2.35} />
-            <span>{t.action.changeTier}</span>
-            <strong>{tier}</strong>
-          </button>
-          <button
-            aria-label={isFrench ? 'Résumé des paiements' : 'Payment summary'}
-            onClick={() => onRouteChange('billing')}
-            type="button"
-          >
-            <ReceiptText aria-hidden="true" size={17} strokeWidth={2.35} />
-            <span>{t.nav.billing}</span>
+        <div className="subscription-service-metrics">
+          <span>
             <strong>{formatXof(price, locale)}</strong>
+            <small>{isFrench ? 'par mois' : 'per month'}</small>
+          </span>
+          <span>
+            <strong>mardi</strong>
+            <small>9h00 - 11h00</small>
+          </span>
+        </div>
+      </section>
+
+      <section
+        className="subscription-profile-panel"
+        aria-label={isFrench ? 'Détails du service' : 'Service details'}
+      >
+        <div className="subscription-profile-row">
+          <CalendarDays aria-hidden="true" size={19} strokeWidth={2.35} />
+          <span>
+            <strong>{isFrench ? 'Prochain passage' : 'Next visit'}</strong>
+            <small>
+              {isFrench ? 'mardi 5 mai · 9h00 - 11h00' : 'Tuesday, May 5 · 9:00 - 11:00'}
+            </small>
+          </span>
+          <Badge tone="success">{t.visitStage.scheduled}</Badge>
+        </div>
+        <div className="subscription-profile-row">
+          <UserRound aria-hidden="true" size={19} strokeWidth={2.35} />
+          <span>
+            <strong>Akouvi Koffi</strong>
+            <small>{isFrench ? '18 visites · note 4.9' : '18 visits · 4.9 rating'}</small>
+          </span>
+          <button onClick={() => onSheetOpen('workerSwap')} type="button">
+            {isFrench ? 'Changer' : 'Change'}
+          </button>
+        </div>
+        <div className="subscription-profile-row">
+          <ReceiptText aria-hidden="true" size={19} strokeWidth={2.35} />
+          <span>
+            <strong>{isFrench ? 'Facturation' : 'Billing'}</strong>
+            <small>
+              {formatXof(price, locale)} ·{' '}
+              {t.paymentStatus[subscriberState.subscription.paymentStatus]}
+            </small>
+          </span>
+          <button onClick={() => onRouteChange('billing')} type="button">
+            {isFrench ? 'Voir' : 'View'}
           </button>
         </div>
       </section>
 
-      <section className="subscriber-control-stack" aria-label={t.home.visitControls}>
+      <section
+        className="subscriber-control-stack subscription-actions-panel"
+        aria-label={t.home.visitControls}
+      >
         <button
-          aria-label={`${t.action.requestSwap} ${subscriberState.subscription.swapCreditsRemaining} / 2`}
-          onClick={() => dispatch({ type: 'subscription/requestSwap' })}
+          aria-label={`${t.action.reschedule}`}
+          onClick={() => onSheetOpen('reschedule')}
           type="button"
         >
           <div>
-            <strong>{t.action.requestSwap}</strong>
-            <span>
-              {isFrench
-                ? 'Raison obligatoire, validation opérateur, historique visible.'
-                : 'Reason required, operator review, visible history.'}
-            </span>
+            <strong>{t.action.reschedule}</strong>
+            <span>{isFrench ? 'Déplacer la prochaine visite.' : 'Move the next visit.'}</span>
           </div>
-          <Badge>{subscriberState.subscription.swapCreditsRemaining} / 2</Badge>
+          <CalendarDays aria-hidden="true" size={20} strokeWidth={2.35} />
         </button>
         <button
           aria-label={`${t.action.skipVisit} ${subscriberState.subscription.skipCreditsRemaining} / 2`}
-          onClick={() => dispatch({ type: 'visit/skip' })}
+          onClick={() => onSheetOpen('skip')}
           type="button"
         >
           <div>
             <strong>{t.action.skipVisit}</strong>
             <span>
               {isFrench
-                ? 'Utilisez un crédit gratuit sans perdre votre créneau habituel.'
-                : 'Use a free credit without losing your usual schedule.'}
+                ? 'Garder le rythme sans cette visite.'
+                : 'Keep cadence without this visit.'}
             </span>
           </div>
           <Badge tone="accent">{subscriberState.subscription.skipCreditsRemaining} / 2</Badge>
         </button>
         <button
-          aria-label={t.action.reschedule}
-          onClick={() => dispatch({ type: 'visit/reschedule' })}
+          aria-label={`${t.action.requestSwap} ${subscriberState.subscription.swapCreditsRemaining} / 2`}
+          onClick={() => onSheetOpen('workerSwap')}
           type="button"
         >
           <div>
-            <strong>{t.action.reschedule}</strong>
-            <span>
-              {isFrench
-                ? 'Disponible jusqu’à 24h avant la visite.'
-                : 'Available until 24h before the visit.'}
-            </span>
+            <strong>{t.action.requestSwap}</strong>
+            <span>{isFrench ? 'Demande revue par opérations.' : 'Reviewed by operations.'}</span>
           </div>
-          <CalendarDays aria-hidden="true" size={20} strokeWidth={2.35} />
+          <Badge>{subscriberState.subscription.swapCreditsRemaining} / 2</Badge>
         </button>
       </section>
 
-      <section className="subscription-ledger-card subscription-billing-card">
+      <section className="subscription-billing-summary">
         <div className="card-header">
           <div>
-            <h2>{isFrench ? 'Paiement' : 'Payment'}</h2>
+            <h2>{isFrench ? 'Paiement et reçus' : 'Payment and receipts'}</h2>
             <p>
               Mai 2026 · {formatXof(price, locale)} ·{' '}
               {t.paymentStatus[subscriberState.subscription.paymentStatus]}
             </p>
           </div>
-          <Badge tone="danger">{t.paymentStatus[subscriberState.subscription.paymentStatus]}</Badge>
+          <Badge
+            tone={subscriberState.subscription.paymentStatus === 'overdue' ? 'danger' : 'success'}
+          >
+            {t.paymentStatus[subscriberState.subscription.paymentStatus]}
+          </Badge>
         </div>
-        <div className="billing-recovery-strip">
+        <button
+          aria-label={t.action.recoverPayment}
+          className="billing-recovery-strip"
+          onClick={() => onSheetOpen('paymentRecovery')}
+          type="button"
+        >
           <strong>{isFrench ? 'Paiement en attente' : 'Payment pending'}</strong>
           <span>
-            {isFrench
-              ? 'Une visite reste protégée pendant la tentative de régularisation.'
-              : 'One visit remains protected while payment recovery runs.'}
+            {isFrench ? pipeline.billing.nextRetryLabelFr : pipeline.billing.nextRetryLabelEn}
           </span>
-          <Button
-            aria-label={t.action.recoverPayment}
-            onClick={() => dispatch({ type: 'payment/recover' })}
-            size="sm"
-            variant="secondary"
-          >
-            {isFrench ? 'Régler' : 'Settle'}
-          </Button>
-        </div>
+          <em>{isFrench ? 'Régler' : 'Settle'}</em>
+        </button>
         <div className="subscription-secondary-actions">
           <button onClick={() => onRouteChange('billing')} type="button">
             <ReceiptText aria-hidden="true" size={18} strokeWidth={2.35} />
@@ -868,7 +970,7 @@ function SubscriptionScreen({
           </button>
           <button
             className="subscription-cancel-action"
-            onClick={() => dispatch({ type: 'subscription/cancel' })}
+            onClick={() => onSheetOpen('cancel')}
             type="button"
           >
             <CircleAlert aria-hidden="true" size={18} strokeWidth={2.35} />
@@ -881,140 +983,222 @@ function SubscriptionScreen({
 }
 
 function SupportScreen({
+  onMessageOpen,
   onRouteChange,
+  onSheetOpen,
+  pipeline,
   subscriberState,
   t,
 }: {
+  readonly onMessageOpen: (message: SubscriberMessageKind) => void;
   readonly onRouteChange: (route: AppRoute) => void;
+  readonly onSheetOpen: (sheet: SubscriberSheet, issue?: SupportIssueKind) => void;
+  readonly pipeline: SubscriberPipeline;
   readonly subscriberState: SubscriberState;
   readonly t: LocalizedCopy;
 }): ReactElement {
   const isFrench = t.nav.home === 'Accueil';
+  const headlineMessage = pipeline.messages[0];
 
   return (
     <ScreenFrame
       action={
-        <Button onClick={() => onRouteChange('home')} variant="secondary">
-          {t.nav.home}
-        </Button>
-      }
-      eyebrow="Care"
-      title={t.support.title}
-    >
-      <Card elevated>
-        <ListItem
-          after={<Badge tone="success">{subscriberState.inboxUnread}</Badge>}
-          description={
-            isFrench
-              ? 'Akouvi est confirmée pour mardi 9-11.'
-              : 'Akouvi is confirmed for Tuesday 9-11.'
-          }
-          title={t.support.inbox}
-        />
-        <ListItem
-          description={
-            isFrench
-              ? 'Vos messages arrivent à l’équipe Washed pour garder un suivi clair.'
-              : 'Messages go to the Washed team so every case stays tracked.'
-          }
-          title={t.support.messages}
-        />
-        <ListItem
-          description={
-            isFrench
-              ? 'Rappels de visite, paiements, changements de planning et alertes service.'
-              : 'Visit reminders, payments, schedule changes, and service alerts.'
-          }
-          title={t.support.notificationCenter}
-        />
         <Button onClick={() => onRouteChange('inbox')} variant="secondary">
           {t.nav.inbox}
         </Button>
-      </Card>
+      }
+      eyebrow={isFrench ? 'Messages' : 'Messages'}
+      title={t.nav.support}
+    >
+      <section className="messages-hub-hero" aria-label={t.nav.support}>
+        <div>
+          <span>
+            {headlineMessage?.needsAttention
+              ? isFrench
+                ? 'À traiter'
+                : 'Needs attention'
+              : isFrench
+                ? 'Dernière réponse'
+                : 'Latest reply'}
+          </span>
+          <h2>{isFrench ? headlineMessage?.titleFr : headlineMessage?.titleEn}</h2>
+          <p>{isFrench ? headlineMessage?.bodyFr : headlineMessage?.bodyEn}</p>
+        </div>
+        <Badge tone="success">{subscriberState.inboxUnread}</Badge>
+      </section>
 
-      <EmptyState
-        action={<Button variant="danger">{t.support.dispute}</Button>}
-        description={
-          isFrench
-            ? 'À utiliser pour une visite manquée, un paiement, un vêtement abîmé ou une situation sensible.'
-            : 'Use this for a missed visit, payment issue, damaged clothing, or sensitive situation.'
-        }
-        title={t.support.dispute}
-      />
+      <section className="message-thread-list" aria-label={t.support.messages}>
+        {pipeline.messages
+          .filter((message) => message.id !== 'maintenance')
+          .map((message) => (
+            <button key={message.id} onClick={() => onMessageOpen(message.id)} type="button">
+              <span />
+              <div>
+                <strong>{isFrench ? message.titleFr : message.titleEn}</strong>
+                <p>{isFrench ? message.bodyFr : message.bodyEn}</p>
+                <small>{isFrench ? message.createdLabelFr : message.createdLabelEn}</small>
+              </div>
+            </button>
+          ))}
+      </section>
+
+      <section className="support-issue-grid support-compact" aria-label={t.support.dispute}>
+        <div className="section-row">
+          <strong>{isFrench ? 'Besoin d’aide ?' : 'Need help?'}</strong>
+          <Badge tone="accent">{isFrench ? 'Support' : 'Support'}</Badge>
+        </div>
+        {supportIssueOrder.map((issue) => (
+          <button key={issue} onClick={() => onSheetOpen('dispute', issue)} type="button">
+            <strong>{t.support.issueKinds[issue]}</strong>
+            <span>
+              {isFrench
+                ? 'Ouvre un suivi avec le contexte de visite.'
+                : 'Opens a case with visit context.'}
+            </span>
+          </button>
+        ))}
+      </section>
     </ScreenFrame>
   );
 }
 
 function ProfileScreen({
-  dispatch,
   locale,
+  onLocaleChange,
   onRouteChange,
+  onSheetOpen,
   t,
 }: {
-  readonly dispatch: Dispatch<SubscriberAction>;
   readonly locale: WashedLocale;
+  readonly onLocaleChange: (locale: WashedLocale) => void;
   readonly onRouteChange: (route: AppRoute) => void;
+  readonly onSheetOpen: (sheet: SubscriberSheet) => void;
   readonly t: LocalizedCopy;
 }): ReactElement {
   const isFrench = locale === 'fr';
 
   return (
     <ScreenFrame
-      action={
-        <Button onClick={() => onRouteChange('onboarding')} variant="secondary">
-          {t.nav.onboarding}
-        </Button>
-      }
-      eyebrow="Account"
+      action={<Badge tone="success">{isFrench ? 'Vérifié' : 'Verified'}</Badge>}
+      eyebrow={isFrench ? 'Compte' : 'Account'}
       title={t.profile.title}
     >
-      <Card elevated>
-        <ListItem description="+228 90 00 00 00" title={t.profile.account} />
-        <ListItem
-          after={<Badge>{locale.toUpperCase()}</Badge>}
-          description="FR / EN"
-          title={t.onboarding.language}
-        />
-        <ListItem
-          description={isFrench ? 'Conditions, confidentialité, aide' : 'Terms, privacy, help'}
-          title={t.profile.legal}
-        />
-        <div className="inline-actions">
-          <Button onClick={() => onRouteChange('legal')} size="sm" variant="secondary">
-            {t.nav.legal}
-          </Button>
-          <Button onClick={() => onRouteChange('accountRecovery')} size="sm" variant="secondary">
-            {t.nav.accountRecovery}
-          </Button>
+      <section className="profile-summary-panel" aria-label={t.profile.account}>
+        <div className="profile-identity-row">
+          <div className="profile-avatar" aria-hidden="true">
+            EA
+          </div>
+          <div>
+            <h2>Essi Agbodzan</h2>
+            <span>+228 90 00 00 00</span>
+          </div>
         </div>
-      </Card>
+        <div className="profile-summary-grid">
+          <span>
+            <MapPinned aria-hidden="true" size={17} strokeWidth={2.35} />
+            <strong>{isFrench ? 'Adidogomé' : 'Adidogome'}</strong>
+            <small>{isFrench ? 'Portail bleu' : 'Blue gate'}</small>
+          </span>
+          <span>
+            <WalletCards aria-hidden="true" size={17} strokeWidth={2.35} />
+            <strong>{t.paymentStatus.overdue}</strong>
+            <small>Mobile Money</small>
+          </span>
+        </div>
+      </section>
 
-      <Card>
-        <div className="card-header">
-          <h2>{t.profile.privacy}</h2>
-          <Badge tone="muted">Confidentiel</Badge>
+      <section
+        className="profile-settings-panel"
+        aria-label={isFrench ? 'Préférences' : 'Preferences'}
+      >
+        <div className="profile-section-heading">
+          <span>{isFrench ? 'Préférences' : 'Preferences'}</span>
+          <strong>{t.onboarding.language}</strong>
         </div>
-        <ActionGrid
-          items={[
-            {
-              label: t.profile.exportData,
-              onClick: () => dispatch({ type: 'privacy/export' }),
-              tone: 'primary',
-            },
-            {
-              label: t.profile.erasure,
-              onClick: () => dispatch({ type: 'privacy/erasure' }),
-              tone: 'accent',
-            },
-            {
-              label: t.profile.deleteAccount,
-              onClick: () => dispatch({ type: 'subscription/cancel' }),
-              tone: 'danger',
-            },
-            { label: t.profile.maintenance, tone: 'primary' },
-          ]}
-        />
-      </Card>
+        <div className="language-segmented-control" aria-label={t.onboarding.language}>
+          {[
+            ['fr', 'Français'],
+            ['en', 'English'],
+          ].map(([language, label]) => (
+            <button
+              aria-pressed={locale === language}
+              key={language}
+              onClick={() => onLocaleChange(language as WashedLocale)}
+              type="button"
+            >
+              <Languages aria-hidden="true" size={15} strokeWidth={2.35} />
+              {label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section
+        className="profile-link-list"
+        aria-label={isFrench ? 'Compte et aide' : 'Account and help'}
+      >
+        <button onClick={() => onRouteChange('accountRecovery')} type="button">
+          <UserRound aria-hidden="true" size={18} strokeWidth={2.35} />
+          <span>
+            <strong>{t.profile.account}</strong>
+            <small>
+              {isFrench ? 'Numéro, changement de SIM, accès' : 'Phone, SIM changes, access'}
+            </small>
+          </span>
+        </button>
+        <button onClick={() => onRouteChange('billing')} type="button">
+          <ReceiptText aria-hidden="true" size={18} strokeWidth={2.35} />
+          <span>
+            <strong>{isFrench ? 'Adresse et paiement' : 'Address and payment'}</strong>
+            <small>{isFrench ? 'Résumé foyer et reçus' : 'Home summary and receipts'}</small>
+          </span>
+        </button>
+        <button onClick={() => onRouteChange('legal')} type="button">
+          <FileText aria-hidden="true" size={18} strokeWidth={2.35} />
+          <span>
+            <strong>{t.profile.legal}</strong>
+            <small>
+              {isFrench
+                ? 'Conditions, confidentialité, obligations'
+                : 'Terms, privacy, obligations'}
+            </small>
+          </span>
+        </button>
+        <button onClick={() => onRouteChange('onboarding')} type="button">
+          <CircleAlert aria-hidden="true" size={18} strokeWidth={2.35} />
+          <span>
+            <strong>{t.nav.onboarding}</strong>
+            <small>
+              {isFrench ? "Revoir le parcours d'inscription" : 'Review subscriber setup'}
+            </small>
+          </span>
+        </button>
+      </section>
+
+      <section className="profile-privacy-panel" aria-label={t.profile.privacy}>
+        <div className="profile-section-heading">
+          <span>{isFrench ? 'Contrôle des données' : 'Data control'}</span>
+          <strong>{t.profile.privacy}</strong>
+        </div>
+        <div className="profile-privacy-actions">
+          <button onClick={() => onSheetOpen('privacyExport')} type="button">
+            <ShieldCheck aria-hidden="true" size={18} strokeWidth={2.35} />
+            <span>{t.profile.exportData}</span>
+          </button>
+          <button onClick={() => onSheetOpen('privacyErasure')} type="button">
+            <FileText aria-hidden="true" size={18} strokeWidth={2.35} />
+            <span>{t.profile.erasure}</span>
+          </button>
+          <button
+            className="profile-danger-row"
+            onClick={() => onSheetOpen('accountDelete')}
+            type="button"
+          >
+            <CircleAlert aria-hidden="true" size={18} strokeWidth={2.35} />
+            <span>{t.profile.deleteAccount}</span>
+          </button>
+        </div>
+      </section>
     </ScreenFrame>
   );
 }
@@ -1022,11 +1206,15 @@ function ProfileScreen({
 function VisitDetailScreen({
   dispatch,
   locale,
+  onRouteChange,
+  onSheetOpen,
   subscriberState,
   t,
 }: {
   readonly dispatch: Dispatch<SubscriberAction>;
   readonly locale: WashedLocale;
+  readonly onRouteChange: (route: AppRoute) => void;
+  readonly onSheetOpen: (sheet: SubscriberSheet, issue?: SupportIssueKind) => void;
   readonly subscriberState: SubscriberState;
   readonly t: LocalizedCopy;
 }): ReactElement {
@@ -1036,7 +1224,7 @@ function VisitDetailScreen({
   return (
     <ScreenFrame
       action={<Badge tone="success">{t.visitStage[subscriberState.nextVisit.stage]}</Badge>}
-      eyebrow="Visit"
+      eyebrow={isFrench ? 'Visite' : 'Visit'}
       title={t.surfaces.visit.title}
     >
       <section className="visit-detail-hero" aria-label={t.surfaces.visit.title}>
@@ -1077,34 +1265,38 @@ function VisitDetailScreen({
         className="visit-proof-grid"
         aria-label={isFrench ? 'Preuves de visite' : 'Visit proofs'}
       >
-        <div>
+        <button onClick={() => onRouteChange('support')} type="button">
           <MapPinned aria-hidden="true" size={18} strokeWidth={2.35} />
           <strong>{isFrench ? 'Adresse et accès' : 'Address and access'}</strong>
           <span>{t.surfaces.visit.access}</span>
-        </div>
-        <div>
+        </button>
+        <button onClick={() => onSheetOpen('dispute', 'quality')} type="button">
           <Camera aria-hidden="true" size={18} strokeWidth={2.35} />
           <strong>{isFrench ? 'Avant / après' : 'Before / after'}</strong>
           <span>{t.surfaces.visit.photos}</span>
-        </div>
-        <div>
+        </button>
+        <button onClick={() => onSheetOpen('rating')} type="button">
           <Star aria-hidden="true" size={18} strokeWidth={2.35} />
           <strong>{isFrench ? 'Note' : 'Rating'}</strong>
           <span>{t.surfaces.visit.rating}</span>
-        </div>
+        </button>
       </section>
 
       <section className="visit-command-bar" aria-label={t.home.visitControls}>
         <Button onClick={() => dispatch({ type: 'visit/startTracking' })}>
           {t.action.startTracking}
         </Button>
-        <Button onClick={() => dispatch({ type: 'visit/skip' })} variant="secondary">
+        <Button onClick={() => onSheetOpen('skip')} variant="secondary">
           {t.action.skipVisit}
         </Button>
-        <Button onClick={() => dispatch({ type: 'visit/reschedule' })} variant="secondary">
+        <Button onClick={() => onSheetOpen('reschedule')} variant="secondary">
           {t.action.reschedule}
         </Button>
       </section>
+
+      <Button fullWidth onClick={() => onSheetOpen('dispute', 'other')} variant="danger">
+        {t.action.reportIssue}
+      </Button>
 
       {subscriberState.nextVisit.stage === 'enRoute' ? (
         <BoundedTrackingMap onArrive={() => dispatch({ type: 'visit/arrive' })} t={t} />
@@ -1123,31 +1315,46 @@ function VisitDetailScreen({
 }
 
 function InboxScreen({
+  onMessageOpen,
+  pipeline,
   subscriberState,
   t,
 }: {
+  readonly onMessageOpen: (message: SubscriberMessageKind) => void;
+  readonly pipeline: SubscriberPipeline;
   readonly subscriberState: SubscriberState;
   readonly t: LocalizedCopy;
 }): ReactElement {
+  const isFrench = t.nav.home === 'Accueil';
+  const priorityMessage =
+    pipeline.messages.find((message) => message.needsAttention) ?? pipeline.messages[0];
+
   return (
     <ScreenFrame
       action={<Badge tone="success">{subscriberState.inboxUnread}</Badge>}
       eyebrow="Inbox"
       title={t.surfaces.inbox.title}
     >
+      <section className="inbox-priority-card" aria-label={isFrench ? 'Priorité' : 'Priority'}>
+        <span>{isFrench ? 'À traiter' : 'Needs attention'}</span>
+        <strong>{isFrench ? priorityMessage?.titleFr : priorityMessage?.titleEn}</strong>
+        <p>{isFrench ? priorityMessage?.bodyFr : priorityMessage?.bodyEn}</p>
+      </section>
       <section className="inbox-stack" aria-label={t.surfaces.inbox.title}>
-        {[
-          [t.surfaces.inbox.reminder, 'T-24h · mardi 5 mai · 9-11', 'visit'],
-          [t.surfaces.inbox.payment, 'Mobile money · prochaine tentative', 'money'],
-          [t.profile.maintenance, t.surfaces.inbox.outage, 'system'],
-        ].map(([title, description, tone]) => (
-          <article className={`inbox-message inbox-message-${tone}`} key={title}>
-            <span />
+        {pipeline.messages.map((message) => (
+          <button
+            className={`inbox-message inbox-message-${message.id}`}
+            key={message.id}
+            onClick={() => onMessageOpen(message.id)}
+            type="button"
+          >
+            <span aria-hidden="true" />
             <div>
-              <strong>{title}</strong>
-              <p>{description}</p>
+              <strong>{isFrench ? message.titleFr : message.titleEn}</strong>
+              <p>{isFrench ? message.createdLabelFr : message.createdLabelEn}</p>
             </div>
-          </article>
+            <em>{isFrench ? 'Ouvrir' : 'Open'}</em>
+          </button>
         ))}
       </section>
     </ScreenFrame>
@@ -1155,16 +1362,20 @@ function InboxScreen({
 }
 
 function BillingScreen({
-  dispatch,
   locale,
+  onSheetOpen,
+  pipeline,
   subscriberState,
   t,
 }: {
-  readonly dispatch: Dispatch<SubscriberAction>;
   readonly locale: WashedLocale;
+  readonly onSheetOpen: (sheet: SubscriberSheet) => void;
+  readonly pipeline: SubscriberPipeline;
   readonly subscriberState: SubscriberState;
   readonly t: LocalizedCopy;
 }): ReactElement {
+  const isFrench = locale === 'fr';
+
   return (
     <ScreenFrame
       action={
@@ -1173,45 +1384,112 @@ function BillingScreen({
       eyebrow="Billing"
       title={t.surfaces.billing.title}
     >
-      <section className="billing-statement-card" aria-label={t.surfaces.billing.title}>
-        <div>
-          <span>{locale === 'fr' ? 'Solde mai' : 'May balance'}</span>
-          <strong>{formatXof(subscriberState.subscription.monthlyPriceXof, locale)}</strong>
-          <p>{t.surfaces.billing.receipt}</p>
+      <section className="billing-overview-card" aria-label={t.surfaces.billing.title}>
+        <div className="billing-overview-top">
+          <div>
+            <span>{isFrench ? 'Solde à régulariser' : 'Balance due'}</span>
+            <strong>{formatXof(pipeline.billing.balanceDueXof, locale)}</strong>
+          </div>
+          <Badge tone="accent">{t.paymentStatus[subscriberState.subscription.paymentStatus]}</Badge>
         </div>
-        <Badge tone="accent">{t.paymentStatus[subscriberState.subscription.paymentStatus]}</Badge>
+        <div
+          className="billing-timeline"
+          aria-label={isFrench ? 'Cycle de facturation' : 'Billing cycle'}
+        >
+          {pipeline.billing.retrySteps.map((step) => (
+            <span aria-current={step.isCurrent ? 'step' : undefined} key={step.id}>
+              <strong>{isFrench ? step.valueFr : step.valueEn}</strong>
+              <small>{isFrench ? step.labelFr : step.labelEn}</small>
+            </span>
+          ))}
+        </div>
+        <button onClick={() => onSheetOpen('paymentRecovery')} type="button">
+          {t.action.recoverPayment}
+        </button>
       </section>
-      <section className="receipt-list">
-        <article>
+
+      <section
+        className="billing-method-card"
+        aria-label={isFrench ? 'Moyen de paiement' : 'Payment method'}
+      >
+        <div>
+          <WalletCards aria-hidden="true" size={20} strokeWidth={2.35} />
+          <span>
+            <strong>{isFrench ? 'Wallet lié' : 'Linked wallet'}</strong>
+            <small>{pipeline.billing.paymentMethodLabel}</small>
+          </span>
+        </div>
+        <button onClick={() => onSheetOpen('paymentRecovery')} type="button">
+          {isFrench ? 'Modifier' : 'Update'}
+        </button>
+      </section>
+
+      <section
+        className="billing-ledger-section"
+        aria-label={isFrench ? 'Paiements passés' : 'Past payments'}
+      >
+        <div className="section-row">
+          <strong>{isFrench ? 'Paiements passés' : 'Past payments'}</strong>
+          <button type="button">{isFrench ? 'Tous' : 'All'}</button>
+        </div>
+        <div className="billing-ledger-list">
+          {pipeline.billing.ledger.map((payment) => (
+            <article key={payment.id}>
+              <span>
+                <strong>{isFrench ? payment.periodFr : payment.periodEn}</strong>
+                <small>{payment.method}</small>
+              </span>
+              <span>
+                <strong>{formatXof(payment.amountXof, locale)}</strong>
+                <small>{isFrench ? payment.statusFr : payment.statusEn}</small>
+              </span>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section
+        className="billing-support-grid"
+        aria-label={isFrench ? 'Facturation et support' : 'Billing and support'}
+      >
+        <button type="button">
           <ReceiptText aria-hidden="true" size={18} strokeWidth={2.35} />
           <div>
             <strong>{t.surfaces.billing.supportCredit}</strong>
             <p>{t.surfaces.billing.refund}</p>
           </div>
-        </article>
-        <article>
+        </button>
+        <button type="button">
           <FileText aria-hidden="true" size={18} strokeWidth={2.35} />
           <div>
-            <strong>{locale === 'fr' ? 'Reçu disponible' : 'Receipt available'}</strong>
+            <strong>{isFrench ? 'Reçu disponible' : 'Receipt available'}</strong>
             <p>PDF · Mai 2026 · T-Money</p>
           </div>
-        </article>
+        </button>
       </section>
-      <Button fullWidth onClick={() => dispatch({ type: 'payment/recover' })} variant="secondary">
-        {t.action.recoverPayment}
-      </Button>
+
+      <section className="billing-next-card" aria-label={isFrench ? 'Suite' : 'What happens next'}>
+        <strong>{isFrench ? 'Ce qui se passe ensuite' : 'What happens next'}</strong>
+        <p>
+          {isFrench
+            ? 'Washed réessaie le wallet lié. Si le paiement échoue encore, le support vous contacte avant toute suspension.'
+            : 'Washed retries the linked wallet. If it fails again, support contacts you before any suspension.'}
+        </p>
+      </section>
     </ScreenFrame>
   );
 }
 
 function PaymentRecoveryScreen({
-  dispatch,
   locale,
+  onSheetOpen,
+  pipeline,
   subscriberState,
   t,
 }: {
-  readonly dispatch: Dispatch<SubscriberAction>;
   readonly locale: WashedLocale;
+  readonly onSheetOpen: (sheet: SubscriberSheet) => void;
+  readonly pipeline: SubscriberPipeline;
   readonly subscriberState: SubscriberState;
   readonly t: LocalizedCopy;
 }): ReactElement {
@@ -1230,7 +1508,13 @@ function PaymentRecoveryScreen({
         >
           {t.surfaces.paymentRecovery.body}
         </Alert>
-        <Button fullWidth onClick={() => dispatch({ type: 'payment/recover' })}>
+        <ListItem
+          description={
+            locale === 'fr' ? pipeline.billing.nextRetryLabelFr : pipeline.billing.nextRetryLabelEn
+          }
+          title={locale === 'fr' ? 'Prochaine étape' : 'Next step'}
+        />
+        <Button fullWidth onClick={() => onSheetOpen('paymentRecovery')}>
           {t.action.recoverPayment}
         </Button>
       </Card>
@@ -1239,10 +1523,10 @@ function PaymentRecoveryScreen({
 }
 
 function LegalScreen({
-  dispatch,
+  onSheetOpen,
   t,
 }: {
-  readonly dispatch: Dispatch<SubscriberAction>;
+  readonly onSheetOpen: (sheet: SubscriberSheet) => void;
   readonly t: LocalizedCopy;
 }): ReactElement {
   const isFrench = t.nav.home === 'Accueil';
@@ -1267,18 +1551,10 @@ function LegalScreen({
         <ListItem description={t.surfaces.legal.export} title={t.profile.exportData} />
         <ListItem description={t.surfaces.legal.erasure} title={t.profile.erasure} />
         <div className="inline-actions">
-          <Button
-            onClick={() => dispatch({ type: 'privacy/export' })}
-            size="sm"
-            variant="secondary"
-          >
+          <Button onClick={() => onSheetOpen('privacyExport')} size="sm" variant="secondary">
             {t.profile.exportData}
           </Button>
-          <Button
-            onClick={() => dispatch({ type: 'privacy/erasure' })}
-            size="sm"
-            variant="secondary"
-          >
+          <Button onClick={() => onSheetOpen('privacyErasure')} size="sm" variant="secondary">
             {t.profile.erasure}
           </Button>
         </div>
@@ -1316,6 +1592,149 @@ function AccountRecoveryScreen({ t }: { readonly t: LocalizedCopy }): ReactEleme
         />
       </Card>
     </ScreenFrame>
+  );
+}
+
+function ConfirmationSheet({
+  activeSheet,
+  onClose,
+  onConfirm,
+  onIssueChange,
+  supportIssue,
+  t,
+}: {
+  readonly activeSheet: SubscriberSheet;
+  readonly onClose: () => void;
+  readonly onConfirm: () => void;
+  readonly onIssueChange: (issue: SupportIssueKind) => void;
+  readonly supportIssue: SupportIssueKind;
+  readonly t: LocalizedCopy;
+}): ReactElement {
+  const sheet = t.sheet[activeSheet];
+  const isDispute = activeSheet === 'dispute';
+  const isOrderWash = activeSheet === 'orderWash';
+
+  return (
+    <div className="sheet-backdrop" role="presentation">
+      <section
+        aria-labelledby="active-sheet-title"
+        aria-modal="true"
+        className={`bottom-sheet${isOrderWash ? ' order-wash-sheet' : ''}`}
+        role="dialog"
+      >
+        <div className="sheet-handle" />
+        <div className="sheet-title-row">
+          <div>
+            <span className="eyebrow">
+              {isDispute
+                ? t.action.reportIssue
+                : isOrderWash
+                  ? t.nav.home === 'Accueil'
+                    ? 'Demande ponctuelle'
+                    : 'One-time request'
+                  : t.action.confirm}
+            </span>
+            <h2 id="active-sheet-title">{sheet.title}</h2>
+          </div>
+          <button aria-label={t.action.close} onClick={onClose} type="button">
+            {t.action.close}
+          </button>
+        </div>
+        <p>{sheet.body}</p>
+        {isDispute ? (
+          <div className="sheet-choice-list" aria-label={t.support.dispute}>
+            {supportIssueOrder.map((issue) => (
+              <button
+                aria-pressed={supportIssue === issue}
+                key={issue}
+                onClick={() => onIssueChange(issue)}
+                type="button"
+              >
+                {t.support.issueKinds[issue]}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        <div className="sheet-actions">
+          <Button onClick={onClose} variant="secondary">
+            {t.action.close}
+          </Button>
+          <Button
+            onClick={onConfirm}
+            variant={
+              activeSheet === 'cancel' || activeSheet === 'accountDelete' ? 'danger' : 'primary'
+            }
+          >
+            {sheet.confirm}
+          </Button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function MessageDetailSheet({
+  message,
+  onClose,
+  onRouteChange,
+  onSheetOpen,
+  pipeline,
+  t,
+}: {
+  readonly message: SubscriberMessageKind;
+  readonly onClose: () => void;
+  readonly onRouteChange: (route: AppRoute) => void;
+  readonly onSheetOpen: (sheet: SubscriberSheet, issue?: SupportIssueKind) => void;
+  readonly pipeline: SubscriberPipeline;
+  readonly t: LocalizedCopy;
+}): ReactElement {
+  const isFrench = t.nav.home === 'Accueil';
+  const detail = pipeline.messages.find((candidate) => candidate.id === message);
+
+  if (detail === undefined) {
+    return <></>;
+  }
+
+  const handleAction = (): void => {
+    if ('route' in detail.target) {
+      onRouteChange(detail.target.route);
+    } else {
+      onSheetOpen(detail.target.sheet, detail.target.issue);
+    }
+    onClose();
+  };
+
+  return (
+    <div className="sheet-backdrop" role="presentation">
+      <section
+        aria-labelledby="message-sheet-title"
+        aria-modal="true"
+        className="bottom-sheet message-detail-sheet"
+        role="dialog"
+      >
+        <div className="sheet-handle" />
+        <div className="sheet-title-row">
+          <div>
+            <span className="eyebrow">
+              {isFrench ? detail.createdLabelFr : detail.createdLabelEn}
+            </span>
+            <h2 id="message-sheet-title">{isFrench ? detail.titleFr : detail.titleEn}</h2>
+          </div>
+          <button aria-label={t.action.close} onClick={onClose} type="button">
+            {t.action.close}
+          </button>
+        </div>
+        <p>{isFrench ? detail.bodyFr : detail.bodyEn}</p>
+        <div className="message-detail-actions">
+          <Button onClick={handleAction}>
+            {isFrench ? detail.actionLabelFr : detail.actionLabelEn}
+          </Button>
+          <Button onClick={() => onSheetOpen('dispute', 'other')} variant="secondary">
+            {t.action.openSupport}
+          </Button>
+        </div>
+      </section>
+    </div>
   );
 }
 

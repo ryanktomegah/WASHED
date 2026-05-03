@@ -13,10 +13,14 @@ export type VisitStatus = SubscriberVisitStatus;
 export type VisitStage = SubscriberVisitStage;
 
 export type SubscriberFeedback =
+  | 'accountDeleteRequested'
   | 'cancelRequested'
   | 'dataErasureRequested'
   | 'dataExportRequested'
+  | 'issueSubmitted'
+  | 'orderRequested'
   | 'paymentRecovered'
+  | 'rated'
   | 'rescheduled'
   | 'skipUsed'
   | 'tierChanged'
@@ -38,6 +42,7 @@ export interface SubscriberState {
     readonly workerName: string;
   };
   readonly privacy: {
+    readonly accountDeleteRequested: boolean;
     readonly erasureRequested: boolean;
     readonly exportRequested: boolean;
   };
@@ -52,6 +57,8 @@ export interface SubscriberState {
 }
 
 export type SubscriberAction =
+  | { readonly type: 'account/delete' }
+  | { readonly type: 'order/wash' }
   | { readonly type: 'payment/recover' }
   | { readonly type: 'privacy/erasure' }
   | { readonly type: 'privacy/export' }
@@ -59,6 +66,8 @@ export type SubscriberAction =
   | { readonly type: 'subscription/changeTier' }
   | { readonly type: 'subscription/requestSwap' }
   | { readonly type: 'visit/arrive' }
+  | { readonly type: 'visit/dispute' }
+  | { readonly type: 'visit/rate' }
   | { readonly type: 'visit/startProgress' }
   | { readonly type: 'visit/reschedule' }
   | { readonly type: 'visit/skip' }
@@ -68,12 +77,23 @@ export type SubscriberAction =
 export const initialSubscriberState = {
   ...DEMO_SUBSCRIBER_APP_SNAPSHOT,
   lastFeedback: null,
+  privacy: {
+    ...DEMO_SUBSCRIBER_APP_SNAPSHOT.privacy,
+    accountDeleteRequested: false,
+  },
 } as const satisfies SubscriberState;
 
 export function subscriberReducer(
   state: SubscriberState,
   action: SubscriberAction,
 ): SubscriberState {
+  if (action.type === 'order/wash') {
+    return {
+      ...state,
+      lastFeedback: 'orderRequested',
+    };
+  }
+
   if (action.type === 'visit/startTracking') {
     return {
       ...state,
@@ -123,6 +143,20 @@ export function subscriberReducer(
       ...state,
       lastFeedback: 'rescheduled',
       nextVisit: { ...state.nextVisit, status: 'rescheduled', stage: 'scheduled' },
+    };
+  }
+
+  if (action.type === 'visit/dispute') {
+    return {
+      ...state,
+      lastFeedback: 'issueSubmitted',
+    };
+  }
+
+  if (action.type === 'visit/rate') {
+    return {
+      ...state,
+      lastFeedback: 'rated',
     };
   }
 
@@ -180,6 +214,14 @@ export function subscriberReducer(
       ...state,
       lastFeedback: 'dataErasureRequested',
       privacy: { ...state.privacy, erasureRequested: true },
+    };
+  }
+
+  if (action.type === 'account/delete') {
+    return {
+      ...state,
+      lastFeedback: 'accountDeleteRequested',
+      privacy: { ...state.privacy, accountDeleteRequested: true },
     };
   }
 
