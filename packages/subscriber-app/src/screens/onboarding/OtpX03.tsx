@@ -8,16 +8,14 @@ import {
   type KeyboardEvent,
   type ReactElement,
 } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
 
+import { useSignup } from './SignupContext.js';
+
 const OTP_LENGTH = 6;
 const RESEND_SECONDS = 30;
-
-interface OtpLocationState {
-  readonly phone?: string;
-}
 
 function maskPhone(phone: string): string {
   // "+228 90 12 34 56" → "+228 90 ●● ●● 56" (mask middle pairs)
@@ -28,9 +26,13 @@ function maskPhone(phone: string): string {
 
 export function OtpX03(): ReactElement {
   const navigate = useNavigate();
-  const location = useLocation();
-  const phone = (location.state as OtpLocationState | null)?.phone ?? '+228 90 12 34 56';
+  const signup = useSignup();
+  const phone = signup.phone === '' ? '+228 90 12 34 56' : signup.phone;
   const maskedPhone = useMemo(() => maskPhone(phone), [phone]);
+
+  useEffect(() => {
+    if (signup.phone === '') navigate('/signup/phone', { replace: true });
+  }, [signup.phone, navigate]);
 
   const [digits, setDigits] = useState<string[]>(() => Array<string>(OTP_LENGTH).fill(''));
   const [secondsRemaining, setSecondsRemaining] = useState(RESEND_SECONDS);

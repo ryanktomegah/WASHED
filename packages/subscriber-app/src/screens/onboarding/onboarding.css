@@ -346,3 +346,417 @@
   flex-direction: column;
   gap: 8px;
 }
+
+.onboarding-screen .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============================================================
+   X-04 Address — neighborhood select, mini map placeholder
+   ============================================================ */
+.onboarding-screen .select-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  min-height: var(--tap-min);
+  transition: border-color var(--d-fast) var(--ease-standard);
+}
+
+.onboarding-screen .select-shell:focus-within {
+  border-color: var(--primary);
+  box-shadow: var(--focus-ring);
+}
+
+.onboarding-screen .select-shell select {
+  flex: 1;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  padding: 12px 16px;
+  padding-right: 40px;
+  cursor: pointer;
+}
+
+.onboarding-screen .select-shell select:invalid,
+.onboarding-screen .select-shell select option[value=""] {
+  color: var(--ink-3);
+}
+
+.onboarding-screen .select-chevron {
+  position: absolute;
+  right: 16px;
+  pointer-events: none;
+  color: var(--primary);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.onboarding-screen .address-map {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 110px;
+  border-radius: 14px;
+  overflow: hidden;
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--line) 0,
+    var(--line) 1px,
+    transparent 1px,
+    transparent 8px
+  );
+  background-color: var(--surface-2);
+  border: 1px dashed var(--line-2);
+}
+
+.onboarding-screen .address-map-pin {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 0 0 6px rgba(196, 98, 45, 0.18);
+}
+
+/* ============================================================
+   X-05 Tier — selectable plan cards
+   ============================================================ */
+.onboarding-screen .tier-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.onboarding-screen .tier-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color var(--d-fast) var(--ease-standard),
+    box-shadow var(--d-fast) var(--ease-standard);
+}
+
+.onboarding-screen .tier-card:focus-within {
+  box-shadow: var(--focus-ring);
+}
+
+.onboarding-screen .tier-card.is-selected {
+  border-color: var(--primary);
+  border-width: 2px;
+  padding: 15px;
+}
+
+.onboarding-screen .tier-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.onboarding-screen .tier-card-head strong {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.onboarding-screen .tier-card-head .p-sm {
+  display: block;
+  margin-top: 2px;
+}
+
+.onboarding-screen .tier-chip {
+  background: var(--primary);
+  color: white;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 9px;
+  font-weight: 600;
+}
+
+.onboarding-screen .tier-price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 32px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.onboarding-screen .tier-price strong {
+  font-weight: 500;
+}
+
+.onboarding-screen .tier-price span {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+/* ============================================================
+   X-06 Payment — Mobile Money provider radio cards
+   ============================================================ */
+.onboarding-screen .provider-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.onboarding-screen .provider-card {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  cursor: pointer;
+  min-height: var(--tap-min);
+  transition: border-color var(--d-fast) var(--ease-standard);
+}
+
+.onboarding-screen .provider-card.is-selected {
+  border-color: var(--primary);
+  border-width: 2px;
+  padding: 13px;
+}
+
+.onboarding-screen .provider-card:focus-within {
+  box-shadow: var(--focus-ring);
+}
+
+.onboarding-screen .provider-radio {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--ink-3);
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  transition: border-color var(--d-fast) var(--ease-standard);
+}
+
+.onboarding-screen .provider-card.is-selected .provider-radio {
+  border-color: var(--primary);
+}
+
+.onboarding-screen .provider-card.is-selected .provider-radio::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+.onboarding-screen .provider-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.onboarding-screen .provider-body strong {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.onboarding-screen .provider-body .p-sm {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.onboarding-screen .provider-network {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 10px;
+}
+
+/* ============================================================
+   X-07 Review — recap card, warn, consent
+   ============================================================ */
+.onboarding-screen .review-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.onboarding-screen .review-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+}
+
+.onboarding-screen .review-row dt {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.onboarding-screen .review-row dd {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  text-align: right;
+}
+
+.onboarding-screen .review-divider {
+  height: 1px;
+  margin: 6px 0;
+  background: var(--line);
+}
+
+.onboarding-screen .review-total dt {
+  font-size: 14px;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.onboarding-screen .review-total-amount {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 20px;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.onboarding-screen .review-warn {
+  border-radius: 14px;
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  padding: 10px 14px;
+}
+
+.onboarding-screen .review-warn-eyebrow {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--accent);
+}
+
+.onboarding-screen .review-warn p {
+  margin: 0;
+}
+
+.onboarding-screen .consent-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.onboarding-screen .consent-row input[type='checkbox'] {
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  background: var(--surface);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color var(--d-fast) var(--ease-standard),
+    border-color var(--d-fast) var(--ease-standard);
+}
+
+.onboarding-screen .consent-row input[type='checkbox']:checked {
+  background: var(--primary);
+  border-color: var(--primary);
+  background-image: linear-gradient(
+      45deg,
+      transparent 50%,
+      white 50%,
+      white 60%,
+      transparent 60%
+    ),
+    linear-gradient(-45deg, transparent 45%, white 45%, white 55%, transparent 55%);
+  background-size: 12px 12px, 8px 8px;
+  background-position: 4px 8px, 8px 8px;
+  background-repeat: no-repeat;
+}
+
+.onboarding-screen .consent-row input[type='checkbox']:focus-visible {
+  box-shadow: var(--focus-ring);
+  outline: none;
+}
+
+/* ============================================================
+   X-08 Welcome — terminal screen, italic Bienvenue
+   ============================================================ */
+.onboarding-screen .welcome-glyph {
+  width: 72px;
+  height: 72px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--surface);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 44px;
+  line-height: 1;
+  margin-bottom: 22px;
+}
+
+.onboarding-screen .welcome-title {
+  font-size: 32px;
+  text-align: center;
+}
+
+.onboarding-screen .welcome-title em {
+  font-style: italic;
+  color: var(--primary);
+}
+
+.onboarding-screen .welcome-body {
+  text-align: center;
+  max-width: 28ch;
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+
+.onboarding-screen .welcome-helper {
+  margin-top: 10px;
+  text-align: center;
+}

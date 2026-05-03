@@ -92,6 +92,11 @@ export interface WorkerCopy {
   readonly today: {
     readonly addressHint: string;
     readonly dayComplete: string;
+    readonly dayLabel: string;
+    readonly earnLabel: string;
+    readonly greeting: string;
+    readonly nextLabel: string;
+    readonly routeCta: string;
     readonly routeActive: string;
     readonly subscriber: string;
     readonly title: string;
@@ -104,7 +109,7 @@ export const workerCopy = {
   action: {
     advance: 'Demander une avance',
     cancel: 'Annuler',
-    checkInNow: "Pointer l'arrivée",
+    checkInNow: "J'arrive",
     checkOutNow: 'Pointer la sortie',
     close: 'Fermer',
     confirmSos: "Prévenir l'opérateur",
@@ -187,7 +192,7 @@ export const workerCopy = {
   planning: {
     markUnavailable: 'Marquer indisponible',
     title: 'Planning',
-    week: 'Semaine du 4 mai',
+    week: 'Semaine du 11 mai',
   },
   profile: {
     agreement: 'Accord travailleuse accepté',
@@ -212,10 +217,15 @@ export const workerCopy = {
   today: {
     addressHint: 'Repère: portail bleu, pharmacie à côté',
     dayComplete: 'Résumé de fin de journée',
+    dayLabel: 'MARDI 5 MAI',
+    earnLabel: 'À gagner',
+    greeting: 'Bonjour Akouvi.',
+    nextLabel: 'Prochaine visite',
+    routeCta: 'Démarrer la route',
     routeActive: 'Route active',
     subscriber: 'Ama K., Adidogomé',
     title: "Route d'aujourd'hui",
-    visitCount: '3 visites planifiées',
+    visitCount: '5 visites',
   },
   visitStep: {
     afterPhoto: 'Photo après',
@@ -254,6 +264,18 @@ export const routeCards = [
     status: 'Prévue',
     time: '14h00-16h00',
     title: 'Yao Agbeko',
+  },
+  {
+    address: 'Agoè, côté station Shell',
+    status: 'Prévue',
+    time: '16h30-18h00',
+    title: 'Mawuli Brown',
+  },
+  {
+    address: 'Hédzranawoé, rue des manguiers',
+    status: 'Prévue',
+    time: '18h15-19h30',
+    title: 'Esi Amouzou',
   },
 ] as const;
 

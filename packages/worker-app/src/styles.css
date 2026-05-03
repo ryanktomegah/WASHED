@@ -37,6 +37,7 @@ button {
 }
 
 .worker-summary,
+.worker-day-hero,
 .card-header,
 .section-title,
 .sync-alert-body {
@@ -44,6 +45,63 @@ button {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+}
+
+.worker-day-hero {
+  display: grid;
+  gap: 12px;
+  margin: 0 -14px 2px;
+  border-bottom: 1px solid var(--washed-border);
+  padding: 16px 18px 14px;
+  background: var(--washed-background);
+}
+
+.worker-day-hero h1 {
+  margin: 4px 0 8px;
+  color: var(--washed-foreground);
+  font-size: 28px;
+  line-height: 1.02;
+}
+
+.worker-status-pill {
+  display: inline-flex;
+  max-width: 100%;
+  border-radius: 999px;
+  background: var(--washed-primary-soft);
+  color: var(--washed-primary);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.15;
+  padding: 7px 11px;
+}
+
+.worker-day-metrics {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 8px;
+}
+
+.worker-day-metrics span {
+  display: grid;
+  gap: 2px;
+  min-height: 58px;
+  align-content: center;
+  border: 1px solid color-mix(in srgb, var(--washed-primary) 16%, var(--washed-border));
+  border-radius: 14px;
+  background: var(--washed-surface);
+  padding: 10px 12px;
+}
+
+.worker-day-metrics small {
+  color: var(--washed-muted);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.worker-day-metrics strong {
+  color: var(--washed-primary);
+  font-size: 20px;
+  line-height: 1.05;
 }
 
 .worker-summary {
@@ -63,7 +121,7 @@ button {
 .summary-date {
   display: block;
   margin-bottom: 4px;
-  color: color-mix(in srgb, var(--washed-primary-soft) 75%, transparent);
+  color: var(--washed-muted);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0;
@@ -105,9 +163,9 @@ button {
 .summary-progress {
   overflow: hidden;
   height: 5px;
-  margin: 10px 0 5px;
+  margin: 0;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.15);
+  background: color-mix(in srgb, var(--washed-primary) 12%, var(--washed-surface));
 }
 
 .summary-progress span,
@@ -120,6 +178,7 @@ button {
 
 .summary-progress span {
   width: 33%;
+  background: var(--washed-primary);
 }
 
 .summary-meta {
@@ -166,19 +225,16 @@ button {
 .offline-ledger,
 .active-visit-card,
 .wire-route-card {
-  box-shadow:
-    0 1px 4px rgba(0, 0, 0, 0.05),
-    0 6px 20px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 0 rgba(13, 36, 22, 0.05);
 }
 
 .field-command-card {
   display: grid;
   gap: 12px;
-  margin-top: -6px;
-  border: 1px solid color-mix(in srgb, var(--washed-primary) 18%, var(--washed-border));
-  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--washed-primary) 20%, var(--washed-border));
+  border-radius: 16px;
   background: var(--washed-surface);
-  padding: 12px;
+  padding: 14px;
 }
 
 .field-command-top,
@@ -197,7 +253,7 @@ button {
 
 .field-command-main h2 {
   margin: 0 0 6px;
-  font-size: 22px;
+  font-size: 24px;
   line-height: 1;
 }
 
@@ -208,6 +264,36 @@ button {
   gap: 6px;
 }
 
+.field-command-main p {
+  margin: 4px 0 0;
+  color: var(--washed-muted);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.field-command-note {
+  display: grid;
+  gap: 3px;
+  border: 1px solid color-mix(in srgb, var(--washed-primary) 14%, var(--washed-border));
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--washed-primary-soft) 48%, var(--washed-surface));
+  padding: 10px 12px;
+}
+
+.field-command-note span {
+  color: var(--washed-muted);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.field-command-note strong {
+  color: var(--washed-foreground);
+  font-size: 13px;
+  line-height: 1.25;
+}
+
 .sos-fab {
   display: grid;
   flex: 0 0 auto;
@@ -215,19 +301,19 @@ button {
   height: 56px;
   place-items: center;
   border: 0;
-  border-radius: 17px;
+  border-radius: 16px;
   background: var(--washed-danger);
   color: #fff;
   cursor: pointer;
   font-size: 12px;
   font-weight: 950;
   letter-spacing: 0;
-  box-shadow: 0 8px 18px rgba(190, 48, 48, 0.2);
+  box-shadow: none;
 }
 
 .field-command-actions {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  grid-template-columns: 1fr;
   gap: 8px;
 }
 
@@ -239,7 +325,7 @@ button {
   justify-content: center;
   min-height: 40px;
   border: 0;
-  border-radius: 12px;
+  border-radius: 14px;
   cursor: pointer;
   font-weight: 900;
   gap: 7px;
@@ -282,9 +368,7 @@ button {
 }
 
 .planning-week-card {
-  background:
-    radial-gradient(circle at 90% 0%, rgba(212, 144, 14, 0.18), transparent 34%),
-    var(--washed-surface);
+  background: var(--washed-surface);
 }
 
 .planning-week-card h2,
@@ -309,6 +393,132 @@ button {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 7px;
+}
+
+.planning-week-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.planning-week-summary span {
+  display: grid;
+  gap: 2px;
+  border: 1px solid var(--washed-border);
+  border-radius: 12px;
+  background: var(--washed-background);
+  padding: 11px 12px;
+}
+
+.planning-week-summary small {
+  color: var(--washed-muted);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.planning-week-summary strong {
+  color: var(--washed-primary);
+  font-size: 22px;
+  line-height: 1.05;
+}
+
+.planning-agenda-card {
+  display: grid;
+  gap: 8px;
+  border: 1px solid color-mix(in srgb, var(--washed-primary) 14%, var(--washed-border));
+  border-radius: 14px;
+  background: var(--washed-surface);
+  padding: 10px;
+}
+
+.planning-agenda-card button:not(.planning-unavailable-button) {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  gap: 2px 10px;
+  align-items: center;
+  min-height: 54px;
+  border: 1px solid var(--washed-border);
+  border-radius: 12px;
+  background: var(--washed-background);
+  color: var(--washed-foreground);
+  cursor: pointer;
+  padding: 9px 11px;
+  text-align: left;
+}
+
+.planning-agenda-card button[aria-current='date'] {
+  border-color: var(--washed-primary);
+  background: color-mix(in srgb, var(--washed-primary-soft) 58%, var(--washed-surface));
+}
+
+.planning-agenda-card button > span {
+  display: grid;
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--washed-primary-soft);
+  color: var(--washed-primary);
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.planning-agenda-card button strong {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  font-size: 15px;
+  line-height: 1.1;
+}
+
+.planning-agenda-card button small,
+.planning-leave-note span {
+  color: var(--washed-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.planning-agenda-card button small {
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+}
+
+.planning-agenda-card button em {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  color: var(--washed-muted);
+  font-size: 22px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.planning-leave-note {
+  display: grid;
+  gap: 2px;
+  border: 1px solid color-mix(in srgb, var(--washed-accent) 35%, var(--washed-border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--washed-accent) 12%, var(--washed-surface));
+  padding: 10px 12px;
+}
+
+.planning-leave-note strong {
+  color: var(--washed-accent);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.planning-unavailable-button {
+  min-height: 44px;
+  border: 1px solid color-mix(in srgb, var(--washed-primary) 18%, var(--washed-border));
+  border-radius: 12px;
+  background: var(--washed-primary-soft);
+  color: var(--washed-primary);
+  cursor: pointer;
+  font-weight: 900;
 }
 
 .planning-day-strip button {
@@ -497,17 +707,13 @@ button {
   overflow: hidden;
   padding: 0 !important;
   border: 1px solid color-mix(in srgb, var(--washed-primary) 20%, var(--washed-border)) !important;
-  border-radius: 18px !important;
-  box-shadow:
-    0 8px 24px rgba(13, 36, 22, 0.09),
-    0 1px 0 rgba(255, 255, 255, 0.75) inset !important;
+  border-radius: 16px !important;
+  box-shadow: 0 1px 0 rgba(13, 36, 22, 0.06) !important;
 }
 
 .visit-card-main {
   padding: 12px;
-  background:
-    radial-gradient(circle at 94% 12%, rgba(212, 144, 14, 0.16), transparent 31%),
-    linear-gradient(145deg, #123c24, #0d2416);
+  background: #0d3b22;
 }
 
 .visit-card-topline {
@@ -565,7 +771,7 @@ button {
 .wire-route-card {
   overflow: hidden;
   border: 1.5px solid var(--washed-border);
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--washed-surface);
 }
 
@@ -587,7 +793,7 @@ button {
 
 .wire-route-card.is-active {
   border: 1.5px solid var(--washed-primary);
-  box-shadow: 0 3px 14px rgba(26, 92, 52, 0.12);
+  box-shadow: none;
 }
 
 .wire-route-card.is-active .visit-card-topline strong,
@@ -662,7 +868,7 @@ button {
   gap: 10px;
   margin: 0 14px 12px;
   border: 1px solid var(--washed-border);
-  border-radius: 16px;
+  border-radius: 14px;
   padding: 12px;
   background: var(--washed-surface);
 }
@@ -682,12 +888,8 @@ button {
   min-height: 86px;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--washed-primary) 18%, var(--washed-border));
-  border-radius: 14px;
-  background:
-    radial-gradient(circle at 24% 28%, rgba(212, 144, 14, 0.22), transparent 28%),
-    linear-gradient(145deg, #ecf6ef, #f7fbf8),
-    repeating-linear-gradient(0deg, transparent 0 39px, rgba(26, 92, 52, 0.1) 39px 40px),
-    repeating-linear-gradient(90deg, transparent 0 59px, rgba(26, 92, 52, 0.1) 59px 60px);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--washed-primary-soft) 56%, var(--washed-surface));
   text-align: center;
 }
 
@@ -711,11 +913,11 @@ button {
   position: absolute;
   top: 10px;
   right: 10px;
-  border-radius: 9px;
+  border-radius: 8px;
   padding: 4px 10px;
   background: var(--washed-surface);
   color: var(--washed-primary);
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
   font-size: 11px;
   font-style: normal;
   font-weight: 800;
@@ -986,6 +1188,112 @@ button {
   background: var(--washed-foreground) !important;
 }
 
+.earnings-week-card,
+.earnings-balance-card,
+.earnings-week-detail {
+  display: grid;
+  gap: 10px;
+  border: 1px solid color-mix(in srgb, var(--washed-primary) 16%, var(--washed-border));
+  border-radius: 14px;
+  background: var(--washed-surface);
+  padding: 14px;
+  box-shadow: 0 1px 0 rgba(13, 36, 22, 0.05);
+}
+
+.earnings-week-card {
+  align-items: center;
+  justify-items: center;
+  min-height: 146px;
+  text-align: center;
+}
+
+.earnings-week-card > span {
+  color: var(--washed-muted);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.earnings-week-card > strong {
+  color: var(--washed-primary);
+  font-size: 46px;
+  line-height: 0.95;
+}
+
+.earnings-week-card small,
+.earnings-balance-card small {
+  color: var(--washed-muted);
+  font-size: 15px;
+}
+
+.earnings-week-card p {
+  margin: 0;
+  color: var(--washed-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.earnings-balance-card {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.earnings-balance-card span {
+  color: var(--washed-muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.earnings-balance-card strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--washed-foreground);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.earnings-balance-card button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--washed-primary);
+  color: var(--washed-surface);
+  cursor: pointer;
+  font-weight: 950;
+  padding: 9px 15px;
+}
+
+.earnings-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 7px;
+  height: 74px;
+  padding: 0 4px;
+}
+
+.earnings-bars span {
+  flex: 1;
+  min-height: 18px;
+  border-radius: 5px 5px 0 0;
+  background: var(--washed-border);
+}
+
+.earnings-bars .is-paid {
+  background: var(--washed-primary);
+}
+
+.earnings-bars .is-active {
+  background: var(--washed-primary-soft);
+}
+
+.earnings-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 4px;
+  color: var(--washed-muted);
+  font-size: 10px;
+  font-weight: 900;
+}
+
 .earnings-hero-card > span {
   color: rgba(255, 255, 255, 0.45);
   font-size: 10px;
@@ -1085,53 +1393,175 @@ button {
 }
 
 .worker-profile-hero {
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  background:
-    radial-gradient(circle at 12% 12%, rgba(212, 144, 14, 0.14), transparent 30%),
-    var(--washed-surface);
+  gap: 12px;
+  border-radius: 14px;
+  background: #0d3b22;
+  color: var(--washed-surface);
 }
 
 .worker-profile-avatar {
   display: grid;
-  width: 58px;
-  height: 58px;
+  width: 64px;
+  height: 64px;
   place-items: center;
-  border-radius: 18px;
-  background: var(--washed-primary-soft);
-  color: var(--washed-primary);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--washed-surface);
   font-weight: 950;
 }
 
-.profile-command-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 9px;
-  margin-bottom: 12px;
+.profile-trust-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
 }
 
-.profile-command-grid span {
+.profile-trust-row span {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 11px;
+  font-weight: 900;
+  padding: 5px 8px;
+}
+
+.profile-readiness-card,
+.profile-household-card,
+.profile-account-card {
   display: grid;
-  min-width: 0;
-  min-height: 86px;
-  gap: 4px;
-  align-content: start;
-  border: 1px solid var(--washed-border);
+  gap: 12px;
+  border: 1px solid color-mix(in srgb, var(--washed-primary) 16%, var(--washed-border));
   border-radius: 14px;
-  background: var(--washed-background);
-  padding: 12px;
+  background: var(--washed-surface);
+  padding: 14px;
+  box-shadow: 0 1px 0 rgba(13, 36, 22, 0.05);
 }
 
-.profile-command-grid strong {
-  font-size: 13px;
-  line-height: 1.25;
+.profile-readiness-card h2,
+.profile-household-card h2,
+.profile-account-card h2 {
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.1;
 }
 
-.profile-command-grid small {
+.profile-readiness-card p,
+.profile-household-card p {
+  margin: 3px 0 0;
+  color: var(--washed-muted);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.profile-readiness-list {
+  display: grid;
+  gap: 8px;
+}
+
+.profile-readiness-list div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 2px 9px;
+  align-items: center;
+  border-bottom: 1px solid var(--washed-border);
+  padding: 0 0 9px;
+}
+
+.profile-readiness-list div:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.profile-readiness-list span {
+  display: grid;
+  grid-row: span 2;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--washed-primary-soft);
+  color: var(--washed-primary);
+}
+
+.profile-readiness-list strong,
+.profile-household-list strong,
+.profile-account-card span {
+  color: var(--washed-foreground);
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.profile-readiness-list small,
+.profile-household-list small,
+.profile-account-card small {
   color: var(--washed-muted);
   font-size: 11px;
-  font-weight: 750;
+  font-weight: 800;
   line-height: 1.35;
+}
+
+.profile-action-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.profile-action-row button,
+.profile-account-card button {
+  border: 1px solid color-mix(in srgb, var(--washed-primary) 18%, var(--washed-border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--washed-primary-soft) 46%, var(--washed-surface));
+  color: var(--washed-primary);
+  cursor: pointer;
+  font-weight: 900;
+  padding: 10px 11px;
+}
+
+.profile-household-list,
+.profile-account-card {
+  display: grid;
+  gap: 8px;
+}
+
+.profile-household-list div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--washed-border);
+  border-radius: 12px;
+  background: var(--washed-background);
+  padding: 10px 11px;
+}
+
+.profile-household-list svg {
+  color: var(--washed-primary);
+}
+
+.profile-household-list span,
+.profile-account-card button {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  text-align: left;
+}
+
+.profile-household-list em {
+  border-radius: 999px;
+  background: var(--washed-primary-soft);
+  color: var(--washed-primary);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 950;
+  padding: 5px 8px;
+}
+
+.profile-account-card button {
+  background: var(--washed-surface);
 }
 
 .activation-checklist-card {

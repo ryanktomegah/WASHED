@@ -13,16 +13,10 @@ import {
 import {
   Banknote,
   CalendarDays,
-  Camera,
   Check,
-  CircleAlert,
   Clock3,
   House,
   MapPinned,
-  Moon,
-  Sun,
-  Sunrise,
-  Zap,
   ShieldAlert,
   UserRound,
 } from 'lucide-react';
@@ -278,39 +272,43 @@ function TodayScreen({
   const activeVisit = routeCards[1];
   const completedVisits = workerState.visit.step === 'checkOut' ? 2 : 1;
   const progressPercent = `${Math.round((completedVisits / routeCards.length) * 100)}%`;
+  const activeVisitIndex = 1;
 
   return (
     <>
-      <section className="worker-summary" aria-labelledby="worker-route-title">
-        <div className="summary-copy">
-          <span className="summary-date">LUNDI 28 AVRIL</span>
-          <div className="summary-title-row">
-            <h1 id="worker-route-title">3 visites aujourd&apos;hui</h1>
-            <div className="summary-earnings">
-              <span>Ce mois</span>
-              <strong>43 400 XOF</strong>
-            </div>
-          </div>
-          <div className="summary-progress" aria-hidden="true">
-            <span style={{ width: progressPercent }} />
-          </div>
-          <div className="summary-meta">
-            <span>{completedVisits} / 3 visites complétées</span>
-            <Badge>
-              {offlineCount > 0 ? `● Hors ligne · ${offlineCount}` : t.today.routeActive}
-            </Badge>
-          </div>
+      <section className="worker-day-hero" aria-labelledby="worker-route-title">
+        <div>
+          <span className="summary-date">{t.today.dayLabel}</span>
+          <h1 id="worker-route-title">{t.today.greeting}</h1>
+          <span className="worker-status-pill">
+            {t.today.visitCount} · {offlineCount > 0 ? `${offlineCount} hors ligne` : 'prête'}
+          </span>
+        </div>
+        <div className="worker-day-metrics" aria-label="Journée travailleuse">
+          <span>
+            <small>Terminées</small>
+            <strong>
+              {completedVisits}/{routeCards.length}
+            </strong>
+          </span>
+          <span>
+            <small>{t.today.earnLabel}</small>
+            <strong>7 500 XOF</strong>
+          </span>
+        </div>
+        <div className="summary-progress" aria-hidden="true">
+          <span style={{ width: progressPercent }} />
         </div>
       </section>
 
-      <section className="field-command-card" aria-label="Visite en cours">
+      <section className="field-command-card" aria-label={t.today.nextLabel}>
         <div className="field-command-top">
-          <span className="eyebrow">Visite en cours</span>
-          <Badge tone="primary">11h30 - 13h30</Badge>
+          <span className="eyebrow">{t.today.nextLabel}</span>
+          <Badge tone="primary">{activeVisit.time}</Badge>
         </div>
         <div className="field-command-main">
           <div>
-            <h2>Ama Dossou</h2>
+            <h2>{activeVisit.title}</h2>
             <p>
               <MapPinned aria-hidden="true" size={15} strokeWidth={2.35} />
               {activeVisit.address}
@@ -330,18 +328,18 @@ function TodayScreen({
             SOS
           </button>
         </div>
+        <div className="field-command-note">
+          <span>Ordre conseillé</span>
+          <strong>Route, arrivée GPS, photo avant, lavage, photo après.</strong>
+        </div>
         <div className="field-command-actions">
           <button
             className="primary-field-action"
             onClick={() => onRouteChange('visit')}
             type="button"
           >
-            <Camera aria-hidden="true" size={17} strokeWidth={2.4} />
-            Ouvrir visite
-          </button>
-          <button onClick={() => dispatch({ type: 'visit/reportIssue' })} type="button">
-            <CircleAlert aria-hidden="true" size={17} strokeWidth={2.4} />
-            Signaler
+            <MapPinned aria-hidden="true" size={17} strokeWidth={2.4} />
+            {t.today.routeCta}
           </button>
         </div>
       </section>
@@ -374,16 +372,20 @@ function TodayScreen({
 
       <section className="route-card-stack">
         <div className="route-section-header">
-          <strong>Route du jour</strong>
+          <strong>Tournée du jour</strong>
           <button onClick={() => onRouteChange('planning')} type="button">
-            Voir planning
+            Planning
           </button>
         </div>
         <div className="route-list wire-route-list">
           {routeCards.map((card, index) => (
             <div
               className={`wire-route-card ${
-                index === 0 ? 'is-done' : index === 1 ? 'is-active' : 'is-next'
+                index < activeVisitIndex
+                  ? 'is-done'
+                  : index === activeVisitIndex
+                    ? 'is-active'
+                    : 'is-next'
               }`}
               key={`${card.time}-${card.title}`}
             >
@@ -391,14 +393,24 @@ function TodayScreen({
                 <div className="visit-card-topline">
                   <strong>{card.title}</strong>
                   <Badge
-                    tone={index === 1 ? 'primary' : index === 2 ? 'accent' : 'success'}
+                    tone={
+                      index === activeVisitIndex
+                        ? 'primary'
+                        : index > activeVisitIndex
+                          ? 'accent'
+                          : 'success'
+                    }
                     style={
-                      index === 1
+                      index === activeVisitIndex
                         ? { background: 'var(--washed-primary)', color: '#fff' }
                         : undefined
                     }
                   >
-                    {index === 0 ? 'Complétée' : index === 1 ? 'En cours' : 'Suivante'}
+                    {index < activeVisitIndex
+                      ? 'Terminée'
+                      : index === activeVisitIndex
+                        ? 'À faire'
+                        : 'Planifiée'}
                   </Badge>
                 </div>
                 <p>
@@ -412,21 +424,6 @@ function TodayScreen({
               </div>
             </div>
           ))}
-        </div>
-        <div className="earnings-strip">
-          <strong className="earnings-strip-title">Salaire · Avril 2026</strong>
-          <span>
-            <small>Fixe garanti</small>
-            <strong>40 000 XOF</strong>
-          </span>
-          <span>
-            <small>Primes (×5)</small>
-            <strong>3 000 XOF</strong>
-          </span>
-          <span>
-            <small>Avance</small>
-            <strong>Disponible</strong>
-          </span>
         </div>
       </section>
     </>
@@ -456,21 +453,23 @@ function VisitDetailScreen({
   readonly t: typeof workerCopy;
   readonly workerState: WorkerState;
 }): ReactElement {
+  const activeVisit = routeCards[1];
+
   return (
     <Card className="active-visit-card" elevated>
       <div className="visit-card-main">
         <div>
           <div className="visit-card-topline">
-            <strong>Ama Dossou</strong>
-            <Badge>En cours ●</Badge>
+            <strong>{activeVisit.title}</strong>
+            <Badge>Visite 2 / {routeCards.length}</Badge>
           </div>
           <p>
             <MapPinned aria-hidden="true" size={14} strokeWidth={2.3} />
-            Adidogomé, rue 42
+            {activeVisit.address}
           </p>
           <p>
             <Clock3 aria-hidden="true" size={14} strokeWidth={2.3} />
-            11h30-13h30 · {t.today.addressHint}
+            {activeVisit.time} · {t.today.addressHint}
           </p>
         </div>
       </div>
@@ -541,65 +540,45 @@ function VisitWorkstation({
 }): ReactElement {
   const stepConfig = {
     afterPhoto: {
-      body: 'Vérifier les preuves, confirmer la sortie GPS et fermer la visite.',
+      body: 'La photo après est enregistrée. Vérifiez le résultat, puis pointez la sortie avant de quitter le foyer.',
       label: t.action.checkOutNow,
       loading: locationCaptureCheckpoint === 'checkOut',
       onClick: () => void onVisitLocationCapture('checkOut'),
       title: 'Photo après enregistrée',
     },
     beforePhoto: {
-      body: 'Photo avant en file hors ligne. Démarrer la prestation quand vous êtes prête.',
+      body: "Photo avant enregistrée. Démarrez seulement quand l'eau, le savon et la bassine sont prêts.",
       label: t.action.startVisit,
       onClick: () => dispatch({ step: 'inVisit', type: 'visit/setStep' }),
-      title: 'Preuve avant capturée',
+      title: 'Photo « avant » capturée',
     },
     checkIn: {
-      body: 'GPS validé dans le rayon de 100 m. Capturer la photo avant maintenant.',
+      body: 'GPS confirmé à 8 m près. Photographiez le panier de linge sale près de la bassine.',
       label: t.action.takeBeforePhoto,
       loading: isCapturingPhoto,
       onClick: () => void onVisitPhotoCapture('before'),
-      title: 'Arrivée pointée',
+      title: 'Vous êtes arrivée',
     },
     checkOut: {
-      body: 'Visite terminée. Les actions se synchronisent dès que le réseau revient.',
+      body: 'Visite terminée. Les preuves restent en sécurité et se synchronisent dès que le réseau revient.',
       label: t.action.openSummary,
       onClick: () => onRouteChange('daySummary'),
       title: 'Sortie pointée',
     },
     heading: {
-      body: 'Le suivi encadré est visible côté abonnée seulement pendant ce trajet.',
+      body: "Carte en cache. Appuyez sur J'arrive seulement quand vous êtes devant le foyer.",
       label: t.action.checkInNow,
       loading: locationCaptureCheckpoint === 'checkIn',
       onClick: () => void onVisitLocationCapture('checkIn'),
-      title: 'Trajet vers Ama Dossou',
+      title: `En route · ${routeCards[1].title}`,
     },
     inVisit: {
-      body: 'La visite est en cours. Capturer la photo après avant de quitter le foyer.',
+      body: "Pas besoin de regarder l'écran. L'application tourne en arrière-plan pendant le lavage.",
       label: t.action.takeAfterPhoto,
       loading: isCapturingPhoto,
       onClick: () => void onVisitPhotoCapture('after'),
-      title: 'Visite en cours',
+      title: 'Lavage en cours.',
     },
-  }[workerState.visit.step];
-
-  const proofItems = [
-    { done: true, label: 'Route reçue' },
-    { done: workerState.visit.step !== 'heading', label: 'Arrivée GPS' },
-    { done: workerState.visit.beforePhotoCaptured, label: 'Photo avant' },
-    {
-      done: workerState.visit.step === 'inVisit' || workerState.visit.afterPhotoCaptured,
-      label: 'Prestation',
-    },
-    { done: workerState.visit.afterPhotoCaptured, label: 'Photo après' },
-    { done: workerState.visit.step === 'checkOut', label: 'Sortie GPS' },
-  ];
-  const activeProofLabel = {
-    afterPhoto: 'Sortie GPS',
-    beforePhoto: 'Prestation',
-    checkIn: 'Photo avant',
-    checkOut: 'Sortie GPS',
-    heading: 'Arrivée GPS',
-    inVisit: 'Photo après',
   }[workerState.visit.step];
 
   return (
@@ -613,7 +592,7 @@ function VisitWorkstation({
       {workerState.visit.step === 'heading' ? (
         <div className="visit-map" aria-label="Worker GPS map">
           <MapPinned aria-hidden="true" size={30} strokeWidth={2.4} />
-          <span>Adidogomé, rue 42</span>
+          <span>{routeCards[1].address}</span>
           <small>Vous êtes à 85 m de l&apos;adresse</small>
           <em>85 m restants</em>
         </div>
@@ -627,22 +606,6 @@ function VisitWorkstation({
       >
         {stepConfig.label}
       </Button>
-
-      <div className="field-proof-rail" aria-label="Visit proof checklist">
-        {proofItems.map((item, index) => (
-          <span
-            aria-current={item.label === activeProofLabel ? 'step' : undefined}
-            className="proof-item"
-            data-complete={item.done}
-            key={item.label}
-          >
-            <i aria-hidden="true">
-              {item.done ? <Check size={13} strokeWidth={3} /> : index + 1}
-            </i>
-            <small>{item.label}</small>
-          </span>
-        ))}
-      </div>
 
       {locationProof === null ? null : (
         <div className="gps-proof" aria-label="Last GPS proof">
@@ -757,16 +720,16 @@ function PlanningScreen({
   readonly workerState: WorkerState;
 }): ReactElement {
   const dayPlan = [
-    ['Lun', '3 visites', 'Adidogomé'],
-    ['Mar', '4 visites', 'Agoè'],
-    ['Mer', '2 visites', 'Tokoin'],
-    ['Jeu', 'Repos', 'Indispo.'],
+    ['L', 'Lundi 11', '3 visites · 9h-13h'],
+    ['M', 'Mardi 12', '4 visites · 8h-15h'],
+    ['M', 'Merc. 13', '3 visites · 9h-12h'],
+    ['J', 'Jeudi 14', '4 visites · 8h-14h'],
   ] as const;
-  const availabilitySlots = [
-    ['Matin', 'Disponible', <Sunrise aria-hidden="true" size={15} strokeWidth={2.35} />],
-    ['Midi', 'Disponible', <Sun aria-hidden="true" size={15} strokeWidth={2.35} />],
-    ['Après-midi', 'Disponible', <Moon aria-hidden="true" size={15} strokeWidth={2.35} />],
-    ['Urgence', 'Opérateur', <Zap aria-hidden="true" size={15} strokeWidth={2.35} />],
+  const planningRoutes = [
+    ['Lundi 11', 'Adidogomé', '3 visites'],
+    ['Mardi 12', 'Agoè', '4 visites'],
+    ['Mercredi 13', 'Tokoin', '3 visites'],
+    ['Jeudi 14', 'Bè Kpota', '4 visites'],
   ] as const;
 
   return (
@@ -774,60 +737,56 @@ function PlanningScreen({
       <section className="planning-week-card" aria-label={t.planning.week}>
         <div className="card-header">
           <div>
-            <h2>{t.planning.week}</h2>
-            <p>11 visites · 3 quartiers · 1 créneau protégé</p>
+            <h2>Semaine du 11 mai</h2>
+            <p>Le bureau ajuste après appel, jamais en silence.</p>
           </div>
           <Badge tone={workerState.availabilityUnavailable ? 'accent' : 'success'}>
             {workerState.availabilityUnavailable ? 'Indispo.' : 'Confirmé'}
           </Badge>
         </div>
-        <div className="planning-day-strip">
-          {dayPlan.map(([day, count, cell], index) => (
-            <button aria-current={index === 0 ? 'date' : undefined} key={day} type="button">
-              <strong>{day}</strong>
-              <span>{count}</span>
-              <small>{cell}</small>
-            </button>
-          ))}
+        <div className="planning-week-summary">
+          <span>
+            <small>Visites prévues</small>
+            <strong>17</strong>
+          </span>
+          <span>
+            <small>Estimé</small>
+            <strong>25 500 XOF</strong>
+          </span>
         </div>
       </section>
 
-      <Card className="availability-card">
-        <div className="card-header">
-          <div>
-            <h2>Disponibilité</h2>
-            <p>Bloquez un créneau avant validation opérateur.</p>
-          </div>
+      <section className="planning-agenda-card" aria-label="Planning 7 jours">
+        {dayPlan.map(([day, title, detail], index) => (
+          <button aria-current={index === 0 ? 'date' : undefined} key={title} type="button">
+            <span>{day}</span>
+            <strong>{title}</strong>
+            <small>{detail}</small>
+            <em aria-hidden="true">›</em>
+          </button>
+        ))}
+        <div className="planning-leave-note">
+          <strong>Vendredi</strong>
+          <span>{workerState.availabilityUnavailable ? 'Congé confirmé.' : 'Créneau libre.'}</span>
         </div>
-        <div className="availability-grid">
-          {availabilitySlots.map(([slot, fallbackLabel, icon]) => (
-            <button aria-pressed={slot === 'Urgence'} key={slot} type="button">
-              {icon}
-              <strong>{slot}</strong>
-              <span>
-                {workerState.availabilityUnavailable ? 'Indisponible' : fallbackLabel}
-              </span>
-            </button>
-          ))}
-        </div>
-        <Button
-          fullWidth
+        <button
+          className="planning-unavailable-button"
           onClick={() => dispatch({ type: 'planning/markUnavailable' })}
-          variant="secondary"
+          type="button"
         >
           {t.planning.markUnavailable}
-        </Button>
-      </Card>
+        </button>
+      </section>
 
       <section className="planning-route-board" aria-label="Routes à venir">
-        {routeCards.map((card) => (
-          <article key={card.title}>
-            <span>{card.time}</span>
+        {planningRoutes.map(([day, zone, count]) => (
+          <article key={day}>
+            <span>{day}</span>
             <div>
-              <strong>{card.title}</strong>
-              <p>{card.address}</p>
+              <strong>{zone}</strong>
+              <p>{count}</p>
             </div>
-            <Badge tone={card.status === 'Prochaine' ? 'success' : 'muted'}>{card.status}</Badge>
+            <Badge tone="success">Planifié</Badge>
           </article>
         ))}
       </section>
@@ -844,36 +803,64 @@ function EarningsScreen({
   readonly t: typeof workerCopy;
   readonly workerState: WorkerState;
 }): ReactElement {
+  const weeklyBars = [
+    ['L', '80%'],
+    ['M', '60%'],
+    ['M', '90%'],
+    ['J', '75%'],
+    ['V', '50%'],
+    ['S', '30%'],
+    ['D', '30%'],
+  ] as const;
+
   return (
     <ScreenFrame eyebrow="Paiement" title={t.earnings.title}>
-      <Card className="earnings-hero-card" elevated>
-        <span>TOTAL DU MOIS</span>
+      <section className="earnings-week-card">
+        <span>Cette semaine</span>
         <strong>
-          43 400<small> XOF</small>
+          22 500<small> XOF</small>
         </strong>
+        <p>15 visites · lundi → vendredi</p>
+      </section>
+
+      <section className="earnings-balance-card">
         <div>
-          <Metric label="Fixe garanti" value="40 000" />
-          <Metric label="Primes (×5 vis.)" value="3 000" />
+          <span>Solde disponible</span>
+          <strong>
+            12 000 <small>XOF</small>
+          </strong>
         </div>
-        <div className="earnings-progress" aria-hidden="true">
-          <span />
+        <button type="button">Retirer</button>
+      </section>
+
+      <section className="earnings-week-detail" aria-label="Cette semaine en détail">
+        <span className="eyebrow">Cette semaine en détail</span>
+        <div className="earnings-bars" aria-hidden="true">
+          {weeklyBars.map(([day, height], index) => (
+            <span
+              className={index < 4 ? 'is-paid' : index === 4 ? 'is-active' : undefined}
+              key={`${day}-${index}`}
+              style={{ height }}
+            />
+          ))}
         </div>
-        <p>22 / 48 visites complétées · 26 restantes</p>
-      </Card>
+        <div className="earnings-bar-labels">
+          {weeklyBars.map(([day], index) => (
+            <span key={`${day}-${index}`}>{day}</span>
+          ))}
+        </div>
+      </section>
+
       <section className="payout-command-card">
         <div className="card-header">
           <div>
-            <h2>Paiement dimanche 4 mai</h2>
+            <h2>Mobile Money</h2>
             <p>T-Money · +228 90 XX XX XX</p>
           </div>
-          <Badge tone="success">Programmé</Badge>
-        </div>
-        <div className="payout-timeline" aria-label="Paiement travailleuse">
-          <span data-state="done">Visites validées</span>
-          <span data-state="active">Calcul bonus</span>
-          <span>Virement</span>
+          <Badge tone="success">Prêt</Badge>
         </div>
       </section>
+
       <section className="advance-card">
         <Alert title={t.earnings.advance} tone="accent">
           Jusqu&apos;à 50% du fixe · 1× par mois
@@ -918,6 +905,25 @@ function ProfileScreen({
   readonly onRouteChange: (route: WorkerRoute) => void;
   readonly t: typeof workerCopy;
 }): ReactElement {
+  const profileChecks = [
+    [t.profile.agreement, 'Accepté', <Check aria-hidden="true" size={16} strokeWidth={3} />],
+    [
+      t.profile.payout,
+      '+228 90 00 00 00',
+      <Banknote aria-hidden="true" size={16} strokeWidth={2.4} />,
+    ],
+    [
+      'Preuves hors ligne',
+      'Photos et GPS gardés localement',
+      <ShieldAlert aria-hidden="true" size={16} strokeWidth={2.4} />,
+    ],
+  ] as const;
+  const regularHomes = [
+    ['Ama Dossou', 'Adidogomé · 12 visites', '4.9'],
+    ['Kofi Mensah', 'Bè Kpota · 8 visites', '4.8'],
+    ['Esi Amouzou', 'Hédzranawoé · 5 visites', '5.0'],
+  ] as const;
+
   return (
     <ScreenFrame eyebrow="Compte" title={t.profile.title}>
       <section className="worker-profile-hero" aria-label={t.profile.title}>
@@ -926,81 +932,101 @@ function ProfileScreen({
         </div>
         <div>
           <h2>Akouvi A.</h2>
-          <p>Adidogomé · Agoè · Tokoin</p>
+          <p>Laveuse active · Adidogomé, Agoè, Tokoin</p>
+          <div className="profile-trust-row" aria-label="Statut travailleuse">
+            <span>4.9</span>
+            <span>25 visites</span>
+            <span>3 foyers réguliers</span>
+          </div>
         </div>
-        <Badge tone="success">Active</Badge>
       </section>
 
-      <Card elevated>
-        <div className="profile-command-grid">
-          <span>
-            <strong>{t.profile.agreement}</strong>
-            <small>Accord travailleuse accepté</small>
-          </span>
-          <span>
-            <strong>{t.profile.payout}</strong>
-            <small>+228 90 00 00 00</small>
-          </span>
-          <span>
-            <strong>{t.profile.privacy}</strong>
-            <small>Export, effacement, politique de confidentialité</small>
-          </span>
-          <span>
-            <strong>{t.profile.help}</strong>
-            <small>Assistance terrain et procédures</small>
-          </span>
-        </div>
-        <div className="profile-actions">
-          <Button
-            fullWidth
-            onClick={() => dispatch({ type: 'activation/complete' })}
-            variant="secondary"
-          >
-            {t.activation.complete}
-          </Button>
-          <Button fullWidth onClick={() => onRouteChange('activation')} variant="secondary">
-            {t.nav.activation}
-          </Button>
-          <Button fullWidth onClick={() => onRouteChange('inbox')} variant="secondary">
-            {t.nav.inbox}
-          </Button>
-          <Button fullWidth onClick={() => onRouteChange('daySummary')} variant="secondary">
-            {t.nav.daySummary}
-          </Button>
-        </div>
-      </Card>
-      <Card>
-        <div className="profile-actions">
-          <Button
-            fullWidth
-            onClick={() => dispatch({ type: 'privacy/export' })}
-            variant="secondary"
-          >
-            {t.action.requestExport}
-          </Button>
-          <Button
-            fullWidth
-            onClick={() => dispatch({ type: 'privacy/erasure' })}
-            variant="secondary"
-          >
-            {t.action.requestErasure}
-          </Button>
-        </div>
-      </Card>
-      <Card>
+      <section className="profile-readiness-card" aria-label="Statut du compte">
         <div className="card-header">
-          <h2>Sécurité</h2>
+          <div>
+            <h2>Compte prêt</h2>
+            <p>Identité, paiement et preuves terrain.</p>
+          </div>
           <Badge tone="success">Active</Badge>
         </div>
-        <ListItem
-          description="Disponible depuis chaque visite en cas de problème."
-          title="Bouton SOS"
-        />
-        <ListItem
-          description="Vos photos, pointages et signalements restent synchronisés dès que le réseau revient."
-          title="Mode hors ligne"
-        />
-      </Card>
+        <div className="profile-readiness-list">
+          {profileChecks.map(([title, detail, icon]) => (
+            <div key={title}>
+              <span>{icon}</span>
+              <strong>{title}</strong>
+              <small>{detail}</small>
+            </div>
+          ))}
+        </div>
+        <div className="profile-action-row">
+          <button onClick={() => dispatch({ type: 'activation/complete' })} type="button">
+            {t.activation.complete}
+          </button>
+          <button onClick={() => onRouteChange('activation')} type="button">
+            {t.nav.activation}
+          </button>
+          <button onClick={() => onRouteChange('inbox')} type="button">
+            {t.nav.inbox}
+          </button>
+          <button onClick={() => onRouteChange('daySummary')} type="button">
+            {t.nav.daySummary}
+          </button>
+        </div>
+      </section>
+
+      <section className="profile-household-card" aria-label="Foyers réguliers">
+        <div className="card-header">
+          <div>
+            <h2>Foyers réguliers</h2>
+            <p>Relations connues par Washed.</p>
+          </div>
+          <Badge tone="primary">3</Badge>
+        </div>
+        <div className="profile-household-list">
+          {regularHomes.map(([name, detail, rating]) => (
+            <div key={name}>
+              <MapPinned aria-hidden="true" size={17} strokeWidth={2.35} />
+              <span>
+                <strong>{name}</strong>
+                <small>{detail}</small>
+              </span>
+              <em>{rating}</em>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="profile-account-card" aria-label="Sécurité et données">
+        <h2>Sécurité et données</h2>
+        <button
+          aria-label="Bouton SOS"
+          onClick={() => dispatch({ type: 'sos/open' })}
+          type="button"
+        >
+          <span>Bouton SOS</span>
+          <small>Disponible depuis chaque visite.</small>
+        </button>
+        <button
+          aria-label={t.action.requestExport}
+          onClick={() => dispatch({ type: 'privacy/export' })}
+          type="button"
+        >
+          <span>{t.action.requestExport}</span>
+          <small>Copie de vos données travailleuse.</small>
+        </button>
+        <button
+          aria-label={t.action.requestErasure}
+          onClick={() => dispatch({ type: 'privacy/erasure' })}
+          type="button"
+        >
+          <span>{t.action.requestErasure}</span>
+          <small>Revue par l&apos;opérateur avant suppression.</small>
+        </button>
+        <button aria-label={t.profile.help} type="button">
+          <span>{t.profile.help}</span>
+          <small>Assistance terrain et procédures.</small>
+        </button>
+      </section>
     </ScreenFrame>
   );
 }

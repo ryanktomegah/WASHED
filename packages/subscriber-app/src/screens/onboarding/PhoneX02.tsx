@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
 
+import { useSignup } from './SignupContext.js';
+
 const TOGO_PHONE_LENGTH = 8;
 
 function formatTogoPhone(digits: string): string {
@@ -16,7 +18,9 @@ function digitsOf(value: string): string {
 
 export function PhoneX02(): ReactElement {
   const navigate = useNavigate();
-  const [phone, setPhone] = useState('');
+  const signup = useSignup();
+  const initialDigits = digitsOf(signup.phone.replace(/^\+228\s*/u, ''));
+  const [phone, setPhone] = useState(formatTogoPhone(initialDigits));
   const digits = digitsOf(phone);
   const isValid = digits.length === TOGO_PHONE_LENGTH;
 
@@ -27,7 +31,9 @@ export function PhoneX02(): ReactElement {
   const onSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
     if (!isValid) return;
-    navigate('/signup/otp', { state: { phone: `+228 ${formatTogoPhone(digits)}` } });
+    const fullPhone = `+228 ${formatTogoPhone(digits)}`;
+    signup.setPhone(fullPhone);
+    navigate('/signup/otp');
   };
 
   return (
