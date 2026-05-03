@@ -6,7 +6,7 @@ body,
 }
 
 body {
-  background: #f5f8f6;
+  background: var(--bg);
 }
 
 * {
@@ -18,11 +18,37 @@ input {
   font: inherit;
 }
 
+/* ============================================================
+   Legacy hub shim — maps the deprecated --washed-* CSS variable
+   names to the canonical Sprint-1 token names defined in
+   @washed/design-tokens/styles.css. The legacy hub at /hub/*
+   is preserved as the snapshot of in-progress work; it gets
+   progressively replaced by design-aligned X-* screens.
+   Once every legacy hub style is migrated, this shim can be
+   deleted along with the App.tsx legacy hub component.
+   ============================================================ */
+[data-theme="subscriber"] {
+  --washed-accent: var(--accent);
+  --washed-background: var(--bg);
+  --washed-border: var(--line);
+  --washed-danger: var(--danger);
+  --washed-foreground: var(--ink);
+  --washed-muted: var(--ink-3);
+  --washed-primary: var(--primary);
+  --washed-primary-soft: var(--primary-soft);
+  --washed-success: var(--success);
+  --washed-surface: var(--surface);
+}
+
 .app-frame {
-  --subscriber-trust: #1a5c34;
-  --subscriber-trust-soft: #eaf6ee;
-  --subscriber-glow: rgba(26, 92, 52, 0.14);
-  background: #f5f8f6 !important;
+  /* Legacy hub used "trust" green tokens because it was themed "worker"
+     by mistake. Now that the regression is fixed (theme="subscriber"),
+     map them to the actual subscriber Savane palette so the hub
+     renders in terracotta/cream until each surface is migrated. */
+  --subscriber-trust: var(--primary);
+  --subscriber-trust-soft: var(--primary-soft);
+  --subscriber-glow: rgba(196, 98, 45, 0.14);
+  background: var(--bg) !important;
   display: grid;
   place-items: center;
   min-height: 100vh;
@@ -39,7 +65,7 @@ input {
   width: min(100%, 430px);
   min-height: 100vh;
   min-height: 100dvh;
-  background: linear-gradient(180deg, rgba(26, 92, 52, 0.08), transparent 190px), #f5f8f6;
+  background: linear-gradient(180deg, rgba(196, 98, 45, 0.06), transparent 190px), var(--bg);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--washed-border) 60%, transparent);
 }
 
@@ -280,8 +306,8 @@ input {
   border: 1px solid rgba(255, 253, 248, 0.12);
   border-radius: 18px;
   background:
-    radial-gradient(circle at 92% 4%, rgba(212, 144, 14, 0.16), transparent 32%),
-    linear-gradient(145deg, #16482b 0%, #0d2416 74%);
+    radial-gradient(circle at 92% 4%, rgba(196, 98, 45, 0.22), transparent 32%),
+    linear-gradient(145deg, var(--ink-2) 0%, var(--ink) 74%);
   box-shadow: none;
   margin: 0 16px 12px;
   padding: 14px;
@@ -1226,7 +1252,7 @@ input {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
   background:
-    radial-gradient(circle at 94% 0%, rgba(26, 92, 52, 0.1), transparent 34%), var(--washed-surface);
+    radial-gradient(circle at 94% 0%, rgba(196, 98, 45, 0.1), transparent 34%), var(--washed-surface);
 }
 
 .messages-hub-hero span {
