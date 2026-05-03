@@ -25,9 +25,9 @@ describe('@washed/ui', () => {
       </WashedThemeProvider>,
     );
 
-    expect(screen.getByTestId('theme')).toHaveAttribute('data-washed-theme', 'worker');
+    expect(screen.getByTestId('theme')).toHaveAttribute('data-theme', 'worker');
     expect(screen.getByText('worker')).toBeInTheDocument();
-    expect(screen.getByTestId('theme')).toHaveStyle({ '--washed-primary': '#1a5c34' });
+    expect(document.body).toHaveAttribute('data-theme', 'worker');
   });
 
   it('renders accessible controls with mobile tap targets', () => {
@@ -76,7 +76,7 @@ describe('@washed/ui', () => {
     );
 
     expect(screen.getByText('Card')).toBeInTheDocument();
-    expect(screen.getByText('Paid')).toHaveStyle({ color: '#2a7a48' });
+    expect(screen.getByText('Paid')).toHaveStyle({ color: '#2A7A48' });
     expect(screen.getByRole('alert')).toHaveTextContent('Offline');
     expect(screen.getByText('Empty')).toBeInTheDocument();
     expect(screen.getByTestId('skeleton')).toHaveAttribute('aria-hidden', 'true');

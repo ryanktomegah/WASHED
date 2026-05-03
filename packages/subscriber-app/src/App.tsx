@@ -10,7 +10,7 @@ import {
   TextField,
   WashedThemeProvider,
 } from '@washed/ui';
-import { formatVisitDate, formatXof, translate, type WashedLocale } from '@washed/i18n';
+import { formatVisitDate, formatXof, type WashedLocale } from '@washed/i18n';
 import {
   Bell,
   CalendarDays,
@@ -143,7 +143,7 @@ export function App(): ReactElement {
   }, [subscriberState.lastFeedback]);
 
   return (
-    <WashedThemeProvider className="app-frame" theme="worker">
+    <WashedThemeProvider className="app-frame" theme="subscriber">
       <div className="phone-shell">
         <main className="subscriber-shell">
           {visibleFeedback === null ? null : (
@@ -725,7 +725,7 @@ function OnboardingScreen({
                 >
                   <strong>{tier}</strong>
                   <span>{cadence}</span>
-                  <Badge>{formatXof(Number(price), locale)}</Badge>
+                  <Badge>{formatXof(Number(price))}</Badge>
                 </button>
               ))}
             </div>
@@ -783,7 +783,13 @@ function OnboardingScreen({
             {isFrench ? 'Retour' : 'Back'}
           </Button>
           <Button onClick={goNext} variant="primary">
-            {isLastStep ? translate('common.done', locale) : translate('common.continue', locale)}
+            {isLastStep
+              ? isFrench
+                ? 'Terminé'
+                : 'Done'
+              : isFrench
+                ? 'Continuer'
+                : 'Continue'}
           </Button>
         </div>
       </Card>
@@ -840,7 +846,7 @@ function SubscriptionScreen({
         </div>
         <div className="subscription-service-metrics">
           <span>
-            <strong>{formatXof(price, locale)}</strong>
+            <strong>{formatXof(price)}</strong>
             <small>{isFrench ? 'par mois' : 'per month'}</small>
           </span>
           <span>
@@ -879,7 +885,7 @@ function SubscriptionScreen({
           <span>
             <strong>{isFrench ? 'Facturation' : 'Billing'}</strong>
             <small>
-              {formatXof(price, locale)} ·{' '}
+              {formatXof(price)} ·{' '}
               {t.paymentStatus[subscriberState.subscription.paymentStatus]}
             </small>
           </span>
@@ -937,7 +943,7 @@ function SubscriptionScreen({
           <div>
             <h2>{isFrench ? 'Paiement et reçus' : 'Payment and receipts'}</h2>
             <p>
-              Mai 2026 · {formatXof(price, locale)} ·{' '}
+              Mai 2026 · {formatXof(price)} ·{' '}
               {t.paymentStatus[subscriberState.subscription.paymentStatus]}
             </p>
           </div>
@@ -1388,7 +1394,7 @@ function BillingScreen({
         <div className="billing-overview-top">
           <div>
             <span>{isFrench ? 'Solde à régulariser' : 'Balance due'}</span>
-            <strong>{formatXof(pipeline.billing.balanceDueXof, locale)}</strong>
+            <strong>{formatXof(pipeline.billing.balanceDueXof)}</strong>
           </div>
           <Badge tone="accent">{t.paymentStatus[subscriberState.subscription.paymentStatus]}</Badge>
         </div>
@@ -1440,7 +1446,7 @@ function BillingScreen({
                 <small>{payment.method}</small>
               </span>
               <span>
-                <strong>{formatXof(payment.amountXof, locale)}</strong>
+                <strong>{formatXof(payment.amountXof)}</strong>
                 <small>{isFrench ? payment.statusFr : payment.statusEn}</small>
               </span>
             </article>
@@ -1503,7 +1509,7 @@ function PaymentRecoveryScreen({
     >
       <Card elevated>
         <Alert
-          title={formatXof(subscriberState.subscription.monthlyPriceXof, locale)}
+          title={formatXof(subscriberState.subscription.monthlyPriceXof)}
           tone="danger"
         >
           {t.surfaces.paymentRecovery.body}

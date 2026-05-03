@@ -88,12 +88,12 @@ export const operatorFeedback = {
 
 export const navItems = [
   { icon: '⌂', label: 'Dashboard', route: 'dashboard' },
-  { badge: '3', icon: '📋', label: translate('operator.nav.matching', 'fr'), route: 'matching' },
-  { badge: '1', icon: '🗺', label: translate('operator.nav.liveOps', 'fr'), route: 'liveOps' },
+  { badge: '3', icon: '📋', label: 'Attribution', route: 'matching' },
+  { badge: '1', icon: '🗺', label: 'Opérations', route: 'liveOps' },
   { icon: '🗓', label: 'Planning', route: 'routePlanning' },
   { icon: '👷', label: 'Profiles', route: 'profiles' },
   { badge: '2', icon: '⚖', label: 'Litiges', route: 'disputes' },
-  { icon: '💳', label: translate('operator.nav.payments', 'fr'), route: 'payments' },
+  { icon: '💳', label: 'Paiements', route: 'payments' },
   { icon: '🔔', label: 'Notifications', route: 'notifications' },
   { icon: '🧾', label: 'Audit', route: 'audit' },
   { icon: '📊', label: 'Rapports', route: 'reports' },

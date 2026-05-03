@@ -3,6 +3,7 @@ import {
   createContext,
   forwardRef,
   useContext,
+  useEffect,
   useId,
   type AnchorHTMLAttributes,
   type ButtonHTMLAttributes,
@@ -100,29 +101,33 @@ export interface TabItem {
   readonly onClick?: () => void;
 }
 
-type CssVariables = CSSProperties & Record<`--washed-${string}`, string>;
-
 const ThemeContext = createContext<WashedTheme>(getWashedTheme('subscriber'));
 
 export function WashedThemeProvider({
   children,
-  style,
   theme = 'subscriber',
   ...props
 }: WashedThemeProviderProps): ReactElement {
   const resolvedTheme = resolveTheme(theme);
 
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+
+    const previous = document.body.getAttribute('data-theme');
+    document.body.setAttribute('data-theme', resolvedTheme.name);
+
+    return () => {
+      if (previous === null) {
+        document.body.removeAttribute('data-theme');
+      } else {
+        document.body.setAttribute('data-theme', previous);
+      }
+    };
+  }, [resolvedTheme.name]);
+
   return (
     <ThemeContext.Provider value={resolvedTheme}>
-      <div
-        {...props}
-        data-washed-theme={resolvedTheme.name}
-        style={{
-          ...themeToCssVariables(resolvedTheme),
-          ...surfaceReset(resolvedTheme),
-          ...style,
-        }}
-      >
+      <div {...props} data-theme={resolvedTheme.name}>
         {children}
       </div>
     </ThemeContext.Provider>
@@ -186,7 +191,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       style={{
         ...buttonStyle(theme, variant, size, false, props.disabled === true),
         aspectRatio: '1 / 1',
-        borderRadius: theme.shared.radius.control,
+        borderRadius: theme.shared.radius.md,
         padding: 0,
         width: size === 'sm' ? 40 : size === 'lg' ? 52 : 44,
         ...style,
@@ -214,7 +219,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
     <div style={{ display: 'grid', gap: 8, ...style }}>
       <label
         htmlFor={inputId}
-        style={{ color: theme.colors.foreground, fontSize: 14, fontWeight: 700 }}
+        style={{ color: theme.colors.ink, fontSize: 14, fontWeight: 700 }}
       >
         {label}
       </label>
@@ -226,19 +231,19 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
         id={inputId}
         style={{
           background: theme.colors.surface,
-          border: `1px solid ${error === undefined ? theme.colors.border : theme.colors.danger}`,
-          borderRadius: theme.shared.radius.control,
+          border: `1px solid ${error === undefined ? theme.colors.line : theme.colors.danger}`,
+          borderRadius: theme.shared.radius.md,
           boxSizing: 'border-box',
-          color: theme.colors.foreground,
-          font: `500 16px ${theme.shared.fontFamily.body}`,
-          minHeight: theme.shared.tapTarget.minimum,
+          color: theme.colors.ink,
+          font: `500 16px ${theme.shared.font.body}`,
+          minHeight: theme.shared.tap.min,
           outlineColor: theme.colors.primary,
           padding: '10px 12px',
           width: '100%',
         }}
       />
       {hint === undefined ? null : (
-        <span id={descriptionId} style={{ color: theme.colors.muted, fontSize: 13 }}>
+        <span id={descriptionId} style={{ color: theme.colors.ink3, fontSize: 13 }}>
           {hint}
         </span>
       )}
@@ -263,10 +268,10 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
       ref={ref}
       style={{
         background: theme.colors.surface,
-        border: `1px solid ${theme.colors.border}`,
-        borderRadius: theme.shared.radius.panel,
+        border: `1px solid ${theme.colors.line}`,
+        borderRadius: theme.shared.radius.md,
         boxShadow: elevated ? theme.shared.shadow.elevated : theme.shared.shadow.card,
-        color: theme.colors.foreground,
+        color: theme.colors.ink,
         padding: 16,
         ...style,
       }}
@@ -289,7 +294,7 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(function Badge(
       ref={ref}
       style={{
         alignItems: 'center',
-        background: colors.muted,
+        background: colors.soft,
         borderRadius: theme.shared.radius.pill,
         color: colors.strong,
         display: 'inline-flex',
@@ -318,10 +323,10 @@ export const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(
       ref={ref}
       role={tone === 'danger' ? 'alert' : 'status'}
       style={{
-        background: colors.muted,
+        background: colors.soft,
         border: `1px solid ${colors.border}`,
-        borderRadius: theme.shared.radius.panel,
-        color: theme.colors.foreground,
+        borderRadius: theme.shared.radius.md,
+        color: theme.colors.ink,
         padding: 14,
         ...style,
       }}
@@ -348,7 +353,7 @@ export function EmptyState({
       {...props}
       style={{
         alignItems: 'center',
-        color: theme.colors.foreground,
+        color: theme.colors.ink,
         display: 'grid',
         gap: 10,
         justifyItems: 'center',
@@ -359,7 +364,7 @@ export function EmptyState({
     >
       <strong style={{ fontSize: 18 }}>{title}</strong>
       {description === undefined ? null : (
-        <span style={{ color: theme.colors.muted, maxWidth: 360 }}>{description}</span>
+        <span style={{ color: theme.colors.ink3, maxWidth: 360 }}>{description}</span>
       )}
       {action}
     </div>
@@ -380,7 +385,7 @@ export function Skeleton({
       aria-hidden="true"
       style={{
         background: theme.colors.primarySoft,
-        borderRadius: theme.shared.radius.control,
+        borderRadius: theme.shared.radius.sm,
         height,
         width,
         ...style,
@@ -402,8 +407,8 @@ export const ListItem = forwardRef<HTMLDivElement, ListItemProps>(function ListI
       style={{
         alignItems: 'center',
         background: theme.colors.surface,
-        borderBottom: `1px solid ${theme.colors.border}`,
-        color: theme.colors.foreground,
+        borderBottom: `1px solid ${theme.colors.line}`,
+        color: theme.colors.ink,
         display: 'grid',
         gap: 12,
         gridTemplateColumns: `${before === undefined ? '' : 'auto '}1fr${
@@ -418,7 +423,7 @@ export const ListItem = forwardRef<HTMLDivElement, ListItemProps>(function ListI
       <div style={{ display: 'grid', gap: 2 }}>
         <strong style={{ fontSize: 15 }}>{title}</strong>
         {description === undefined ? null : (
-          <span style={{ color: theme.colors.muted, fontSize: 13 }}>{description}</span>
+          <span style={{ color: theme.colors.ink3, fontSize: 13 }}>{description}</span>
         )}
       </div>
       {after}
@@ -435,7 +440,7 @@ export function BottomNav({ items, style, ...props }: BottomNavProps): ReactElem
       aria-label={props['aria-label'] ?? 'Primary'}
       style={{
         background: theme.colors.surface,
-        borderTop: `1px solid ${theme.colors.border}`,
+        borderTop: `1px solid ${theme.colors.line}`,
         display: 'grid',
         gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))`,
         minHeight: 64,
@@ -477,9 +482,9 @@ export function Tabs({ tabs, style, ...props }: TabsProps): ReactElement {
             background: tab.active === true ? theme.colors.surface : 'transparent',
             border: 0,
             borderRadius: theme.shared.radius.pill,
-            color: tab.active === true ? theme.colors.primary : theme.colors.muted,
+            color: tab.active === true ? theme.colors.primary : theme.colors.ink3,
             cursor: 'pointer',
-            font: `800 14px ${theme.shared.fontFamily.body}`,
+            font: `800 14px ${theme.shared.font.body}`,
             minHeight: 36,
             padding: '8px 14px',
           }}
@@ -503,9 +508,9 @@ function NavAction({
     alignItems: 'center',
     background: 'transparent',
     border: 0,
-    color: item.active === true ? theme.colors.primary : theme.colors.muted,
+    color: item.active === true ? theme.colors.primary : theme.colors.ink3,
     display: 'grid',
-    font: `800 12px ${theme.shared.fontFamily.body}`,
+    font: `800 12px ${theme.shared.font.body}`,
     gap: 4,
     justifyItems: 'center',
     minHeight: 64,
@@ -556,14 +561,14 @@ function buttonStyle(
     alignItems: 'center',
     background: palette.background,
     border: `1px solid ${palette.border}`,
-    borderRadius: theme.shared.radius.control,
+    borderRadius: theme.shared.radius.md,
     color: palette.color,
     cursor: disabled ? 'not-allowed' : 'pointer',
     display: 'inline-flex',
-    font: `800 ${size === 'sm' ? 14 : 16}px ${theme.shared.fontFamily.body}`,
+    font: `800 ${size === 'sm' ? 14 : 16}px ${theme.shared.font.body}`,
     gap: 8,
     justifyContent: 'center',
-    minHeight: Math.max(height, Number.parseInt(theme.shared.tapTarget.minimum, 10)),
+    minHeight: Math.max(height, Number.parseInt(theme.shared.tap.min, 10)),
     opacity: disabled ? 0.58 : 1,
     padding: size === 'sm' ? '8px 12px' : size === 'lg' ? '12px 18px' : '10px 16px',
     width: fullWidth ? '100%' : undefined,
@@ -597,7 +602,7 @@ function buttonPalette(
   if (variant === 'secondary') {
     return {
       background: theme.colors.primarySoft,
-      border: theme.colors.primaryMuted,
+      border: theme.colors.primaryTint,
       color: theme.colors.primary,
     };
   }
@@ -613,43 +618,18 @@ function resolveTheme(theme: WashedThemeInput): WashedTheme {
   return typeof theme === 'string' ? getWashedTheme(theme) : theme;
 }
 
-function surfaceReset(theme: WashedTheme): CSSProperties {
-  return {
-    background: theme.colors.background,
-    color: theme.colors.foreground,
-    fontFamily: theme.shared.fontFamily.body,
-  };
-}
-
-function themeToCssVariables(theme: WashedTheme): CssVariables {
-  return {
-    '--washed-accent': theme.colors.accent,
-    '--washed-background': theme.colors.background,
-    '--washed-border': theme.colors.border,
-    '--washed-danger': theme.colors.danger,
-    '--washed-font-body': theme.shared.fontFamily.body,
-    '--washed-font-brand': theme.shared.fontFamily.brand,
-    '--washed-foreground': theme.colors.foreground,
-    '--washed-muted': theme.colors.muted,
-    '--washed-primary': theme.colors.primary,
-    '--washed-primary-soft': theme.colors.primarySoft,
-    '--washed-success': theme.colors.success,
-    '--washed-surface': theme.colors.surface,
-  };
-}
-
 function toneColors(
   theme: WashedTheme,
   tone: Tone,
 ): {
   readonly border: string;
-  readonly muted: string;
+  readonly soft: string;
   readonly strong: string;
 } {
   if (tone === 'accent') {
     return {
       border: theme.colors.accent,
-      muted: theme.colors.accentMuted,
+      soft: theme.colors.accentSoft,
       strong: theme.colors.accent,
     };
   }
@@ -657,30 +637,30 @@ function toneColors(
   if (tone === 'danger') {
     return {
       border: theme.colors.danger,
-      muted: theme.colors.dangerMuted,
+      soft: theme.colors.dangerSoft,
       strong: theme.colors.danger,
     };
   }
 
   if (tone === 'muted') {
     return {
-      border: theme.colors.border,
-      muted: theme.colors.primarySoft,
-      strong: theme.colors.muted,
+      border: theme.colors.line,
+      soft: theme.colors.primarySoft,
+      strong: theme.colors.ink3,
     };
   }
 
   if (tone === 'success') {
     return {
       border: theme.colors.success,
-      muted: theme.colors.successMuted,
+      soft: theme.colors.successSoft,
       strong: theme.colors.success,
     };
   }
 
   return {
     border: theme.colors.primary,
-    muted: theme.colors.primaryMuted,
+    soft: theme.colors.primaryTint,
     strong: theme.colors.primary,
   };
 }

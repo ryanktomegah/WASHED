@@ -7,10 +7,12 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./fr.json": "./src/fr.json"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "node scripts/compile-fr.mjs && tsc -p tsconfig.json",
+    "compile:fr": "node scripts/compile-fr.mjs",
     "lint": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",

@@ -7,11 +7,17 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./styles.css": "./styles.css"
   },
+  "files": [
+    "dist",
+    "styles.css"
+  ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && node scripts/sync-design-css.mjs",
     "lint": "tsc -p tsconfig.json --noEmit",
+    "sync:css": "node scripts/sync-design-css.mjs",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc -p tsconfig.json --noEmit"

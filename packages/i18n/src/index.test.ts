@@ -1,30 +1,57 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatVisitDate, formatXof, messages, normalizeLocale, translate } from './index.js';
+import {
+  defaultLocale,
+  formatVisitDate,
+  formatXof,
+  hasMessageKey,
+  normalizeLocale,
+  translate,
+} from './index.js';
 
 describe('Washed i18n', () => {
   it('defaults unsupported locales to French', () => {
+    expect(defaultLocale).toBe('fr');
     expect(normalizeLocale(undefined)).toBe('fr');
     expect(normalizeLocale('mina-TG')).toBe('fr');
     expect(normalizeLocale('en-US')).toBe('en');
   });
 
-  it('keeps message keys present in both launch locales', () => {
-    expect(Object.keys(messages.en).sort()).toEqual(Object.keys(messages.fr).sort());
+  it('translates onboarding copy from the deck', () => {
+    expect(translate('subscriber.signup.phone.title')).toBe('Votre numéro de téléphone.');
+    expect(translate('subscriber.signup.phone.cta')).toBe('Recevoir le code');
+    expect(translate('subscriber.signup.otp.title')).toBe('Le code reçu par SMS.');
   });
 
-  it('translates launch copy', () => {
-    expect(translate('subscriber.onboarding.start', 'fr')).toBe('Commencer');
-    expect(translate('subscriber.onboarding.start', 'en')).toBe('Start');
+  it('falls back to FR when EN is missing in v1', () => {
+    expect(translate('subscriber.splash.tagline', 'en')).toBe(
+      "L'appli laveuse pour Lomé.",
+    );
   });
 
-  it('formats XOF without fractional currency units', () => {
-    expect(formatXof(4500, 'fr')).toContain('4');
-    expect(formatXof(4500, 'fr')).toContain('500');
-    expect(formatXof(4500, 'fr')).toContain('F');
+  it('interpolates ICU-style {variables}', () => {
+    expect(
+      translate('subscriber.signup.step_indicator', 'fr', { current: 1, total: 8 }),
+    ).toBe('Étape 1 sur 8');
+    expect(
+      translate('subscriber.signup.otp.body', 'fr', { phone: '+228 90 ●● ●● 56' }),
+    ).toBe('Six chiffres envoyés au +228 90 ●● ●● 56.');
+    expect(translate('subscriber.signup.otp.resend', 'fr', { seconds: 30 })).toBe(
+      'Renvoyer dans 30 s',
+    );
   });
 
-  it('formats visit dates with weekday context', () => {
+  it('exposes a type guard for runtime key validation', () => {
+    expect(hasMessageKey('subscriber.signup.phone.title')).toBe(true);
+    expect(hasMessageKey('totally.invented.key')).toBe(false);
+  });
+
+  it('formats XOF with thousands grouping and the XOF suffix', () => {
+    expect(formatXof(2500)).toMatch(/2.500.*XOF/);
+    expect(formatXof(4500)).toMatch(/4.500.*XOF/);
+  });
+
+  it('formats visit dates with weekday context in FR', () => {
     expect(formatVisitDate('2026-05-05T09:00:00.000Z', 'fr').toLowerCase()).toContain('mardi');
   });
 });

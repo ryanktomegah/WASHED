@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { getWashedTheme, washedThemes } from './index.js';
+import {
+  getWashedTheme,
+  sharedTokens,
+  subscriberTheme,
+  washedThemes,
+} from './index.js';
 
 describe('Washed design tokens', () => {
   it('preserves one audience theme per frontend surface', () => {
@@ -9,21 +14,60 @@ describe('Washed design tokens', () => {
 
   it('keeps the subscriber Savannah palette from the design files', () => {
     expect(getWashedTheme('subscriber').colors).toMatchObject({
-      background: '#FAF6F0',
-      foreground: '#1C1208',
+      bg: '#FAF6F0',
+      ink: '#1C1208',
       primary: '#C4622D',
+      accent: '#B8870A',
+      success: '#4A7C3F',
     });
   });
 
   it('keeps the worker Forest palette distinct from subscriber', () => {
-    expect(getWashedTheme('worker').colors.primary).toBe('#1a5c34');
+    expect(getWashedTheme('worker').colors.primary).toBe('#1A5C34');
     expect(getWashedTheme('worker').colors.primary).not.toBe(
       getWashedTheme('subscriber').colors.primary,
     );
   });
 
+  it('uses the Operator Admin palette with deep purple primary', () => {
+    expect(getWashedTheme('operator').colors.primary).toBe('#3B1F7A');
+    expect(getWashedTheme('operator').colors.bg).toBe('#F7F7FB');
+  });
+
   it('uses a shared minimum tap target suitable for mobile apps', () => {
-    expect(getWashedTheme('subscriber').shared.tapTarget.minimum).toBe('44px');
-    expect(getWashedTheme('worker').shared.tapTarget.minimum).toBe('44px');
+    expect(sharedTokens.tap.min).toBe('44px');
+  });
+
+  it('exposes the foundations type stack: Fraunces / Inter / JetBrains Mono', () => {
+    expect(sharedTokens.font.display).toContain('Fraunces');
+    expect(sharedTokens.font.body).toContain('Inter');
+    expect(sharedTokens.font.mono).toContain('JetBrains Mono');
+  });
+
+  it('emits the 4-based spacing scale with 12 stops (--s-0 .. --s-11)', () => {
+    expect(sharedTokens.spacing).toHaveLength(12);
+    expect(sharedTokens.spacing[0]).toBe('0');
+    expect(sharedTokens.spacing[1]).toBe('4px');
+    expect(sharedTokens.spacing[4]).toBe('16px');
+    expect(sharedTokens.spacing[11]).toBe('120px');
+  });
+
+  it('locks the four motion durations at 120/200/320/480 ms', () => {
+    expect(sharedTokens.motion.duration.fast).toBe('120ms');
+    expect(sharedTokens.motion.duration.base).toBe('200ms');
+    expect(sharedTokens.motion.duration.slow).toBe('320ms');
+    expect(sharedTokens.motion.duration.emphasis).toBe('480ms');
+  });
+
+  it('refuses bounce/spring — only the three approved easings', () => {
+    expect(sharedTokens.motion.easing.standard).toBe('cubic-bezier(0.2, 0.8, 0.2, 1)');
+    expect(sharedTokens.motion.easing.emphasized).toBe('cubic-bezier(0.32, 0.72, 0, 1)');
+    expect(sharedTokens.motion.easing.snap).toBe('cubic-bezier(0.4, 0, 0.2, 1)');
+  });
+
+  it('shares the spacing/font/motion grammar across every theme', () => {
+    expect(subscriberTheme.shared).toBe(sharedTokens);
+    expect(getWashedTheme('worker').shared).toBe(sharedTokens);
+    expect(getWashedTheme('operator').shared).toBe(sharedTokens);
   });
 });
