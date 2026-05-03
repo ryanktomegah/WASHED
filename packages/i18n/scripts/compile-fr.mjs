@@ -23,7 +23,7 @@ const html = readFileSync(deckPath, 'utf8');
 
 const tbodyPattern = /<tbody>([\s\S]*?)<\/tbody>/g;
 const pairPattern =
-  /<span class="key">([^<]+)<\/span>[\s\S]*?<span class="fr(?:\s+body)?">([\s\S]*?)<\/span>/g;
+  /<span class="key">([^<]+)<\/span>[\s\S]*?<span class="fr(?:\s+body)?"\s*>([\s\S]*?)<\/span>/g;
 
 const messages = {};
 const duplicates = [];

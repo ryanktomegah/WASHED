@@ -12,7 +12,8 @@ export default defineConfig({
     // We design at this size and verify it scales up cleanly.
     {
       name: 'subscriber-mobile',
-      testMatch: /(subscriber|onboarding|screenshot|screenshot-iphone17)\.spec\.ts/u,
+      testMatch:
+        /(subscriber|subscriber-visit|onboarding|screenshot|screenshot-iphone17)\.spec\.ts/u,
       use: {
         ...devices['iPhone 15 Pro'],
         baseURL: 'http://127.0.0.1:6173',
@@ -25,7 +26,7 @@ export default defineConfig({
     // which Apple no longer sells, so we override the viewport explicitly.
     {
       name: 'subscriber-iphone-se',
-      testMatch: /(onboarding|screenshot)\.spec\.ts/u,
+      testMatch: /(onboarding|screenshot|subscriber-visit)\.spec\.ts/u,
       use: {
         ...devices['iPhone SE'],
         baseURL: 'http://127.0.0.1:6173',

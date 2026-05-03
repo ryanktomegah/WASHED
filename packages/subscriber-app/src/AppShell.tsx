@@ -12,8 +12,19 @@ import { TierX05 } from './screens/onboarding/TierX05.js';
 import { PaymentX06 } from './screens/onboarding/PaymentX06.js';
 import { ReviewX07 } from './screens/onboarding/ReviewX07.js';
 import { WelcomeX08 } from './screens/onboarding/WelcomeX08.js';
+import {
+  VisitDetailX11,
+  VisitEnRouteX12,
+  VisitFeedbackX15,
+  VisitInProgressX13,
+  VisitIssueSubmittedX15S,
+  VisitIssueX15S,
+  VisitRescheduleX11M,
+  VisitRevealX14,
+} from './screens/visits/VisitScreens.js';
 
 import './screens/onboarding/onboarding.css';
+import './screens/visits/visit.css';
 
 export function AppShell(): ReactElement {
   return (
@@ -30,6 +41,14 @@ export function AppShell(): ReactElement {
             <Route element={<PaymentX06 />} path="/signup/payment" />
             <Route element={<ReviewX07 />} path="/signup/review" />
             <Route element={<WelcomeX08 />} path="/signup/welcome" />
+            <Route element={<VisitDetailX11 />} path="/visit/detail" />
+            <Route element={<VisitRescheduleX11M />} path="/visit/reschedule" />
+            <Route element={<VisitEnRouteX12 />} path="/visit/en-route" />
+            <Route element={<VisitInProgressX13 />} path="/visit/in-progress" />
+            <Route element={<VisitRevealX14 />} path="/visit/reveal" />
+            <Route element={<VisitFeedbackX15 />} path="/visit/feedback" />
+            <Route element={<VisitIssueX15S />} path="/visit/issue" />
+            <Route element={<VisitIssueSubmittedX15S />} path="/visit/issue/submitted" />
             <Route element={<Navigate replace to="/welcome" />} path="*" />
           </Routes>
         </HashRouter>
