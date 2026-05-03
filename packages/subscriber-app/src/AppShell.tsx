@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { HashRouter, Route, Routes } from 'react-router-dom';
+import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { WashedThemeProvider } from '@washed/ui';
 
@@ -15,10 +15,12 @@ export function AppShell(): ReactElement {
     <WashedThemeProvider theme="subscriber">
       <HashRouter>
         <Routes>
+          <Route element={<Navigate replace to="/welcome" />} path="/" />
           <Route element={<SplashX01 />} path="/welcome" />
           <Route element={<PhoneX02 />} path="/signup/phone" />
           <Route element={<OtpX03 />} path="/signup/otp" />
-          <Route element={<LegacyHub />} path="*" />
+          <Route element={<LegacyHub />} path="/hub/*" />
+          <Route element={<Navigate replace to="/welcome" />} path="*" />
         </Routes>
       </HashRouter>
     </WashedThemeProvider>
