@@ -1006,6 +1006,425 @@
   </section>
 
   <!-- =================================================== -->
+  <!-- SPRINT 0 · O-01, O-06, O-07, O-08, O-09, O-10        -->
+  <!-- =================================================== -->
+  <section class="section">
+    <div class="num">08 · SPRINT 0 · AUTHENTIFICATION &amp; PROFILS 360°</div>
+    <h2>O-01 · O-06 · O-07 · O-08 · O-09 · O-10</h2>
+    <p class="sub">Connexion 2FA, drawer live ops, listes &amp; profils complets abonnés/laveuses. Ces écrans débloquent le workflow SOS (O-21 « Ouvrir le dossier ») et tout le support 1<sup>er</sup> niveau.</p>
+
+    <!-- O-01 LOGIN 2FA -->
+    <div class="win">
+      <div class="chrome">
+        <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="url">ops.washed.tg / login</div>
+        <div class="right"><span>déconnecté</span></div>
+      </div>
+      <div style="background:var(--bg);padding:var(--s-9) var(--s-7);min-height:480px;display:grid;place-items:center">
+        <div style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:var(--s-7);width:400px;max-width:100%">
+          <div class="brand" style="margin:0 0 var(--s-6)"><div class="brand-glyph">w</div><div class="brand-name" style="color:var(--ink)">Washed Ops</div></div>
+          <div style="font-family:var(--font-display);font-style:italic;font-weight:500;font-size:24px;letter-spacing:-0.01em;margin-bottom:var(--s-2)">Connexion sécurisée</div>
+          <div style="font-size:13px;color:var(--ink-3);margin-bottom:var(--s-5)">Étape 2 sur 2 · code à 6 chiffres envoyé à <b>ama.mensah@washed.tg</b></div>
+          <div style="display:flex;gap:6px;margin-bottom:var(--s-3)">
+            <input style="flex:1;height:48px;text-align:center;font-family:var(--font-mono);font-size:18px;border:1px solid var(--line);border-radius:8px;background:var(--surface)" value="4"/>
+            <input style="flex:1;height:48px;text-align:center;font-family:var(--font-mono);font-size:18px;border:1px solid var(--line);border-radius:8px;background:var(--surface)" value="8"/>
+            <input style="flex:1;height:48px;text-align:center;font-family:var(--font-mono);font-size:18px;border:1px solid var(--primary);border-width:2px;border-radius:8px;background:var(--surface)" value="2"/>
+            <input style="flex:1;height:48px;text-align:center;font-family:var(--font-mono);font-size:18px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink-3)" placeholder="·"/>
+            <input style="flex:1;height:48px;text-align:center;font-family:var(--font-mono);font-size:18px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink-3)" placeholder="·"/>
+            <input style="flex:1;height:48px;text-align:center;font-family:var(--font-mono);font-size:18px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink-3)" placeholder="·"/>
+          </div>
+          <div style="font-size:11px;color:var(--ink-3);margin-bottom:var(--s-5)">Renvoyer dans <span style="font-family:var(--font-mono);font-weight:600">0:42 s</span> · ou <span style="color:var(--primary);font-weight:600">utiliser une app TOTP</span></div>
+          <button class="btn primary" style="width:100%;padding:14px">Vérifier &amp; entrer</button>
+          <div style="font-size:11px;color:var(--ink-3);margin-top:var(--s-4);text-align:center">Session expire après 8 h d'inactivité.</div>
+        </div>
+      </div>
+    </div>
+    <div class="win-cap">O-01</div><div class="win-name">Connexion 2FA</div><div class="win-notes">Email + OTP par défaut. TOTP (Google Authenticator) optionnel pour admins. Session 8 h. Audit log : chaque connexion enregistrée.</div>
+
+    <!-- O-06 LIVE VISIT DRAWER -->
+    <div class="win">
+      <div class="chrome">
+        <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="url">ops.washed.tg / live?visit=v-4421</div>
+        <div class="right"><span>visite en cours · 14:32</span></div>
+      </div>
+      <div class="app">
+        <aside class="sidebar">
+          <div class="brand"><div class="brand-glyph">w</div><div class="brand-name">Washed Ops</div></div>
+          <div class="nav-grp">
+            <div class="nav-h">Aujourd'hui</div>
+            <div class="nav-i"><span class="glyph"></span>Tableau de bord</div>
+            <div class="nav-i active"><span class="glyph"></span>Live ops<span class="badge">14</span></div>
+            <div class="nav-i"><span class="glyph"></span>Matching</div>
+            <div class="nav-i"><span class="glyph"></span>Tickets</div>
+          </div>
+        </aside>
+        <main class="main" style="padding:0">
+          <div style="height:520px;background-image:repeating-linear-gradient(135deg,var(--line) 0,var(--line) 1px,transparent 1px,transparent 8px);background-color:var(--surface-2);position:relative">
+            <div class="map-legend"><div class="li"><span class="pip" style="background:var(--primary)"></span>Visite suivie</div></div>
+            <div style="position:absolute;left:42%;top:46%;width:14px;height:14px;border-radius:999px;background:var(--primary);box-shadow:0 0 0 6px rgba(59,31,122,0.18)"></div>
+            <div style="position:absolute;left:46%;top:50%;font-family:var(--font-mono);font-size:10px;background:white;padding:2px 6px;border-radius:4px;border:1px solid var(--line)">AKOUVI · CHEZ ADJOA · 32 MIN</div>
+          </div>
+        </main>
+        <aside class="rpanel" style="width:380px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--s-3)">
+            <div>
+              <h4 style="margin:0">Visite v-4421</h4>
+              <div style="font-size:11px;color:var(--ink-3)">démarrée 14:00 · 32 min écoulées</div>
+            </div>
+            <span class="chip live dot">EN COURS · ÉTAPE 2/5</span>
+          </div>
+          <div class="divider"></div>
+          <div class="field"><div class="l">Abonnée</div><div class="v">Adjoa Komlan · Tokoin Casablanca</div></div>
+          <div class="field"><div class="l">Laveuse</div><div class="v">Akouvi K. · 8e mois ensemble · 32 visites</div></div>
+          <div class="divider"></div>
+          <div class="field"><div class="l">Timeline en direct</div></div>
+          <div class="timeline">
+            <div class="ev"><div class="t">14:32 ⏱</div><div class="h">Phase lavage en cours</div><div class="d">Étape 2/5 · timer libre 32 min</div></div>
+            <div class="ev"><div class="t">14:01 ✓</div><div class="h">Photo « avant » uploadée</div><div class="d">EXIF + GPS validés</div></div>
+            <div class="ev"><div class="t">14:00 ✓</div><div class="h">Visite démarrée par Akouvi</div></div>
+            <div class="ev"><div class="t">13:58 ✓</div><div class="h">Geofence détecté · 8 m de précision</div></div>
+            <div class="ev"><div class="t">13:42 ✓</div><div class="h">En route · partie de Tokoin</div></div>
+          </div>
+          <div class="divider"></div>
+          <div class="field"><div class="l">Photos visite</div></div>
+          <div style="display:flex;gap:6px;margin-top:6px">
+            <div style="aspect-ratio:1;flex:1;background:linear-gradient(135deg,#4A3622,#1C1208);border-radius:6px;display:grid;place-items:center;color:rgba(255,255,255,0.5);font-family:var(--font-mono);font-size:9px">AVANT</div>
+            <div style="aspect-ratio:1;flex:1;background:var(--bg-deep);border:1px dashed var(--line-2);border-radius:6px;display:grid;place-items:center;color:var(--ink-3);font-family:var(--font-mono);font-size:9px">APRÈS · ATTENTE</div>
+          </div>
+          <div class="divider"></div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <button class="btn alt" style="font-size:11px;justify-content:flex-start">📞 Appeler Akouvi</button>
+            <button class="btn alt" style="font-size:11px;justify-content:flex-start">📞 Appeler Adjoa</button>
+            <button class="btn alt" style="font-size:11px;justify-content:flex-start">→ Profil 360° Akouvi</button>
+            <button class="btn alt" style="font-size:11px;justify-content:flex-start">→ Profil 360° Adjoa</button>
+            <button class="btn ghost" style="font-size:11px;justify-content:flex-start;color:var(--danger)">Intervenir · marquer suspect</button>
+          </div>
+        </aside>
+      </div>
+    </div>
+    <div class="win-cap">O-06</div><div class="win-name">Drawer détail visite live</div><div class="win-notes">Tap sur un pin O-05. Timeline temps réel via WebSocket. Photos uploadées dès validation côté laveuse. Actions opérateur prioritaires en bas.</div>
+
+    <!-- O-07 SUBSCRIBER LIST -->
+    <div class="win">
+      <div class="chrome">
+        <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="url">ops.washed.tg / people / subscribers</div>
+        <div class="right"><span>247 abonnés</span></div>
+      </div>
+      <div class="app no-right">
+        <aside class="sidebar">
+          <div class="brand"><div class="brand-glyph">w</div><div class="brand-name">Washed Ops</div></div>
+          <div class="nav-grp">
+            <div class="nav-h">Personnes</div>
+            <div class="nav-i active"><span class="glyph"></span>Abonnés<span class="badge">247</span></div>
+            <div class="nav-i"><span class="glyph"></span>Laveuses</div>
+            <div class="nav-i"><span class="glyph"></span>Onboarding<span class="badge warn">5</span></div>
+          </div>
+          <div class="nav-grp">
+            <div class="nav-h">Filtres rapides</div>
+            <div class="nav-i" style="background:rgba(255,255,255,0.06);color:white">‣ Tous (247)</div>
+            <div class="nav-i">Actifs (231)</div>
+            <div class="nav-i">En pause (8)</div>
+            <div class="nav-i" style="color:var(--accent)">À valider (5)</div>
+            <div class="nav-i" style="color:var(--danger)">Litige ouvert (2)</div>
+            <div class="nav-i">Suspendus (1)</div>
+          </div>
+        </aside>
+        <main class="main">
+          <div class="main-hd">
+            <div>
+              <div class="crumb-i">PERSONNES · ABONNÉS</div>
+              <h3>247 abonnés à Lomé</h3>
+            </div>
+            <div class="actions">
+              <button class="btn ghost">Filtrer<span class="kbd">F</span></button>
+              <button class="btn ghost">Exporter</button>
+              <button class="btn alt">Inviter par SMS</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:var(--s-4)">
+            <div style="flex:1;display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface);border:1px solid var(--line);border-radius:999px"><span style="color:var(--ink-3);font-size:14px">⌕</span><input style="flex:1;border:none;outline:none;font-size:13px;background:transparent" placeholder="Chercher par nom, numéro, quartier…"/><span class="kbd">⌘ K</span></div>
+          </div>
+          <table class="tbl">
+            <thead><tr>
+              <th>Abonnée</th>
+              <th>Quartier</th>
+              <th>Forfait</th>
+              <th>Dernier paiement</th>
+              <th>Prochaine visite</th>
+              <th>Laveuse</th>
+              <th>État</th>
+              <th></th>
+            </tr></thead>
+            <tbody>
+              <tr><td><div class="who"><div class="av"></div>Adjoa Komlan</div></td><td>Tokoin</td><td>T1</td><td>1 mai · ✓</td><td>5 mai 9 h</td><td>Akouvi K.</td><td><span class="chip live dot">ACTIF</span></td><td>›</td></tr>
+              <tr><td><div class="who"><div class="av"></div>Yawa Mensah</div></td><td>Tokoin</td><td>T1</td><td>1 mai · ✓</td><td>2 juin 9 h</td><td>Akouvi K.</td><td><span class="chip live dot">ACTIF</span></td><td>›</td></tr>
+              <tr><td><div class="who"><div class="av"></div>Kossi Atayi</div></td><td>Bè</td><td>T2</td><td>1 mai · ✓</td><td>10 mai 14 h</td><td>Mawu E.</td><td><span class="chip live dot">ACTIF</span></td><td>›</td></tr>
+              <tr style="background:var(--accent-soft)"><td><div class="who"><div class="av"></div>Foli Nyaho</div></td><td>Agoé</td><td>T1 <span class="chip primary" style="margin-left:6px">PREMIÈRE</span></td><td>—</td><td>—</td><td>—</td><td><span class="chip warn dot">À VALIDER</span></td><td>›</td></tr>
+              <tr><td><div class="who"><div class="av"></div>Esi Tetteh</div></td><td>Adidogomé</td><td>T1</td><td>1 mai · ✓</td><td>9 mai 11 h</td><td>Mawu E.</td><td><span class="chip live dot">ACTIF</span></td><td>›</td></tr>
+              <tr style="background:var(--danger-soft)"><td><div class="who"><div class="av"></div>Akua Pomé</div></td><td>Tokoin</td><td>T2</td><td>1 mai · ✓</td><td>maintenue</td><td>Mawu E.</td><td><span class="chip danger dot">LITIGE #0421</span></td><td>›</td></tr>
+              <tr style="opacity:0.6"><td><div class="who"><div class="av"></div>Mawuli Bessah</div></td><td>Cacavéli</td><td>T1</td><td>1 mar. · 3 mois</td><td>—</td><td>—</td><td><span class="chip warn dot">EN PAUSE</span></td><td>›</td></tr>
+              <tr style="background:var(--danger-soft)"><td><div class="who"><div class="av"></div>Sika Dogbeh</div></td><td>Hédzranawoé</td><td>T2</td><td>3 relances échouées</td><td>—</td><td>—</td><td><span class="chip danger dot">SUSPENDU</span></td><td>›</td></tr>
+            </tbody>
+          </table>
+        </main>
+      </div>
+    </div>
+    <div class="win-cap">O-07</div><div class="win-name">Liste des abonnés</div><div class="win-notes">Recherche typeahead ⌘K. Filtres rapides en sidebar (sticky scroll). Bulk actions (export, invite SMS). Tri par colonne au clic header. Tap ligne ouvre O-08.</div>
+
+    <!-- O-08 SUBSCRIBER 360° PROFILE -->
+    <div class="win">
+      <div class="chrome">
+        <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="url">ops.washed.tg / people / subscribers / s-2287</div>
+        <div class="right"><span>Adjoa Komlan</span></div>
+      </div>
+      <div class="app">
+        <aside class="sidebar">
+          <div class="brand"><div class="brand-glyph">w</div><div class="brand-name">Washed Ops</div></div>
+          <div class="nav-grp">
+            <div class="nav-h">Personnes</div>
+            <div class="nav-i active"><span class="glyph"></span>Abonnés</div>
+            <div class="nav-i"><span class="glyph"></span>Laveuses</div>
+          </div>
+        </aside>
+        <main class="main">
+          <div class="main-hd">
+            <div>
+              <div class="crumb-i">‹ ABONNÉS · S-2287</div>
+              <h3>Adjoa Komlan</h3>
+            </div>
+            <div class="actions">
+              <button class="btn ghost">📞 Appeler</button>
+              <button class="btn ghost">📱 SMS modèle</button>
+              <button class="btn alt">Composer⌘K</button>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:var(--s-5);margin-bottom:var(--s-5)">
+            <div style="width:80px;height:80px;border-radius:999px;background:linear-gradient(135deg,var(--primary),var(--accent))"></div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s-4)">
+              <div><div style="font-family:var(--font-mono);font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.1em">TÉLÉPHONE</div><div style="font-family:var(--font-mono);font-size:13px;margin-top:4px">+228 90 12 34 56</div></div>
+              <div><div style="font-family:var(--font-mono);font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.1em">QUARTIER</div><div style="font-size:13px;margin-top:4px">Tokoin Casablanca</div></div>
+              <div><div style="font-family:var(--font-mono);font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.1em">FORFAIT</div><div style="font-size:13px;margin-top:4px">T1 · 2 500 XOF / mois</div></div>
+              <div><div style="font-family:var(--font-mono);font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.1em">CLIENTE DEPUIS</div><div style="font-size:13px;margin-top:4px">8 mois (sept. 2025)</div></div>
+            </div>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="l">Visites</div><div class="n">32</div><div class="d">100% terminées</div></div>
+            <div class="stat"><div class="l">Total payé</div><div class="n">80 000</div><div class="d">XOF · 8 prélèvements</div></div>
+            <div class="stat"><div class="l">Tickets</div><div class="n">3</div><div class="d">2 résolus · 1 ouvert</div></div>
+            <div class="stat"><div class="l">Laveuse</div><div class="n">Akouvi</div><div class="d">8 mois ensemble</div></div>
+          </div>
+          <div class="tabs">
+            <div class="tab active">Visites (32)</div>
+            <div class="tab">Paiements (8)</div>
+            <div class="tab">Tickets (3)</div>
+            <div class="tab">Notes ops</div>
+            <div class="tab">Activité</div>
+          </div>
+          <table class="tbl">
+            <thead><tr><th>Date</th><th>Heure</th><th>Laveuse</th><th>Durée</th><th>État</th><th>Photos</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>5 mai 2026</td><td>9:00</td><td><div class="who"><div class="av" style="background:#1A5C34"></div>Akouvi K.</div></td><td>—</td><td><span class="chip primary dot">PROGRAMMÉE</span></td><td>—</td><td>›</td></tr>
+              <tr><td>28 avril 2026</td><td>9:02</td><td><div class="who"><div class="av" style="background:#1A5C34"></div>Akouvi K.</div></td><td>1h 06</td><td><span class="chip live dot">TERMINÉE</span></td><td>2/2 ✓</td><td>›</td></tr>
+              <tr><td>21 avril 2026</td><td>9:00</td><td><div class="who"><div class="av" style="background:#1A5C34"></div>Akouvi K.</div></td><td>1h 12</td><td><span class="chip live dot">TERMINÉE</span></td><td>2/2 ✓</td><td>›</td></tr>
+              <tr><td>14 avril 2026</td><td>9:04</td><td><div class="who"><div class="av" style="background:#1A5C34"></div>Akouvi K.</div></td><td>58 min</td><td><span class="chip live dot">TERMINÉE</span></td><td>2/2 ✓</td><td>›</td></tr>
+            </tbody>
+          </table>
+        </main>
+        <aside class="rpanel">
+          <h4>Notes opérateur</h4>
+          <div style="font-size:11px;color:var(--ink-3)">Visibles uniquement par l'équipe ops</div>
+          <div class="divider"></div>
+          <div class="card" style="background:var(--accent-soft);border:none;padding:var(--s-3);margin-bottom:var(--s-2);border-radius:var(--r-sm)">
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:0.05em">15 AVR · AMA M.</div>
+            <div style="font-size:12px;margin-top:4px;line-height:1.5">Cliente discrète, préfère SMS plutôt qu'appel. Akouvi a noté qu'elle aime quand on prévient 5 min avant.</div>
+          </div>
+          <div class="card" style="background:var(--bg-deep);border:none;padding:var(--s-3);margin-bottom:var(--s-2);border-radius:var(--r-sm)">
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.05em">2 MAR · KOSSI A.</div>
+            <div style="font-size:12px;margin-top:4px;line-height:1.5">Adresse validée au 1<sup>er</sup> appel. Portail vert, sonnette à droite.</div>
+          </div>
+          <button class="btn alt" style="width:100%;font-size:11px;justify-content:flex-start">+ Ajouter une note</button>
+          <div class="divider"></div>
+          <h4 style="font-size:14px">Actions admin</h4>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:var(--s-3)">
+            <button class="btn alt" style="font-size:11px;justify-content:flex-start">💸 Crédit goodwill</button>
+            <button class="btn alt" style="font-size:11px;justify-content:flex-start">✏️ Modifier l'adresse</button>
+            <button class="btn alt" style="font-size:11px;justify-content:flex-start">⏸ Mettre en pause manuelle</button>
+            <button class="btn ghost" style="font-size:11px;justify-content:flex-start;color:var(--danger)">🚫 Suspendre l'abonnement</button>
+          </div>
+        </aside>
+      </div>
+    </div>
+    <div class="win-cap">O-08</div><div class="win-name">Profil abonné 360°</div><div class="win-notes">Header 4 colonnes (téléphone/quartier/forfait/ancienneté). Stats strip 4 KPI. Tabs : Visites · Paiements · Tickets · Notes · Activité. Drawer right : notes ops privées + actions admin (toutes auditées).</div>
+
+    <!-- O-09 WORKER LIST -->
+    <div class="win">
+      <div class="chrome">
+        <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="url">ops.washed.tg / people / workers</div>
+        <div class="right"><span>42 laveuses</span></div>
+      </div>
+      <div class="app no-right">
+        <aside class="sidebar">
+          <div class="brand"><div class="brand-glyph">w</div><div class="brand-name">Washed Ops</div></div>
+          <div class="nav-grp">
+            <div class="nav-h">Personnes</div>
+            <div class="nav-i"><span class="glyph"></span>Abonnés</div>
+            <div class="nav-i active"><span class="glyph"></span>Laveuses<span class="badge">42</span></div>
+          </div>
+          <div class="nav-grp">
+            <div class="nav-h">Filtres</div>
+            <div class="nav-i" style="background:rgba(255,255,255,0.06);color:white">‣ Toutes (42)</div>
+            <div class="nav-i">Disponibles maintenant (14)</div>
+            <div class="nav-i">En visite (12)</div>
+            <div class="nav-i">Pause / repos (8)</div>
+            <div class="nav-i" style="color:var(--accent)">En retard (3)</div>
+            <div class="nav-i" style="color:var(--accent)">En congé (5)</div>
+            <div class="nav-i">En formation (2)</div>
+          </div>
+          <div class="nav-grp">
+            <div class="nav-h">Vues</div>
+            <div class="nav-i">Tableau (actif)</div>
+            <div class="nav-i">Carte de Lomé</div>
+          </div>
+        </aside>
+        <main class="main">
+          <div class="main-hd">
+            <div>
+              <div class="crumb-i">PERSONNES · LAVEUSES</div>
+              <h3>42 laveuses à Lomé</h3>
+            </div>
+            <div class="actions">
+              <button class="btn ghost">Filtrer</button>
+              <button class="btn primary">+ Ajouter laveuse</button>
+            </div>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="l">Disponibles</div><div class="n">14</div><div class="d up">capacité 39 visites/jour</div></div>
+            <div class="stat"><div class="l">En visite</div><div class="n">12</div><div class="d">en cours actuellement</div></div>
+            <div class="stat"><div class="l">À surveiller</div><div class="n">3</div><div class="d down">retards</div></div>
+            <div class="stat"><div class="l">Foyers actifs</div><div class="n">189</div><div class="d up">+12 vs semaine passée</div></div>
+          </div>
+          <table class="tbl">
+            <thead><tr>
+              <th>Laveuse</th>
+              <th>Quartier base</th>
+              <th>État</th>
+              <th>Tournée du jour</th>
+              <th>Foyers</th>
+              <th>Confiance</th>
+              <th>Ancienneté</th>
+              <th></th>
+            </tr></thead>
+            <tbody>
+              <tr><td><div class="who"><div class="av" style="background:#1A5C34"></div>Akouvi Komlan</div></td><td>Tokoin</td><td><span class="chip live dot">EN VISITE</span></td><td>5 / 5 visites</td><td>14</td><td>98%</td><td>2 ans</td><td>›</td></tr>
+              <tr><td><div class="who"><div class="av" style="background:#1A5C34"></div>Mawu Edem</div></td><td>Bè</td><td><span class="chip live dot">EN VISITE</span></td><td>3 / 5</td><td>17</td><td>97%</td><td>2 ans</td><td>›</td></tr>
+              <tr style="background:var(--accent-soft)"><td><div class="who"><div class="av" style="background:#1A5C34"></div>Délali Kouassi</div></td><td>Hédzranawoé</td><td><span class="chip warn dot">RETARD +12 MIN</span></td><td>2 / 4</td><td>9</td><td>92%</td><td>14 mois</td><td>›</td></tr>
+              <tr><td><div class="who"><div class="av" style="background:#1A5C34"></div>Afi Tetteh</div></td><td>Bè-Klikamé</td><td><span class="chip live dot">EN VISITE</span></td><td>4 / 5</td><td>12</td><td>98%</td><td>18 mois</td><td>›</td></tr>
+              <tr><td><div class="who"><div class="av" style="background:#1A5C34"></div>Yawa Tetteh</div></td><td>Hédzranawoé</td><td><span class="chip">DISPO</span></td><td>—</td><td>11</td><td>96%</td><td>9 mois</td><td>›</td></tr>
+              <tr><td><div class="who"><div class="av" style="background:#1A5C34"></div>Mawuli Bessah</div></td><td>Cacavéli</td><td><span class="chip live dot">EN VISITE</span></td><td>3 / 4</td><td>8</td><td>94%</td><td>11 mois</td><td>›</td></tr>
+              <tr style="opacity:0.6"><td><div class="who"><div class="av" style="background:#1A5C34"></div>Esi Adjo</div></td><td>Adidogomé</td><td><span class="chip warn dot">EN CONGÉ JUSQU'AU 23 MAI</span></td><td>—</td><td>15</td><td>97%</td><td>2 ans</td><td>›</td></tr>
+            </tbody>
+          </table>
+        </main>
+      </div>
+    </div>
+    <div class="win-cap">O-09</div><div class="win-name">Liste des laveuses</div><div class="win-notes">Vue tableau (par défaut) ou carte de Lomé. Filtres temps réel. Bouton primary "+ Ajouter laveuse" déclenche O-22 onboarding multi-step.</div>
+
+    <!-- O-10 WORKER 360° PROFILE -->
+    <div class="win">
+      <div class="chrome">
+        <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="url">ops.washed.tg / people / workers / w-1042</div>
+        <div class="right"><span>Akouvi Komlan</span></div>
+      </div>
+      <div class="app">
+        <aside class="sidebar">
+          <div class="brand"><div class="brand-glyph">w</div><div class="brand-name">Washed Ops</div></div>
+          <div class="nav-grp">
+            <div class="nav-h">Personnes</div>
+            <div class="nav-i"><span class="glyph"></span>Abonnés</div>
+            <div class="nav-i active"><span class="glyph"></span>Laveuses</div>
+          </div>
+        </aside>
+        <main class="main">
+          <div class="main-hd">
+            <div>
+              <div class="crumb-i">‹ LAVEUSES · W-1042</div>
+              <h3>Akouvi Komlan</h3>
+            </div>
+            <div class="actions">
+              <button class="btn ghost">📞 Appeler</button>
+              <button class="btn ghost">📱 SMS</button>
+              <button class="btn alt">Voir tournée du jour</button>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:var(--s-5);margin-bottom:var(--s-5)">
+            <div style="width:80px;height:80px;border-radius:999px;background:linear-gradient(135deg,#1A5C34,#D4900E)"></div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s-4)">
+              <div><div style="font-family:var(--font-mono);font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.1em">TÉLÉPHONE</div><div style="font-family:var(--font-mono);font-size:13px;margin-top:4px">+228 99 87 65 43</div></div>
+              <div><div style="font-family:var(--font-mono);font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.1em">QUARTIER BASE</div><div style="font-size:13px;margin-top:4px">Tokoin</div></div>
+              <div><div style="font-family:var(--font-mono);font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.1em">LANGUES</div><div style="font-size:13px;margin-top:4px">Français · Éwé</div></div>
+              <div><div style="font-family:var(--font-mono);font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.1em">LAVEUSE DEPUIS</div><div style="font-size:13px;margin-top:4px">2 ans (mai 2024)</div></div>
+            </div>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="l">Visites totales</div><div class="n">412</div><div class="d up">100% terminées</div></div>
+            <div class="stat"><div class="l">Confiance</div><div class="n">98%</div><div class="d">basée sur 412 visites</div></div>
+            <div class="stat"><div class="l">Foyers réguliers</div><div class="n">14</div><div class="d up">+2 ce mois</div></div>
+            <div class="stat"><div class="l">Gains du mois</div><div class="n">87 000</div><div class="d">XOF · payés au fil de l'eau</div></div>
+          </div>
+          <div class="tabs">
+            <div class="tab active">Tournée du jour</div>
+            <div class="tab">Foyers (14)</div>
+            <div class="tab">Gains &amp; paiements</div>
+            <div class="tab">Signalements (2)</div>
+            <div class="tab">Documents RH</div>
+            <div class="tab">Activité</div>
+          </div>
+          <div style="margin-top:var(--s-4)">
+            <table class="tbl">
+              <thead><tr><th>Heure</th><th>Foyer</th><th>Quartier</th><th>État</th><th>Distance</th><th>Notes</th><th></th></tr></thead>
+              <tbody>
+                <tr><td>9:00 ✓</td><td><div class="who"><div class="av"></div>Adjoa Komlan</div></td><td>Tokoin</td><td><span class="chip live dot">TERMINÉE</span></td><td>800 m</td><td>1 h 06 · pas de souci</td><td>›</td></tr>
+                <tr><td>10:30 ✓</td><td><div class="who"><div class="av"></div>Kossi Atayi</div></td><td>Bè</td><td><span class="chip live dot">TERMINÉE</span></td><td>1.2 km</td><td>1 h 18</td><td>›</td></tr>
+                <tr style="background:var(--primary-soft)"><td>12:00 ⏱</td><td><div class="who"><div class="av"></div>Mme Esi T.</div></td><td>Adidogomé</td><td><span class="chip primary dot">EN ROUTE</span></td><td>2.4 km</td><td>en moto-taxi</td><td>›</td></tr>
+                <tr><td>14:00</td><td><div class="who"><div class="av"></div>Akua Pomé</div></td><td>Tokoin</td><td><span class="chip">PROGRAMMÉE</span></td><td>1.1 km</td><td>—</td><td>›</td></tr>
+                <tr><td>15:30</td><td><div class="who"><div class="av"></div>Yawa Mensah</div></td><td>Tokoin</td><td><span class="chip">PROGRAMMÉE</span></td><td>800 m</td><td>—</td><td>›</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </main>
+        <aside class="rpanel">
+          <h4>Contact d'urgence</h4>
+          <div class="card" style="background:var(--surface);border:1px solid var(--line);padding:var(--s-4);margin-top:var(--s-3);border-radius:var(--r-sm)">
+            <div style="font-size:13px;font-weight:600">Komi Edem · son frère</div>
+            <div style="font-family:var(--font-mono);font-size:11px;color:var(--ink-3);margin-top:4px">+228 90 88 77 66</div>
+          </div>
+          <div class="divider"></div>
+          <h4 style="font-size:14px">Notes RH (admin)</h4>
+          <div class="card" style="background:var(--bg-deep);border:none;padding:var(--s-3);margin-top:var(--s-3);border-radius:var(--r-sm)">
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.05em">12 AVR · AMA M.</div>
+            <div style="font-size:12px;margin-top:4px;line-height:1.5">Promotion proposée · responsable de quartier Tokoin. À confirmer avec elle ce mois.</div>
+          </div>
+          <button class="btn alt" style="width:100%;font-size:11px;justify-content:flex-start;margin-top:var(--s-3)">+ Ajouter une note RH</button>
+          <div class="divider"></div>
+          <h4 style="font-size:14px">Actions admin</h4>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:var(--s-3)">
+            <button class="btn alt" style="font-size:11px;justify-content:flex-start">📅 Modifier le planning</button>
+            <button class="btn alt" style="font-size:11px;justify-content:flex-start">💰 Bonus exceptionnel</button>
+            <button class="btn alt" style="font-size:11px;justify-content:flex-start">⏸ Mettre en congé</button>
+            <button class="btn ghost" style="font-size:11px;justify-content:flex-start;color:var(--danger)">🚫 Suspendre laveuse</button>
+          </div>
+        </aside>
+      </div>
+    </div>
+    <div class="win-cap">O-10</div><div class="win-name">Profil laveuse 360°</div><div class="win-notes">Symétrique à O-08. Tabs : Tournée du jour · Foyers · Gains · Signalements · Documents RH · Activité. Drawer : contact d'urgence (visible pendant SOS) + notes RH admin + actions destructives auditées.</div>
+  </section>
+
+  <!-- =================================================== -->
   <!-- COVERAGE                                             -->
   <!-- =================================================== -->
   <section class="section">
@@ -1014,16 +1433,16 @@
     <p class="lede" style="font-size: var(--text-base); margin-top: var(--s-3); margin-bottom: var(--s-6)">Liste de référence pour l'ingénierie et l'équipe ops. Hi-fi livrés ci-dessus marqués <b style="color:var(--success)">livré</b>. Wireframes et redlines couvrent le reste.</p>
 
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s-3);font-family:var(--font-mono);font-size:var(--text-xs);color:var(--ink-2)">
-      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-01</b> · Connexion 2FA</span><span style="color:var(--ink-3)">wireframe</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-01</b> · Connexion 2FA</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-02</b> · Tableau de bord</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-03</b> · File matching</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-04</b> · Détail demande</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-05</b> · Live ops carte</span><span style="color:var(--success)">livré</span></div>
-      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-06</b> · Détail visite live</span><span style="color:var(--ink-3)">wireframe</span></div>
-      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-07</b> · Liste abonnés</span><span style="color:var(--ink-3)">wireframe</span></div>
-      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-08</b> · Profil abonné</span><span style="color:var(--ink-3)">wireframe</span></div>
-      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-09</b> · Liste laveuses</span><span style="color:var(--ink-3)">wireframe</span></div>
-      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-10</b> · Profil laveuse</span><span style="color:var(--ink-3)">wireframe</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-06</b> · Détail visite live</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-07</b> · Liste abonnés</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-08</b> · Profil abonné</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-09</b> · Liste laveuses</span><span style="color:var(--success)">livré</span></div>
+      <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-10</b> · Profil laveuse</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-11</b> · Tickets</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-12</b> · Détail ticket</span><span style="color:var(--success)">livré</span></div>
       <div style="padding:var(--s-3) var(--s-4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);display:flex;justify-content:space-between"><span><b style="color:var(--primary)">O-13</b> · Paiements</span><span style="color:var(--success)">livré</span></div>
