@@ -20,10 +20,11 @@ function shortPhone(phone: string): string {
 export function ReviewX07(): ReactElement {
   const navigate = useNavigate();
   const signup = useSignup();
-  // Guard: a deep-link to /signup/review without prior steps should bounce.
+  // Guard: a deep-link to /signup/review without prior steps must restart from
+  // the splash, not jump to the post-signup welcome (which would fake success).
   useEffect(() => {
     if (signup.tier === null || signup.paymentProvider === null) {
-      navigate('/signup/welcome', { replace: true });
+      navigate('/welcome', { replace: true });
     }
   }, [signup.tier, signup.paymentProvider, navigate]);
 

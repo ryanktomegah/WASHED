@@ -190,6 +190,7 @@ describe('Onboarding · X-06 Payment', () => {
   it('shows payment providers and routes to review', () => {
     const { locationRef } = renderAt('/signup/payment', <PaymentX06 />, {
       phone: '+228 90 12 34 56',
+      tier: 'T1',
     });
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-06');
@@ -202,6 +203,20 @@ describe('Onboarding · X-06 Payment', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
 
     expect(locationRef.current).toBe('/signup/review');
+  });
+
+  it('redirects to /signup/phone when the deep-link arrives without a confirmed phone', () => {
+    const { locationRef } = renderAt('/signup/payment', <PaymentX06 />, { tier: 'T1' });
+
+    expect(locationRef.current).toBe('/signup/phone');
+  });
+
+  it('redirects to /welcome when the deep-link arrives without a chosen tier', () => {
+    const { locationRef } = renderAt('/signup/payment', <PaymentX06 />, {
+      phone: '+228 90 12 34 56',
+    });
+
+    expect(locationRef.current).toBe('/welcome');
   });
 });
 
@@ -228,6 +243,12 @@ describe('Onboarding · X-07 Review', () => {
     fireEvent.click(cta);
 
     expect(locationRef.current).toBe('/signup/welcome');
+  });
+
+  it('redirects an empty deep-link back to the splash, not the post-signup welcome', () => {
+    const { locationRef } = renderAt('/signup/review', <ReviewX07 />);
+
+    expect(locationRef.current).toBe('/welcome');
   });
 });
 

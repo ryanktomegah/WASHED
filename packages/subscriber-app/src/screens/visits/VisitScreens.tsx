@@ -22,7 +22,7 @@ export function VisitDetailX11(): ReactElement {
         </h1>
 
         <div className="visit-chip-row" aria-label="Détails de la visite">
-          <span className="visit-chip success">8e mois</span>
+          <span className="visit-chip success">{visit.tenureLabel}</span>
           <span className="visit-chip">{visit.neighborhood}</span>
           <span className="visit-chip">{visit.estimatedDuration}</span>
         </div>

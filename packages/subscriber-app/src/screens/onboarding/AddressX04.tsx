@@ -64,7 +64,6 @@ export function AddressX04(): ReactElement {
           </label>
           <div className="select-shell">
             <select
-              autoFocus={signup.address.neighborhood === ''}
               id="x04-neighborhood"
               name="neighborhood"
               onChange={(event) => setNeighborhood(event.target.value)}

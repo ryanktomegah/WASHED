@@ -15,6 +15,7 @@ export interface SubscriberVisitDemo {
   readonly completedDuration: string;
   readonly counter: string;
   readonly counterSince: string;
+  readonly tenureLabel: string;
 }
 
 export const SUBSCRIBER_VISIT_DEMO: SubscriberVisitDemo = {
@@ -34,6 +35,7 @@ export const SUBSCRIBER_VISIT_DEMO: SubscriberVisitDemo = {
   completedDuration: '1 h 06',
   counter: '33 visites',
   counterSince: 'septembre 2025',
+  tenureLabel: '8e mois',
 };
 
 export const RESCHEDULE_OPTIONS = [

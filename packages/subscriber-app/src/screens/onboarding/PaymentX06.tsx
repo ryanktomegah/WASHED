@@ -1,4 +1,4 @@
-import { type ReactElement } from 'react';
+import { useEffect, type ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
@@ -25,6 +25,20 @@ export function PaymentX06(): ReactElement {
   const signup = useSignup();
   const selected: SignupPaymentProvider = signup.paymentProvider ?? 'tmoney';
 
+  // Guard: a deep-link to /signup/payment without a confirmed phone or tier
+  // means earlier steps were skipped — bounce to the right resume point.
+  useEffect(() => {
+    if (signup.phone === '') {
+      navigate('/signup/phone', { replace: true });
+      return;
+    }
+    if (signup.tier === null) {
+      navigate('/welcome', { replace: true });
+    }
+  }, [signup.phone, signup.tier, navigate]);
+
+  if (signup.phone === '' || signup.tier === null) return <></>;
+
   const onSelect = (provider: SignupPaymentProvider): void => {
     signup.setPaymentProvider(provider);
   };
@@ -37,7 +51,7 @@ export function PaymentX06(): ReactElement {
   // Show the user's confirmed phone next to the default-selected wallet so
   // they can spot a mismatch immediately. Other providers prompt to add a
   // dedicated number — captured in a follow-up screen, not this one.
-  const phoneLine = signup.phone === '' ? '+228 90 12 34 56' : signup.phone;
+  const phoneLine = signup.phone;
 
   return (
     <main
