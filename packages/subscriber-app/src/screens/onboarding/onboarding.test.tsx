@@ -305,11 +305,13 @@ describe('Onboarding · X-07 Review', () => {
 });
 
 describe('Onboarding · X-08 Welcome', () => {
-  it('renders the terminal welcome screen with disabled hub CTA', () => {
-    renderAt('/signup/welcome', <WelcomeX08 />);
+  it('renders the welcome screen and routes to the hub', () => {
+    const { locationRef } = renderAt('/signup/welcome', <WelcomeX08 />);
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-08');
     expect(screen.getByRole('heading', { name: 'Bienvenue chez Washed.' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Voir mon accueil' })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Voir mon accueil' }));
+    expect(locationRef.current).toBe('/hub');
   });
 });

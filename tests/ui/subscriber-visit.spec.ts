@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 const screenRoutes = [
+  ['x-10-hub', '/#/hub', 'X-10'],
   ['x-11-detail', '/#/visit/detail', 'X-11'],
   ['x-11m-reschedule', '/#/visit/reschedule', 'X-11.M'],
   ['x-12-en-route', '/#/visit/en-route', 'X-12'],
@@ -27,6 +28,17 @@ test.describe('Subscriber visit flow X-11 → X-15', () => {
         await expect(page.getByLabel('Photos avant et après')).toBeVisible();
         await expect(page.getByText('Avant — 9 h 01')).toBeVisible();
         await expect(page.getByText('Après — 10 h 04')).toBeVisible();
+      }
+
+      if (screenId === 'X-10') {
+        await expect(page.getByText('Prochaine visite')).toBeVisible();
+        await expect(page.getByText('Mardi')).toBeVisible();
+        await expect(page.getByText('9 h 00')).toBeVisible();
+        await expect(page.getByText('Akouvi K.')).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Accueil' })).toHaveAttribute(
+          'aria-current',
+          'page',
+        );
       }
 
       const screenshotPath = testInfo.outputPath(`${slug}-${testInfo.project.name}.png`);
@@ -67,7 +79,8 @@ test.describe('Subscriber visit flow X-11 → X-15', () => {
     await expect(page).toHaveURL(/#\/visit\/feedback/u);
     await expect(page.locator('[data-screen-id="X-15"]')).toBeVisible();
     await page.getByRole('button', { name: "Retour à l'accueil" }).click();
-    await expect(page).toHaveURL(/#\/welcome/u);
+    await expect(page).toHaveURL(/#\/hub/u);
+    await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
 
     await page.goto('/#/visit/reveal');
     await page.getByRole('button', { name: 'Signaler un souci' }).click();
@@ -77,14 +90,15 @@ test.describe('Subscriber visit flow X-11 → X-15', () => {
     await expect(page).toHaveURL(/#\/visit\/issue\/submitted/u);
     await expect(page.getByRole('heading', { name: 'Signalement reçu.' })).toBeVisible();
     await page.getByRole('button', { name: "Retour à l'accueil" }).click();
-    await expect(page).toHaveURL(/#\/welcome/u);
+    await expect(page).toHaveURL(/#\/hub/u);
+    await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
   });
 
-  test('X-13 close action remains non-hub-safe until X-10 exists', async ({ page }) => {
+  test('X-13 close action lands on the X-10 hub', async ({ page }) => {
     await page.goto('/#/visit/in-progress');
 
     await page.getByRole('button', { name: "Fermer l'app sereinement" }).click();
-    await expect(page).toHaveURL(/#\/welcome/u);
-    await expect(page.locator('[data-screen-id="X-01"]')).toBeVisible();
+    await expect(page).toHaveURL(/#\/hub/u);
+    await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
   });
 });

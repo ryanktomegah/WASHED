@@ -102,7 +102,7 @@ describe('Subscriber visit · X-12 En Route', () => {
 });
 
 describe('Subscriber visit · X-13 In Progress', () => {
-  it('renders the reassurance copy and non-hub-safe close route', () => {
+  it('renders the reassurance copy and routes close to the hub', () => {
     const { locationRef } = renderAt('/visit/in-progress', <VisitInProgressX13 />);
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-13');
@@ -114,7 +114,7 @@ describe('Subscriber visit · X-13 In Progress', () => {
     ).toBeVisible();
 
     fireEvent.click(screen.getByRole('button', { name: "Fermer l'app sereinement" }));
-    expect(locationRef.current).toBe('/welcome');
+    expect(locationRef.current).toBe('/hub');
   });
 });
 
@@ -140,7 +140,7 @@ describe('Subscriber visit · X-14 Reveal', () => {
 });
 
 describe('Subscriber visit · X-15 Feedback', () => {
-  it('renders the positive confirmation and returns to welcome', () => {
+  it('renders the positive confirmation and returns to the hub', () => {
     const { locationRef } = renderAt('/visit/feedback', <VisitFeedbackX15 />);
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-15');
@@ -148,7 +148,7 @@ describe('Subscriber visit · X-15 Feedback', () => {
     expect(screen.getByText('33 visites')).toBeVisible();
 
     fireEvent.click(screen.getByRole('button', { name: "Retour à l'accueil" }));
-    expect(locationRef.current).toBe('/welcome');
+    expect(locationRef.current).toBe('/hub');
   });
 });
 
@@ -171,7 +171,7 @@ describe('Subscriber visit · X-15.S Issue', () => {
     expect(locationRef.current).toBe('/visit/issue/submitted');
   });
 
-  it('renders submitted confirmation and returns to welcome', () => {
+  it('renders submitted confirmation and returns to the hub', () => {
     const { locationRef } = renderAt('/visit/issue/submitted', <VisitIssueSubmittedX15S />);
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-15.S');
@@ -179,6 +179,6 @@ describe('Subscriber visit · X-15.S Issue', () => {
     expect(screen.getByText('Ticket #0421 créé. Le bureau vous répond sous 4 h.')).toBeVisible();
 
     fireEvent.click(screen.getByRole('button', { name: "Retour à l'accueil" }));
-    expect(locationRef.current).toBe('/welcome');
+    expect(locationRef.current).toBe('/hub');
   });
 });

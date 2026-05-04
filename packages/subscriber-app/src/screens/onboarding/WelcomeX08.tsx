@@ -1,11 +1,10 @@
 import { type ReactElement } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
 
 export function WelcomeX08(): ReactElement {
-  // Terminal screen — the hub doesn't exist yet, so the CTA is intentionally
-  // disabled with a helper line. Once X-10 ships, navigate('/hub') replaces
-  // the placeholder.
+  const navigate = useNavigate();
   return (
     <main aria-labelledby="x08-headline" className="onboarding-screen" data-screen-id="X-08">
       <div className="body center">
@@ -25,10 +24,13 @@ export function WelcomeX08(): ReactElement {
 
         <div className="grow" />
 
-        <button className="btn full" disabled type="button">
+        <button
+          className="btn full primary"
+          onClick={() => navigate('/hub')}
+          type="button"
+        >
           Voir mon accueil
         </button>
-        <p className="p-sm welcome-helper">L'accueil sera disponible après l'appel du bureau.</p>
       </div>
     </main>
   );

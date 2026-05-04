@@ -88,7 +88,10 @@ test('X-04 → X-08 complete signup flow', async ({ page }) => {
 
   await expect(page.locator('[data-screen-id="X-08"]')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Bienvenue chez Washed.' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Voir mon accueil' })).toBeDisabled();
+
+  await page.getByRole('button', { name: 'Voir mon accueil' }).click();
+  await expect(page).toHaveURL(/#\/hub/u);
+  await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
 });
 
 test('X-01 Français button routes to X-02 phone', async ({ page }) => {

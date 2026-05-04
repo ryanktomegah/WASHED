@@ -197,7 +197,7 @@ export function VisitInProgressX13(): ReactElement {
 
         <button
           className="visit-button ghost full"
-          onClick={() => navigate('/welcome')}
+          onClick={() => navigate('/hub')}
           type="button"
         >
           Fermer l&apos;app sereinement
@@ -306,7 +306,7 @@ export function VisitFeedbackX15(): ReactElement {
 
         <button
           className="visit-button ghost full"
-          onClick={() => navigate('/welcome')}
+          onClick={() => navigate('/hub')}
           type="button"
         >
           {translate('subscriber.visit.return_home.cta')}
@@ -393,7 +393,7 @@ export function VisitIssueSubmittedX15S(): ReactElement {
         <div className="visit-grow" />
         <button
           className="visit-button ghost full"
-          onClick={() => navigate('/welcome')}
+          onClick={() => navigate('/hub')}
           type="button"
         >
           {translate('subscriber.visit.return_home.cta')}
