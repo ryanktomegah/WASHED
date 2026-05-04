@@ -11,6 +11,28 @@ export type MessageKey = keyof typeof frMessages;
 const fr: Record<MessageKey, string> = frMessages;
 const en: Partial<Record<MessageKey, string>> = enMessages as Partial<Record<MessageKey, string>>;
 
+let activeLocale: WashedLocale = defaultLocale;
+const localeSubscribers = new Set<() => void>();
+
+export function getActiveLocale(): WashedLocale {
+  return activeLocale;
+}
+
+export function setActiveLocale(locale: WashedLocale): void {
+  if (activeLocale === locale) return;
+  activeLocale = locale;
+  for (const subscriber of localeSubscribers) {
+    subscriber();
+  }
+}
+
+export function subscribeLocale(listener: () => void): () => void {
+  localeSubscribers.add(listener);
+  return () => {
+    localeSubscribers.delete(listener);
+  };
+}
+
 export function normalizeLocale(locale: string | undefined): WashedLocale {
   if (locale?.toLowerCase().startsWith('en') === true) {
     return 'en';
@@ -21,7 +43,7 @@ export function normalizeLocale(locale: string | undefined): WashedLocale {
 
 export function translate(
   key: MessageKey,
-  locale: WashedLocale = defaultLocale,
+  locale: WashedLocale = activeLocale,
   values: Record<string, string | number> = {},
 ): string {
   const template = locale === 'en' ? en[key] ?? fr[key] : fr[key];
@@ -47,7 +69,7 @@ export function formatXof(amountMinor: bigint | number): string {
 
 export function formatVisitDate(
   value: Date | string,
-  locale: WashedLocale = defaultLocale,
+  locale: WashedLocale = activeLocale,
 ): string {
   const date = typeof value === 'string' ? new Date(value) : value;
 

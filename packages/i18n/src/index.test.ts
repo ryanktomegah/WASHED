@@ -4,8 +4,10 @@ import {
   defaultLocale,
   formatVisitDate,
   formatXof,
+  getActiveLocale,
   hasMessageKey,
   normalizeLocale,
+  setActiveLocale,
   translate,
 } from './index.js';
 
@@ -23,10 +25,19 @@ describe('Washed i18n', () => {
     expect(translate('subscriber.signup.otp.title')).toBe('Le code reçu par SMS.');
   });
 
-  it('falls back to FR when EN is missing in v1', () => {
-    expect(translate('subscriber.splash.tagline', 'en')).toBe(
-      "L'appli laveuse pour Lomé.",
-    );
+  it('returns the EN translation when present and falls back to FR otherwise', () => {
+    expect(translate('subscriber.splash.tagline', 'en')).toBe('The washerwoman app for Lomé.');
+    expect(translate('worker.login.greeting', 'en')).toBe('Bonjour.');
+  });
+
+  it('reads the active locale by default and updates when setActiveLocale is called', () => {
+    expect(getActiveLocale()).toBe('fr');
+    expect(translate('subscriber.signup.phone.cta')).toBe('Recevoir le code');
+
+    setActiveLocale('en');
+    expect(translate('subscriber.signup.phone.cta')).toBe('Send the code');
+
+    setActiveLocale('fr');
   });
 
   it('interpolates ICU-style {variables}', () => {

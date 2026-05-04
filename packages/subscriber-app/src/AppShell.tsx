@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 
-import { WashedThemeProvider } from '@washed/ui';
+import { LocaleProvider, WashedThemeProvider, useActiveLocale } from '@washed/ui';
 
 import { SignupProvider } from './screens/onboarding/SignupContext.js';
 import { SplashX01 } from './screens/onboarding/SplashX01.js';
@@ -68,61 +68,71 @@ import './screens/visits/visit.css';
 
 export function AppShell(): ReactElement {
   return (
-    <WashedThemeProvider theme="subscriber">
-      <SignupProvider>
-        <HashRouter>
-          <Routes>
-            <Route element={<Navigate replace to="/welcome" />} path="/" />
-            <Route element={<SplashX01 />} path="/welcome" />
-            <Route element={<PhoneX02 />} path="/signup/phone" />
-            <Route element={<OtpX03 />} path="/signup/otp" />
-            <Route element={<AddressX04 />} path="/signup/address" />
-            <Route element={<TierX05 />} path="/signup/tier" />
-            <Route element={<PaymentX06 />} path="/signup/payment" />
-            <Route element={<ReviewX07 />} path="/signup/review" />
-            <Route element={<WelcomeX08 />} path="/signup/welcome" />
-            <Route element={<HubX10 />} path="/hub" />
-            <Route element={<HistoryX16 />} path="/history" />
-            <Route element={<HistoryDetailX17 />} path="/history/:visitId" />
-            <Route element={<PlanX19 />} path="/plan" />
-            <Route element={<PlanPaymentHistoryX20 />} path="/plan/payments" />
-            <Route element={<PlanPaymentMethodX21 />} path="/plan/payment-method" />
-            <Route element={<PlanOverdueX23 />} path="/plan/overdue" />
-            <Route element={<PlanUpgradeX19U />} path="/plan/upgrade" />
-            <Route element={<PlanPauseConfirmX22 />} path="/plan/pause" />
-            <Route element={<PlanPausedSuccessX22A />} path="/plan/pause/submitted" />
-            <Route element={<PlanPausedX19R />} path="/plan/paused" />
-            <Route element={<ProfileX24 />} path="/profile" />
-            <Route element={<AddressEditX25 />} path="/profile/address" />
-            <Route element={<NotificationsX26 />} path="/profile/notifications" />
-            <Route element={<PrivacyX27 />} path="/profile/privacy" />
-            <Route element={<DeleteAccountX28 />} path="/profile/delete" />
-            <Route element={<HelpCenterX29 />} path="/support" />
-            <Route element={<ContactBureauX30 />} path="/support/contact" />
-            <Route element={<ContactSubmittedX30S />} path="/support/contact/submitted" />
-            <Route element={<TicketsX31 />} path="/support/tickets" />
-            <Route element={<TicketDetailX32 />} path="/support/tickets/:ticketId" />
-            <Route element={<OfflineX33 />} path="/offline" />
-            <Route element={<MaintenanceX34 />} path="/maintenance" />
-            <Route element={<UpdateRequiredX35 />} path="/update-required" />
-            <Route element={<WorkerProfileX18 />} path="/worker/:workerId" />
-            <Route element={<WorkerChangeX18C />} path="/worker/:workerId/change" />
-            <Route
-              element={<WorkerChangeSubmittedX18C />}
-              path="/worker/:workerId/change/submitted"
-            />
-            <Route element={<VisitDetailX11 />} path="/visit/detail" />
-            <Route element={<VisitRescheduleX11M />} path="/visit/reschedule" />
-            <Route element={<VisitEnRouteX12 />} path="/visit/en-route" />
-            <Route element={<VisitInProgressX13 />} path="/visit/in-progress" />
-            <Route element={<VisitRevealX14 />} path="/visit/reveal" />
-            <Route element={<VisitFeedbackX15 />} path="/visit/feedback" />
-            <Route element={<VisitIssueX15S />} path="/visit/issue" />
-            <Route element={<VisitIssueSubmittedX15S />} path="/visit/issue/submitted" />
-            <Route element={<Navigate replace to="/welcome" />} path="*" />
-          </Routes>
-        </HashRouter>
-      </SignupProvider>
-    </WashedThemeProvider>
+    <LocaleProvider>
+      <WashedThemeProvider theme="subscriber">
+        <SignupProvider>
+          <HashRouter>
+            <LocaleScopedRoutes />
+          </HashRouter>
+        </SignupProvider>
+      </WashedThemeProvider>
+    </LocaleProvider>
+  );
+}
+
+function LocaleScopedRoutes(): ReactElement {
+  const locale = useActiveLocale();
+
+  return (
+    <Routes key={locale}>
+      <Route element={<Navigate replace to="/welcome" />} path="/" />
+      <Route element={<SplashX01 />} path="/welcome" />
+      <Route element={<PhoneX02 />} path="/signup/phone" />
+      <Route element={<OtpX03 />} path="/signup/otp" />
+      <Route element={<AddressX04 />} path="/signup/address" />
+      <Route element={<TierX05 />} path="/signup/tier" />
+      <Route element={<PaymentX06 />} path="/signup/payment" />
+      <Route element={<ReviewX07 />} path="/signup/review" />
+      <Route element={<WelcomeX08 />} path="/signup/welcome" />
+      <Route element={<HubX10 />} path="/hub" />
+      <Route element={<HistoryX16 />} path="/history" />
+      <Route element={<HistoryDetailX17 />} path="/history/:visitId" />
+      <Route element={<PlanX19 />} path="/plan" />
+      <Route element={<PlanPaymentHistoryX20 />} path="/plan/payments" />
+      <Route element={<PlanPaymentMethodX21 />} path="/plan/payment-method" />
+      <Route element={<PlanOverdueX23 />} path="/plan/overdue" />
+      <Route element={<PlanUpgradeX19U />} path="/plan/upgrade" />
+      <Route element={<PlanPauseConfirmX22 />} path="/plan/pause" />
+      <Route element={<PlanPausedSuccessX22A />} path="/plan/pause/submitted" />
+      <Route element={<PlanPausedX19R />} path="/plan/paused" />
+      <Route element={<ProfileX24 />} path="/profile" />
+      <Route element={<AddressEditX25 />} path="/profile/address" />
+      <Route element={<NotificationsX26 />} path="/profile/notifications" />
+      <Route element={<PrivacyX27 />} path="/profile/privacy" />
+      <Route element={<DeleteAccountX28 />} path="/profile/delete" />
+      <Route element={<HelpCenterX29 />} path="/support" />
+      <Route element={<ContactBureauX30 />} path="/support/contact" />
+      <Route element={<ContactSubmittedX30S />} path="/support/contact/submitted" />
+      <Route element={<TicketsX31 />} path="/support/tickets" />
+      <Route element={<TicketDetailX32 />} path="/support/tickets/:ticketId" />
+      <Route element={<OfflineX33 />} path="/offline" />
+      <Route element={<MaintenanceX34 />} path="/maintenance" />
+      <Route element={<UpdateRequiredX35 />} path="/update-required" />
+      <Route element={<WorkerProfileX18 />} path="/worker/:workerId" />
+      <Route element={<WorkerChangeX18C />} path="/worker/:workerId/change" />
+      <Route
+        element={<WorkerChangeSubmittedX18C />}
+        path="/worker/:workerId/change/submitted"
+      />
+      <Route element={<VisitDetailX11 />} path="/visit/detail" />
+      <Route element={<VisitRescheduleX11M />} path="/visit/reschedule" />
+      <Route element={<VisitEnRouteX12 />} path="/visit/en-route" />
+      <Route element={<VisitInProgressX13 />} path="/visit/in-progress" />
+      <Route element={<VisitRevealX14 />} path="/visit/reveal" />
+      <Route element={<VisitFeedbackX15 />} path="/visit/feedback" />
+      <Route element={<VisitIssueX15S />} path="/visit/issue" />
+      <Route element={<VisitIssueSubmittedX15S />} path="/visit/issue/submitted" />
+      <Route element={<Navigate replace to="/welcome" />} path="*" />
+    </Routes>
   );
 }

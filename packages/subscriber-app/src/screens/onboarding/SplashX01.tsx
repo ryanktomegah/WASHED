@@ -2,11 +2,19 @@ import { useNavigate } from 'react-router-dom';
 import type { ReactElement } from 'react';
 
 import { translate } from '@washed/i18n';
+import { useLocale } from '@washed/ui';
 
 export function SplashX01(): ReactElement {
   const navigate = useNavigate();
+  const { setLocale } = useLocale();
 
   const continueInFrench = (): void => {
+    setLocale('fr');
+    navigate('/signup/phone');
+  };
+
+  const continueInEnglish = (): void => {
+    setLocale('en');
     navigate('/signup/phone');
   };
 
@@ -34,17 +42,12 @@ export function SplashX01(): ReactElement {
             {translate('subscriber.splash.lang.fr')}
           </button>
           <button
-            aria-disabled="true"
-            className="btn full alt"
-            disabled
-            title={translate('subscriber.splash.lang.en_disabled_note')}
+            className="btn full surface"
+            onClick={continueInEnglish}
             type="button"
           >
             {translate('subscriber.splash.lang.en')}
           </button>
-        </div>
-        <div className="splash-disabled-note">
-          {translate('subscriber.splash.lang.en_disabled_note')}
         </div>
       </div>
     </main>

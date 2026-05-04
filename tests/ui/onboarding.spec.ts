@@ -1,15 +1,28 @@
 import { expect, test } from '@playwright/test';
 
-test('X-01 splash · Savane palette, FR-default, EN disabled per D-06', async ({ page }) => {
+test('X-01 splash · Savane palette, FR + EN locale CTAs both enabled', async ({ page }) => {
   await page.goto('/#/welcome');
 
   await expect(page.locator('[data-screen-id="X-01"]')).toBeVisible();
   await expect(page.getByText("L'APPLI LAVEUSE POUR LOMÉ")).toBeVisible();
   await expect(page.getByRole('button', { name: 'Français' })).toBeEnabled();
-  await expect(page.getByRole('button', { name: 'English' })).toBeDisabled();
-  await expect(page.getByText('Bientôt disponible').first()).toBeVisible();
+  await expect(page.getByRole('button', { name: 'English' })).toBeEnabled();
 
   await page.screenshot({ path: 'playwright-report/x-01-splash.png', fullPage: true });
+});
+
+test('X-01 English button routes to X-02 phone with EN copy', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.removeItem('washed.locale');
+  });
+  await page.goto('/#/welcome');
+
+  await page.getByRole('button', { name: 'English' }).click();
+
+  await expect(page).toHaveURL(/#\/signup\/phone/u);
+  await expect(page.locator('[data-screen-id="X-02"]')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your phone number.' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Send the code' })).toBeVisible();
 });
 
 test('X-02 phone · ÉTAPE 1 / 4, +228 prefix, CTA disabled until 8 digits', async ({ page }) => {

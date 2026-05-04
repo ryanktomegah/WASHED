@@ -1,10 +1,20 @@
 import { getWashedTheme, type WashedTheme, type WashedThemeName } from '@washed/design-tokens';
 import {
+  getActiveLocale,
+  setActiveLocale,
+  subscribeLocale,
+  type WashedLocale,
+} from '@washed/i18n';
+import {
   createContext,
   forwardRef,
+  useCallback,
   useContext,
   useEffect,
   useId,
+  useMemo,
+  useState,
+  useSyncExternalStore,
   type AnchorHTMLAttributes,
   type ButtonHTMLAttributes,
   type CSSProperties,
@@ -13,6 +23,8 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
+
+export type { WashedLocale } from '@washed/i18n';
 
 export type WashedThemeInput = WashedTheme | WashedThemeName;
 export type ComponentSize = 'lg' | 'md' | 'sm';
@@ -136,6 +148,75 @@ export function WashedThemeProvider({
 
 export function useWashedTheme(): WashedTheme {
   return useContext(ThemeContext);
+}
+
+export interface LocaleContextValue {
+  readonly locale: WashedLocale;
+  readonly setLocale: (locale: WashedLocale) => void;
+}
+
+const LOCALE_STORAGE_KEY = 'washed.locale';
+
+const LocaleContext = createContext<LocaleContextValue>({
+  locale: getActiveLocale(),
+  setLocale: setActiveLocale,
+});
+
+export interface LocaleProviderProps {
+  readonly children: ReactNode;
+  readonly storageKey?: string;
+}
+
+function readStoredLocale(storageKey: string): WashedLocale | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const stored = window.localStorage.getItem(storageKey);
+    if (stored === 'fr' || stored === 'en') return stored;
+  } catch {
+    // localStorage may be unavailable (private mode, sandboxed iframes) — fall back silently.
+  }
+  return null;
+}
+
+export function LocaleProvider({
+  children,
+  storageKey = LOCALE_STORAGE_KEY,
+}: LocaleProviderProps): ReactElement {
+  const [locale, setLocaleState] = useState<WashedLocale>(() => {
+    const stored = readStoredLocale(storageKey);
+    if (stored !== null) {
+      setActiveLocale(stored);
+      return stored;
+    }
+    return getActiveLocale();
+  });
+
+  useEffect(() => subscribeLocale(() => setLocaleState(getActiveLocale())), []);
+
+  const setLocale = useCallback(
+    (next: WashedLocale): void => {
+      setActiveLocale(next);
+      if (typeof window === 'undefined') return;
+      try {
+        window.localStorage.setItem(storageKey, next);
+      } catch {
+        // ignore storage failures
+      }
+    },
+    [storageKey],
+  );
+
+  const value = useMemo<LocaleContextValue>(() => ({ locale, setLocale }), [locale, setLocale]);
+
+  return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
+}
+
+export function useLocale(): LocaleContextValue {
+  return useContext(LocaleContext);
+}
+
+export function useActiveLocale(): WashedLocale {
+  return useSyncExternalStore(subscribeLocale, getActiveLocale, getActiveLocale);
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(

@@ -330,6 +330,9 @@ importers:
       '@washed/design-tokens':
         specifier: workspace:*
         version: link:../design-tokens
+      '@washed/i18n':
+        specifier: workspace:*
+        version: link:../i18n
     devDependencies:
       '@testing-library/jest-dom':
         specifier: 6.9.1

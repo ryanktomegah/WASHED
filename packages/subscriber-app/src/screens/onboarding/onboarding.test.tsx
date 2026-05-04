@@ -49,22 +49,27 @@ function renderAt(
 }
 
 describe('Onboarding · X-01 Splash', () => {
-  it('renders the FR-default headline, tagline and disabled-EN banner per D-06', () => {
+  it('renders the headline, tagline, and both locale CTAs enabled', () => {
     renderAt('/welcome', <SplashX01 />);
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-01');
     expect(screen.getByText("L'appli laveuse pour Lomé.")).toBeInTheDocument();
-    expect(screen.getAllByText('Bientôt disponible').length).toBeGreaterThan(0);
 
-    const englishButton = screen.getByRole('button', { name: 'English' });
-    expect(englishButton).toBeDisabled();
-    expect(englishButton).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('button', { name: 'Français' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'English' })).toBeEnabled();
   });
 
   it('routes to /signup/phone when the user picks Français', () => {
     const { locationRef } = renderAt('/welcome', <SplashX01 />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Français' }));
+    expect(locationRef.current).toBe('/signup/phone');
+  });
+
+  it('routes to /signup/phone when the user picks English', () => {
+    const { locationRef } = renderAt('/welcome', <SplashX01 />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'English' }));
     expect(locationRef.current).toBe('/signup/phone');
   });
 });

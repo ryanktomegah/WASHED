@@ -17,7 +17,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@washed/design-tokens": "workspace:*"
+    "@washed/design-tokens": "workspace:*",
+    "@washed/i18n": "workspace:*"
   },
   "peerDependencies": {
     "react": ">=19.0.0",
