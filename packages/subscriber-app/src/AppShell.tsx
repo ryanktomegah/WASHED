@@ -15,6 +15,11 @@ import { WelcomeX08 } from './screens/onboarding/WelcomeX08.js';
 import { HubX10 } from './screens/hub/HubX10.js';
 import { HistoryDetailX17, HistoryX16 } from './screens/history/HistoryX16.js';
 import {
+  WorkerChangeSubmittedX18C,
+  WorkerChangeX18C,
+  WorkerProfileX18,
+} from './screens/worker-profile/WorkerProfileX18.js';
+import {
   VisitDetailX11,
   VisitEnRouteX12,
   VisitFeedbackX15,
@@ -28,6 +33,7 @@ import {
 import './screens/onboarding/onboarding.css';
 import './screens/hub/hub.css';
 import './screens/history/history.css';
+import './screens/worker-profile/workerProfile.css';
 import './screens/visits/visit.css';
 
 export function AppShell(): ReactElement {
@@ -48,6 +54,12 @@ export function AppShell(): ReactElement {
             <Route element={<HubX10 />} path="/hub" />
             <Route element={<HistoryX16 />} path="/history" />
             <Route element={<HistoryDetailX17 />} path="/history/:visitId" />
+            <Route element={<WorkerProfileX18 />} path="/worker/:workerId" />
+            <Route element={<WorkerChangeX18C />} path="/worker/:workerId/change" />
+            <Route
+              element={<WorkerChangeSubmittedX18C />}
+              path="/worker/:workerId/change/submitted"
+            />
             <Route element={<VisitDetailX11 />} path="/visit/detail" />
             <Route element={<VisitRescheduleX11M />} path="/visit/reschedule" />
             <Route element={<VisitEnRouteX12 />} path="/visit/en-route" />

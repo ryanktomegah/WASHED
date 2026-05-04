@@ -83,7 +83,12 @@ export function HubX10(): ReactElement {
           </span>
         </section>
 
-        <article className="hub-worker-card" aria-label={hub.worker.name}>
+        <button
+          aria-label={hub.worker.name}
+          className="hub-worker-card"
+          onClick={() => navigate('/worker/akouvi')}
+          type="button"
+        >
           <span aria-hidden="true" className="hub-avatar">
             {hub.worker.initials}
           </span>
@@ -96,7 +101,7 @@ export function HubX10(): ReactElement {
               {translate('subscriber.dashboard.worker.ready_chip')}
             </span>
           ) : null}
-        </article>
+        </button>
 
         <div className="hub-row2">
           <button

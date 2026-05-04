@@ -1,0 +1,328 @@
+.worker-profile-screen {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--ink);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.worker-profile-screen *,
+.worker-profile-screen *::before,
+.worker-profile-screen *::after {
+  box-sizing: border-box;
+}
+
+.worker-profile-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px 20px 8px;
+}
+
+.worker-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.worker-profile-back {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 28px;
+  line-height: 1;
+  padding: 0;
+}
+
+.worker-profile-back:focus-visible,
+.worker-profile-change-button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.worker-profile-eyebrow {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.worker-profile-eyebrow.accent {
+  color: var(--primary);
+}
+
+.worker-profile-identity {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.worker-profile-avatar {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.worker-profile-name {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.08;
+}
+
+.worker-profile-change-title {
+  margin: 8px 0 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.08;
+}
+
+.worker-profile-change-body {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.worker-profile-location {
+  margin: 4px 0 0;
+  color: var(--ink-3);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.worker-profile-relation-card,
+.worker-profile-card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.worker-profile-relation-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-color: color-mix(in srgb, var(--primary) 18%, var(--line));
+  background: var(--primary-soft);
+  padding: 12px;
+}
+
+.worker-profile-relation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.worker-profile-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.worker-profile-metric.right {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.worker-profile-metric strong {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.05;
+}
+
+.worker-profile-metric.right strong {
+  color: var(--primary);
+}
+
+.worker-profile-metric span {
+  color: var(--ink-3);
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.worker-profile-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 12px;
+}
+
+.worker-profile-card p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.worker-profile-choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.worker-profile-choice {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 10px 11px;
+}
+
+.worker-profile-choice.is-selected {
+  border-color: var(--primary);
+  border-width: 2px;
+  padding: 9px 10px;
+}
+
+.worker-profile-radio {
+  display: grid;
+  width: 14px;
+  height: 14px;
+  place-items: center;
+  border: 2px solid var(--ink-3);
+  border-radius: 999px;
+}
+
+.worker-profile-choice.is-selected .worker-profile-radio {
+  border-color: var(--primary);
+}
+
+.worker-profile-choice.is-selected .worker-profile-radio::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+.worker-profile-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.worker-profile-note {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--line));
+  border-radius: 14px;
+  background: var(--accent-soft);
+  padding: 10px 12px;
+}
+
+.worker-profile-note p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.worker-profile-grow {
+  flex: 1;
+  min-height: 8px;
+}
+
+.worker-profile-change-button,
+.worker-profile-submit-button {
+  min-height: var(--tap-min);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 18px;
+}
+
+.worker-profile-submit-button {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--surface);
+}
+
+.worker-profile-submitted {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.worker-profile-submitted .worker-profile-change-body {
+  max-width: 30ch;
+}
+
+.worker-profile-submitted-mark {
+  display: grid;
+  width: 72px;
+  height: 72px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--success-soft);
+  color: var(--success);
+  font-size: 36px;
+  font-weight: 700;
+}
+
+@media (max-height: 700px) {
+  .worker-profile-body {
+    gap: 9px;
+    padding-top: 18px;
+  }
+
+  .worker-profile-avatar {
+    width: 52px;
+    height: 52px;
+  }
+}

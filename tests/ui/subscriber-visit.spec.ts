@@ -11,9 +11,12 @@ const screenRoutes = [
   ['x-15s-issue', '/#/visit/issue', 'X-15.S'],
   ['x-16-history', '/#/history', 'X-16'],
   ['x-17-history-detail', '/#/history/visit-2026-04-28', 'X-17'],
+  ['x-18-worker-profile', '/#/worker/akouvi', 'X-18'],
+  ['x-18c-worker-change', '/#/worker/akouvi/change', 'X-18.C'],
+  ['x-18c-worker-change-submitted', '/#/worker/akouvi/change/submitted', 'X-18.C.S'],
 ] as const;
 
-test.describe('Subscriber hub, visit, and history flows X-10 → X-17', () => {
+test.describe('Subscriber hub, visit, and relationship flows X-10 → X-18.C', () => {
   // Most tests target post-onboarding state — pre-mark the X-09 first-session
   // tour completed so the hub renders clean. The tour itself has its own spec
   // below where the flag is explicitly cleared.
@@ -69,6 +72,33 @@ test.describe('Subscriber hub, visit, and history flows X-10 → X-17', () => {
         await expect(page.getByText('Visite incluse au forfait')).toBeVisible();
       }
 
+      if (screenId === 'X-18') {
+        await expect(page.getByText('Profil de la laveuse')).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Akouvi K.' })).toBeVisible();
+        await expect(
+          page.getByText('Tokoin · vit avec sa famille à 800 m de chez vous'),
+        ).toBeVisible();
+        await expect(page.getByText('Votre relation')).toBeVisible();
+        await expect(page.getByText('Son parcours')).toBeVisible();
+        await expect(page.getByText('Fiabilité')).toBeVisible();
+      }
+
+      if (screenId === 'X-18.C') {
+        await expect(page.getByText('Changer de laveuse')).toBeVisible();
+        await expect(
+          page.getByRole('heading', { name: 'Pourquoi voulez-vous changer ?' }),
+        ).toBeVisible();
+        await expect(page.getByLabel('Préférence personnelle')).toBeChecked();
+        await expect(page.getByText('À noter')).toBeVisible();
+      }
+
+      if (screenId === 'X-18.C.S') {
+        await expect(page.getByRole('heading', { name: 'Demande envoyée.' })).toBeVisible();
+        await expect(
+          page.getByText(/La prochaine visite reste maintenue avec Akouvi/u),
+        ).toBeVisible();
+      }
+
       const screenshotPath = testInfo.outputPath(`${slug}-${testInfo.project.name}.png`);
       await page.screenshot({ fullPage: true, path: screenshotPath });
       await testInfo.attach(`${slug}-${testInfo.project.name}`, {
@@ -95,6 +125,37 @@ test.describe('Subscriber hub, visit, and history flows X-10 → X-17', () => {
     await page.getByRole('button', { name: /28 avr · 9 h 02/u }).click();
     await expect(page).toHaveURL(/#\/history\/visit-2026-04-28/u);
     await expect(page.locator('[data-screen-id="X-17"]')).toBeVisible();
+  });
+
+  test('X-10 worker card routes to X-18 worker profile', async ({ page }) => {
+    await page.goto('/#/hub');
+
+    await page.getByRole('button', { name: 'Akouvi K.' }).click();
+    await expect(page).toHaveURL(/#\/worker\/akouvi/u);
+    await expect(page.locator('[data-screen-id="X-18"]')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Accueil' }).click();
+    await expect(page).toHaveURL(/#\/hub/u);
+    await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
+  });
+
+  test('X-18 change request selects a reason and submits to confirmation', async ({ page }) => {
+    await page.goto('/#/worker/akouvi');
+
+    await page.getByRole('button', { name: 'Demander un changement' }).click();
+    await expect(page).toHaveURL(/#\/worker\/akouvi\/change/u);
+    await expect(page.locator('[data-screen-id="X-18.C"]')).toBeVisible();
+
+    await page.getByText('Souci de qualité du travail').click();
+    await expect(page.getByLabel('Souci de qualité du travail')).toBeChecked();
+
+    await page.getByRole('button', { name: 'Envoyer la demande' }).click();
+    await expect(page).toHaveURL(/#\/worker\/akouvi\/change\/submitted/u);
+    await expect(page.locator('[data-screen-id="X-18.C.S"]')).toBeVisible();
+
+    await page.getByRole('button', { name: "Retour à l'accueil" }).click();
+    await expect(page).toHaveURL(/#\/hub/u);
+    await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
   });
 
   test('X-17 routes back to history and to issue reporting', async ({ page }) => {

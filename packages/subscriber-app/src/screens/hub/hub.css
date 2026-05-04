@@ -126,7 +126,18 @@
   border: 1px solid var(--line);
   border-radius: 14px;
   background: var(--surface);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
   padding: 12px;
+  text-align: left;
+  transition: background-color var(--d-fast) var(--ease-standard);
+}
+
+.hub-worker-card:hover,
+.hub-worker-card:focus-visible {
+  background: color-mix(in srgb, var(--primary-soft) 48%, var(--surface) 52%);
+  outline: none;
 }
 
 .hub-worker-meta {

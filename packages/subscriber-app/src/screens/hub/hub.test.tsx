@@ -97,6 +97,16 @@ describe('Subscriber hub · X-10', () => {
     expect(locationRef.current).toBe('/history');
   });
 
+  it('routes the worker card to X-18 worker profile', () => {
+    vi.setSystemTime(new Date('2026-05-03T09:30:00.000'));
+
+    const { locationRef } = renderAt('/hub', <HubX10 />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Akouvi K.' }));
+
+    expect(locationRef.current).toBe('/worker/akouvi');
+  });
+
   it('routes the Visites nav item to X-16 history', () => {
     vi.setSystemTime(new Date('2026-05-03T09:30:00.000'));
 
