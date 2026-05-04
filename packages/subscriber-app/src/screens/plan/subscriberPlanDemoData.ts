@@ -40,10 +40,33 @@ export interface PausedPlanDemo {
   readonly tenureMonths: number;
 }
 
+export interface PaymentReceiptDemo {
+  readonly date: string;
+  readonly provider: string;
+  readonly reference: string;
+  readonly amountXof: number;
+}
+
+export interface PaymentMethodDemo {
+  readonly provider: string;
+  readonly phone: string;
+  readonly isActive: boolean;
+}
+
+export interface PaymentDemo {
+  readonly subscriberFirstName: string;
+  readonly subscriberInitials: string;
+  readonly historyMonths: number;
+  readonly receipts: readonly PaymentReceiptDemo[];
+  readonly methods: readonly PaymentMethodDemo[];
+  readonly overdueAttempts: number;
+}
+
 export const SUBSCRIBER_PLAN_DEMO: {
   readonly active: ActivePlanDemo;
   readonly upgrade: UpgradeDemo;
   readonly paused: PausedPlanDemo;
+  readonly payment: PaymentDemo;
 } = {
   active: {
     tier: 'T1',
@@ -76,5 +99,25 @@ export const SUBSCRIBER_PLAN_DEMO: {
     workerName: 'Akouvi K.',
     workerInitials: 'AK',
     tenureMonths: 8,
+  },
+  payment: {
+    subscriberFirstName: 'Yawa',
+    subscriberInitials: 'YM',
+    historyMonths: 8,
+    receipts: [
+      { date: '1 mai 2026', provider: 'TMoney', reference: 'MM-78423190', amountXof: 2_500 },
+      { date: '1 avril 2026', provider: 'TMoney', reference: 'MM-78421042', amountXof: 2_500 },
+      { date: '1 mars 2026', provider: 'TMoney', reference: 'MM-78420993', amountXof: 2_500 },
+      { date: '1 février 2026', provider: 'TMoney', reference: 'MM-78420122', amountXof: 2_500 },
+      { date: '1 janvier 2026', provider: 'TMoney', reference: 'MM-78419881', amountXof: 2_500 },
+      { date: '1 décembre 2025', provider: 'TMoney', reference: 'MM-78418640', amountXof: 2_500 },
+      { date: '1 novembre 2025', provider: 'TMoney', reference: 'MM-78417309', amountXof: 2_500 },
+      { date: '1 octobre 2025', provider: 'TMoney', reference: 'MM-78416277', amountXof: 2_500 },
+    ],
+    methods: [
+      { provider: 'TMoney', phone: '+228 90 12 34 56', isActive: true },
+      { provider: 'Mixx by Yas', phone: '+228 99 87 65 43', isActive: false },
+    ],
+    overdueAttempts: 3,
   },
 };

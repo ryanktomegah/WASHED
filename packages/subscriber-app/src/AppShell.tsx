@@ -15,9 +15,12 @@ import { WelcomeX08 } from './screens/onboarding/WelcomeX08.js';
 import { HubX10 } from './screens/hub/HubX10.js';
 import { HistoryDetailX17, HistoryX16 } from './screens/history/HistoryX16.js';
 import {
+  PlanOverdueX23,
   PlanPauseConfirmX22,
   PlanPausedSuccessX22A,
   PlanPausedX19R,
+  PlanPaymentHistoryX20,
+  PlanPaymentMethodX21,
   PlanUpgradeX19U,
   PlanX19,
 } from './screens/plan/PlanScreens.js';
@@ -71,6 +74,9 @@ export function AppShell(): ReactElement {
             <Route element={<HistoryX16 />} path="/history" />
             <Route element={<HistoryDetailX17 />} path="/history/:visitId" />
             <Route element={<PlanX19 />} path="/plan" />
+            <Route element={<PlanPaymentHistoryX20 />} path="/plan/payments" />
+            <Route element={<PlanPaymentMethodX21 />} path="/plan/payment-method" />
+            <Route element={<PlanOverdueX23 />} path="/plan/overdue" />
             <Route element={<PlanUpgradeX19U />} path="/plan/upgrade" />
             <Route element={<PlanPauseConfirmX22 />} path="/plan/pause" />
             <Route element={<PlanPausedSuccessX22A />} path="/plan/pause/submitted" />

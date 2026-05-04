@@ -1,623 +1,1719 @@
 <!doctype html>
-<html lang="fr"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Washed — Redlines &amp; Handoff Specs</title>
-<link rel="stylesheet" href="../shared/tokens.css">
-<style>
-  body { background: var(--bg); color: var(--ink); }
-  .page { max-width: 1280px; margin: 0 auto; padding: var(--s-9) var(--s-6) var(--s-11); }
-  .crumb { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3); margin-bottom: var(--s-6); }
-  .crumb a { color: var(--ink-3); text-decoration: none; }
-  h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(40px, 6vw, 64px); letter-spacing: -0.02em; line-height: 1.05; margin: 0 0 var(--s-5); }
-  h1 em { font-style: italic; color: var(--primary); }
-  .lede { font-size: var(--text-lg); color: var(--ink-2); max-width: 64ch; line-height: 1.55; margin: 0 0 var(--s-9); }
-  .section { margin-top: var(--s-10); padding-top: var(--s-7); border-top: 1px solid var(--line); }
-  .section h2 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-2xl); letter-spacing: -0.01em; margin: 0 0 var(--s-2); }
-  .section h3 { font-family: var(--font-display); font-weight: 500; font-style: italic; font-size: var(--text-xl); margin: var(--s-7) 0 var(--s-4); }
-  .num { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); letter-spacing: 0.12em; margin-bottom: var(--s-2); }
-  .note { font-size: var(--text-sm); color: var(--ink-2); line-height: 1.55; max-width: 72ch; }
-  code { font-family: var(--font-mono); font-size: 12px; background: var(--bg-deep); padding: 1px 5px; border-radius: 3px; color: var(--ink-2); }
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Washed — Redlines &amp; Handoff Specs</title>
+    <link rel="stylesheet" href="../shared/tokens.css" />
+    <style>
+      body {
+        background: var(--bg);
+        color: var(--ink);
+      }
+      .page {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: var(--s-9) var(--s-6) var(--s-11);
+      }
+      .crumb {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--ink-3);
+        margin-bottom: var(--s-6);
+      }
+      .crumb a {
+        color: var(--ink-3);
+        text-decoration: none;
+      }
+      h1 {
+        font-family: var(--font-display);
+        font-weight: 500;
+        font-size: clamp(40px, 6vw, 64px);
+        letter-spacing: -0.02em;
+        line-height: 1.05;
+        margin: 0 0 var(--s-5);
+      }
+      h1 em {
+        font-style: italic;
+        color: var(--primary);
+      }
+      .lede {
+        font-size: var(--text-lg);
+        color: var(--ink-2);
+        max-width: 64ch;
+        line-height: 1.55;
+        margin: 0 0 var(--s-9);
+      }
+      .section {
+        margin-top: var(--s-10);
+        padding-top: var(--s-7);
+        border-top: 1px solid var(--line);
+      }
+      .section h2 {
+        font-family: var(--font-display);
+        font-weight: 500;
+        font-size: var(--text-2xl);
+        letter-spacing: -0.01em;
+        margin: 0 0 var(--s-2);
+      }
+      .section h3 {
+        font-family: var(--font-display);
+        font-weight: 500;
+        font-style: italic;
+        font-size: var(--text-xl);
+        margin: var(--s-7) 0 var(--s-4);
+      }
+      .num {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--ink-3);
+        letter-spacing: 0.12em;
+        margin-bottom: var(--s-2);
+      }
+      .note {
+        font-size: var(--text-sm);
+        color: var(--ink-2);
+        line-height: 1.55;
+        max-width: 72ch;
+      }
+      code {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        background: var(--bg-deep);
+        padding: 1px 5px;
+        border-radius: 3px;
+        color: var(--ink-2);
+      }
 
-  .annot { background: var(--bg-deep); border-left: 3px solid var(--primary); padding: var(--s-4) var(--s-5); border-radius: 0 var(--r-sm) var(--r-sm) 0; margin: var(--s-5) 0; font-size: var(--text-sm); color: var(--ink-2); line-height: 1.55; }
-  .annot b { color: var(--primary); font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; display: block; margin-bottom: 4px; }
+      .annot {
+        background: var(--bg-deep);
+        border-left: 3px solid var(--primary);
+        padding: var(--s-4) var(--s-5);
+        border-radius: 0 var(--r-sm) var(--r-sm) 0;
+        margin: var(--s-5) 0;
+        font-size: var(--text-sm);
+        color: var(--ink-2);
+        line-height: 1.55;
+      }
+      .annot b {
+        color: var(--primary);
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        display: block;
+        margin-bottom: 4px;
+      }
 
-  /* Redline frame: live component on left, measurement annotations on right */
-  .rl {
-    display: grid; grid-template-columns: 380px 1fr;
-    gap: var(--s-7); align-items: start;
-    background: var(--surface); border: 1px solid var(--line);
-    border-radius: var(--r-sm); padding: var(--s-7);
-    margin-bottom: var(--s-5);
-  }
-  .rl-stage { position: relative; min-height: 200px; display: grid; place-items: center; }
-  .rl-spec { font-size: var(--text-sm); color: var(--ink-2); line-height: 1.6; }
-  .rl-spec .cap { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--primary); margin-bottom: 6px; }
-  .rl-spec h4 { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 18px; margin: 0 0 var(--s-2); }
-  .rl-spec table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: var(--s-3); }
-  .rl-spec th, .rl-spec td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  .rl-spec th { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; }
-  .rl-spec td.k { font-family: var(--font-mono); color: var(--primary); white-space: nowrap; }
-  .rl-spec td.v { font-family: var(--font-mono); color: var(--ink-3); white-space: nowrap; }
-  .rl-spec .tip {
-    margin-top: var(--s-4); padding: var(--s-3) var(--s-4); border-radius: var(--r-sm);
-    background: var(--bg); border-left: 2px solid var(--accent); font-size: 12px;
-  }
-  .rl-spec .tip b { color: var(--accent); font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 3px; }
+      /* Redline frame: live component on left, measurement annotations on right */
+      .rl {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        gap: var(--s-7);
+        align-items: start;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--r-sm);
+        padding: var(--s-7);
+        margin-bottom: var(--s-5);
+      }
+      .rl-stage {
+        position: relative;
+        min-height: 200px;
+        display: grid;
+        place-items: center;
+      }
+      .rl-spec {
+        font-size: var(--text-sm);
+        color: var(--ink-2);
+        line-height: 1.6;
+      }
+      .rl-spec .cap {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--primary);
+        margin-bottom: 6px;
+      }
+      .rl-spec h4 {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-weight: 500;
+        font-size: 18px;
+        margin: 0 0 var(--s-2);
+      }
+      .rl-spec table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        margin-top: var(--s-3);
+      }
+      .rl-spec th,
+      .rl-spec td {
+        text-align: left;
+        padding: 6px 8px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      .rl-spec th {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--ink-3);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 500;
+      }
+      .rl-spec td.k {
+        font-family: var(--font-mono);
+        color: var(--primary);
+        white-space: nowrap;
+      }
+      .rl-spec td.v {
+        font-family: var(--font-mono);
+        color: var(--ink-3);
+        white-space: nowrap;
+      }
+      .rl-spec .tip {
+        margin-top: var(--s-4);
+        padding: var(--s-3) var(--s-4);
+        border-radius: var(--r-sm);
+        background: var(--bg);
+        border-left: 2px solid var(--accent);
+        font-size: 12px;
+      }
+      .rl-spec .tip b {
+        color: var(--accent);
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        display: block;
+        margin-bottom: 3px;
+      }
 
-  /* Live components for redlining */
-  .demo-btn {
-    background: var(--primary); color: white; border: none;
-    border-radius: 999px; padding: 14px 22px;
-    font-family: var(--font-body); font-size: 14px; font-weight: 600;
-    cursor: pointer;
-  }
-  .demo-card {
-    background: var(--surface); border: 1px solid var(--line);
-    border-radius: var(--r-md); padding: var(--s-5);
-    width: 320px; box-shadow: var(--shadow-card);
-  }
-  .demo-card .eyebrow { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3); margin-bottom: 8px; }
-  .demo-card .title { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 24px; line-height: 1.1; margin: 0 0 8px; }
-  .demo-card .body { font-size: 13px; color: var(--ink-2); line-height: 1.5; margin: 0 0 var(--s-4); }
-  .demo-field {
-    width: 280px; padding: 12px 14px;
-    border: 1px solid var(--line); border-radius: var(--r-sm);
-    background: var(--surface); font-family: var(--font-mono);
-    font-size: 13px; color: var(--ink);
-  }
+      /* Live components for redlining */
+      .demo-btn {
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 999px;
+        padding: 14px 22px;
+        font-family: var(--font-body);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .demo-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--r-md);
+        padding: var(--s-5);
+        width: 320px;
+        box-shadow: var(--shadow-card);
+      }
+      .demo-card .eyebrow {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--ink-3);
+        margin-bottom: 8px;
+      }
+      .demo-card .title {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-weight: 500;
+        font-size: 24px;
+        line-height: 1.1;
+        margin: 0 0 8px;
+      }
+      .demo-card .body {
+        font-size: 13px;
+        color: var(--ink-2);
+        line-height: 1.5;
+        margin: 0 0 var(--s-4);
+      }
+      .demo-field {
+        width: 280px;
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: var(--r-sm);
+        background: var(--surface);
+        font-family: var(--font-mono);
+        font-size: 13px;
+        color: var(--ink);
+      }
 
-  /* Measurement guides — overlaid */
-  .guide {
-    position: absolute; pointer-events: none;
-    font-family: var(--font-mono); font-size: 9px; color: var(--primary);
-    letter-spacing: 0.05em;
-  }
-  .guide.h { display: flex; align-items: center; gap: 4px; }
-  .guide.h::before { content: ''; flex: 1; height: 1px; background: var(--primary); border-left: 2px solid var(--primary); border-right: 2px solid var(--primary); }
-  .guide.v { writing-mode: vertical-rl; transform: rotate(180deg); }
+      /* Measurement guides — overlaid */
+      .guide {
+        position: absolute;
+        pointer-events: none;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        color: var(--primary);
+        letter-spacing: 0.05em;
+      }
+      .guide.h {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .guide.h::before {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--primary);
+        border-left: 2px solid var(--primary);
+        border-right: 2px solid var(--primary);
+      }
+      .guide.v {
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+      }
 
-  /* Spacing scale visualizer */
-  .scale-grid { display: grid; grid-template-columns: 80px 80px 1fr 1fr; gap: 0; border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden; }
-  .scale-grid > div { padding: 12px; border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); font-size: 12px; }
-  .scale-grid > div:nth-last-child(-n+4) { border-bottom: none; }
-  .scale-grid > div:nth-child(4n) { border-right: none; }
-  .scale-grid .h-cell { background: var(--bg-deep); font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-3); padding: 8px 12px; }
-  .scale-grid .k { font-family: var(--font-mono); color: var(--primary); }
-  .scale-grid .v { font-family: var(--font-mono); color: var(--ink-3); }
-  .scale-grid .vis { display: flex; align-items: center; }
-  .scale-grid .vis .bar { background: var(--primary); height: 8px; border-radius: 2px; }
+      /* Spacing scale visualizer */
+      .scale-grid {
+        display: grid;
+        grid-template-columns: 80px 80px 1fr 1fr;
+        gap: 0;
+        border: 1px solid var(--line);
+        border-radius: var(--r-sm);
+        overflow: hidden;
+      }
+      .scale-grid > div {
+        padding: 12px;
+        border-bottom: 1px solid var(--line);
+        border-right: 1px solid var(--line);
+        font-size: 12px;
+      }
+      .scale-grid > div:nth-last-child(-n + 4) {
+        border-bottom: none;
+      }
+      .scale-grid > div:nth-child(4n) {
+        border-right: none;
+      }
+      .scale-grid .h-cell {
+        background: var(--bg-deep);
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--ink-3);
+        padding: 8px 12px;
+      }
+      .scale-grid .k {
+        font-family: var(--font-mono);
+        color: var(--primary);
+      }
+      .scale-grid .v {
+        font-family: var(--font-mono);
+        color: var(--ink-3);
+      }
+      .scale-grid .vis {
+        display: flex;
+        align-items: center;
+      }
+      .scale-grid .vis .bar {
+        background: var(--primary);
+        height: 8px;
+        border-radius: 2px;
+      }
 
-  /* Color usage matrix */
-  .matrix { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .matrix thead th { text-align: left; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-3); font-weight: 500; padding: 10px 12px; border-bottom: 2px solid var(--line); background: var(--bg); }
-  .matrix tbody td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  .matrix .swatch { display: inline-block; width: 16px; height: 16px; border-radius: 4px; vertical-align: middle; margin-right: 6px; box-shadow: 0 0 0 1px rgba(0,0,0,0.06) inset; }
-  .matrix .k { font-family: var(--font-mono); font-size: 11px; color: var(--ink); }
-  .matrix .v { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); }
+      /* Color usage matrix */
+      .matrix {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+      .matrix thead th {
+        text-align: left;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--ink-3);
+        font-weight: 500;
+        padding: 10px 12px;
+        border-bottom: 2px solid var(--line);
+        background: var(--bg);
+      }
+      .matrix tbody td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      .matrix .swatch {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        vertical-align: middle;
+        margin-right: 6px;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06) inset;
+      }
+      .matrix .k {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--ink);
+      }
+      .matrix .v {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--ink-3);
+      }
 
-  /* Type spec */
-  .type-row { display: grid; grid-template-columns: 200px 100px 100px 1fr; gap: var(--s-5); padding: var(--s-4) 0; border-bottom: 1px solid var(--line); align-items: center; }
-  .type-row.h { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.1em; }
-  .type-row .sample { font-family: var(--font-display); font-weight: 500; }
-  .type-row .k { font-family: var(--font-mono); font-size: 12px; color: var(--primary); }
-  .type-row .v { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); }
-  .type-row .use { font-size: 12px; color: var(--ink-2); }
+      /* Type spec */
+      .type-row {
+        display: grid;
+        grid-template-columns: 200px 100px 100px 1fr;
+        gap: var(--s-5);
+        padding: var(--s-4) 0;
+        border-bottom: 1px solid var(--line);
+        align-items: center;
+      }
+      .type-row.h {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--ink-3);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+      .type-row .sample {
+        font-family: var(--font-display);
+        font-weight: 500;
+      }
+      .type-row .k {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--primary);
+      }
+      .type-row .v {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--ink-3);
+      }
+      .type-row .use {
+        font-size: 12px;
+        color: var(--ink-2);
+      }
 
-  /* Do/dont split */
-  .dd { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-5); margin-top: var(--s-4); }
-  .dd > div { padding: var(--s-5); border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); }
-  .dd > div.do { border-left: 3px solid var(--success); }
-  .dd > div.dont { border-left: 3px solid var(--danger); }
-  .dd h4 { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; margin: 0 0 var(--s-3); }
-  .dd .do h4 { color: var(--success); }
-  .dd .dont h4 { color: var(--danger); }
-  .dd ul { margin: 0; padding-left: var(--s-5); font-size: 13px; line-height: 1.6; }
-  .dd li { margin-bottom: 6px; }
+      /* Do/dont split */
+      .dd {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--s-5);
+        margin-top: var(--s-4);
+      }
+      .dd > div {
+        padding: var(--s-5);
+        border: 1px solid var(--line);
+        border-radius: var(--r-sm);
+        background: var(--surface);
+      }
+      .dd > div.do {
+        border-left: 3px solid var(--success);
+      }
+      .dd > div.dont {
+        border-left: 3px solid var(--danger);
+      }
+      .dd h4 {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        margin: 0 0 var(--s-3);
+      }
+      .dd .do h4 {
+        color: var(--success);
+      }
+      .dd .dont h4 {
+        color: var(--danger);
+      }
+      .dd ul {
+        margin: 0;
+        padding-left: var(--s-5);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+      .dd li {
+        margin-bottom: 6px;
+      }
 
-  /* Token applied table */
-  .tt { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: var(--s-3); }
-  .tt thead th { text-align: left; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-3); font-weight: 500; padding: 10px 14px; border-bottom: 2px solid var(--line); background: var(--bg); }
-  .tt tbody td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  .tt .prop { font-family: var(--font-body); color: var(--ink); font-weight: 500; }
-  .tt .tok { font-family: var(--font-mono); color: var(--primary); }
-  .tt .val { font-family: var(--font-mono); color: var(--ink-3); }
-</style></head>
-<body data-theme="subscriber">
-<div class="page">
-  <div class="crumb"><a href="../index.html">← Index</a> · 10 Redlines &amp; Handoff</div>
+      /* Token applied table */
+      .tt {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        margin-top: var(--s-3);
+      }
+      .tt thead th {
+        text-align: left;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--ink-3);
+        font-weight: 500;
+        padding: 10px 14px;
+        border-bottom: 2px solid var(--line);
+        background: var(--bg);
+      }
+      .tt tbody td {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      .tt .prop {
+        font-family: var(--font-body);
+        color: var(--ink);
+        font-weight: 500;
+      }
+      .tt .tok {
+        font-family: var(--font-mono);
+        color: var(--primary);
+      }
+      .tt .val {
+        font-family: var(--font-mono);
+        color: var(--ink-3);
+      }
+    </style>
+  </head>
+  <body data-theme="subscriber">
+    <div class="page">
+      <div class="crumb"><a href="../index.html">← Index</a> · 10 Redlines &amp; Handoff</div>
 
-  <h1>Redlines &amp; <em>specs</em></h1>
-  <p class="lede">Le manuel à ouvrir quand on code un écran. Mesures, tokens appliqués, règles d'usage par primitive, exceptions. La règle d'or : un dev ne devine jamais — soit la valeur est ici, soit elle est dans <code>shared/tokens.css</code> ou <code>packages/design-tokens</code>.</p>
+      <h1>Redlines &amp; <em>specs</em></h1>
+      <p class="lede">
+        Le manuel à ouvrir quand on code un écran. Mesures, tokens appliqués, règles d'usage par
+        primitive, exceptions. La règle d'or : un dev ne devine jamais — soit la valeur est ici,
+        soit elle est dans <code>shared/tokens.css</code> ou <code>packages/design-tokens</code>.
+      </p>
 
-  <div class="annot"><b>Conventions de cette page</b>Les annotations rouges (#C4622D) sont des mesures. Les chiffres en mono sont des tokens. Les <code>--s-N</code> renvoient à l'échelle d'espacement (4-base). Toute valeur en pixels indiquée est <i>appliquée</i> — vous lisez le DOM rendu, pas une approximation.</div>
-
-  <!-- =================================================== -->
-  <!-- SPACING                                              -->
-  <!-- =================================================== -->
-  <section class="section">
-    <div class="num">01 · ESPACEMENT</div>
-    <h2>Échelle 4-based · 12 paliers</h2>
-    <p class="note">Tout l'espacement vient de cette échelle. Aucune valeur libre dans le code (revue refusée). Les paliers sont conçus pour produire des rythmes harmoniques (4 → 8 → 16 → 32 = doublements; 12, 20, 24, 56 = paliers tactiques entre les doublements).</p>
-
-    <div class="scale-grid" style="margin-top: var(--s-5)">
-      <div class="h-cell">Token</div>
-      <div class="h-cell">Valeur</div>
-      <div class="h-cell">Visualisation</div>
-      <div class="h-cell">Usage typique</div>
-
-      <div class="k">--s-0</div><div class="v">0px</div><div class="vis"><div class="bar" style="width:0px"></div></div><div>Reset, aucune marge</div>
-      <div class="k">--s-1</div><div class="v">4px</div><div class="vis"><div class="bar" style="width:4px"></div></div><div>Demi-pas. Espace entre éléments inline (chip + icône).</div>
-      <div class="k">--s-2</div><div class="v">8px</div><div class="vis"><div class="bar" style="width:8px"></div></div><div>Pas serré. Gap entre boutons d'un row, padding chip vertical.</div>
-      <div class="k">--s-3</div><div class="v">12px</div><div class="vis"><div class="bar" style="width:12px"></div></div><div>Padding standard d'une carte serrée. Gap label + value.</div>
-      <div class="k">--s-4</div><div class="v">16px</div><div class="vis"><div class="bar" style="width:16px"></div></div><div>Gap entre paragraphes. Padding interne d'un input.</div>
-      <div class="k">--s-5</div><div class="v">20px</div><div class="vis"><div class="bar" style="width:20px"></div></div><div>Padding de carte. Gap entre cartes d'une grille dense.</div>
-      <div class="k">--s-6</div><div class="v">24px</div><div class="vis"><div class="bar" style="width:24px"></div></div><div>Padding latéral d'un écran mobile. Gap entre sections d'un drawer.</div>
-      <div class="k">--s-7</div><div class="v">32px</div><div class="vis"><div class="bar" style="width:32px"></div></div><div>Espacement entre bloc-héros et corps. Gap entre cartes lâches.</div>
-      <div class="k">--s-8</div><div class="v">40px</div><div class="vis"><div class="bar" style="width:40px"></div></div><div>Top-margin d'un sous-titre après un H1.</div>
-      <div class="k">--s-9</div><div class="v">56px</div><div class="vis"><div class="bar" style="width:56px"></div></div><div>Padding-top de la page (mobile). Gap entre grandes sections.</div>
-      <div class="k">--s-10</div><div class="v">80px</div><div class="vis"><div class="bar" style="width:80px"></div></div><div>Marge entre sections d'une page longue (desktop).</div>
-      <div class="k">--s-11</div><div class="v">120px</div><div class="vis"><div class="bar" style="width:120px"></div></div><div>Padding-bottom d'une page (respiration finale).</div>
-    </div>
-
-    <div class="dd">
-      <div class="do">
-        <h4>✓ Faire</h4>
-        <ul>
-          <li>Toujours utiliser un token: <code>padding: var(--s-5)</code></li>
-          <li>Doubler à mesure qu'on monte dans la hiérarchie : carte 20px → section 40px → page 80px</li>
-          <li>Combiner deux tokens si nécessaire : <code>padding: var(--s-5) var(--s-6)</code></li>
-        </ul>
+      <div class="annot">
+        <b>Conventions de cette page</b>Les annotations rouges (#C4622D) sont des mesures. Les
+        chiffres en mono sont des tokens. Les <code>--s-N</code> renvoient à l'échelle d'espacement
+        (4-base). Toute valeur en pixels indiquée est <i>appliquée</i> — vous lisez le DOM rendu,
+        pas une approximation.
       </div>
-      <div class="dont">
-        <h4>✗ Ne pas faire</h4>
-        <ul>
-          <li>Valeur libre : <code style="text-decoration:line-through">padding: 18px</code></li>
-          <li>Multiples non-tokens (calc) : <code style="text-decoration:line-through">padding: calc(var(--s-4) + 3px)</code></li>
-          <li>Inventer un palier intermédiaire — si vous en avez besoin, ouvrez une PR sur <code>shared/tokens.css</code></li>
-        </ul>
-      </div>
-    </div>
-  </section>
 
-  <!-- =================================================== -->
-  <!-- COLOR                                                -->
-  <!-- =================================================== -->
-  <section class="section">
-    <div class="num">02 · COULEUR</div>
-    <h2>Palette &amp; usage par audience</h2>
-    <p class="note">Trois palettes — <b>Savane</b> (abonné, terracotta), <b>Forêt</b> (laveuse, vert profond), <b>Admin</b> (opérateur, violet). Le <code>data-theme</code> sur <code>&lt;body&gt;</code> bascule automatiquement les variables. Aucun composant ne référence une couleur littérale ; tout passe par les tokens.</p>
+      <!-- =================================================== -->
+      <!-- SPACING                                              -->
+      <!-- =================================================== -->
+      <section class="section">
+        <div class="num">01 · ESPACEMENT</div>
+        <h2>Échelle 4-based · 12 paliers</h2>
+        <p class="note">
+          Tout l'espacement vient de cette échelle. Aucune valeur libre dans le code (revue
+          refusée). Les paliers sont conçus pour produire des rythmes harmoniques (4 → 8 → 16 → 32 =
+          doublements; 12, 20, 24, 56 = paliers tactiques entre les doublements).
+        </p>
 
-    <h3>Subscriber · Savane</h3>
-    <table class="matrix">
-      <thead><tr><th>Token</th><th>Hex</th><th>Usage primaire</th><th>Contraste sur fond</th></tr></thead>
-      <tbody>
-        <tr><td><span class="swatch" style="background:#C4622D"></span><span class="k">--primary</span></td><td class="v">#C4622D</td><td>Action principale, accent éditorial, italiques</td><td class="v">5.4:1 sur #FFFDF8 ✓ AA</td></tr>
-        <tr><td><span class="swatch" style="background:#9C4A1F"></span><span class="k">--primary-deep</span></td><td class="v">#9C4A1F</td><td>État pressed du primary, lien visité</td><td class="v">7.1:1 ✓ AAA</td></tr>
-        <tr><td><span class="swatch" style="background:#FFF3EE"></span><span class="k">--primary-soft</span></td><td class="v">#FFF3EE</td><td>Fond de carte sélectionnée, fond de chip primary</td><td class="v">décor uniquement</td></tr>
-        <tr><td><span class="swatch" style="background:#1C1208"></span><span class="k">--ink</span></td><td class="v">#1C1208</td><td>Texte principal, boutons primaires charbon</td><td class="v">17.8:1 ✓ AAA</td></tr>
-        <tr><td><span class="swatch" style="background:#8C7258"></span><span class="k">--ink-3</span></td><td class="v">#8C7258</td><td>Texte secondaire, labels mono</td><td class="v">4.6:1 ✓ AA</td></tr>
-        <tr><td><span class="swatch" style="background:#FAF6F0"></span><span class="k">--bg</span></td><td class="v">#FAF6F0</td><td>Fond de page</td><td class="v">—</td></tr>
-        <tr><td><span class="swatch" style="background:#FFFDF8"></span><span class="k">--surface</span></td><td class="v">#FFFDF8</td><td>Fond de carte, surface élévée</td><td class="v">—</td></tr>
-        <tr><td><span class="swatch" style="background:#EAE0D5"></span><span class="k">--line</span></td><td class="v">#EAE0D5</td><td>Bordure 1px, séparateur</td><td class="v">décor uniquement</td></tr>
-        <tr><td><span class="swatch" style="background:#4A7C3F"></span><span class="k">--success</span></td><td class="v">#4A7C3F</td><td>Confirmation, état positif</td><td class="v">5.7:1 ✓ AA</td></tr>
-        <tr><td><span class="swatch" style="background:#C03020"></span><span class="k">--danger</span></td><td class="v">#C03020</td><td>Erreur, état destructif</td><td class="v">6.1:1 ✓ AA</td></tr>
-      </tbody>
-    </table>
+        <div class="scale-grid" style="margin-top: var(--s-5)">
+          <div class="h-cell">Token</div>
+          <div class="h-cell">Valeur</div>
+          <div class="h-cell">Visualisation</div>
+          <div class="h-cell">Usage typique</div>
 
-    <h3>Worker · Forêt</h3>
-    <table class="matrix">
-      <thead><tr><th>Token</th><th>Hex</th><th>Usage primaire</th><th>Contraste</th></tr></thead>
-      <tbody>
-        <tr><td><span class="swatch" style="background:#1A5C34"></span><span class="k">--primary</span></td><td class="v">#1A5C34</td><td>Action principale (Démarrer, Photo, Terminer), gain XOF</td><td class="v">8.1:1 ✓ AAA</td></tr>
-        <tr><td><span class="swatch" style="background:#0E1A12"></span><span class="k">--ink</span></td><td class="v">#0E1A12</td><td>Texte principal, boutons charbon</td><td class="v">17.5:1 ✓ AAA</td></tr>
-        <tr><td><span class="swatch" style="background:#EAF6EE"></span><span class="k">--primary-soft</span></td><td class="v">#EAF6EE</td><td>Fond visite confirmée, fond chip primary</td><td class="v">—</td></tr>
-        <tr><td><span class="swatch" style="background:#D4900E"></span><span class="k">--accent</span></td><td class="v">#D4900E</td><td>Avertissement (retard, hors-zone)</td><td class="v">3.8:1 ✓ AA Large</td></tr>
-        <tr><td><span class="swatch" style="background:#BE3030"></span><span class="k">--danger</span></td><td class="v">#BE3030</td><td>SOS, suspension, refus</td><td class="v">6.3:1 ✓ AA</td></tr>
-      </tbody>
-    </table>
-
-    <h3>Operator · Admin</h3>
-    <table class="matrix">
-      <thead><tr><th>Token</th><th>Hex</th><th>Usage primaire</th><th>Contraste</th></tr></thead>
-      <tbody>
-        <tr><td><span class="swatch" style="background:#3B1F7A"></span><span class="k">--primary</span></td><td class="v">#3B1F7A</td><td>Lien actif sidebar, bouton primaire, sélection ligne</td><td class="v">9.4:1 ✓ AAA</td></tr>
-        <tr><td><span class="swatch" style="background:#15131D"></span><span class="k">--ink</span></td><td class="v">#15131D</td><td>Sidebar, texte principal</td><td class="v">18.7:1 ✓ AAA</td></tr>
-        <tr><td><span class="swatch" style="background:#F7F7FB"></span><span class="k">--bg</span></td><td class="v">#F7F7FB</td><td>Fond chrome, fond page</td><td class="v">—</td></tr>
-        <tr><td><span class="swatch" style="background:#F0EBFF"></span><span class="k">--primary-soft</span></td><td class="v">#F0EBFF</td><td>Ligne sélectionnée d'un tableau, drawer fond</td><td class="v">—</td></tr>
-      </tbody>
-    </table>
-
-    <div class="annot" style="margin-top: var(--s-6)"><b>Règle de couleur</b>Le primary n'est jamais utilisé pour décorer — uniquement pour <i>signifier une action</i>. Une couleur primary qui ne dit pas "vous pouvez agir ici" est une couleur primary mal placée. Pour décorer (gradients, illustrations), utilisez les <code>-soft</code> et <code>-tint</code>.</div>
-  </section>
-
-  <!-- =================================================== -->
-  <!-- TYPE                                                 -->
-  <!-- =================================================== -->
-  <section class="section">
-    <div class="num">03 · TYPOGRAPHIE</div>
-    <h2>Pairing · Fraunces + Inter + JetBrains Mono</h2>
-    <p class="note">Trois familles. <b>Fraunces</b> (display) — italique 500 = signature visuelle Washed. <b>Inter</b> (body) — texte courant. <b>JetBrains Mono</b> — étiquettes, métadonnées, code. Toute autre police est interdite.</p>
-
-    <div class="type-row h">
-      <div>Token</div><div>Taille</div><div>Famille</div><div>Usage</div>
-    </div>
-    <div class="type-row">
-      <div class="sample" style="font-style:italic;font-size:64px;letter-spacing:-0.04em;line-height:1">Mardi</div>
-      <div class="k">--text-5xl</div>
-      <div class="v">64 / 1.0</div>
-      <div class="use">Display hero (jour visite, splash). <i>Italique 500.</i></div>
-    </div>
-    <div class="type-row">
-      <div class="sample" style="font-size:48px;letter-spacing:-0.025em;line-height:1.05">La laveuse</div>
-      <div class="k">--text-4xl</div>
-      <div class="v">48 / 1.05</div>
-      <div class="use">H1 page web. Italique optionnel sur 1 mot.</div>
-    </div>
-    <div class="type-row">
-      <div class="sample" style="font-size:38px;letter-spacing:-0.02em;line-height:1.1">Section</div>
-      <div class="k">--text-3xl</div>
-      <div class="v">38 / 1.1</div>
-      <div class="use">H2 page web</div>
-    </div>
-    <div class="type-row">
-      <div class="sample" style="font-size:30px;letter-spacing:-0.02em;line-height:1.1">Titre</div>
-      <div class="k">--text-2xl</div>
-      <div class="v">30 / 1.1</div>
-      <div class="use">H3 page web. H1 modal mobile.</div>
-    </div>
-    <div class="type-row">
-      <div class="sample" style="font-size:24px;letter-spacing:-0.01em;line-height:1.15">Question</div>
-      <div class="k">--text-xl</div>
-      <div class="v">24 / 1.15</div>
-      <div class="use">H1 mobile, label drawer</div>
-    </div>
-    <div class="type-row">
-      <div class="sample" style="font-size:20px;line-height:1.4;font-weight:400;font-family:var(--font-body)">Lede paragraphe</div>
-      <div class="k">--text-lg</div>
-      <div class="v">20 / 1.4</div>
-      <div class="use">Lede / sous-titre</div>
-    </div>
-    <div class="type-row">
-      <div class="sample" style="font-size:17px;line-height:1.5;font-weight:400;font-family:var(--font-body)">Corps de texte</div>
-      <div class="k">--text-md</div>
-      <div class="v">17 / 1.5</div>
-      <div class="use">Body riche (mobile)</div>
-    </div>
-    <div class="type-row">
-      <div class="sample" style="font-size:15px;line-height:1.5;font-weight:400;font-family:var(--font-body)">Texte courant</div>
-      <div class="k">--text-base</div>
-      <div class="v">15 / 1.5</div>
-      <div class="use">Body web</div>
-    </div>
-    <div class="type-row">
-      <div class="sample" style="font-size:13px;line-height:1.45;font-weight:400;font-family:var(--font-body)">Texte secondaire</div>
-      <div class="k">--text-sm</div>
-      <div class="v">13 / 1.45</div>
-      <div class="use">Texte de carte, métadonnées descriptives</div>
-    </div>
-    <div class="type-row">
-      <div class="sample" style="font-size:11px;line-height:1.4;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-3)">EYEBROW · MÉTA</div>
-      <div class="k">--text-xs</div>
-      <div class="v">11 / 1.4</div>
-      <div class="use">Mono, eyebrow, état, ID. Toujours upper + tracking 0.12em.</div>
-    </div>
-
-    <div class="annot" style="margin-top:var(--s-6)"><b>Règle italique</b>L'italique de Fraunces est <i>la</i> signature Washed. Réservé à : (a) un mot du H1 par écran, (b) les chiffres-fierté (gain, semaine, mois), (c) les citations de copie (Voix &amp; ton). Jamais d'italique dans le texte courant, jamais d'italique dans Inter.</div>
-  </section>
-
-  <!-- =================================================== -->
-  <!-- BUTTON ANATOMY                                       -->
-  <!-- =================================================== -->
-  <section class="section">
-    <div class="num">04 · ANATOMIE — BOUTON</div>
-    <h2>Bouton primaire · 44pt minimum</h2>
-
-    <div class="rl">
-      <div class="rl-stage">
-        <div style="position:relative;display:inline-block">
-          <button class="demo-btn">Confirmer</button>
-          <span class="guide h" style="left:-50px;top:50%;width:50px;color:var(--primary)">44</span>
-          <span class="guide" style="bottom:-22px;left:0;right:0;text-align:center">padding: 14 · 22</span>
+          <div class="k">--s-0</div>
+          <div class="v">0px</div>
+          <div class="vis"><div class="bar" style="width: 0px"></div></div>
+          <div>Reset, aucune marge</div>
+          <div class="k">--s-1</div>
+          <div class="v">4px</div>
+          <div class="vis"><div class="bar" style="width: 4px"></div></div>
+          <div>Demi-pas. Espace entre éléments inline (chip + icône).</div>
+          <div class="k">--s-2</div>
+          <div class="v">8px</div>
+          <div class="vis"><div class="bar" style="width: 8px"></div></div>
+          <div>Pas serré. Gap entre boutons d'un row, padding chip vertical.</div>
+          <div class="k">--s-3</div>
+          <div class="v">12px</div>
+          <div class="vis"><div class="bar" style="width: 12px"></div></div>
+          <div>Padding standard d'une carte serrée. Gap label + value.</div>
+          <div class="k">--s-4</div>
+          <div class="v">16px</div>
+          <div class="vis"><div class="bar" style="width: 16px"></div></div>
+          <div>Gap entre paragraphes. Padding interne d'un input.</div>
+          <div class="k">--s-5</div>
+          <div class="v">20px</div>
+          <div class="vis"><div class="bar" style="width: 20px"></div></div>
+          <div>Padding de carte. Gap entre cartes d'une grille dense.</div>
+          <div class="k">--s-6</div>
+          <div class="v">24px</div>
+          <div class="vis"><div class="bar" style="width: 24px"></div></div>
+          <div>Padding latéral d'un écran mobile. Gap entre sections d'un drawer.</div>
+          <div class="k">--s-7</div>
+          <div class="v">32px</div>
+          <div class="vis"><div class="bar" style="width: 32px"></div></div>
+          <div>Espacement entre bloc-héros et corps. Gap entre cartes lâches.</div>
+          <div class="k">--s-8</div>
+          <div class="v">40px</div>
+          <div class="vis"><div class="bar" style="width: 40px"></div></div>
+          <div>Top-margin d'un sous-titre après un H1.</div>
+          <div class="k">--s-9</div>
+          <div class="v">56px</div>
+          <div class="vis"><div class="bar" style="width: 56px"></div></div>
+          <div>Padding-top de la page (mobile). Gap entre grandes sections.</div>
+          <div class="k">--s-10</div>
+          <div class="v">80px</div>
+          <div class="vis"><div class="bar" style="width: 80px"></div></div>
+          <div>Marge entre sections d'une page longue (desktop).</div>
+          <div class="k">--s-11</div>
+          <div class="v">120px</div>
+          <div class="vis"><div class="bar" style="width: 120px"></div></div>
+          <div>Padding-bottom d'une page (respiration finale).</div>
         </div>
-      </div>
-      <div class="rl-spec">
-        <div class="cap">PRIMITIVE · BUTTON</div>
-        <h4>Bouton primaire (CTA)</h4>
-        <table>
-          <tr><td class="k">background</td><td class="v">var(--primary)</td><td>#C4622D / #1A5C34 / #3B1F7A</td></tr>
-          <tr><td class="k">color</td><td class="v">#FFFFFF</td><td>contraste min 4.5:1</td></tr>
-          <tr><td class="k">padding</td><td class="v">14px 22px</td><td>vertical · horizontal</td></tr>
-          <tr><td class="k">border-radius</td><td class="v">var(--r-pill)</td><td>999px (pilule)</td></tr>
-          <tr><td class="k">font-size</td><td class="v">14px</td><td>--text-sm + 1</td></tr>
-          <tr><td class="k">font-weight</td><td class="v">600</td><td>Inter SemiBold</td></tr>
-          <tr><td class="k">min-height</td><td class="v">44px</td><td>WCAG 2.5.5 — non négociable</td></tr>
-          <tr><td class="k">transition</td><td class="v">var(--d-base)</td><td>200ms ease-standard</td></tr>
-          <tr><td class="k">focus-ring</td><td class="v">var(--focus-ring)</td><td>3px primary alpha .32</td></tr>
-        </table>
-        <div class="tip"><b>Exception</b>Bouton mobile pleine largeur en bas d'écran : <code>padding: 16 18</code>, <code>font-size: 13px</code>, <code>min-height: 52px</code> (gros pouce + sécurité tactile).</div>
-      </div>
-    </div>
 
-    <h3>États du bouton</h3>
-    <p class="note">Chaque bouton documente 7 états. Aucun n'est optionnel.</p>
-    <table class="tt">
-      <thead><tr><th>État</th><th>Background</th><th>Color</th><th>Indicateur visible</th></tr></thead>
-      <tbody>
-        <tr><td class="prop">default</td><td class="tok">var(--primary)</td><td class="tok">#FFFFFF</td><td>—</td></tr>
-        <tr><td class="prop">hover</td><td class="tok">var(--primary-deep)</td><td class="tok">#FFFFFF</td><td>+ <code>translateY(-1px)</code></td></tr>
-        <tr><td class="prop">pressed</td><td class="tok">var(--primary-deep)</td><td class="tok">#FFFFFF</td><td>+ <code>translateY(0)</code> + scale(0.98)</td></tr>
-        <tr><td class="prop">focus</td><td class="tok">var(--primary)</td><td class="tok">#FFFFFF</td><td>+ <code>box-shadow: var(--focus-ring)</code></td></tr>
-        <tr><td class="prop">disabled</td><td class="tok">var(--ink-4)</td><td class="tok">var(--surface)</td><td><code>cursor: not-allowed</code> + opacity 0.6</td></tr>
-        <tr><td class="prop">loading</td><td class="tok">var(--primary)</td><td class="tok">#FFFFFF</td><td>spinner 14px à droite, label disabled, <code>aria-busy="true"</code></td></tr>
-        <tr><td class="prop">success (toast)</td><td class="tok">var(--success)</td><td class="tok">#FFFFFF</td><td>2s puis retour default</td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <!-- =================================================== -->
-  <!-- CARD ANATOMY                                         -->
-  <!-- =================================================== -->
-  <section class="section">
-    <div class="num">05 · ANATOMIE — CARTE</div>
-    <h2>Carte standard · 320px de référence</h2>
-
-    <div class="rl">
-      <div class="rl-stage" style="background:var(--bg);min-height:280px;padding:var(--s-7)">
-        <div class="demo-card">
-          <div class="eyebrow">Prochaine visite</div>
-          <div class="title">Mardi <em style="font-style:italic;color:var(--primary)">9 h 00</em></div>
-          <div class="body">Akouvi K. arrive chez vous depuis 8 mois. Tokoin · 800 m.</div>
-          <button class="demo-btn" style="padding:10px 18px;font-size:13px">Voir le détail</button>
+        <div class="dd">
+          <div class="do">
+            <h4>✓ Faire</h4>
+            <ul>
+              <li>Toujours utiliser un token: <code>padding: var(--s-5)</code></li>
+              <li>
+                Doubler à mesure qu'on monte dans la hiérarchie : carte 20px → section 40px → page
+                80px
+              </li>
+              <li>
+                Combiner deux tokens si nécessaire : <code>padding: var(--s-5) var(--s-6)</code>
+              </li>
+            </ul>
+          </div>
+          <div class="dont">
+            <h4>✗ Ne pas faire</h4>
+            <ul>
+              <li>
+                Valeur libre : <code style="text-decoration: line-through">padding: 18px</code>
+              </li>
+              <li>
+                Multiples non-tokens (calc) :
+                <code style="text-decoration: line-through">padding: calc(var(--s-4) + 3px)</code>
+              </li>
+              <li>
+                Inventer un palier intermédiaire — si vous en avez besoin, ouvrez une PR sur
+                <code>shared/tokens.css</code>
+              </li>
+            </ul>
+          </div>
         </div>
-      </div>
-      <div class="rl-spec">
-        <div class="cap">PRIMITIVE · CARD</div>
-        <h4>Carte de surface</h4>
-        <table>
-          <tr><td class="k">background</td><td class="v">var(--surface)</td><td>#FFFDF8 (sub)</td></tr>
-          <tr><td class="k">border</td><td class="v">1px solid var(--line)</td><td>#EAE0D5</td></tr>
-          <tr><td class="k">border-radius</td><td class="v">var(--r-md)</td><td>14px</td></tr>
-          <tr><td class="k">padding</td><td class="v">var(--s-5)</td><td>20px partout</td></tr>
-          <tr><td class="k">box-shadow</td><td class="v">var(--shadow-card)</td><td>1px 2px alpha .04 + 4px 16px alpha .05</td></tr>
+      </section>
+
+      <!-- =================================================== -->
+      <!-- COLOR                                                -->
+      <!-- =================================================== -->
+      <section class="section">
+        <div class="num">02 · COULEUR</div>
+        <h2>Palette &amp; usage par audience</h2>
+        <p class="note">
+          Trois palettes — <b>Savane</b> (abonné, terracotta), <b>Forêt</b> (laveuse, vert profond),
+          <b>Admin</b> (opérateur, violet). Le <code>data-theme</code> sur
+          <code>&lt;body&gt;</code> bascule automatiquement les variables. Aucun composant ne
+          référence une couleur littérale ; tout passe par les tokens.
+        </p>
+
+        <h3>Subscriber · Savane</h3>
+        <table class="matrix">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>Hex</th>
+              <th>Usage primaire</th>
+              <th>Contraste sur fond</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <span class="swatch" style="background: #c4622d"></span
+                ><span class="k">--primary</span>
+              </td>
+              <td class="v">#C4622D</td>
+              <td>Action principale, accent éditorial, italiques</td>
+              <td class="v">5.4:1 sur #FFFDF8 ✓ AA</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="swatch" style="background: #9c4a1f"></span
+                ><span class="k">--primary-deep</span>
+              </td>
+              <td class="v">#9C4A1F</td>
+              <td>État pressed du primary, lien visité</td>
+              <td class="v">7.1:1 ✓ AAA</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="swatch" style="background: #fff3ee"></span
+                ><span class="k">--primary-soft</span>
+              </td>
+              <td class="v">#FFF3EE</td>
+              <td>Fond de carte sélectionnée, fond de chip primary</td>
+              <td class="v">décor uniquement</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="swatch" style="background: #1c1208"></span><span class="k">--ink</span>
+              </td>
+              <td class="v">#1C1208</td>
+              <td>Texte principal, boutons primaires charbon</td>
+              <td class="v">17.8:1 ✓ AAA</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="swatch" style="background: #8c7258"></span
+                ><span class="k">--ink-3</span>
+              </td>
+              <td class="v">#8C7258</td>
+              <td>Texte secondaire, labels mono</td>
+              <td class="v">4.6:1 ✓ AA</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="swatch" style="background: #faf6f0"></span><span class="k">--bg</span>
+              </td>
+              <td class="v">#FAF6F0</td>
+              <td>Fond de page</td>
+              <td class="v">—</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="swatch" style="background: #fffdf8"></span
+                ><span class="k">--surface</span>
+              </td>
+              <td class="v">#FFFDF8</td>
+              <td>Fond de carte, surface élévée</td>
+              <td class="v">—</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="swatch" style="background: #eae0d5"></span
+                ><span class="k">--line</span>
+              </td>
+              <td class="v">#EAE0D5</td>
+              <td>Bordure 1px, séparateur</td>
+              <td class="v">décor uniquement</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="swatch" style="background: #4a7c3f"></span
+                ><span class="k">--success</span>
+              </td>
+              <td class="v">#4A7C3F</td>
+              <td>Confirmation, état positif</td>
+              <td class="v">5.7:1 ✓ AA</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="swatch" style="background: #c03020"></span
+                ><span class="k">--danger</span>
+              </td>
+              <td class="v">#C03020</td>
+              <td>Erreur, état destructif</td>
+              <td class="v">6.1:1 ✓ AA</td>
+            </tr>
+          </tbody>
         </table>
 
-        <h4 style="margin-top:var(--s-4)">Espacement interne</h4>
-        <table>
-          <tr><td class="k">eyebrow → title</td><td class="v">var(--s-2)</td><td>8px</td></tr>
-          <tr><td class="k">title → body</td><td class="v">var(--s-2)</td><td>8px</td></tr>
-          <tr><td class="k">body → cta</td><td class="v">var(--s-4)</td><td>16px</td></tr>
+        <h3>Worker · Forêt</h3>
+        <table class="matrix">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>Hex</th>
+              <th>Usage primaire</th>
+              <th>Contraste</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <span class="swatch" style="background: #1a5c34"></span
+                ><span class="k">--primary</span>
+              </td>
+              <td class="v">#1A5C34</td>
+              <td>Action principale (Démarrer, Photo, Terminer), gain XOF</td>
+              <td class="v">8.1:1 ✓ AAA</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="swatch" style="background: #0e1a12"></span><span class="k">--ink</span>
+              </td>
+              <td class="v">#0E1A12</td>
+              <td>Texte principal, boutons charbon</td>
+              <td class="v">17.5:1 ✓ AAA</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="swatch" style="background: #eaf6ee"></span
+                ><span class="k">--primary-soft</span>
+              </td>
+              <td class="v">#EAF6EE</td>
+              <td>Fond visite confirmée, fond chip primary</td>
+              <td class="v">—</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="swatch" style="background: #d4900e"></span
+                ><span class="k">--accent</span>
+              </td>
+              <td class="v">#D4900E</td>
+              <td>Avertissement (retard, hors-zone)</td>
+              <td class="v">3.8:1 ✓ AA Large</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="swatch" style="background: #be3030"></span
+                ><span class="k">--danger</span>
+              </td>
+              <td class="v">#BE3030</td>
+              <td>SOS, suspension, refus</td>
+              <td class="v">6.3:1 ✓ AA</td>
+            </tr>
+          </tbody>
         </table>
 
-        <div class="tip"><b>Exception</b>Carte sélectionnée (état actif) : <code>border-color: var(--primary)</code> + <code>background: var(--primary-soft)</code>. Pas d'élévation ajoutée.</div>
-      </div>
-    </div>
-  </section>
+        <h3>Operator · Admin</h3>
+        <table class="matrix">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>Hex</th>
+              <th>Usage primaire</th>
+              <th>Contraste</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <span class="swatch" style="background: #3b1f7a"></span
+                ><span class="k">--primary</span>
+              </td>
+              <td class="v">#3B1F7A</td>
+              <td>Lien actif sidebar, bouton primaire, sélection ligne</td>
+              <td class="v">9.4:1 ✓ AAA</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="swatch" style="background: #15131d"></span><span class="k">--ink</span>
+              </td>
+              <td class="v">#15131D</td>
+              <td>Sidebar, texte principal</td>
+              <td class="v">18.7:1 ✓ AAA</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="swatch" style="background: #f7f7fb"></span><span class="k">--bg</span>
+              </td>
+              <td class="v">#F7F7FB</td>
+              <td>Fond chrome, fond page</td>
+              <td class="v">—</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="swatch" style="background: #f0ebff"></span
+                ><span class="k">--primary-soft</span>
+              </td>
+              <td class="v">#F0EBFF</td>
+              <td>Ligne sélectionnée d'un tableau, drawer fond</td>
+              <td class="v">—</td>
+            </tr>
+          </tbody>
+        </table>
 
-  <!-- =================================================== -->
-  <!-- FIELD ANATOMY                                        -->
-  <!-- =================================================== -->
-  <section class="section">
-    <div class="num">06 · ANATOMIE — CHAMP</div>
-    <h2>Champ texte · 280px / 44pt</h2>
-
-    <div class="rl">
-      <div class="rl-stage">
-        <div style="position:relative;display:inline-block">
-          <input class="demo-field" value="+228 90 12 34 56" />
-          <span class="guide h" style="left:-50px;top:50%;width:50px">44</span>
-          <span class="guide" style="bottom:-22px;left:0;right:0;text-align:center">padding: 12 · 14</span>
+        <div class="annot" style="margin-top: var(--s-6)">
+          <b>Règle de couleur</b>Le primary n'est jamais utilisé pour décorer — uniquement pour
+          <i>signifier une action</i>. Une couleur primary qui ne dit pas "vous pouvez agir ici" est
+          une couleur primary mal placée. Pour décorer (gradients, illustrations), utilisez les
+          <code>-soft</code> et <code>-tint</code>.
         </div>
-      </div>
-      <div class="rl-spec">
-        <div class="cap">PRIMITIVE · FIELD</div>
-        <h4>Champ texte</h4>
-        <table>
-          <tr><td class="k">background</td><td class="v">var(--surface)</td><td>—</td></tr>
-          <tr><td class="k">border</td><td class="v">1px solid var(--line)</td><td>—</td></tr>
-          <tr><td class="k">border-radius</td><td class="v">var(--r-sm)</td><td>10px</td></tr>
-          <tr><td class="k">padding</td><td class="v">12px 14px</td><td>v / h</td></tr>
-          <tr><td class="k">font-size</td><td class="v">15px</td><td>--text-base — jamais &lt; 16px sur iOS pour éviter zoom auto</td></tr>
-          <tr><td class="k">color</td><td class="v">var(--ink)</td><td>—</td></tr>
-          <tr><td class="k">caret-color</td><td class="v">var(--primary)</td><td>—</td></tr>
+      </section>
+
+      <!-- =================================================== -->
+      <!-- TYPE                                                 -->
+      <!-- =================================================== -->
+      <section class="section">
+        <div class="num">03 · TYPOGRAPHIE</div>
+        <h2>Pairing · Fraunces + Inter + JetBrains Mono</h2>
+        <p class="note">
+          Trois familles. <b>Fraunces</b> (display) — italique 500 = signature visuelle Washed.
+          <b>Inter</b> (body) — texte courant. <b>JetBrains Mono</b> — étiquettes, métadonnées,
+          code. Toute autre police est interdite.
+        </p>
+
+        <div class="type-row h">
+          <div>Token</div>
+          <div>Taille</div>
+          <div>Famille</div>
+          <div>Usage</div>
+        </div>
+        <div class="type-row">
+          <div
+            class="sample"
+            style="font-style: italic; font-size: 64px; letter-spacing: -0.04em; line-height: 1"
+          >
+            Mardi
+          </div>
+          <div class="k">--text-5xl</div>
+          <div class="v">64 / 1.0</div>
+          <div class="use">Display hero (jour visite, splash). <i>Italique 500.</i></div>
+        </div>
+        <div class="type-row">
+          <div class="sample" style="font-size: 48px; letter-spacing: -0.025em; line-height: 1.05">
+            La laveuse
+          </div>
+          <div class="k">--text-4xl</div>
+          <div class="v">48 / 1.05</div>
+          <div class="use">H1 page web. Italique optionnel sur 1 mot.</div>
+        </div>
+        <div class="type-row">
+          <div class="sample" style="font-size: 38px; letter-spacing: -0.02em; line-height: 1.1">
+            Section
+          </div>
+          <div class="k">--text-3xl</div>
+          <div class="v">38 / 1.1</div>
+          <div class="use">H2 page web</div>
+        </div>
+        <div class="type-row">
+          <div class="sample" style="font-size: 30px; letter-spacing: -0.02em; line-height: 1.1">
+            Titre
+          </div>
+          <div class="k">--text-2xl</div>
+          <div class="v">30 / 1.1</div>
+          <div class="use">H3 page web. H1 modal mobile.</div>
+        </div>
+        <div class="type-row">
+          <div class="sample" style="font-size: 24px; letter-spacing: -0.01em; line-height: 1.15">
+            Question
+          </div>
+          <div class="k">--text-xl</div>
+          <div class="v">24 / 1.15</div>
+          <div class="use">H1 mobile, label drawer</div>
+        </div>
+        <div class="type-row">
+          <div
+            class="sample"
+            style="
+              font-size: 20px;
+              line-height: 1.4;
+              font-weight: 400;
+              font-family: var(--font-body);
+            "
+          >
+            Lede paragraphe
+          </div>
+          <div class="k">--text-lg</div>
+          <div class="v">20 / 1.4</div>
+          <div class="use">Lede / sous-titre</div>
+        </div>
+        <div class="type-row">
+          <div
+            class="sample"
+            style="
+              font-size: 17px;
+              line-height: 1.5;
+              font-weight: 400;
+              font-family: var(--font-body);
+            "
+          >
+            Corps de texte
+          </div>
+          <div class="k">--text-md</div>
+          <div class="v">17 / 1.5</div>
+          <div class="use">Body riche (mobile)</div>
+        </div>
+        <div class="type-row">
+          <div
+            class="sample"
+            style="
+              font-size: 15px;
+              line-height: 1.5;
+              font-weight: 400;
+              font-family: var(--font-body);
+            "
+          >
+            Texte courant
+          </div>
+          <div class="k">--text-base</div>
+          <div class="v">15 / 1.5</div>
+          <div class="use">Body web</div>
+        </div>
+        <div class="type-row">
+          <div
+            class="sample"
+            style="
+              font-size: 13px;
+              line-height: 1.45;
+              font-weight: 400;
+              font-family: var(--font-body);
+            "
+          >
+            Texte secondaire
+          </div>
+          <div class="k">--text-sm</div>
+          <div class="v">13 / 1.45</div>
+          <div class="use">Texte de carte, métadonnées descriptives</div>
+        </div>
+        <div class="type-row">
+          <div
+            class="sample"
+            style="
+              font-size: 11px;
+              line-height: 1.4;
+              font-family: var(--font-mono);
+              text-transform: uppercase;
+              letter-spacing: 0.12em;
+              color: var(--ink-3);
+            "
+          >
+            EYEBROW · MÉTA
+          </div>
+          <div class="k">--text-xs</div>
+          <div class="v">11 / 1.4</div>
+          <div class="use">Mono, eyebrow, état, ID. Toujours upper + tracking 0.12em.</div>
+        </div>
+
+        <div class="annot" style="margin-top: var(--s-6)">
+          <b>Règle italique</b>L'italique de Fraunces est <i>la</i> signature Washed. Réservé à :
+          (a) un mot du H1 par écran, (b) les chiffres-fierté (gain, semaine, mois), (c) les
+          citations de copie (Voix &amp; ton). Jamais d'italique dans le texte courant, jamais
+          d'italique dans Inter.
+        </div>
+      </section>
+
+      <!-- =================================================== -->
+      <!-- BUTTON ANATOMY                                       -->
+      <!-- =================================================== -->
+      <section class="section">
+        <div class="num">04 · ANATOMIE — BOUTON</div>
+        <h2>Bouton primaire · 44pt minimum</h2>
+
+        <div class="rl">
+          <div class="rl-stage">
+            <div style="position: relative; display: inline-block">
+              <button class="demo-btn">Confirmer</button>
+              <span
+                class="guide h"
+                style="left: -50px; top: 50%; width: 50px; color: var(--primary)"
+                >44</span
+              >
+              <span class="guide" style="bottom: -22px; left: 0; right: 0; text-align: center"
+                >padding: 14 · 22</span
+              >
+            </div>
+          </div>
+          <div class="rl-spec">
+            <div class="cap">PRIMITIVE · BUTTON</div>
+            <h4>Bouton primaire (CTA)</h4>
+            <table>
+              <tr>
+                <td class="k">background</td>
+                <td class="v">var(--primary)</td>
+                <td>#C4622D / #1A5C34 / #3B1F7A</td>
+              </tr>
+              <tr>
+                <td class="k">color</td>
+                <td class="v">#FFFFFF</td>
+                <td>contraste min 4.5:1</td>
+              </tr>
+              <tr>
+                <td class="k">padding</td>
+                <td class="v">14px 22px</td>
+                <td>vertical · horizontal</td>
+              </tr>
+              <tr>
+                <td class="k">border-radius</td>
+                <td class="v">var(--r-pill)</td>
+                <td>999px (pilule)</td>
+              </tr>
+              <tr>
+                <td class="k">font-size</td>
+                <td class="v">14px</td>
+                <td>--text-sm + 1</td>
+              </tr>
+              <tr>
+                <td class="k">font-weight</td>
+                <td class="v">600</td>
+                <td>Inter SemiBold</td>
+              </tr>
+              <tr>
+                <td class="k">min-height</td>
+                <td class="v">44px</td>
+                <td>WCAG 2.5.5 — non négociable</td>
+              </tr>
+              <tr>
+                <td class="k">transition</td>
+                <td class="v">var(--d-base)</td>
+                <td>200ms ease-standard</td>
+              </tr>
+              <tr>
+                <td class="k">focus-ring</td>
+                <td class="v">var(--focus-ring)</td>
+                <td>3px primary alpha .32</td>
+              </tr>
+            </table>
+            <div class="tip">
+              <b>Exception</b>Bouton mobile pleine largeur en bas d'écran :
+              <code>padding: 16 18</code>, <code>font-size: 13px</code>,
+              <code>min-height: 52px</code> (gros pouce + sécurité tactile).
+            </div>
+          </div>
+        </div>
+
+        <h3>États du bouton</h3>
+        <p class="note">Chaque bouton documente 7 états. Aucun n'est optionnel.</p>
+        <table class="tt">
+          <thead>
+            <tr>
+              <th>État</th>
+              <th>Background</th>
+              <th>Color</th>
+              <th>Indicateur visible</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="prop">default</td>
+              <td class="tok">var(--primary)</td>
+              <td class="tok">#FFFFFF</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td class="prop">hover</td>
+              <td class="tok">var(--primary-deep)</td>
+              <td class="tok">#FFFFFF</td>
+              <td>+ <code>translateY(-1px)</code></td>
+            </tr>
+            <tr>
+              <td class="prop">pressed</td>
+              <td class="tok">var(--primary-deep)</td>
+              <td class="tok">#FFFFFF</td>
+              <td>+ <code>translateY(0)</code> + scale(0.98)</td>
+            </tr>
+            <tr>
+              <td class="prop">focus</td>
+              <td class="tok">var(--primary)</td>
+              <td class="tok">#FFFFFF</td>
+              <td>+ <code>box-shadow: var(--focus-ring)</code></td>
+            </tr>
+            <tr>
+              <td class="prop">disabled</td>
+              <td class="tok">var(--ink-4)</td>
+              <td class="tok">var(--surface)</td>
+              <td><code>cursor: not-allowed</code> + opacity 0.6</td>
+            </tr>
+            <tr>
+              <td class="prop">loading</td>
+              <td class="tok">var(--primary)</td>
+              <td class="tok">#FFFFFF</td>
+              <td>spinner 14px à droite, label disabled, <code>aria-busy="true"</code></td>
+            </tr>
+            <tr>
+              <td class="prop">success (toast)</td>
+              <td class="tok">var(--success)</td>
+              <td class="tok">#FFFFFF</td>
+              <td>2s puis retour default</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- =================================================== -->
+      <!-- CARD ANATOMY                                         -->
+      <!-- =================================================== -->
+      <section class="section">
+        <div class="num">05 · ANATOMIE — CARTE</div>
+        <h2>Carte standard · 320px de référence</h2>
+
+        <div class="rl">
+          <div
+            class="rl-stage"
+            style="background: var(--bg); min-height: 280px; padding: var(--s-7)"
+          >
+            <div class="demo-card">
+              <div class="eyebrow">Prochaine visite</div>
+              <div class="title">
+                Mardi <em style="font-style: italic; color: var(--primary)">9 h 00</em>
+              </div>
+              <div class="body">Akouvi K. arrive chez vous depuis 8 mois. Tokoin · 800 m.</div>
+              <button class="demo-btn" style="padding: 10px 18px; font-size: 13px">
+                Voir le détail
+              </button>
+            </div>
+          </div>
+          <div class="rl-spec">
+            <div class="cap">PRIMITIVE · CARD</div>
+            <h4>Carte de surface</h4>
+            <table>
+              <tr>
+                <td class="k">background</td>
+                <td class="v">var(--surface)</td>
+                <td>#FFFDF8 (sub)</td>
+              </tr>
+              <tr>
+                <td class="k">border</td>
+                <td class="v">1px solid var(--line)</td>
+                <td>#EAE0D5</td>
+              </tr>
+              <tr>
+                <td class="k">border-radius</td>
+                <td class="v">var(--r-md)</td>
+                <td>14px</td>
+              </tr>
+              <tr>
+                <td class="k">padding</td>
+                <td class="v">var(--s-5)</td>
+                <td>20px partout</td>
+              </tr>
+              <tr>
+                <td class="k">box-shadow</td>
+                <td class="v">var(--shadow-card)</td>
+                <td>1px 2px alpha .04 + 4px 16px alpha .05</td>
+              </tr>
+            </table>
+
+            <h4 style="margin-top: var(--s-4)">Espacement interne</h4>
+            <table>
+              <tr>
+                <td class="k">eyebrow → title</td>
+                <td class="v">var(--s-2)</td>
+                <td>8px</td>
+              </tr>
+              <tr>
+                <td class="k">title → body</td>
+                <td class="v">var(--s-2)</td>
+                <td>8px</td>
+              </tr>
+              <tr>
+                <td class="k">body → cta</td>
+                <td class="v">var(--s-4)</td>
+                <td>16px</td>
+              </tr>
+            </table>
+
+            <div class="tip">
+              <b>Exception</b>Carte sélectionnée (état actif) :
+              <code>border-color: var(--primary)</code> +
+              <code>background: var(--primary-soft)</code>. Pas d'élévation ajoutée.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================== -->
+      <!-- FIELD ANATOMY                                        -->
+      <!-- =================================================== -->
+      <section class="section">
+        <div class="num">06 · ANATOMIE — CHAMP</div>
+        <h2>Champ texte · 280px / 44pt</h2>
+
+        <div class="rl">
+          <div class="rl-stage">
+            <div style="position: relative; display: inline-block">
+              <input class="demo-field" value="+228 90 12 34 56" />
+              <span class="guide h" style="left: -50px; top: 50%; width: 50px">44</span>
+              <span class="guide" style="bottom: -22px; left: 0; right: 0; text-align: center"
+                >padding: 12 · 14</span
+              >
+            </div>
+          </div>
+          <div class="rl-spec">
+            <div class="cap">PRIMITIVE · FIELD</div>
+            <h4>Champ texte</h4>
+            <table>
+              <tr>
+                <td class="k">background</td>
+                <td class="v">var(--surface)</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td class="k">border</td>
+                <td class="v">1px solid var(--line)</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td class="k">border-radius</td>
+                <td class="v">var(--r-sm)</td>
+                <td>10px</td>
+              </tr>
+              <tr>
+                <td class="k">padding</td>
+                <td class="v">12px 14px</td>
+                <td>v / h</td>
+              </tr>
+              <tr>
+                <td class="k">font-size</td>
+                <td class="v">15px</td>
+                <td>--text-base — jamais &lt; 16px sur iOS pour éviter zoom auto</td>
+              </tr>
+              <tr>
+                <td class="k">color</td>
+                <td class="v">var(--ink)</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td class="k">caret-color</td>
+                <td class="v">var(--primary)</td>
+                <td>—</td>
+              </tr>
+            </table>
+
+            <h4 style="margin-top: var(--s-4)">Variations</h4>
+            <ul
+              style="
+                margin: 0;
+                padding-left: 18px;
+                font-size: 13px;
+                line-height: 1.6;
+                color: var(--ink-2);
+              "
+            >
+              <li>
+                <b>focus</b> — <code>border: 1px solid var(--primary)</code> +
+                <code>box-shadow: var(--focus-ring)</code>
+              </li>
+              <li>
+                <b>error</b> — <code>border-color: var(--danger)</code> · message rouge sous le
+                champ
+              </li>
+              <li>
+                <b>disabled</b> — <code>background: var(--bg-deep)</code> · text
+                <code>--ink-4</code> · <code>cursor: not-allowed</code>
+              </li>
+              <li><b>filled</b> — couleur ink, pas de placeholder visible</li>
+            </ul>
+
+            <div class="tip">
+              <b>iOS gotcha</b>Les inputs &lt; 16px déclenchent un zoom auto sur iPhone. Toujours
+              <code>font-size: 15px</code> ou plus, ou <code>maximum-scale=1</code> dans le viewport
+              (déjà fait).
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================== -->
+      <!-- TOKENS APPLIED PAR COMPOSANT                         -->
+      <!-- =================================================== -->
+      <section class="section">
+        <div class="num">07 · TOKENS APPLIQUÉS — RÉFÉRENCE RAPIDE</div>
+        <h2>Tableau exhaustif des composants × tokens</h2>
+        <p class="note">
+          À l'écriture d'un composant React/Vue, copier les valeurs de cette table. Aucune valeur
+          n'est libre.
+        </p>
+
+        <table class="tt">
+          <thead>
+            <tr>
+              <th>Composant</th>
+              <th>Propriété</th>
+              <th>Token</th>
+              <th>Valeur appliquée</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="prop" rowspan="4">Button (primary)</td>
+              <td>min-height</td>
+              <td class="tok">var(--tap-min)</td>
+              <td class="val">44px</td>
+            </tr>
+            <tr>
+              <td>border-radius</td>
+              <td class="tok">var(--r-pill)</td>
+              <td class="val">999px</td>
+            </tr>
+            <tr>
+              <td>padding (default)</td>
+              <td class="tok">14px var(--s-5)</td>
+              <td class="val">14 · 20</td>
+            </tr>
+            <tr>
+              <td>padding (mobile-full)</td>
+              <td class="tok">var(--s-4) var(--s-5)</td>
+              <td class="val">16 · 20, min-height 52</td>
+            </tr>
+
+            <tr>
+              <td class="prop" rowspan="3">Card</td>
+              <td>padding</td>
+              <td class="tok">var(--s-5)</td>
+              <td class="val">20px</td>
+            </tr>
+            <tr>
+              <td>border-radius</td>
+              <td class="tok">var(--r-md)</td>
+              <td class="val">14px</td>
+            </tr>
+            <tr>
+              <td>shadow</td>
+              <td class="tok">var(--shadow-card)</td>
+              <td class="val">2-stop subtle</td>
+            </tr>
+
+            <tr>
+              <td class="prop" rowspan="3">Field</td>
+              <td>padding</td>
+              <td class="tok">12px var(--s-4)</td>
+              <td class="val">12 · 16</td>
+            </tr>
+            <tr>
+              <td>border-radius</td>
+              <td class="tok">var(--r-sm)</td>
+              <td class="val">10px</td>
+            </tr>
+            <tr>
+              <td>min-height</td>
+              <td class="tok">var(--tap-min)</td>
+              <td class="val">44px</td>
+            </tr>
+
+            <tr>
+              <td class="prop" rowspan="3">Sheet (modal mobile)</td>
+              <td>border-radius (top)</td>
+              <td class="tok">var(--r-xl)</td>
+              <td class="val">28 28 0 0</td>
+            </tr>
+            <tr>
+              <td>padding</td>
+              <td class="tok">var(--s-6) var(--s-5)</td>
+              <td class="val">24 · 20</td>
+            </tr>
+            <tr>
+              <td>shadow</td>
+              <td class="tok">var(--shadow-overlay)</td>
+              <td class="val">24px 80px alpha .18</td>
+            </tr>
+
+            <tr>
+              <td class="prop" rowspan="3">Chip</td>
+              <td>padding</td>
+              <td class="tok">3px var(--s-2)</td>
+              <td class="val">3 · 8</td>
+            </tr>
+            <tr>
+              <td>border-radius</td>
+              <td class="tok">var(--r-pill)</td>
+              <td class="val">999px</td>
+            </tr>
+            <tr>
+              <td>font-size</td>
+              <td class="tok">var(--text-xs)</td>
+              <td class="val">11px (mono)</td>
+            </tr>
+
+            <tr>
+              <td class="prop" rowspan="3">Toast</td>
+              <td>padding</td>
+              <td class="tok">var(--s-3) var(--s-5)</td>
+              <td class="val">12 · 20</td>
+            </tr>
+            <tr>
+              <td>border-radius</td>
+              <td class="tok">var(--r-md)</td>
+              <td class="val">14px</td>
+            </tr>
+            <tr>
+              <td>shadow</td>
+              <td class="tok">var(--shadow-elevated)</td>
+              <td class="val">8 · 24 stops</td>
+            </tr>
+
+            <tr>
+              <td class="prop" rowspan="2">Avatar</td>
+              <td>border-radius</td>
+              <td class="tok">var(--r-pill)</td>
+              <td class="val">999px</td>
+            </tr>
+            <tr>
+              <td>size</td>
+              <td class="tok">36px (default), 56px (lg), 22px (table)</td>
+              <td class="val">—</td>
+            </tr>
+
+            <tr>
+              <td class="prop" rowspan="2">Bottom nav</td>
+              <td>height</td>
+              <td class="tok">56px</td>
+              <td class="val">item min 44, label 9px mono</td>
+            </tr>
+            <tr>
+              <td>border-top</td>
+              <td class="tok">1px solid var(--line)</td>
+              <td class="val">—</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- =================================================== -->
+      <!-- COMPONENT USAGE NOTES                                -->
+      <!-- =================================================== -->
+      <section class="section">
+        <div class="num">08 · NOTES D'USAGE PAR PRIMITIVE</div>
+        <h2>Quand l'utiliser, quand ne pas</h2>
+        <p class="note">Pour les cas non triviaux. Lire avant de proposer une nouvelle variante.</p>
+
+        <h3>Bouton primaire</h3>
+        <div class="dd">
+          <div class="do">
+            <h4>✓ Faire</h4>
+            <ul>
+              <li>Une seule action principale par écran</li>
+              <li>Couleur primary uniquement pour l'action irréversible/positive</li>
+              <li>Texte ≤ 24 ch. Verbe d'action en début (« Confirmer », « Démarrer »)</li>
+            </ul>
+          </div>
+          <div class="dont">
+            <h4>✗ Ne pas faire</h4>
+            <ul>
+              <li>Deux primaries côte à côte (utiliser primary + ghost)</li>
+              <li>Primary pour navigation (utiliser ghost ou link)</li>
+              <li>Texte « Cliquer ici » / « OK »</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3>Carte (subscriber)</h3>
+        <div class="dd">
+          <div class="do">
+            <h4>✓ Faire</h4>
+            <ul>
+              <li>Eyebrow mono UPPER pour catégoriser (« PROCHAINE VISITE »)</li>
+              <li>Titre Fraunces italique pour le H1 de carte</li>
+              <li>Maximum 4 éléments verticaux : eyebrow + title + body + cta</li>
+            </ul>
+          </div>
+          <div class="dont">
+            <h4>✗ Ne pas faire</h4>
+            <ul>
+              <li>Carte cliquable entière sans CTA visible (cible tactile invisible = piège)</li>
+              <li>Plus d'une ombre par carte (jamais d'effet « élévation lourde »)</li>
+              <li>Tordre le border-radius (toujours <code>--r-md</code>)</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3>Tableau (operator)</h3>
+        <div class="dd">
+          <div class="do">
+            <h4>✓ Faire</h4>
+            <ul>
+              <li>Hauteur de ligne 36-40px. Plus dense = lisibilité tuée.</li>
+              <li><code>font-variant-numeric: tabular-nums</code> sur toute colonne chiffrée</li>
+              <li>Sélection clavier J/K + ouverture drawer ↵</li>
+              <li>Header sticky pour les listes &gt; écran</li>
+            </ul>
+          </div>
+          <div class="dont">
+            <h4>✗ Ne pas faire</h4>
+            <ul>
+              <li>Cellules plus de 2 lignes (utiliser drawer pour le détail)</li>
+              <li>
+                Tri client-side au-delà de 100 lignes (toujours côté serveur avec query params)
+              </li>
+              <li>
+                Couleur de fond sur ligne pour décorer (réservé à la sélection &amp; aux états
+                critiques)
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================== -->
+      <!-- ACCESSIBILITY                                        -->
+      <!-- =================================================== -->
+      <section class="section">
+        <div class="num">09 · ACCESSIBILITÉ — CHECKLIST PAR ÉCRAN</div>
+        <h2>WCAG 2.1 AA · 44pt · 200% type</h2>
+        <p class="note">
+          À cocher avant tout ticket « Done ». Aucune exception, aucun trade-off — la barre est
+          mondiale (cf. principe 02).
+        </p>
+
+        <ul style="font-size: 13px; line-height: 1.8; color: var(--ink-2); max-width: 72ch">
+          <li>
+            <b>Contraste de texte</b> ≥ 4.5:1 (corps) ou ≥ 3:1 (titres ≥ 24px). Vérifier dans Stark
+            / WebAIM.
+          </li>
+          <li>
+            <b>Cibles tactiles</b> ≥ 44 × 44 pt. Les zones plus petites doivent avoir une zone
+            cliquable étendue (<code>::before</code> avec <code>inset: -10px</code>).
+          </li>
+          <li>
+            <b>Focus visible</b> sur tout élément interactif.
+            <code>box-shadow: var(--focus-ring)</code>. Jamais <code>outline: none</code> sans
+            remplacement.
+          </li>
+          <li>
+            <b>Lecteur d'écran</b> — étiquettes ARIA pour icônes seules, ordre DOM logique,
+            <code>aria-live</code> pour les toasts.
+          </li>
+          <li>
+            <b>Type dynamique</b> — texte en <code>rem</code>, pas en <code>px</code>. Vérifier à
+            200% que rien ne déborde.
+          </li>
+          <li>
+            <b>Couleur seule</b> — un état (succès, erreur) n'est jamais signalé uniquement par
+            couleur. Toujours + icône / + texte.
+          </li>
+          <li>
+            <b>Mouvement</b> — respecter <code>prefers-reduced-motion: reduce</code>. Désactiver les
+            animations &gt; 200ms.
+          </li>
+          <li>
+            <b>Navigation clavier</b> — Tab, Shift-Tab, Esc, ↵ doivent marcher. La palette ⌘K est
+            testée à 100%.
+          </li>
+          <li>
+            <b>Photos</b> — <code>alt</code> descriptif (« Photo avant lavage : panier de linge sale
+            » plutôt que « image »).
+          </li>
+          <li>
+            <b>Formulaires</b> — chaque champ a un <code>&lt;label&gt;</code> ou
+            <code>aria-label</code>. Erreurs liées via <code>aria-describedby</code>.
+          </li>
+        </ul>
+      </section>
+
+      <!-- =================================================== -->
+      <!-- COMMON MISTAKES                                      -->
+      <!-- =================================================== -->
+      <section class="section">
+        <div class="num">10 · ERREURS COURANTES — REVUE DESIGN</div>
+        <h2>Les motifs refusés en revue</h2>
+        <p class="note">Ce qui revient en revue à chaque PR. Lisez avant d'ouvrir le vôtre.</p>
+
+        <table class="tt">
+          <thead>
+            <tr>
+              <th>Motif</th>
+              <th>Pourquoi refusé</th>
+              <th>Correctif</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="prop">Couleur littérale dans CSS</td>
+              <td>
+                Empêche le theming par <code>data-theme</code> et casse le thème dark/light futur.
+              </td>
+              <td class="val">
+                Utiliser <code>var(--ink)</code>, <code>var(--primary)</code>, etc.
+              </td>
+            </tr>
+            <tr>
+              <td class="prop">Box-shadow custom</td>
+              <td>Brise le rythme d'élévation. 3 niveaux suffisent.</td>
+              <td class="val">
+                Utiliser <code>--shadow-card</code> · <code>--shadow-elevated</code> ·
+                <code>--shadow-overlay</code>.
+              </td>
+            </tr>
+            <tr>
+              <td class="prop">Padding de 18px</td>
+              <td>Hors échelle 4-base. Crée des micro-désalignements.</td>
+              <td class="val">16 (s-4) ou 20 (s-5).</td>
+            </tr>
+            <tr>
+              <td class="prop">Police custom (Roboto, Helvetica…)</td>
+              <td>Hors brand. Casse la signature.</td>
+              <td class="val">Fraunces · Inter · JetBrains Mono. Point.</td>
+            </tr>
+            <tr>
+              <td class="prop">Emoji dans la copie système</td>
+              <td>Voir Voix &amp; ton — interdit (sauf 🆘 SOS).</td>
+              <td class="val">Mots ou icônes SVG.</td>
+            </tr>
+            <tr>
+              <td class="prop">Bouton « OK »</td>
+              <td>Vide. Refusé.</td>
+              <td class="val">Verbe d'action concret (« Confirmer », « Compris »).</td>
+            </tr>
+            <tr>
+              <td class="prop">Tutoiement</td>
+              <td>Inadapté en français togolais formel.</td>
+              <td class="val">Vouvoiement systématique.</td>
+            </tr>
+            <tr>
+              <td class="prop">Animation &gt; 480ms</td>
+              <td>Au-delà, on ressent le décalage. Tout bloque.</td>
+              <td class="val">120 / 200 / 320 / 480ms — pas plus.</td>
+            </tr>
+            <tr>
+              <td class="prop">État loading non documenté</td>
+              <td>L'utilisateur croit que ça a marché.</td>
+              <td class="val">Toujours fournir loading + error + empty (cf. 08-states-library).</td>
+            </tr>
+            <tr>
+              <td class="prop">Texte sur image sans dégradé</td>
+              <td>Lisibilité aléatoire selon la photo.</td>
+              <td class="val">Dégradé sombre 0 → 60% noir alpha .5 par-dessus la photo.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- =================================================== -->
+      <!-- LIVRAISON                                            -->
+      <!-- =================================================== -->
+      <section class="section">
+        <div class="num">11 · LIVRAISON ENGINEERING</div>
+        <h2>Ce qui passe en code · ce qui reste design</h2>
+
+        <table class="tt">
+          <thead>
+            <tr>
+              <th>Artefact design</th>
+              <th>Code correspondant</th>
+              <th>Synchronisation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="prop">shared/tokens.css</td>
+              <td class="tok">packages/design-tokens/src/index.ts</td>
+              <td>Source de vérité = TS. CSS regénéré via <code>pnpm tokens:build</code>.</td>
+            </tr>
+            <tr>
+              <td class="prop">01-design-system/components.html</td>
+              <td class="tok">packages/ui/src/&lt;Component&gt;.tsx</td>
+              <td>Storybook par composant. Snapshot test contre le HTML.</td>
+            </tr>
+            <tr>
+              <td class="prop">09-copy-deck/copy.html</td>
+              <td class="tok">packages/i18n/src/fr.json</td>
+              <td>
+                <code>pnpm --filter @washed/i18n compile:fr</code> compile le deck en JSON ICU.
+              </td>
+            </tr>
+            <tr>
+              <td class="prop">02-flows/flows.html</td>
+              <td class="tok">docs/ux/low-fidelity-flows.md</td>
+              <td>Manuel. Le markdown est la source pour les diagrammes Mermaid.</td>
+            </tr>
+            <tr>
+              <td class="prop">04-wireframes/</td>
+              <td class="tok">— (référence visuelle)</td>
+              <td>Pas de code direct. Référence pour l'écriture des stories Storybook.</td>
+            </tr>
+            <tr>
+              <td class="prop">05/06/07 hi-fi prototypes</td>
+              <td class="tok">packages/{subscriber,worker,operator}-app/</td>
+              <td>Cible visuelle. Snapshot Playwright contre les routes équivalentes.</td>
+            </tr>
+          </tbody>
         </table>
 
-        <h4 style="margin-top:var(--s-4)">Variations</h4>
-        <ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.6;color:var(--ink-2)">
-          <li><b>focus</b> — <code>border: 1px solid var(--primary)</code> + <code>box-shadow: var(--focus-ring)</code></li>
-          <li><b>error</b> — <code>border-color: var(--danger)</code> · message rouge sous le champ</li>
-          <li><b>disabled</b> — <code>background: var(--bg-deep)</code> · text <code>--ink-4</code> · <code>cursor: not-allowed</code></li>
-          <li><b>filled</b> — couleur ink, pas de placeholder visible</li>
-        </ul>
-
-        <div class="tip"><b>iOS gotcha</b>Les inputs &lt; 16px déclenchent un zoom auto sur iPhone. Toujours <code>font-size: 15px</code> ou plus, ou <code>maximum-scale=1</code> dans le viewport (déjà fait).</div>
-      </div>
+        <div class="annot" style="margin-top: var(--s-6)">
+          <b>Test de conformité applicative</b>Pour qu'un écran design soit considéré prêt à livrer
+          dans l'app, trois preuves :<br />1. Storybook visuel passé en revue par design
+          (Chromatic)<br />2. Tests Playwright verts (parité visuelle ≥ 99%)<br />3. Audit
+          accessibilité Lighthouse ≥ 95<br />Sans les trois, le ticket reste In Review.
+        </div>
+      </section>
     </div>
-  </section>
-
-  <!-- =================================================== -->
-  <!-- TOKENS APPLIED PAR COMPOSANT                         -->
-  <!-- =================================================== -->
-  <section class="section">
-    <div class="num">07 · TOKENS APPLIQUÉS — RÉFÉRENCE RAPIDE</div>
-    <h2>Tableau exhaustif des composants × tokens</h2>
-    <p class="note">À l'écriture d'un composant React/Vue, copier les valeurs de cette table. Aucune valeur n'est libre.</p>
-
-    <table class="tt">
-      <thead><tr><th>Composant</th><th>Propriété</th><th>Token</th><th>Valeur appliquée</th></tr></thead>
-      <tbody>
-        <tr><td class="prop" rowspan="4">Button (primary)</td><td>min-height</td><td class="tok">var(--tap-min)</td><td class="val">44px</td></tr>
-        <tr><td>border-radius</td><td class="tok">var(--r-pill)</td><td class="val">999px</td></tr>
-        <tr><td>padding (default)</td><td class="tok">14px var(--s-5)</td><td class="val">14 · 20</td></tr>
-        <tr><td>padding (mobile-full)</td><td class="tok">var(--s-4) var(--s-5)</td><td class="val">16 · 20, min-height 52</td></tr>
-
-        <tr><td class="prop" rowspan="3">Card</td><td>padding</td><td class="tok">var(--s-5)</td><td class="val">20px</td></tr>
-        <tr><td>border-radius</td><td class="tok">var(--r-md)</td><td class="val">14px</td></tr>
-        <tr><td>shadow</td><td class="tok">var(--shadow-card)</td><td class="val">2-stop subtle</td></tr>
-
-        <tr><td class="prop" rowspan="3">Field</td><td>padding</td><td class="tok">12px var(--s-4)</td><td class="val">12 · 16</td></tr>
-        <tr><td>border-radius</td><td class="tok">var(--r-sm)</td><td class="val">10px</td></tr>
-        <tr><td>min-height</td><td class="tok">var(--tap-min)</td><td class="val">44px</td></tr>
-
-        <tr><td class="prop" rowspan="3">Sheet (modal mobile)</td><td>border-radius (top)</td><td class="tok">var(--r-xl)</td><td class="val">28 28 0 0</td></tr>
-        <tr><td>padding</td><td class="tok">var(--s-6) var(--s-5)</td><td class="val">24 · 20</td></tr>
-        <tr><td>shadow</td><td class="tok">var(--shadow-overlay)</td><td class="val">24px 80px alpha .18</td></tr>
-
-        <tr><td class="prop" rowspan="3">Chip</td><td>padding</td><td class="tok">3px var(--s-2)</td><td class="val">3 · 8</td></tr>
-        <tr><td>border-radius</td><td class="tok">var(--r-pill)</td><td class="val">999px</td></tr>
-        <tr><td>font-size</td><td class="tok">var(--text-xs)</td><td class="val">11px (mono)</td></tr>
-
-        <tr><td class="prop" rowspan="3">Toast</td><td>padding</td><td class="tok">var(--s-3) var(--s-5)</td><td class="val">12 · 20</td></tr>
-        <tr><td>border-radius</td><td class="tok">var(--r-md)</td><td class="val">14px</td></tr>
-        <tr><td>shadow</td><td class="tok">var(--shadow-elevated)</td><td class="val">8 · 24 stops</td></tr>
-
-        <tr><td class="prop" rowspan="2">Avatar</td><td>border-radius</td><td class="tok">var(--r-pill)</td><td class="val">999px</td></tr>
-        <tr><td>size</td><td class="tok">36px (default), 56px (lg), 22px (table)</td><td class="val">—</td></tr>
-
-        <tr><td class="prop" rowspan="2">Bottom nav</td><td>height</td><td class="tok">56px</td><td class="val">item min 44, label 9px mono</td></tr>
-        <tr><td>border-top</td><td class="tok">1px solid var(--line)</td><td class="val">—</td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <!-- =================================================== -->
-  <!-- COMPONENT USAGE NOTES                                -->
-  <!-- =================================================== -->
-  <section class="section">
-    <div class="num">08 · NOTES D'USAGE PAR PRIMITIVE</div>
-    <h2>Quand l'utiliser, quand ne pas</h2>
-    <p class="note">Pour les cas non triviaux. Lire avant de proposer une nouvelle variante.</p>
-
-    <h3>Bouton primaire</h3>
-    <div class="dd">
-      <div class="do">
-        <h4>✓ Faire</h4>
-        <ul>
-          <li>Une seule action principale par écran</li>
-          <li>Couleur primary uniquement pour l'action irréversible/positive</li>
-          <li>Texte ≤ 24 ch. Verbe d'action en début (« Confirmer », « Démarrer »)</li>
-        </ul>
-      </div>
-      <div class="dont">
-        <h4>✗ Ne pas faire</h4>
-        <ul>
-          <li>Deux primaries côte à côte (utiliser primary + ghost)</li>
-          <li>Primary pour navigation (utiliser ghost ou link)</li>
-          <li>Texte « Cliquer ici » / « OK »</li>
-        </ul>
-      </div>
-    </div>
-
-    <h3>Carte (subscriber)</h3>
-    <div class="dd">
-      <div class="do">
-        <h4>✓ Faire</h4>
-        <ul>
-          <li>Eyebrow mono UPPER pour catégoriser (« PROCHAINE VISITE »)</li>
-          <li>Titre Fraunces italique pour le H1 de carte</li>
-          <li>Maximum 4 éléments verticaux : eyebrow + title + body + cta</li>
-        </ul>
-      </div>
-      <div class="dont">
-        <h4>✗ Ne pas faire</h4>
-        <ul>
-          <li>Carte cliquable entière sans CTA visible (cible tactile invisible = piège)</li>
-          <li>Plus d'une ombre par carte (jamais d'effet « élévation lourde »)</li>
-          <li>Tordre le border-radius (toujours <code>--r-md</code>)</li>
-        </ul>
-      </div>
-    </div>
-
-    <h3>Tableau (operator)</h3>
-    <div class="dd">
-      <div class="do">
-        <h4>✓ Faire</h4>
-        <ul>
-          <li>Hauteur de ligne 36-40px. Plus dense = lisibilité tuée.</li>
-          <li><code>font-variant-numeric: tabular-nums</code> sur toute colonne chiffrée</li>
-          <li>Sélection clavier J/K + ouverture drawer ↵</li>
-          <li>Header sticky pour les listes &gt; écran</li>
-        </ul>
-      </div>
-      <div class="dont">
-        <h4>✗ Ne pas faire</h4>
-        <ul>
-          <li>Cellules plus de 2 lignes (utiliser drawer pour le détail)</li>
-          <li>Tri client-side au-delà de 100 lignes (toujours côté serveur avec query params)</li>
-          <li>Couleur de fond sur ligne pour décorer (réservé à la sélection &amp; aux états critiques)</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- =================================================== -->
-  <!-- ACCESSIBILITY                                        -->
-  <!-- =================================================== -->
-  <section class="section">
-    <div class="num">09 · ACCESSIBILITÉ — CHECKLIST PAR ÉCRAN</div>
-    <h2>WCAG 2.1 AA · 44pt · 200% type</h2>
-    <p class="note">À cocher avant tout ticket « Done ». Aucune exception, aucun trade-off — la barre est mondiale (cf. principe 02).</p>
-
-    <ul style="font-size:13px;line-height:1.8;color:var(--ink-2);max-width:72ch">
-      <li><b>Contraste de texte</b> ≥ 4.5:1 (corps) ou ≥ 3:1 (titres ≥ 24px). Vérifier dans Stark / WebAIM.</li>
-      <li><b>Cibles tactiles</b> ≥ 44 × 44 pt. Les zones plus petites doivent avoir une zone cliquable étendue (<code>::before</code> avec <code>inset: -10px</code>).</li>
-      <li><b>Focus visible</b> sur tout élément interactif. <code>box-shadow: var(--focus-ring)</code>. Jamais <code>outline: none</code> sans remplacement.</li>
-      <li><b>Lecteur d'écran</b> — étiquettes ARIA pour icônes seules, ordre DOM logique, <code>aria-live</code> pour les toasts.</li>
-      <li><b>Type dynamique</b> — texte en <code>rem</code>, pas en <code>px</code>. Vérifier à 200% que rien ne déborde.</li>
-      <li><b>Couleur seule</b> — un état (succès, erreur) n'est jamais signalé uniquement par couleur. Toujours + icône / + texte.</li>
-      <li><b>Mouvement</b> — respecter <code>prefers-reduced-motion: reduce</code>. Désactiver les animations &gt; 200ms.</li>
-      <li><b>Navigation clavier</b> — Tab, Shift-Tab, Esc, ↵ doivent marcher. La palette ⌘K est testée à 100%.</li>
-      <li><b>Photos</b> — <code>alt</code> descriptif (« Photo avant lavage : panier de linge sale » plutôt que « image »).</li>
-      <li><b>Formulaires</b> — chaque champ a un <code>&lt;label&gt;</code> ou <code>aria-label</code>. Erreurs liées via <code>aria-describedby</code>.</li>
-    </ul>
-  </section>
-
-  <!-- =================================================== -->
-  <!-- COMMON MISTAKES                                      -->
-  <!-- =================================================== -->
-  <section class="section">
-    <div class="num">10 · ERREURS COURANTES — REVUE DESIGN</div>
-    <h2>Les motifs refusés en revue</h2>
-    <p class="note">Ce qui revient en revue à chaque PR. Lisez avant d'ouvrir le vôtre.</p>
-
-    <table class="tt">
-      <thead><tr><th>Motif</th><th>Pourquoi refusé</th><th>Correctif</th></tr></thead>
-      <tbody>
-        <tr><td class="prop">Couleur littérale dans CSS</td><td>Empêche le theming par <code>data-theme</code> et casse le thème dark/light futur.</td><td class="val">Utiliser <code>var(--ink)</code>, <code>var(--primary)</code>, etc.</td></tr>
-        <tr><td class="prop">Box-shadow custom</td><td>Brise le rythme d'élévation. 3 niveaux suffisent.</td><td class="val">Utiliser <code>--shadow-card</code> · <code>--shadow-elevated</code> · <code>--shadow-overlay</code>.</td></tr>
-        <tr><td class="prop">Padding de 18px</td><td>Hors échelle 4-base. Crée des micro-désalignements.</td><td class="val">16 (s-4) ou 20 (s-5).</td></tr>
-        <tr><td class="prop">Police custom (Roboto, Helvetica…)</td><td>Hors brand. Casse la signature.</td><td class="val">Fraunces · Inter · JetBrains Mono. Point.</td></tr>
-        <tr><td class="prop">Emoji dans la copie système</td><td>Voir Voix &amp; ton — interdit (sauf 🆘 SOS).</td><td class="val">Mots ou icônes SVG.</td></tr>
-        <tr><td class="prop">Bouton « OK »</td><td>Vide. Refusé.</td><td class="val">Verbe d'action concret (« Confirmer », « Compris »).</td></tr>
-        <tr><td class="prop">Tutoiement</td><td>Inadapté en français togolais formel.</td><td class="val">Vouvoiement systématique.</td></tr>
-        <tr><td class="prop">Animation &gt; 480ms</td><td>Au-delà, on ressent le décalage. Tout bloque.</td><td class="val">120 / 200 / 320 / 480ms — pas plus.</td></tr>
-        <tr><td class="prop">État loading non documenté</td><td>L'utilisateur croit que ça a marché.</td><td class="val">Toujours fournir loading + error + empty (cf. 08-states-library).</td></tr>
-        <tr><td class="prop">Texte sur image sans dégradé</td><td>Lisibilité aléatoire selon la photo.</td><td class="val">Dégradé sombre 0 → 60% noir alpha .5 par-dessus la photo.</td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <!-- =================================================== -->
-  <!-- LIVRAISON                                            -->
-  <!-- =================================================== -->
-  <section class="section">
-    <div class="num">11 · LIVRAISON ENGINEERING</div>
-    <h2>Ce qui passe en code · ce qui reste design</h2>
-
-    <table class="tt">
-      <thead><tr><th>Artefact design</th><th>Code correspondant</th><th>Synchronisation</th></tr></thead>
-      <tbody>
-        <tr><td class="prop">shared/tokens.css</td><td class="tok">packages/design-tokens/src/index.ts</td><td>Source de vérité = TS. CSS regénéré via <code>pnpm tokens:build</code>.</td></tr>
-        <tr><td class="prop">01-design-system/components.html</td><td class="tok">packages/ui/src/&lt;Component&gt;.tsx</td><td>Storybook par composant. Snapshot test contre le HTML.</td></tr>
-        <tr><td class="prop">09-copy-deck/copy.html</td><td class="tok">packages/i18n/src/fr.json</td><td><code>pnpm i18n:sync</code> compile le deck en JSON ICU.</td></tr>
-        <tr><td class="prop">02-flows/flows.html</td><td class="tok">docs/ux/low-fidelity-flows.md</td><td>Manuel. Le markdown est la source pour les diagrammes Mermaid.</td></tr>
-        <tr><td class="prop">04-wireframes/</td><td class="tok">— (référence visuelle)</td><td>Pas de code direct. Référence pour l'écriture des stories Storybook.</td></tr>
-        <tr><td class="prop">05/06/07 hi-fi prototypes</td><td class="tok">packages/{subscriber,worker,operator}-app/</td><td>Cible visuelle. Snapshot Playwright contre les routes équivalentes.</td></tr>
-      </tbody>
-    </table>
-
-    <div class="annot" style="margin-top:var(--s-6)"><b>Test de conformité</b>Pour qu'un écran soit considéré « livré », trois preuves :<br>1. Storybook visuel passé en revue par design (Chromatic)<br>2. Tests Playwright vert (parité visuelle ≥ 99%)<br>3. Audit accessibilité Lighthouse ≥ 95<br>Sans les trois, le ticket reste In Review.</div>
-  </section>
-
-</div>
-</body>
+  </body>
 </html>

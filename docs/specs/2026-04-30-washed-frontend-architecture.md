@@ -19,17 +19,19 @@ The backend is already comparatively mature. The frontend must now catch up with
 
 The spec is grounded in five inputs:
 
-- Product/system design: `docs/specs/2026-04-28-washed-v1-design.md`
-- UX flows and operations models: `docs/ux/low-fidelity-flows.md`, `docs/ux/operator-console-ia.md`, `docs/ux/service-blueprints.md`
-- Current implementation: `packages/subscriber-app`, `packages/worker-app`, `packages/operator-console`, `packages/ui`, `packages/i18n`, `packages/api-client`, `packages/auth`, `packages/design-tokens`, `packages/frontend-config`, `packages/core-api`, and `docs/api/core-api.openapi.json`
-- Prototype shells retained only for reference/backward compatibility during transition: `packages/subscriber-web` and `packages/ops-web`
-- Claude design files: `/Users/tomegah/Downloads/WASHED/Washed - Subscriber App.html`, `/Users/tomegah/Downloads/WASHED/Washed - Worker & Ops.html`, and `/Users/tomegah/Downloads/WASHED/Washed Wireframes v2.html`
+- Product/design standards: `design/index.html`. This is the current design-system and product-spec source of truth.
+- French copy/i18n: `design/09-copy-deck/copy.html`. This is the human source of truth for production FR strings; `packages/i18n/src/fr.json` must stay aligned with it.
+- UX flows and operations models: `docs/ux/low-fidelity-flows.md`, `docs/ux/operator-console-ia.md`, and `docs/ux/service-blueprints.md`.
+- Current implementation: `packages/subscriber-app`, `packages/worker-app`, `packages/operator-console`, `packages/ui`, `packages/i18n`, `packages/api-client`, `packages/auth`, `packages/design-tokens`, `packages/frontend-config`, `packages/core-api`, and `docs/api/core-api.openapi.json`.
+- Legacy/reference smoke clients retained only during transition: `packages/subscriber-web` and `packages/ops-web`.
+
+Historical Claude handoff files under `/Users/tomegah/Downloads/WASHED` informed earlier prototypes, but they are not the current source of truth.
 
 ## 2.1 Current Implementation Baseline
 
 The architecture is no longer theoretical. The repository now contains the three target frontend apps and shared packages:
 
-- `packages/subscriber-app`: React 19 + Vite + Capacitor subscriber shell, Savannah theme, FR/EN switcher, 35-surface inventory, bounded-tracking state, subscription/payment/privacy/support routes, and iOS/Android Capacitor scripts.
+- `packages/subscriber-app`: React 19 + Vite + Capacitor subscriber shell, Savannah theme, FR/EN switcher, implemented onboarding/visit/relationship/forfait/profile flows, and iOS/Android Capacitor scripts. The full 35-surface subscriber inventory remains the design target, not a claim that every target screen is app-implemented.
 - `packages/worker-app`: React 19 + Vite + Capacitor worker shell, Forest theme, route/visit lifecycle, offline queue ledger, photo retry, planning, earnings, profile, inbox, and SOS surfaces.
 - `packages/operator-console`: React 19 + Vite desktop console, Admin theme, dashboard, matching, live ops, route planning, profiles, disputes, payments, notifications, audit, reports, and settings surfaces.
 - `packages/ui`: shared React component primitives backed by `@washed/design-tokens`.
@@ -240,7 +242,7 @@ Home | Subscription | Messages | Profile
 
 ### 6.3 Screen Inventory
 
-V1 subscriber inventory is 35 tracked screens or distinct surfaces in `packages/subscriber-app/src/appData.ts`.
+`design/05-subscriber/subscriber.html` and `design/02-flows/flows.html` define the 35-surface subscriber target inventory. Current app implementation is tracked by routes/tests in `packages/subscriber-app`: X-01 through X-28 are routed, including X-11.M, X-15.S, X-18.C/X-18.C.S, X-19.U, X-19.R, and X-22.A variants. X-21.M remains a documented modal variant for adding a Mobile Money provider and is not yet a separate app route.
 
 Core onboarding:
 

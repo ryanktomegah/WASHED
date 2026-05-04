@@ -4,15 +4,20 @@ Washed is a local-services platform for scheduled in-home laundry visits, starti
 
 ## Current Implementation
 
-The repo is now a pnpm/Turborepo TypeScript workspace.
+The repo is a pnpm/Turborepo TypeScript workspace. Product and frontend work should use
+`design/index.html` as the design/product source of truth and
+`design/09-copy-deck/copy.html` as the French copy/i18n source of truth.
 
 Packages:
 
 - `@washed/shared` - cross-cutting primitives for money, currency, country/locale context, domain errors, audit events, and idempotency keys.
-- `@washed/core-domain` - product domain logic for launch pricing, subscription state transitions, and worker compensation.
-- `@washed/core-api` - Fastify API for launch pricing, OTP auth, subscriptions, assignment, visits, payments, worker routes/earnings, and support disputes.
-- `@washed/subscriber-web` - local mobile-web subscriber app shell adapted from the Claude design files, with a built-in `/api` proxy to Core API.
-- `@washed/ops-web` - local worker app and operator console shell adapted from the Claude Worker/Ops wireframes, with a built-in `/api` proxy to Core API.
+- `@washed/core-domain` - product domain logic for launch pricing, subscription state transitions, visit lifecycle, scheduling, and worker compensation.
+- `@washed/core-api` - Fastify API for launch pricing, OTP auth, subscriptions, assignment, visits, payments, worker routes/earnings, support disputes, notifications, audit, and Postgres integration.
+- `@washed/subscriber-app` - React/Vite/Capacitor subscriber app. This is the current target subscriber surface.
+- `@washed/worker-app` - React/Vite/Capacitor worker/laveuse app. This is the current target worker surface.
+- `@washed/operator-console` - React/Vite desktop operator console. This is the current target ops surface.
+- `@washed/ui`, `@washed/design-tokens`, `@washed/i18n`, `@washed/api-client`, `@washed/auth`, and `@washed/frontend-config` - shared frontend foundations.
+- `@washed/subscriber-web` and `@washed/ops-web` - legacy/reference smoke clients retained during the transition only.
 
 Local services:
 
@@ -50,16 +55,30 @@ DATABASE_URL=postgres://washed:washed@localhost:5432/washed pnpm --filter @washe
 DATABASE_URL=postgres://washed:washed@localhost:5432/washed node packages/core-api/dist/main.js
 ```
 
-Run the subscriber web app against the local Core API:
+Run the current target frontend apps in separate terminals:
+
+```bash
+# terminal 1
+pnpm --filter @washed/subscriber-app dev      # http://127.0.0.1:5173
+# terminal 2
+pnpm --filter @washed/worker-app dev          # http://127.0.0.1:5174
+# terminal 3
+pnpm --filter @washed/operator-console dev    # http://127.0.0.1:5175
+```
+
+Launch the mobile apps in iOS Simulator:
+
+```bash
+pnpm ios:sim:subscriber
+pnpm ios:sim:worker
+pnpm ios:sim:all
+```
+
+Legacy smoke clients, when explicitly needed:
 
 ```bash
 pnpm --filter @washed/subscriber-web dev
-```
-
-Run the worker/operator web app against the local Core API:
-
-```bash
-PORT=5174 pnpm --filter @washed/ops-web dev
+PORT=5176 pnpm --filter @washed/ops-web dev
 ```
 
 Current API surface:

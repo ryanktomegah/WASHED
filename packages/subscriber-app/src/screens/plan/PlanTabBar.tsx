@@ -3,14 +3,22 @@ import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
 
-// Bottom-nav tab bar for the X-19 / X-19.R plan screens. Forfait is active
-// here; reuses the .hub-nav class so the visual treatment is shared with
-// the hub and history surfaces.
-export function PlanTabBar(): ReactElement {
+// Bottom-nav tab bar for plan-family screens; reuses the .hub-nav class so
+// the visual treatment is shared with the hub and history surfaces.
+export function PlanTabBar({
+  activeItem = 'plan',
+}: {
+  readonly activeItem?: 'home' | 'plan';
+} = {}): ReactElement {
   const navigate = useNavigate();
   return (
     <nav className="hub-nav" aria-label="Navigation principale">
-      <button className="hub-nav-item" type="button" onClick={() => navigate('/hub')}>
+      <button
+        aria-current={activeItem === 'home' ? 'page' : undefined}
+        className={activeItem === 'home' ? 'hub-nav-item active' : 'hub-nav-item'}
+        type="button"
+        onClick={() => navigate('/hub')}
+      >
         <span aria-hidden="true" className="hub-nav-glyph" />
         {translate('subscriber.dashboard.tab.home')}
       </button>
@@ -18,7 +26,12 @@ export function PlanTabBar(): ReactElement {
         <span aria-hidden="true" className="hub-nav-glyph" />
         {translate('subscriber.dashboard.tab.visits')}
       </button>
-      <button className="hub-nav-item active" type="button" aria-current="page">
+      <button
+        aria-current={activeItem === 'plan' ? 'page' : undefined}
+        className={activeItem === 'plan' ? 'hub-nav-item active' : 'hub-nav-item'}
+        type="button"
+        onClick={() => navigate('/plan')}
+      >
         <span aria-hidden="true" className="hub-nav-glyph" />
         {translate('subscriber.dashboard.tab.plan')}
       </button>

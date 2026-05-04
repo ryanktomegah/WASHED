@@ -26,7 +26,7 @@ const screenRoutes = [
   ['x-28-profile-delete', '/#/profile/delete', 'X-28'],
 ] as const;
 
-test.describe('Subscriber hub, visit, and relationship flows X-10 → X-18.C', () => {
+test.describe('Subscriber implemented hub, visit, relationship, forfait, and profile flows through X-28', () => {
   // Most tests target post-onboarding state — pre-mark the X-09 first-session
   // tour completed so the hub renders clean. The tour itself has its own spec
   // below where the flag is explicitly cleared.
@@ -164,9 +164,7 @@ test.describe('Subscriber hub, visit, and relationship flows X-10 → X-18.C', (
       if (screenId === 'X-25') {
         await expect(page.getByRole('heading', { name: 'Vous déménagez ?' })).toBeVisible();
         await expect(page.getByText(/24-48 h/u)).toBeVisible();
-        await expect(
-          page.getByRole('button', { name: 'Envoyer pour validation' }),
-        ).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Envoyer pour validation' })).toBeVisible();
       }
 
       if (screenId === 'X-26') {
@@ -193,9 +191,7 @@ test.describe('Subscriber hub, visit, and relationship flows X-10 → X-18.C', (
 
       if (screenId === 'X-28') {
         await expect(page.getByRole('heading', { name: "C'est définitif." })).toBeVisible();
-        await expect(
-          page.getByRole('button', { name: 'Supprimer définitivement' }),
-        ).toBeDisabled();
+        await expect(page.getByRole('button', { name: 'Supprimer définitivement' })).toBeDisabled();
       }
 
       const screenshotPath = testInfo.outputPath(`${slug}-${testInfo.project.name}.png`);

@@ -1,12 +1,12 @@
 # Subscriber Mobile Implementation Plan
 
 **Date:** 2026-04-30
-**Status:** Ready for implementation
+**Status:** Superseded by current `packages/subscriber-app` React/Vite/Capacitor implementation; retained as historical prototype plan
 **Spec:** `docs/specs/2026-04-30-subscriber-mobile-design.md`
 
 ## 1. Objective
 
-Implement the subscriber mobile spec as a polished iOS Simulator prototype. Keep the current static subscriber app and Capacitor wrapper, but make the native experience full-screen, reliable, and understandable enough for founder-led testing.
+Historical objective: implement the subscriber mobile spec as a polished iOS Simulator prototype. Current implementation work should use `packages/subscriber-app`, `design/index.html`, and `design/09-copy-deck/copy.html` instead of this legacy static-app plan.
 
 ## 2. Implementation Phases
 
@@ -26,7 +26,7 @@ Done when:
 
 ### Phase 2 - Onboarding Polish
 
-- Align splash, phone, OTP, address, tier, and schedule screens with the Claude visual direction.
+- Align splash, phone, OTP, address, tier, and schedule screens with `design/index.html` and `design/09-copy-deck/copy.html`.
 - Keep all current API calls and route names unless the spec requires a copy/layout-only change.
 - Improve bottom-fixed primary actions on onboarding screens while avoiding overlap with the iOS home indicator.
 - Add clear empty/error copy for OTP failure, GPS failure, and unavailable API.
@@ -59,19 +59,19 @@ Done when:
 
 Done when:
 
-- `pnpm --filter @washed/subscriber-web test` passes.
-- `pnpm --filter @washed/subscriber-web build` passes.
-- `pnpm --filter @washed/subscriber-web ios:sync` passes.
+- `pnpm --filter @washed/subscriber-app test` passes.
+- `pnpm --filter @washed/subscriber-app build` passes.
+- `pnpm --filter @washed/subscriber-app ios:sync` passes.
 - `xcodebuild` succeeds for the iPhone simulator.
 - The installed simulator app opens to the visible Washed UI.
 
 ## 3. Technical Decisions
 
-- Keep the UI in `packages/subscriber-web/public` for this phase.
-- Do not introduce React/Vite/mobile-native dependencies yet.
-- Do not copy the Claude React HTML directly; port the design decisions into the existing app.
-- Do not alter backend endpoints in this pass.
-- Keep native API base as `http://127.0.0.1:3000`.
+- Current implementation lives in `packages/subscriber-app/src`.
+- React/Vite/Capacitor is now the target subscriber-app stack.
+- Do not copy historical handoff HTML directly; port decisions through `design/index.html`, `design/09-copy-deck/copy.html`, and shared design tokens.
+- Do not alter backend endpoints in this pass unless the current app/API integration task explicitly requires it.
+- Do not assume the legacy native API base unless implementing an explicit API-backed subscriber-app slice.
 - Keep generated iOS source project committed, but ignore DerivedData/build output.
 
 ## 4. Test Scenarios

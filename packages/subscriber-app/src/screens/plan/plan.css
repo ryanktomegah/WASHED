@@ -1,6 +1,7 @@
 /* ============================================================
-   X-19 Forfait + X-19.U upgrade + X-19.R paused +
-   X-22 pause confirm + X-22.A pause submitted
+   X-19 Forfait + X-20 payment history + X-21 payment method +
+   X-19.U upgrade + X-19.R paused + X-22 pause confirm +
+   X-22.A pause submitted + X-23 overdue banner.
    Locked to design/05-subscriber/subscriber.html:642-783, 1224-1345.
    Reuses .hub-nav from hub.css for the bottom nav.
    ============================================================ */
@@ -259,6 +260,21 @@
   color: var(--ink);
 }
 
+.plan-button.subtle {
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+.plan-button.danger-outline {
+  border-color: var(--danger, #c4622d);
+  background: transparent;
+  color: var(--danger, #c4622d);
+  font-size: 11px;
+  padding: 9px 10px;
+}
+
 .plan-button.ink {
   background: var(--ink);
   color: white;
@@ -281,6 +297,10 @@
 .plan-button-sm {
   font-size: 12px;
   padding: 10px 12px;
+}
+
+.plan-payment-actions {
+  margin-top: -2px;
 }
 
 /* Cream highlight card — used in upgrade compare, paused worker, success
@@ -419,6 +439,225 @@
 .plan-compare-savings {
   color: var(--success, #2c7a4b);
   font-family: var(--font-mono);
+}
+
+/* Payment history and method surfaces — X-20 / X-21. */
+.plan-payment-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+}
+
+.plan-payment-summary-right {
+  text-align: right;
+}
+
+.plan-payment-total {
+  display: block;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.1;
+  margin-top: 2px;
+}
+
+.plan-payment-list,
+.plan-method-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.plan-payment-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  border-bottom: 1px solid var(--line);
+  padding: 10px 0;
+}
+
+.plan-payment-row:last-child {
+  border-bottom: 0;
+}
+
+.plan-payment-row div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.plan-payment-row strong {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.plan-payment-row span {
+  color: var(--ink-3);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.plan-payment-amount {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 12px !important;
+}
+
+.plan-method-card {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 12px;
+  text-align: left;
+}
+
+.plan-method-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.plan-method-card + .plan-method-card {
+  margin-top: 8px;
+}
+
+.plan-method-card.active {
+  border-color: var(--primary);
+  border-width: 2px;
+}
+
+.plan-method-add {
+  grid-template-columns: 20px minmax(0, 1fr);
+  color: var(--ink-2);
+}
+
+.plan-radio {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 2px solid var(--ink-3);
+  border-radius: 999px;
+}
+
+.plan-radio.active {
+  border-color: var(--primary);
+}
+
+.plan-radio.active span {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+.plan-method-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.plan-method-meta strong,
+.plan-method-add strong {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.plan-method-meta span {
+  color: var(--ink-3);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.plan-method-badge {
+  border-radius: 999px;
+  background: var(--surface-alt, var(--bg));
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 4px 7px;
+}
+
+.plan-method-badge.active {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+/* Payment overdue degraded hub — X-23. */
+.plan-header .plan-avatar {
+  margin-left: auto;
+}
+
+.plan-eyebrow.accent-danger {
+  color: var(--danger, #c4622d);
+}
+
+.plan-danger-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  border: 1px solid color-mix(in srgb, var(--danger, #c4622d) 28%, var(--line));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--danger, #c4622d) 10%, white 90%);
+  padding: 12px;
+}
+
+.plan-overdue-title {
+  margin: 0;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.plan-danger-body {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.plan-overdue-visit {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+  opacity: 0.52;
+}
+
+.plan-overdue-visit strong {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.plan-overdue-visit span:last-child {
+  color: var(--ink-3);
+  font-size: 12px;
 }
 
 /* Success state — X-22.A. */

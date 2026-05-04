@@ -1,9 +1,9 @@
 # Washed Subscriber Mobile Design Spec
 
 **Date:** 2026-04-30
-**Status:** Superseded by `docs/specs/2026-04-30-washed-frontend-architecture.md`; retained as subscriber iOS prototype context
+**Status:** Superseded by `docs/specs/2026-04-30-washed-frontend-architecture.md`; retained as historical subscriber iOS prototype context only
 **Surface:** Subscriber iPhone app
-**Source inputs:** `docs/specs/2026-04-28-washed-v1-design.md`, `docs/ux/low-fidelity-flows.md`, current `@washed/subscriber-web`, and Claude design files in `/Users/tomegah/Downloads/WASHED`.
+**Current source of truth:** `design/index.html` for product/design standards, `design/09-copy-deck/copy.html` for FR copy/i18n, and `packages/subscriber-app` for the target React/Vite/Capacitor implementation. `@washed/subscriber-web` is now a legacy/reference smoke client.
 
 ## 1. Purpose
 
@@ -40,7 +40,7 @@ The prototype is not successful if it requires browser dev tools, external instr
 
 ## 4. Design Direction
 
-Use the Claude subscriber design as the visual direction and the current app as the functional baseline.
+Use `design/index.html` as the visual/product direction, `design/09-copy-deck/copy.html` as the FR copy source, and `packages/subscriber-app` as the current functional baseline. Historical Claude design files are reference only.
 
 ### Native iPhone Rules
 
@@ -240,8 +240,7 @@ The iOS prototype uses Capacitor.
 Required behavior:
 
 - `capacitor://localhost` app shell loads bundled assets.
-- Native mode API calls go to `http://127.0.0.1:3000`.
-- Web browser mode keeps relative `/api` proxy behavior.
+- Historical note: the legacy subscriber-web simulator used `http://127.0.0.1:3000` for native-mode API calls and a relative `/api` proxy in browser mode. The current `packages/subscriber-app` flow should not inherit this assumption unless API-backed wiring is explicitly added.
 - Launch screen must stay lightweight and must not use the default oversized splash image.
 - Xcode generated build artifacts stay ignored; source project files are committed.
 

@@ -1,4 +1,4 @@
-import { type ReactElement } from 'react';
+import { type ReactElement, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { formatXof, translate } from '@washed/i18n';
@@ -109,9 +109,232 @@ export function PlanX19(): ReactElement {
           </button>
         </div>
 
+        <div className="plan-row2 plan-payment-actions">
+          <button
+            className="plan-button subtle"
+            onClick={() => navigate('/plan/payments')}
+            type="button"
+          >
+            {translate('subscriber.payment.action.view_history')}
+          </button>
+          <button
+            className="plan-button subtle"
+            onClick={() => navigate('/plan/payment-method')}
+            type="button"
+          >
+            {translate('subscriber.payment.action.edit_method')}
+          </button>
+        </div>
+
         <div className="plan-grow" />
 
         <PlanTabBar />
+      </div>
+    </main>
+  );
+}
+
+export function PlanPaymentHistoryX20(): ReactElement {
+  const navigate = useNavigate();
+  const { payment } = SUBSCRIBER_PLAN_DEMO;
+  const totalXof = payment.receipts.reduce((sum, receipt) => sum + receipt.amountXof, 0);
+
+  return (
+    <main aria-labelledby="x20-headline" className="plan-screen" data-screen-id="X-20">
+      <div className="plan-body plan-body-flow">
+        <BackHeader
+          label={translate('subscriber.payment.history.header')}
+          onBack={() => navigate('/plan')}
+        />
+
+        <h1 className="plan-title" id="x20-headline">
+          {translate('subscriber.payment.history.title', 'fr', {
+            months: payment.historyMonths,
+          })}
+        </h1>
+
+        <section
+          className="plan-cream-card plan-payment-summary"
+          aria-label={translate('subscriber.payment.history.summary_label')}
+        >
+          <div>
+            <span className="plan-cream-body">
+              {translate('subscriber.payment.history.total_label')}
+            </span>
+            <strong className="plan-payment-total">{formatXof(totalXof)}</strong>
+          </div>
+          <div className="plan-payment-summary-right">
+            <span className="plan-cream-body">
+              {translate('subscriber.payment.history.count_label', 'fr', {
+                count: payment.historyMonths,
+              })}
+            </span>
+            <strong className="plan-payment-total">
+              {translate('subscriber.payment.history.success_rate')}
+            </strong>
+          </div>
+        </section>
+
+        <h2 className="plan-eyebrow plan-section-eyebrow">
+          {translate('subscriber.payment.history.detail_eyebrow')}
+        </h2>
+
+        <ul
+          className="plan-payment-list"
+          aria-label={translate('subscriber.payment.history.detail_eyebrow')}
+        >
+          {payment.receipts.map((receipt) => (
+            <li className="plan-payment-row" key={receipt.reference}>
+              <div>
+                <strong>{receipt.date}</strong>
+                <span>
+                  {receipt.provider} · {receipt.reference}
+                </span>
+              </div>
+              <strong className="plan-payment-amount">{formatXof(receipt.amountXof)}</strong>
+            </li>
+          ))}
+        </ul>
+
+        <div className="plan-grow" />
+
+        <button className="plan-button ghost full" disabled type="button">
+          {translate('subscriber.payment.history.download_cta')}
+        </button>
+      </div>
+    </main>
+  );
+}
+
+export function PlanPaymentMethodX21(): ReactElement {
+  const navigate = useNavigate();
+  const { payment } = SUBSCRIBER_PLAN_DEMO;
+  const initialProvider =
+    payment.methods.find((method) => method.isActive)?.provider ??
+    payment.methods[0]?.provider ??
+    '';
+  const [selectedProvider, setSelectedProvider] = useState(initialProvider);
+
+  return (
+    <main aria-labelledby="x21-headline" className="plan-screen" data-screen-id="X-21">
+      <div className="plan-body plan-body-flow">
+        <BackHeader
+          label={translate('subscriber.payment.method.header')}
+          onBack={() => navigate('/plan')}
+        />
+
+        <h1 className="plan-title" id="x21-headline">
+          {translate('subscriber.payment.method.title')}
+        </h1>
+        <p className="plan-copy">{translate('subscriber.payment.method.body')}</p>
+
+        <div className="plan-method-list" role="list">
+          {payment.methods.map((method) => {
+            const isSelected = selectedProvider === method.provider;
+            return (
+              <button
+                aria-pressed={isSelected}
+                className={isSelected ? 'plan-method-card active' : 'plan-method-card'}
+                key={method.provider}
+                onClick={() => setSelectedProvider(method.provider)}
+                type="button"
+              >
+                <span
+                  className={isSelected ? 'plan-radio active' : 'plan-radio'}
+                  aria-hidden="true"
+                >
+                  {isSelected ? <span /> : null}
+                </span>
+                <span className="plan-method-meta">
+                  <strong>{method.provider}</strong>
+                  <span>
+                    {method.phone}
+                    {method.isActive
+                      ? ` · ${translate('subscriber.payment.method.current_suffix')}`
+                      : ''}
+                  </span>
+                </span>
+                <span className={isSelected ? 'plan-method-badge active' : 'plan-method-badge'}>
+                  {isSelected
+                    ? translate('subscriber.payment.method.active_badge').toUpperCase()
+                    : translate('subscriber.payment.method.available_badge').toUpperCase()}
+                </span>
+              </button>
+            );
+          })}
+
+          <button className="plan-method-card plan-method-add" disabled type="button">
+            <span className="plan-radio" aria-hidden="true" />
+            <strong>{translate('subscriber.payment.method.add_flooz')}</strong>
+          </button>
+        </div>
+
+        <div className="plan-grow" />
+
+        <button
+          className="plan-button primary full lg"
+          onClick={() => navigate('/plan')}
+          type="button"
+        >
+          {translate('subscriber.payment.method.save_cta')}
+        </button>
+      </div>
+    </main>
+  );
+}
+
+export function PlanOverdueX23(): ReactElement {
+  const navigate = useNavigate();
+  const { active, payment } = SUBSCRIBER_PLAN_DEMO;
+
+  return (
+    <main aria-labelledby="x23-headline" className="plan-screen" data-screen-id="X-23">
+      <div className="plan-body">
+        <header className="plan-header">
+          <span className="plan-eyebrow">
+            {translate('subscriber.dashboard.greeting.morning', 'fr', {
+              name: payment.subscriberFirstName,
+            })}
+          </span>
+          <span aria-hidden="true" className="plan-avatar">
+            {payment.subscriberInitials}
+          </span>
+        </header>
+
+        <section className="plan-danger-card" aria-labelledby="x23-headline">
+          <span className="plan-eyebrow accent-danger">
+            {translate('subscriber.payment.overdue.header')}
+          </span>
+          <h1 className="plan-overdue-title" id="x23-headline">
+            {translate('subscriber.payment.failed.title')}
+          </h1>
+          <p className="plan-danger-body">{translate('subscriber.payment.failed.body')}</p>
+          <p className="plan-danger-body">{translate('subscriber.payment.overdue.banner')}</p>
+          <div className="plan-row2">
+            <button
+              className="plan-button danger-outline"
+              onClick={() => navigate('/plan/payments')}
+              type="button"
+            >
+              {translate('subscriber.payment.history.detail_eyebrow')}
+            </button>
+            <button className="plan-button primary" onClick={() => navigate('/plan')} type="button">
+              {translate('subscriber.payment.failed.cta')}
+            </button>
+          </div>
+        </section>
+
+        <section className="plan-overdue-visit" aria-labelledby="x23-next-visit">
+          <span className="plan-eyebrow" id="x23-next-visit">
+            {translate('subscriber.payment.overdue.next_visit_eyebrow')}
+          </span>
+          <strong>{active.nextVisit.weekday}</strong>
+          <span>{translate('subscriber.payment.overdue.waiting')}</span>
+        </section>
+
+        <div className="plan-grow" />
+
+        <PlanTabBar activeItem="home" />
       </div>
     </main>
   );
@@ -146,9 +369,7 @@ export function PlanUpgradeX19U(): ReactElement {
           </span>
           <div className="plan-compare-row">
             <span>{translate('subscriber.plan.upgrade.current_label')}</span>
-            <span className="plan-compare-current">
-              {formatXof(upgrade.currentAmountXof)}
-            </span>
+            <span className="plan-compare-current">{formatXof(upgrade.currentAmountXof)}</span>
           </div>
           <div className="plan-compare-row">
             <strong>{translate('subscriber.plan.upgrade.new_label')}</strong>
@@ -157,9 +378,7 @@ export function PlanUpgradeX19U(): ReactElement {
           <div className="plan-compare-divider" aria-hidden="true" />
           <div className="plan-compare-row plan-compare-row-savings">
             <span>{translate('subscriber.plan.upgrade.savings_label')}</span>
-            <span className="plan-compare-savings">
-              — {formatXof(upgrade.savingsXof)}
-            </span>
+            <span className="plan-compare-savings">— {formatXof(upgrade.savingsXof)}</span>
           </div>
         </section>
 
@@ -195,11 +414,7 @@ export function PlanUpgradeX19U(): ReactElement {
             amount: formatXof(upgrade.newAmountXof),
           })}
         </button>
-        <button
-          className="plan-button ghost full"
-          onClick={() => navigate('/plan')}
-          type="button"
-        >
+        <button className="plan-button ghost full" onClick={() => navigate('/plan')} type="button">
           {translate('subscriber.plan.upgrade.cancel.cta')}
         </button>
       </div>
@@ -263,11 +478,7 @@ export function PlanPauseConfirmX22(): ReactElement {
 
         <div className="plan-grow" />
 
-        <button
-          className="plan-button ghost full"
-          onClick={() => navigate('/plan')}
-          type="button"
-        >
+        <button className="plan-button ghost full" onClick={() => navigate('/plan')} type="button">
           {translate('subscriber.plan.upgrade.cancel.cta')}
         </button>
         <button
@@ -455,12 +666,7 @@ function BackHeader({
 }): ReactElement {
   return (
     <header className="plan-back-header">
-      <button
-        aria-label="Retour"
-        className="plan-back"
-        onClick={onBack}
-        type="button"
-      >
+      <button aria-label="Retour" className="plan-back" onClick={onBack} type="button">
         ‹
       </button>
       <span className="plan-eyebrow">{label.toUpperCase()}</span>

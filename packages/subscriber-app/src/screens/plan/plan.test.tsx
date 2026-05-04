@@ -4,9 +4,12 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 
 import {
+  PlanOverdueX23,
   PlanPauseConfirmX22,
   PlanPausedSuccessX22A,
   PlanPausedX19R,
+  PlanPaymentHistoryX20,
+  PlanPaymentMethodX21,
   PlanUpgradeX19U,
   PlanX19,
 } from './PlanScreens.js';
@@ -66,10 +69,87 @@ describe('Subscriber plan · X-19 Active', () => {
     expect(locationRef.current).toBe('/plan/pause');
   });
 
+  it('routes payment detail actions to X-20 and X-21', () => {
+    const { locationRef } = renderAt('/plan', <PlanX19 />);
+    fireEvent.click(screen.getByRole('button', { name: 'Voir les paiements' }));
+    expect(locationRef.current).toBe('/plan/payments');
+
+    const method = renderAt('/plan', <PlanX19 />);
+    fireEvent.click(screen.getByRole('button', { name: 'Modifier le moyen' }));
+    expect(method.locationRef.current).toBe('/plan/payment-method');
+  });
+
   it('marks Forfait active in the bottom nav', () => {
     renderAt('/plan', <PlanX19 />);
     const forfait = screen.getByRole('button', { name: 'Forfait' });
     expect(forfait).toHaveAttribute('aria-current', 'page');
+  });
+});
+
+describe('Subscriber plan · X-20 Payment history', () => {
+  it('renders payment totals and receipt rows from the deck', () => {
+    renderAt('/plan/payments', <PlanPaymentHistoryX20 />);
+
+    expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-20');
+    expect(screen.getByRole('heading', { name: /8 mois de prélèvements/u })).toBeVisible();
+    expect(screen.getByText('Total payé')).toBeVisible();
+    expect(screen.getByText(/20\s000\s+XOF/u)).toBeVisible();
+    expect(screen.getByText('8 prélèvements')).toBeVisible();
+    expect(screen.getByText('1 mai 2026')).toBeVisible();
+    expect(screen.getByText('TMoney · MM-78423190')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Télécharger les reçus' })).toBeVisible();
+  });
+
+  it('back button returns to /plan', () => {
+    const { locationRef } = renderAt('/plan/payments', <PlanPaymentHistoryX20 />);
+    fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
+    expect(locationRef.current).toBe('/plan');
+  });
+});
+
+describe('Subscriber plan · X-21 Payment method', () => {
+  it('renders Mobile Money providers with the current account marked active', () => {
+    renderAt('/plan/payment-method', <PlanPaymentMethodX21 />);
+
+    expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-21');
+    expect(screen.getByRole('heading', { name: 'Mobile Money' })).toBeVisible();
+    expect(
+      screen.getByText("L'argent quitte votre Mobile Money le 1er de chaque mois."),
+    ).toBeVisible();
+    expect(screen.getByText('TMoney')).toBeVisible();
+    expect(screen.getByText('+228 90 12 34 56 · actuel')).toBeVisible();
+    expect(screen.getByText('ACTIF')).toBeVisible();
+    expect(screen.getByText('Mixx by Yas')).toBeVisible();
+    expect(screen.getByText('+ Ajouter un Flooz')).toBeVisible();
+  });
+
+  it('save returns to /plan', () => {
+    const { locationRef } = renderAt('/plan/payment-method', <PlanPaymentMethodX21 />);
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+    expect(locationRef.current).toBe('/plan');
+  });
+});
+
+describe('Subscriber plan · X-23 Overdue banner', () => {
+  it('renders the failed-payment banner and grays the next visit state', () => {
+    renderAt('/plan/overdue', <PlanOverdueX23 />);
+
+    expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-23');
+    expect(screen.getByText("Le paiement n'a pas abouti.")).toBeVisible();
+    expect(
+      screen.getByText('Solde Mobile Money insuffisant. Rechargez puis nous réessayons demain.'),
+    ).toBeVisible();
+    expect(
+      screen.getByText("3 tentatives échouées. Visite en pause jusqu'au paiement."),
+    ).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Réessayer maintenant' })).toBeVisible();
+    expect(screen.getByText('en attente de paiement')).toBeVisible();
+  });
+
+  it('routes retry to payment method', () => {
+    const { locationRef } = renderAt('/plan/overdue', <PlanOverdueX23 />);
+    fireEvent.click(screen.getByRole('button', { name: 'Réessayer maintenant' }));
+    expect(locationRef.current).toBe('/plan');
   });
 });
 
@@ -84,16 +164,12 @@ describe('Subscriber plan · X-19.U Upgrade', () => {
     expect(screen.getByText(/^2\s500\s+XOF$/u)).toBeVisible(); // current
     expect(screen.getByText(/^4\s500\s+XOF$/u)).toBeVisible(); // new (compare row)
     expect(screen.getByText(/—\s500\s+XOF/u)).toBeVisible(); // savings line
-    expect(
-      screen.getByRole('button', { name: /Confirmer · 4\s500\s+XOF \/ mois/u }),
-    ).toBeVisible();
+    expect(screen.getByRole('button', { name: /Confirmer · 4\s500\s+XOF \/ mois/u })).toBeVisible();
   });
 
   it('routes confirm and cancel back to /plan', () => {
     const confirm = renderAt('/plan/upgrade', <PlanUpgradeX19U />);
-    fireEvent.click(
-      screen.getByRole('button', { name: /Confirmer · 4\s500\s+XOF \/ mois/u }),
-    );
+    fireEvent.click(screen.getByRole('button', { name: /Confirmer · 4\s500\s+XOF \/ mois/u }));
     expect(confirm.locationRef.current).toBe('/plan');
 
     const cancel = renderAt('/plan/upgrade', <PlanUpgradeX19U />);

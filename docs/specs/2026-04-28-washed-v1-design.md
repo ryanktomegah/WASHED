@@ -5,6 +5,8 @@
 **Working name:** Washed (subject to legal/trademark check before launch)
 **Authors:** Founder + Claude (CTO autonomy mode)
 
+**Frontend stack note:** frontend stack sections in this 2026-04-28 document are superseded by `docs/specs/2026-04-30-washed-frontend-architecture.md` and `design/index.html`. The current target apps are `packages/subscriber-app`, `packages/worker-app`, and `packages/operator-console` with shared frontend packages; `design/09-copy-deck/copy.html` is the FR copy source of truth.
+
 ---
 
 ## 0. Executive summary
@@ -263,8 +265,8 @@ Until those thresholds are met, scoring is advisory only and the operator remain
 ```
 ┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────────┐
 │   SUBSCRIBER APP     │  │     WORKER APP       │  │  OPERATOR CONSOLE    │
-│  Flutter (iOS+Android│  │ Flutter (Android-first│  │ Custom React/Next.js │
-│  +PWA), French i18n  │  │  +iOS), French i18n   │  │  + Tailwind, custom   │
+│  React/Vite/Capacitor│  │ React/Vite/Capacitor│  │ React/Vite console  │
+│  iOS+Android+PWA FR  │  │ Android-first + PWA │  │  shared UI, custom   │
 │   from day 1         │  │   from day 1          │  │  data-grid components │
 └──────────┬───────────┘  └──────────┬───────────┘  └──────────┬───────────┘
            │                         │                          │
@@ -354,8 +356,8 @@ Independent deployables from day one. Splits chosen based on differing reliabili
 | Layer | Choice | Rationale |
 |---|---|---|
 | **Backend** | Node.js 22 + TypeScript + Fastify; NestJS modules per domain | Mature ecosystem; DI + clear boundaries |
-| **Mobile** | Flutter 3 (single codebase iOS+Android+web); Riverpod; Freezed | One codebase, native compilation, offline-tolerant |
-| **Operator console** | Next.js 15 + React 19 + TypeScript + Tailwind + shadcn/ui + TanStack Table | Real product, not Retool scaffold |
+| **Mobile** | React 19 + Vite + Capacitor in `packages/subscriber-app` and `packages/worker-app` | One TypeScript codebase, native distribution, offline-tolerant |
+| **Operator console** | React 19 + Vite + TypeScript in `packages/operator-console`, backed by shared `@washed/ui` and design tokens | Real product, not Retool scaffold |
 | **Real-time media** | LiveKit (self-hosted) + Coturn + Opus codec | Industry-standard WebRTC, full data sovereignty |
 | **Voice transcription** | Post-beta Whisper-v3-large option | Manual callback and text support are beta defaults; GPU transcription waits for cost/research proof |
 | **Translation** | Post-beta NLLB-200 option | FR is beta-critical; EWE/MINA support starts as human-assisted/localized copy before automatic translation |
@@ -374,7 +376,7 @@ Independent deployables from day one. Splits chosen based on differing reliabili
 
 ### 5.1 Client components (3)
 
-#### C1 — Subscriber App (Flutter)
+#### C1 — Subscriber App (React/Vite/Capacitor)
 
 Mobile app for signup, subscription management, payment, schedule visibility, ratings, dispute filing, and support. Voice messaging and masked in-app calling are post-beta unless field research proves they are needed for safety or completion.
 
@@ -390,9 +392,9 @@ Mobile app for signup, subscription management, payment, schedule visibility, ra
 - **Voice calls** — post-beta masked in-app calling; beta uses operator callback unless research changes the scope.
 - **Wallet/Billing** — monthly statement, mobile-money receipt, refund history
 
-**Tech:** Flutter 3, Riverpod, Freezed, Dio, FlutterSecureStorage, Firebase Cloud Messaging, sentry_flutter, easy_localization (FR beta-critical; EN internal/admin; EWE/MINA after field benchmark), drift for offline storage. `livekit_client` is added only when masked calling becomes beta-critical or launch-critical.
+**Tech:** React 19 + Vite + Capacitor in `packages/subscriber-app`, shared `@washed/ui`, `@washed/design-tokens`, `@washed/i18n`, `@washed/api-client`, `@washed/auth`, and `@washed/frontend-config`. Native push/location/media integrations remain gated by beta-critical need and provider readiness.
 
-#### C2 — Worker App (Flutter, Android-first)
+#### C2 — Worker App (React/Vite/Capacitor, Android-first)
 
 Mobile app for daily route, visit check-in/out, earnings, payouts, operator messaging, and safety escalation. Voice/call communication with subscribers is post-beta.
 
@@ -406,9 +408,9 @@ Mobile app for daily route, visit check-in/out, earnings, payouts, operator mess
 - **Safety/support contact** — one-tap issue reporting and operator callback; direct voice messages/calls with subscribers remain post-beta.
 - **Offline mode** — today's route cached; check-ins queued; photos compressed and queued for sync
 
-**Tech:** Same Flutter stack as C1, plus drift for offline-first sqlite, image compression, geolocator, background_fetch.
+**Tech:** React 19 + Vite + Capacitor in `packages/worker-app`, with offline queueing, image compression, geolocation, and background behavior implemented through explicit Capacitor/native integrations as needed.
 
-#### C3 — Operator Console (Next.js + React)
+#### C3 — Operator Console (React/Vite)
 
 Operations workspace for matching, monitoring live ops, dispute handling, worker onboarding, and customer support.
 
@@ -422,7 +424,7 @@ Operations workspace for matching, monitoring live ops, dispute handling, worker
 - **Live calls** — active calls (anonymised), one-click join-as-operator
 - **Reporting** — daily/weekly/monthly KPIs, exports
 
-**Tech:** Next.js 15 App Router, React 19, TypeScript, Tailwind, shadcn/ui, TanStack Table, TanStack Query, react-leaflet, deck.gl for heatmaps, WebSocket client. Built as a real product, not a CRUD scaffold.
+**Tech:** React 19 + Vite + TypeScript in `packages/operator-console`, shared `@washed/ui`/`@washed/design-tokens`, TanStack Table, TanStack Query, map/heatmap integrations, and WebSocket client where live operations require it. Built as a real product, not a CRUD scaffold.
 
 ### 5.2 Backend services (8)
 
@@ -614,8 +616,8 @@ Each SLO has a monthly error budget; >50% consumption triggers eng-team review.
 
 | Layer | Coverage | Framework |
 |---|---:|---|
-| Unit tests | ≥ 90% of business logic | Vitest, Dart `test`, Jest |
-| Component tests | ≥ 80% of public surfaces | Supertest + Testcontainers, Flutter widget tests, RTL |
+| Unit tests | ≥ 90% of business logic | Vitest and TypeScript test suites |
+| Component tests | ≥ 80% of public surfaces | Supertest + Testcontainers, Vitest/Testing Library component tests, RTL |
 | Integration tests | All critical flows | Testcontainers + Pactum, MockServer |
 | Contract tests | 100% of public events + endpoints | Pact + OpenAPI Validator |
 | E2E tests | Top 30 user journeys | Playwright (web), Maestro (mobile) |
@@ -673,7 +675,7 @@ Compliance baseline: OWASP ASVS Level 2 (annual); GDPR-equivalent rights for all
 
 ### 8.6 Accessibility
 
-WCAG 2.1 Level AA from launch. Automated (axe-core + Pa11y in CI; Flutter accessibility-checker); manual (TalkBack + VoiceOver every release); external audit pre-launch and annually (Deque or Level Access).
+WCAG 2.1 Level AA from launch. Automated checks should use axe-core/Pa11y where applicable; manual TalkBack and VoiceOver checks are required every release; external audit pre-launch and annually (Deque or Level Access).
 
 Specific: tap targets ≥44pt; contrast ≥4.5:1; screen-reader navigation tested; voice messages have transcripts once voice is active scope; high-contrast mode toggle; dynamic-type up to 200% scale without breakage.
 
@@ -717,7 +719,7 @@ Synthetic monitoring every 60s from Frankfurt/Paris/Accra: OTP, signup, visit li
 
 Real-user monitoring: every session reports performance + errors + network conditions to ClickHouse; weekly eng review.
 
-Canary releases: 5% traffic for 30 min on every backend deploy; staged 5% Flutter rollouts; auto-rollback on error spike.
+Canary releases: 5% traffic for 30 min on every backend deploy; staged mobile/Capacitor rollouts; auto-rollback on error spike.
 
 Feature flags (Unleash self-hosted) on every new feature.
 
@@ -770,7 +772,7 @@ Voice messages and in-app calls are post-beta unless research proves they are re
 - Brand identity + name validation (Washed trademark check)
 - Hire research coordinator in Lomé (part-time)
 - Reference device procurement
-- Design system (Figma) — Subscriber + Worker + Operator
+- Design system (`design/index.html` and `design/09-copy-deck/copy.html`) — Subscriber + Worker + Operator
 - Translator engagement for FR formal launch copy; EWE/MINA benchmark and human-reviewed expansion plan before automatic translation is promised.
 
 ### 10.2 v1 build (weeks 4-N — duration determined in implementation plan)

@@ -4,7 +4,7 @@
 // have a key in the deck before the code that renders it.
 //
 // Usage:  node scripts/compile-fr.mjs
-//         (also wired as `pnpm i18n:sync` and the package's build step)
+//         (also wired as `pnpm --filter @washed/i18n compile:fr` and the package's build step)
 //
 // Parse strategy: walk every <tbody>...</tbody> block, then within each tbody
 // extract sequential pairs of <span class="key">…</span> followed by
@@ -23,7 +23,7 @@ const html = readFileSync(deckPath, 'utf8');
 
 const tbodyPattern = /<tbody>([\s\S]*?)<\/tbody>/g;
 const pairPattern =
-  /<span class="key">([^<]+)<\/span>[\s\S]*?<span class="fr(?:\s+body)?"\s*>([\s\S]*?)<\/span>/g;
+  /<span class="key">([^<]+)<\/span>[\s\S]*?<span class="fr(?:\s+body)?"\s*>([\s\S]*?)<\/span\s*>/g;
 
 const messages = {};
 const duplicates = [];
