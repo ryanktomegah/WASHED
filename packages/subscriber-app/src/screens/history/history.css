@@ -1,0 +1,327 @@
+/* ============================================================
+   X-16 Visit History — l'actif relationnel
+   Locked to design/05-subscriber/subscriber.html:546-571.
+   Reuses .hub-nav from hub.css for the bottom nav.
+   ============================================================ */
+
+.history-screen {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--ink);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.history-screen *,
+.history-screen *::before,
+.history-screen *::after {
+  box-sizing: border-box;
+}
+
+.history-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px 20px 8px;
+}
+
+.history-grow {
+  flex: 1;
+  min-height: 8px;
+}
+
+.history-header {
+  display: flex;
+  align-items: center;
+}
+
+.history-eyebrow {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.history-title {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.1;
+}
+
+.history-title-accent {
+  color: var(--primary);
+  font-style: italic;
+}
+
+.history-stats-card {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line));
+  border-radius: 14px;
+  background: var(--primary-soft);
+  padding: 12px 14px;
+}
+
+.history-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.history-stat.align-right {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.history-stat-label {
+  color: var(--ink-3);
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.history-stat-value {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.05;
+}
+
+.history-stat-value small {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.history-recent-label {
+  margin: 4px 0 0;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.history-card {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  font: inherit;
+  text-align: left;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background-color var(--d-fast) var(--ease-standard);
+}
+
+.history-card:hover,
+.history-card:focus-visible {
+  background: color-mix(in srgb, var(--primary-soft) 60%, var(--surface) 40%);
+  outline: none;
+}
+
+.history-card-avatar {
+  display: block;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+}
+
+.history-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.history-card-meta strong {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.history-card-meta span {
+  color: var(--ink-3);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.history-card-chip {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.history-card-chip.clean {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.history-card-chip.issue {
+  background: var(--danger-soft, color-mix(in srgb, var(--primary) 22%, white 78%));
+  color: var(--primary);
+}
+
+.history-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.history-back {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 28px;
+  line-height: 1;
+  padding: 0;
+}
+
+.history-back:focus-visible,
+.history-report-button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.history-detail-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.history-detail-title span {
+  color: var(--ink);
+}
+
+.history-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.history-photo {
+  display: grid;
+  aspect-ratio: 1;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: rgba(255, 253, 248, 0.7);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.history-photo.before {
+  border-color: color-mix(in srgb, var(--ink) 22%, transparent);
+  background:
+    linear-gradient(135deg, rgba(255, 253, 248, 0.08), transparent 44%),
+    linear-gradient(135deg, #4a3622, #1c1208);
+}
+
+.history-photo.after {
+  background:
+    radial-gradient(circle at 72% 24%, rgba(255, 253, 248, 0.75), transparent 24%),
+    linear-gradient(135deg, var(--surface), var(--primary-soft));
+  color: var(--primary);
+}
+
+.history-detail-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  padding: 10px 12px;
+}
+
+.history-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0;
+}
+
+.history-detail-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.history-detail-row dt {
+  color: var(--ink-3);
+}
+
+.history-detail-row dd {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  text-align: right;
+}
+
+.history-report-button {
+  min-height: var(--tap-min);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 18px;
+}
+
+@media (max-height: 700px) {
+  .history-body {
+    gap: 9px;
+    padding-top: 18px;
+  }
+
+  .history-title {
+    font-size: 24px;
+  }
+}

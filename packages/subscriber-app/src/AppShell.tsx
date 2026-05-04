@@ -13,6 +13,7 @@ import { PaymentX06 } from './screens/onboarding/PaymentX06.js';
 import { ReviewX07 } from './screens/onboarding/ReviewX07.js';
 import { WelcomeX08 } from './screens/onboarding/WelcomeX08.js';
 import { HubX10 } from './screens/hub/HubX10.js';
+import { HistoryDetailX17, HistoryX16 } from './screens/history/HistoryX16.js';
 import {
   VisitDetailX11,
   VisitEnRouteX12,
@@ -26,6 +27,7 @@ import {
 
 import './screens/onboarding/onboarding.css';
 import './screens/hub/hub.css';
+import './screens/history/history.css';
 import './screens/visits/visit.css';
 
 export function AppShell(): ReactElement {
@@ -44,6 +46,8 @@ export function AppShell(): ReactElement {
             <Route element={<ReviewX07 />} path="/signup/review" />
             <Route element={<WelcomeX08 />} path="/signup/welcome" />
             <Route element={<HubX10 />} path="/hub" />
+            <Route element={<HistoryX16 />} path="/history" />
+            <Route element={<HistoryDetailX17 />} path="/history/:visitId" />
             <Route element={<VisitDetailX11 />} path="/visit/detail" />
             <Route element={<VisitRescheduleX11M />} path="/visit/reschedule" />
             <Route element={<VisitEnRouteX12 />} path="/visit/en-route" />

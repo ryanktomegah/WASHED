@@ -106,11 +106,7 @@ export function HubX10(): ReactElement {
           >
             {translate('subscriber.dashboard.cta_detail')}
           </button>
-          <button
-            className="hub-button primary"
-            onClick={() => navigate('/visit/detail')}
-            type="button"
-          >
+          <button className="hub-button primary" onClick={() => navigate('/history')} type="button">
             {translate('subscriber.dashboard.cta_visits')}
           </button>
         </div>
@@ -136,7 +132,7 @@ export function HubX10(): ReactElement {
             <span aria-hidden="true" className="hub-nav-glyph" />
             {translate('subscriber.dashboard.tab.home')}
           </button>
-          <button className="hub-nav-item" type="button" disabled>
+          <button className="hub-nav-item" onClick={() => navigate('/history')} type="button">
             <span aria-hidden="true" className="hub-nav-glyph" />
             {translate('subscriber.dashboard.tab.visits')}
           </button>

@@ -9,9 +9,11 @@ const screenRoutes = [
   ['x-14-reveal', '/#/visit/reveal', 'X-14'],
   ['x-15-feedback', '/#/visit/feedback', 'X-15'],
   ['x-15s-issue', '/#/visit/issue', 'X-15.S'],
+  ['x-16-history', '/#/history', 'X-16'],
+  ['x-17-history-detail', '/#/history/visit-2026-04-28', 'X-17'],
 ] as const;
 
-test.describe('Subscriber visit flow X-11 → X-15', () => {
+test.describe('Subscriber hub, visit, and history flows X-10 → X-17', () => {
   // Most tests target post-onboarding state — pre-mark the X-09 first-session
   // tour completed so the hub renders clean. The tour itself has its own spec
   // below where the flag is explicitly cleared.
@@ -50,6 +52,23 @@ test.describe('Subscriber visit flow X-11 → X-15', () => {
         );
       }
 
+      if (screenId === 'X-16') {
+        await expect(page.getByText('Vos visites')).toBeVisible();
+        await expect(page.getByText('Akouvi')).toBeVisible();
+        await expect(page.getByText('32')).toBeVisible();
+        await expect(page.getByText(/80\s000/u)).toBeVisible();
+        await expect(page.getByRole('button', { name: /28 avr · 9 h 02/u })).toBeVisible();
+      }
+
+      if (screenId === 'X-17') {
+        await expect(page.getByText('Visite · 28 avril')).toBeVisible();
+        await expect(page.getByRole('heading', { name: /Bonne visite/u })).toBeVisible();
+        await expect(page.getByLabel('Photos avant et après')).toBeVisible();
+        await expect(page.getByText('Photo avant')).toBeVisible();
+        await expect(page.getByText('9 h 03')).toBeVisible();
+        await expect(page.getByText('Visite incluse au forfait')).toBeVisible();
+      }
+
       const screenshotPath = testInfo.outputPath(`${slug}-${testInfo.project.name}.png`);
       await page.screenshot({ fullPage: true, path: screenshotPath });
       await testInfo.attach(`${slug}-${testInfo.project.name}`, {
@@ -58,6 +77,38 @@ test.describe('Subscriber visit flow X-11 → X-15', () => {
       });
     });
   }
+
+  test('X-10 routes visible history actions to X-16, then a visit card to X-17', async ({
+    page,
+  }) => {
+    await page.goto('/#/hub');
+
+    await page.getByRole('button', { name: 'Voir les visites' }).click();
+    await expect(page).toHaveURL(/#\/history/u);
+    await expect(page.locator('[data-screen-id="X-16"]')).toBeVisible();
+
+    await page.goto('/#/hub');
+    await page.getByRole('button', { exact: true, name: 'Visites' }).click();
+    await expect(page).toHaveURL(/#\/history/u);
+    await expect(page.locator('[data-screen-id="X-16"]')).toBeVisible();
+
+    await page.getByRole('button', { name: /28 avr · 9 h 02/u }).click();
+    await expect(page).toHaveURL(/#\/history\/visit-2026-04-28/u);
+    await expect(page.locator('[data-screen-id="X-17"]')).toBeVisible();
+  });
+
+  test('X-17 routes back to history and to issue reporting', async ({ page }) => {
+    await page.goto('/#/history/visit-2026-04-28');
+
+    await page.getByRole('button', { name: 'Visites' }).click();
+    await expect(page).toHaveURL(/#\/history/u);
+    await expect(page.locator('[data-screen-id="X-16"]')).toBeVisible();
+
+    await page.goto('/#/history/visit-2026-04-28');
+    await page.getByRole('button', { name: 'Signaler a posteriori' }).click();
+    await expect(page).toHaveURL(/#\/visit\/issue/u);
+    await expect(page.locator('[data-screen-id="X-15.S"]')).toBeVisible();
+  });
 
   test('X-11 routes to tracking, reschedule, and issue branch', async ({ page }) => {
     await page.goto('/#/visit/detail');
@@ -110,7 +161,6 @@ test.describe('Subscriber visit flow X-11 → X-15', () => {
     await expect(page).toHaveURL(/#\/hub/u);
     await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
   });
-
 });
 
 // The X-09 first-session tour belongs to its own describe so it does NOT

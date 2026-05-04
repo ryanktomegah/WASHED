@@ -73,20 +73,38 @@ describe('Subscriber hub · X-10', () => {
     expect(screen.getByText('Dernière visite · 28 avril')).toBeVisible();
     expect(screen.getByText('32 visites')).toBeVisible();
 
-    // Nav — Accueil active, Visites/Forfait/Profil disabled in this sprint.
+    // Nav — Accueil active; Visites opens the delivered X-16 history slice.
     const home = screen.getByRole('button', { name: 'Accueil' });
     expect(home).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByRole('button', { name: 'Visites' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Visites' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Forfait' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Profil' })).toBeDisabled();
   });
 
-  it('routes the Détail and Voir les visites CTAs to /visit/detail', () => {
+  it('routes Détail to X-11 visit detail', () => {
     vi.setSystemTime(new Date('2026-05-03T09:30:00.000'));
 
     const { locationRef } = renderAt('/hub', <HubX10 />);
     fireEvent.click(screen.getByRole('button', { name: 'Détail' }));
     expect(locationRef.current).toBe('/visit/detail');
+  });
+
+  it('routes Voir les visites to X-16 history', () => {
+    vi.setSystemTime(new Date('2026-05-03T09:30:00.000'));
+
+    const { locationRef } = renderAt('/hub', <HubX10 />);
+    fireEvent.click(screen.getByRole('button', { name: 'Voir les visites' }));
+    expect(locationRef.current).toBe('/history');
+  });
+
+  it('routes the Visites nav item to X-16 history', () => {
+    vi.setSystemTime(new Date('2026-05-03T09:30:00.000'));
+
+    const { locationRef } = renderAt('/hub', <HubX10 />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Visites' }));
+
+    expect(locationRef.current).toBe('/history');
   });
 
   it('switches the greeting to afternoon between 12h and 18h', () => {
@@ -134,9 +152,7 @@ describe('Subscriber tour · X-09 (overlay on hub)', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Suivant' }));
     expect(screen.getByText(/2 \/ 3 · DÉCOUVERTE/u)).toBeVisible();
-    expect(
-      screen.getByRole('heading', { name: 'Votre laveuse, toujours la même.' }),
-    ).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Votre laveuse, toujours la même.' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Précédent' })).toBeEnabled();
 
     fireEvent.click(screen.getByRole('button', { name: 'Suivant' }));
