@@ -1,8 +1,12 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { AuthManager, OtpChallenge } from '@washed/auth';
+
+import { BackendProvider } from '../../backend/BackendContext.js';
+import type { SubscriberBackend } from '../../backend/createBackend.js';
 import { AddressX04 } from './AddressX04.js';
 import { OtpX03 } from './OtpX03.js';
 import { PaymentX06 } from './PaymentX06.js';
@@ -17,6 +21,7 @@ function renderAt(
   path: string,
   element: ReactElement,
   initialSignupState: SignupInitialState = {},
+  backend?: SubscriberBackend,
 ): { locationRef: { current: string } } {
   const locationRef = { current: path };
 
@@ -27,25 +32,71 @@ function renderAt(
   }
 
   render(
-    <SignupProvider initialState={initialSignupState}>
-      <MemoryRouter initialEntries={[path]}>
-        <Routes>
-          <Route
-            element={
-              <>
-                {element}
-                <Spy />
-              </>
-            }
-            path={path}
-          />
-          <Route element={<Spy />} path="*" />
-        </Routes>
-      </MemoryRouter>
-    </SignupProvider>,
+    <BackendProvider backend={backend}>
+      <SignupProvider initialState={initialSignupState}>
+        <MemoryRouter initialEntries={[path]}>
+          <Routes>
+            <Route
+              element={
+                <>
+                  {element}
+                  <Spy />
+                </>
+              }
+              path={path}
+            />
+            <Route element={<Spy />} path="*" />
+          </Routes>
+        </MemoryRouter>
+      </SignupProvider>
+    </BackendProvider>,
   );
 
   return { locationRef };
+}
+
+function createTestBackend(overrides: Partial<AuthManager> = {}): SubscriberBackend {
+  const baseAuth: AuthManager = {
+    clearSession: async () => undefined,
+    getAccessToken: async () => undefined,
+    getSession: async () => null,
+    requireAccessToken: async () => '',
+    setSession: async () => undefined,
+    startOtp: async () =>
+      ({
+        challengeId: 'chal_test',
+        expiresAt: new Date(Date.now() + 60_000).toISOString(),
+        phoneNumber: '+22890000000',
+        provider: 'test',
+        testCode: '123456',
+      }) satisfies OtpChallenge,
+    verifyOtp: async () => ({
+      accessToken: 'access_test',
+      accessTokenExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+      refreshToken: 'refresh_test',
+      refreshTokenExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+      role: 'subscriber',
+      sessionId: 'sess_test',
+      userId: 'user_test',
+    }),
+  };
+
+  return {
+    api: { request: async () => undefined },
+    auth: { ...baseAuth, ...overrides },
+    data: {
+      loadSubscriberApp: async () => {
+        throw new Error('not used');
+      },
+      loadWorkerApp: async () => {
+        throw new Error('not used');
+      },
+      loadOperatorConsole: async () => {
+        throw new Error('not used');
+      },
+    },
+    liveBackendEnabled: true,
+  };
 }
 
 describe('Onboarding · X-01 Splash', () => {
@@ -104,6 +155,34 @@ describe('Onboarding · X-02 Phone', () => {
 
     expect(locationRef.current).toBe('/signup/otp');
   });
+
+  it('calls auth.startOtp and forwards the challenge when the live backend is enabled', async () => {
+    const startOtp = vi.fn(async (phone: string) => ({
+      challengeId: 'chal_live',
+      expiresAt: new Date(Date.now() + 60_000).toISOString(),
+      phoneNumber: phone,
+      provider: 'sms_http',
+      testCode: null,
+    }));
+    const backend = createTestBackend({ startOtp });
+
+    const { locationRef } = renderAt(
+      '/signup/phone',
+      <PhoneX02 />,
+      {},
+      backend,
+    );
+
+    fireEvent.change(screen.getByLabelText('Numéro'), { target: { value: '90123456' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Recevoir le code' }));
+
+    await waitFor(() => {
+      expect(startOtp).toHaveBeenCalledWith('+228 90 12 34 56');
+    });
+    await waitFor(() => {
+      expect(locationRef.current).toBe('/signup/otp');
+    });
+  });
 });
 
 describe('Onboarding · X-03 OTP', () => {
@@ -161,6 +240,46 @@ describe('Onboarding · X-03 OTP', () => {
 
     expect(locationRef.current).toBe('/signup/phone');
     expect(screen.queryByText(/\+228 90/u)).not.toBeInTheDocument();
+  });
+
+  it('calls auth.verifyOtp with the challenge when all 6 digits are entered (live backend)', async () => {
+    vi.useRealTimers();
+    const verifyOtp = vi.fn(async () => ({
+      accessToken: 'access_test',
+      accessTokenExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+      refreshToken: 'refresh_test',
+      refreshTokenExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+      role: 'subscriber' as const,
+      sessionId: 'sess_test',
+      userId: 'user_test',
+    }));
+    const backend = createTestBackend({ verifyOtp });
+
+    const { locationRef } = renderAt(
+      '/signup/otp',
+      <OtpX03 />,
+      {
+        phone: '+228 90 12 34 56',
+        otpChallenge: {
+          challengeId: 'chal_live',
+          expiresAt: new Date(Date.now() + 60_000).toISOString(),
+          phoneNumber: '+22890123456',
+          provider: 'sms_http',
+          testCode: null,
+        },
+      },
+      backend,
+    );
+
+    const cells = screen.getAllByRole('textbox') as HTMLInputElement[];
+    fireEvent.change(cells[0]!, { target: { value: '482915' } });
+
+    await waitFor(() => {
+      expect(verifyOtp).toHaveBeenCalledWith({ challengeId: 'chal_live', code: '482915' });
+    });
+    await waitFor(() => {
+      expect(locationRef.current).toBe('/signup/address');
+    });
   });
 });
 

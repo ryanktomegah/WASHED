@@ -3,6 +3,7 @@ import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { LocaleProvider, WashedThemeProvider, useActiveLocale } from '@washed/ui';
 
+import { BackendProvider } from './backend/BackendContext.js';
 import { SignupProvider } from './screens/onboarding/SignupContext.js';
 import { SplashX01 } from './screens/onboarding/SplashX01.js';
 import { PhoneX02 } from './screens/onboarding/PhoneX02.js';
@@ -68,15 +69,17 @@ import './screens/visits/visit.css';
 
 export function AppShell(): ReactElement {
   return (
-    <LocaleProvider>
-      <WashedThemeProvider theme="subscriber">
-        <SignupProvider>
-          <HashRouter>
-            <LocaleScopedRoutes />
-          </HashRouter>
-        </SignupProvider>
-      </WashedThemeProvider>
-    </LocaleProvider>
+    <BackendProvider>
+      <LocaleProvider>
+        <WashedThemeProvider theme="subscriber">
+          <SignupProvider>
+            <HashRouter>
+              <LocaleScopedRoutes />
+            </HashRouter>
+          </SignupProvider>
+        </WashedThemeProvider>
+      </LocaleProvider>
+    </BackendProvider>
   );
 }
 

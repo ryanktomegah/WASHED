@@ -2,7 +2,9 @@ import { useState, type ChangeEvent, type FormEvent, type ReactElement } from 'r
 import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
+import { CoreApiError } from '@washed/api-client';
 
+import { useBackend } from '../../backend/BackendContext.js';
 import { useSignup } from './SignupContext.js';
 
 const TOGO_PHONE_LENGTH = 8;
@@ -19,20 +21,42 @@ function digitsOf(value: string): string {
 export function PhoneX02(): ReactElement {
   const navigate = useNavigate();
   const signup = useSignup();
+  const backend = useBackend();
   const initialDigits = digitsOf(signup.phone.replace(/^\+228\s*/u, ''));
   const [phone, setPhone] = useState(formatTogoPhone(initialDigits));
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const digits = digitsOf(phone);
   const isValid = digits.length === TOGO_PHONE_LENGTH;
 
   const onChange = (event: ChangeEvent<HTMLInputElement>): void => {
     setPhone(formatTogoPhone(event.target.value));
+    if (error !== null) setError(null);
   };
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>): void => {
+  const onSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
-    if (!isValid) return;
+    if (!isValid || submitting) return;
     const fullPhone = `+228 ${formatTogoPhone(digits)}`;
     signup.setPhone(fullPhone);
+
+    if (backend.liveBackendEnabled) {
+      setSubmitting(true);
+      try {
+        const challenge = await backend.auth.startOtp(fullPhone);
+        signup.setOtpChallenge(challenge);
+      } catch (caught) {
+        setSubmitting(false);
+        const message =
+          caught instanceof CoreApiError
+            ? translate('error.server.body')
+            : translate('error.network.body');
+        setError(message);
+        return;
+      }
+      setSubmitting(false);
+    }
+
     navigate('/signup/otp');
   };
 
@@ -76,11 +100,16 @@ export function PhoneX02(): ReactElement {
           <p className="p-sm">
             Le numéro reste privé. Jamais transmis à votre laveuse.
           </p>
+          {error === null ? null : (
+            <p className="p-sm" role="alert" style={{ color: 'var(--danger)' }}>
+              {error}
+            </p>
+          )}
         </div>
 
         <div className="grow" />
 
-        <button className="btn full primary" disabled={!isValid} type="submit">
+        <button className="btn full primary" disabled={!isValid || submitting} type="submit">
           {translate('subscriber.signup.phone.cta')}
         </button>
       </form>

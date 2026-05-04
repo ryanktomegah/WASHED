@@ -11,7 +11,9 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
+import { CoreApiError } from '@washed/api-client';
 
+import { useBackend } from '../../backend/BackendContext.js';
 import { useSignup } from './SignupContext.js';
 
 const OTP_LENGTH = 6;
@@ -27,15 +29,18 @@ function maskPhone(phone: string): string {
 export function OtpX03(): ReactElement {
   const navigate = useNavigate();
   const signup = useSignup();
+  const backend = useBackend();
 
   useEffect(() => {
     if (signup.phone === '') navigate('/signup/phone', { replace: true });
   }, [signup.phone, navigate]);
 
   const phone = signup.phone;
+  const challengeId = signup.otpChallenge?.challengeId;
   const maskedPhone = useMemo(() => maskPhone(phone), [phone]);
   const [digits, setDigits] = useState<string[]>(() => Array<string>(OTP_LENGTH).fill(''));
   const [secondsRemaining, setSecondsRemaining] = useState(RESEND_SECONDS);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
   const cellRefs = useRef<(HTMLInputElement | null)[]>(
     Array<HTMLInputElement | null>(OTP_LENGTH).fill(null),
   );
@@ -56,10 +61,35 @@ export function OtpX03(): ReactElement {
 
   useEffect(() => {
     if (!allFilled) return;
-    // Verification stub — wire to API in next iteration.
-    const timeout = window.setTimeout(() => navigate('/signup/address'), 320);
-    return () => window.clearTimeout(timeout);
-  }, [allFilled, navigate]);
+
+    if (!backend.liveBackendEnabled || challengeId === undefined) {
+      const timeout = window.setTimeout(() => navigate('/signup/address'), 320);
+      return () => window.clearTimeout(timeout);
+    }
+
+    let cancelled = false;
+    setVerifyError(null);
+    void (async () => {
+      try {
+        await backend.auth.verifyOtp({ challengeId, code: digits.join('') });
+        if (cancelled) return;
+        navigate('/signup/address');
+      } catch (caught) {
+        if (cancelled) return;
+        const message =
+          caught instanceof CoreApiError && caught.status === 401
+            ? 'Code incorrect. Réessayez.'
+            : translate('error.network.body');
+        setVerifyError(message);
+        setDigits(Array<string>(OTP_LENGTH).fill(''));
+        cellRefs.current[0]?.focus();
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [allFilled, backend, challengeId, digits, navigate]);
 
   const focusCell = (index: number): void => {
     const target = cellRefs.current[index];
@@ -128,10 +158,19 @@ export function OtpX03(): ReactElement {
     }
   };
 
-  const onResend = (): void => {
+  const onResend = async (): Promise<void> => {
     setDigits(Array<string>(OTP_LENGTH).fill(''));
     setSecondsRemaining(RESEND_SECONDS);
+    setVerifyError(null);
     focusCell(0);
+
+    if (!backend.liveBackendEnabled || phone === '') return;
+    try {
+      const challenge = await backend.auth.startOtp(phone);
+      signup.setOtpChallenge(challenge);
+    } catch {
+      setVerifyError(translate('error.network.body'));
+    }
   };
 
   const onEditPhone = (): void => {
@@ -183,11 +222,23 @@ export function OtpX03(): ReactElement {
           {secondsRemaining > 0 ? (
             <>{translate('subscriber.signup.otp.resend', 'fr', { seconds: secondsRemaining })}</>
           ) : (
-            <button className="link" onClick={onResend} type="button">
+            <button
+              className="link"
+              onClick={() => {
+                void onResend();
+              }}
+              type="button"
+            >
               Renvoyer le code
             </button>
           )}
         </p>
+
+        {verifyError === null ? null : (
+          <p className="p-sm" role="alert" style={{ color: 'var(--danger)' }}>
+            {verifyError}
+          </p>
+        )}
 
         <div className="grow" />
 

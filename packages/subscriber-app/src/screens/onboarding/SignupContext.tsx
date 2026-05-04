@@ -8,6 +8,8 @@ import {
   type ReactNode,
 } from 'react';
 
+import type { OtpChallenge } from '@washed/auth';
+
 export type SignupTier = 'T1' | 'T2';
 export type SignupPaymentProvider = 'tmoney' | 'mixx' | 'flooz';
 
@@ -23,6 +25,7 @@ export interface SignupState {
   readonly tier: SignupTier | null;
   readonly paymentProvider: SignupPaymentProvider | null;
   readonly consentAccepted: boolean;
+  readonly otpChallenge: OtpChallenge | null;
 }
 
 export interface SignupContextValue extends SignupState {
@@ -31,6 +34,7 @@ export interface SignupContextValue extends SignupState {
   readonly setTier: (tier: SignupTier) => void;
   readonly setPaymentProvider: (provider: SignupPaymentProvider) => void;
   readonly setConsentAccepted: (accepted: boolean) => void;
+  readonly setOtpChallenge: (challenge: OtpChallenge | null) => void;
   readonly reset: () => void;
 }
 
@@ -44,6 +48,7 @@ const defaultSignupState: SignupState = {
   tier: null,
   paymentProvider: null,
   consentAccepted: false,
+  otpChallenge: null,
 };
 
 const SignupContext = createContext<SignupContextValue | null>(null);
@@ -84,6 +89,10 @@ export function SignupProvider({
     setState((current) => ({ ...current, consentAccepted }));
   }, []);
 
+  const setOtpChallenge = useCallback((otpChallenge: OtpChallenge | null) => {
+    setState((current) => ({ ...current, otpChallenge }));
+  }, []);
+
   const reset = useCallback(() => {
     setState(defaultSignupState);
   }, []);
@@ -96,9 +105,19 @@ export function SignupProvider({
       setTier,
       setPaymentProvider,
       setConsentAccepted,
+      setOtpChallenge,
       reset,
     }),
-    [state, setPhone, setAddress, setTier, setPaymentProvider, setConsentAccepted, reset],
+    [
+      state,
+      setPhone,
+      setAddress,
+      setTier,
+      setPaymentProvider,
+      setConsentAccepted,
+      setOtpChallenge,
+      reset,
+    ],
   );
 
   return <SignupContext.Provider value={value}>{children}</SignupContext.Provider>;
