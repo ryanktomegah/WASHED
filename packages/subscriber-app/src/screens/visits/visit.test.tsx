@@ -185,14 +185,18 @@ describe('Subscriber visit · X-15.S Issue', () => {
     expect(locationRef.current).toBe('/visit/issue/submitted');
   });
 
-  it('renders submitted confirmation and returns to the hub', () => {
+  it('renders submitted confirmation and routes to the created ticket or home', () => {
     const { locationRef } = renderAt('/visit/issue/submitted', <VisitIssueSubmittedX15S />);
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-15.S');
     expect(screen.getByRole('heading', { name: 'Signalement reçu.' })).toBeVisible();
     expect(screen.getByText('Ticket #0421 créé. Le bureau vous répond sous 4 h.')).toBeVisible();
 
+    fireEvent.click(screen.getByRole('button', { name: 'Voir mon ticket' }));
+    expect(locationRef.current).toBe('/support/tickets/0421');
+
+    const h = renderAt('/visit/issue/submitted', <VisitIssueSubmittedX15S />);
     fireEvent.click(screen.getByRole('button', { name: "Retour à l'accueil" }));
-    expect(locationRef.current).toBe('/hub');
+    expect(h.locationRef.current).toBe('/hub');
   });
 });

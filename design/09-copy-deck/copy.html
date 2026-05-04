@@ -411,7 +411,7 @@
       <!-- =================================================== -->
       <section class="section">
         <div class="num">01 · TABLE DES MATIÈRES</div>
-        <h2>358 chaînes · 3 apps</h2>
+        <h2>433 chaînes · 3 apps</h2>
         <div class="toc">
           <a href="#sub-on">Abonné · Onboarding<span class="ct">25</span></a>
           <a href="#sub-hub"
@@ -422,6 +422,7 @@
           >
           <a href="#sub-vis">Abonné · Cycle visite<span class="ct">31</span></a>
           <a href="#sub-pay">Abonné · Paiement<span class="ct">29</span></a>
+          <a href="#sub-support">Abonné · Aide &amp; états système<span class="ct">74</span></a>
           <a href="#wrk-on">Laveuse · Connexion<span class="ct">8</span></a>
           <a href="#wrk-tour">Laveuse · Tournée<span class="ct">11</span></a>
           <a href="#wrk-vis">Laveuse · Cycle visite<span class="ct">17</span></a>
@@ -2090,6 +2091,12 @@
               <td><span class="lim">70 ch</span></td>
             </tr>
             <tr>
+              <td><span class="key">subscriber.visit.support.submitted.ticket_cta</span></td>
+              <td><span class="fr body">Voir mon ticket</span></td>
+              <td><span class="ctx">X-15.S bouton vers ticket</span></td>
+              <td><span class="lim">22 ch</span></td>
+            </tr>
+            <tr>
               <td><span class="key">subscriber.visit.return_home.cta</span></td>
               <td><span class="fr body">Retour à l'accueil</span></td>
               <td><span class="ctx">X-15 / X-15.S bouton retour</span></td>
@@ -2359,6 +2366,508 @@
               <td><span class="fr">Vous êtes sûr ?</span></td>
               <td><span class="ctx">Confirm annulation. Sans point d'exclamation.</span></td>
               <td><span class="lim">22 ch</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- =================================================== -->
+      <!-- SUBSCRIBER · AIDE & ÉTATS SYSTÈME                   -->
+      <!-- =================================================== -->
+      <section class="section" id="sub-support">
+        <div class="num">
+          05B · ABONNÉ · AIDE &amp; ÉTATS SYSTÈME <span class="app-tag sub">SUBSCRIBER</span>
+        </div>
+        <h2>X-29 → X-35 · Support, tickets, hors-ligne, maintenance, mise à jour</h2>
+
+        <table class="deck">
+          <thead>
+            <tr>
+              <th style="width: 22%">Clé</th>
+              <th>Texte FR</th>
+              <th style="width: 25%">Contexte</th>
+              <th style="width: 80px">Limite</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="key">subscriber.support.help.eyebrow</span></td>
+              <td><span class="fr body">Aide</span></td>
+              <td><span class="ctx">X-29 mono — affiché en majuscules</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.help.title</span></td>
+              <td><span class="fr body">On vous écoute.</span></td>
+              <td><span class="ctx">X-29 titre</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.help.call.title</span></td>
+              <td><span class="fr body">Appeler le bureau</span></td>
+              <td><span class="ctx">X-29 carte téléphone</span></td>
+              <td><span class="lim">22 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.help.call.detail</span></td>
+              <td><span class="fr body">90 00 00 00 · lun-sam 7 h-19 h</span></td>
+              <td><span class="ctx">X-29 sous-ligne téléphone</span></td>
+              <td><span class="lim">42 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.help.write.cta</span></td>
+              <td><span class="fr body">Écrire au bureau</span></td>
+              <td><span class="ctx">X-29 CTA contact écrit</span></td>
+              <td><span class="lim">22 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.help.faq.eyebrow</span></td>
+              <td><span class="fr body">Questions fréquentes</span></td>
+              <td><span class="ctx">X-29 section FAQ</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.help.faq.cancel.question</span></td>
+              <td><span class="fr body">Comment annuler une visite ?</span></td>
+              <td><span class="ctx">X-29 FAQ</span></td>
+              <td><span class="lim">38 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.help.faq.cancel.answer</span></td>
+              <td>
+                <span class="fr body"
+                  >Depuis le détail de visite, choisissez Reporter. Le bureau confirme le nouveau
+                  créneau.</span
+                >
+              </td>
+              <td><span class="ctx">X-29 FAQ réponse</span></td>
+              <td><span class="lim">110 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.help.faq.missed.question</span></td>
+              <td><span class="fr body">Que faire si la laveuse ne vient pas ?</span></td>
+              <td><span class="ctx">X-29 FAQ</span></td>
+              <td><span class="lim">44 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.help.faq.missed.answer</span></td>
+              <td>
+                <span class="fr body"
+                  >Appelez le bureau. On vérifie la tournée et on vous rappelle.</span
+                >
+              </td>
+              <td><span class="ctx">X-29 FAQ réponse</span></td>
+              <td><span class="lim">90 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.help.faq.payment.question</span></td>
+              <td><span class="fr body">Comment changer de Mobile Money ?</span></td>
+              <td><span class="ctx">X-29 FAQ</span></td>
+              <td><span class="lim">40 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.help.faq.payment.answer</span></td>
+              <td>
+                <span class="fr body"
+                  >Dans Forfait, ouvrez Moyen de paiement puis enregistrez le nouveau numéro.</span
+                >
+              </td>
+              <td><span class="ctx">X-29 FAQ réponse</span></td>
+              <td><span class="lim">100 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.help.faq.damage.question</span></td>
+              <td><span class="fr body">Le linge a été abîmé. Que faire ?</span></td>
+              <td><span class="ctx">X-29 FAQ</span></td>
+              <td><span class="lim">42 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.help.faq.damage.answer</span></td>
+              <td>
+                <span class="fr body"
+                  >Signalez un souci depuis la visite. Ajoutez des photos si possible.</span
+                >
+              </td>
+              <td><span class="ctx">X-29 FAQ réponse</span></td>
+              <td><span class="lim">94 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.help.faq.worker.question</span></td>
+              <td><span class="fr body">Puis-je changer de laveuse ?</span></td>
+              <td><span class="ctx">X-29 FAQ</span></td>
+              <td><span class="lim">34 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.help.faq.worker.answer</span></td>
+              <td>
+                <span class="fr body"
+                  >Oui, le bureau examine la demande sans annuler votre prochaine visite.</span
+                >
+              </td>
+              <td><span class="ctx">X-29 FAQ réponse</span></td>
+              <td><span class="lim">96 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.help.tickets.cta</span></td>
+              <td><span class="fr body">Mes tickets · {openCount} ouvert</span></td>
+              <td><span class="ctx">X-29 bouton bas</span></td>
+              <td><span class="lim">34 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.contact.header</span></td>
+              <td><span class="fr body">Contacter le bureau</span></td>
+              <td><span class="ctx">X-30 header retour</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.contact.title</span></td>
+              <td><span class="fr body">De quoi voulez-vous parler ?</span></td>
+              <td><span class="ctx">X-30 titre</span></td>
+              <td><span class="lim">34 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.contact.category.visit</span></td>
+              <td><span class="fr body">Une visite · annulation, report, problème</span></td>
+              <td><span class="ctx">X-30 catégorie</span></td>
+              <td><span class="lim">48 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.contact.category.plan</span></td>
+              <td><span class="fr body">Mon abonnement · pause, changement, fin</span></td>
+              <td><span class="ctx">X-30 catégorie</span></td>
+              <td><span class="lim">48 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.contact.category.payment</span></td>
+              <td><span class="fr body">Paiement Mobile Money</span></td>
+              <td><span class="ctx">X-30 catégorie</span></td>
+              <td><span class="lim">28 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.contact.category.worker</span></td>
+              <td><span class="fr body">Ma laveuse · changement, retour, autre</span></td>
+              <td><span class="ctx">X-30 catégorie</span></td>
+              <td><span class="lim">48 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.contact.category.other</span></td>
+              <td><span class="fr body">Autre</span></td>
+              <td><span class="ctx">X-30 catégorie</span></td>
+              <td><span class="lim">10 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.contact.message.label</span></td>
+              <td><span class="fr body">Votre message</span></td>
+              <td><span class="ctx">X-30 champ</span></td>
+              <td><span class="lim">18 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.contact.message.placeholder</span></td>
+              <td><span class="fr body">Décrivez en quelques mots…</span></td>
+              <td><span class="ctx">X-30 placeholder</span></td>
+              <td><span class="lim">32 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.contact.submit.cta</span></td>
+              <td><span class="fr body">Envoyer au bureau</span></td>
+              <td><span class="ctx">X-30 bouton bas</span></td>
+              <td><span class="lim">22 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.contact.submitted.title</span></td>
+              <td><span class="fr body">Message envoyé.</span></td>
+              <td><span class="ctx">X-30.S titre</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.contact.submitted.body</span></td>
+              <td>
+                <span class="fr body"
+                  >Ticket #{ticketId} créé. Le bureau vous répond sous 4 h.</span
+                >
+              </td>
+              <td><span class="ctx">X-30.S body</span></td>
+              <td><span class="lim">80 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.contact.submitted.card_eyebrow</span></td>
+              <td><span class="fr body">Votre demande · #{ticketId}</span></td>
+              <td><span class="ctx">X-30.S carte</span></td>
+              <td><span class="lim">32 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.contact.submitted.card_status</span></td>
+              <td><span class="fr body">Ouvert · réponse sous 4 h</span></td>
+              <td><span class="ctx">X-30.S carte status</span></td>
+              <td><span class="lim">32 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.contact.submitted.tickets_cta</span></td>
+              <td><span class="fr body">Voir mes tickets</span></td>
+              <td><span class="ctx">X-30.S bouton principal</span></td>
+              <td><span class="lim">22 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.contact.submitted.home_cta</span></td>
+              <td><span class="fr body">Retour à l'accueil</span></td>
+              <td><span class="ctx">X-30.S bouton secondaire</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.tickets.header</span></td>
+              <td><span class="fr body">Mes tickets</span></td>
+              <td><span class="ctx">X-31 header retour</span></td>
+              <td><span class="lim">18 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.tickets.title</span></td>
+              <td><span class="fr body">Vos demandes.</span></td>
+              <td><span class="ctx">X-31 titre</span></td>
+              <td><span class="lim">18 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.tickets.status.open</span></td>
+              <td><span class="fr body">#{ticketId} · OUVERT</span></td>
+              <td><span class="ctx">X-31 ticket actif</span></td>
+              <td><span class="lim">22 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.tickets.status.resolved</span></td>
+              <td><span class="fr body">#{ticketId} · RÉSOLU</span></td>
+              <td><span class="ctx">X-31 ticket résolu</span></td>
+              <td><span class="lim">22 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.tickets.open.progress</span></td>
+              <td><span class="fr body">{agentName} enquête · réponse sous 4 h</span></td>
+              <td><span class="ctx">X-31 progression bureau</span></td>
+              <td><span class="lim">48 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.tickets.open_request.cta</span></td>
+              <td><span class="fr body">Ouvrir une demande</span></td>
+              <td><span class="ctx">X-31 bouton bas</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.tickets.empty.title</span></td>
+              <td><span class="fr body">Aucune demande.</span></td>
+              <td><span class="ctx">X-31 état vide</span></td>
+              <td><span class="lim">22 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.tickets.empty.body</span></td>
+              <td><span class="fr body">Vos messages au bureau apparaîtront ici.</span></td>
+              <td><span class="ctx">X-31 état vide body</span></td>
+              <td><span class="lim">60 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.ticket.detail.header</span></td>
+              <td><span class="fr body">Ticket #{ticketId}</span></td>
+              <td><span class="ctx">X-32 header retour</span></td>
+              <td><span class="lim">18 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.ticket.detail.status.open</span></td>
+              <td><span class="fr body">En cours</span></td>
+              <td><span class="ctx">X-32 statut</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.ticket.detail.status.resolved</span></td>
+              <td><span class="fr body">Résolu</span></td>
+              <td><span class="ctx">X-32 statut</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.ticket.detail.user_label</span></td>
+              <td><span class="fr body">Vous · {timeAgo}</span></td>
+              <td><span class="ctx">X-32 message abonné</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.ticket.detail.office_label</span></td>
+              <td><span class="fr body">Bureau · {timeAgo}</span></td>
+              <td><span class="ctx">X-32 message bureau</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.ticket.detail.reply.label</span></td>
+              <td><span class="fr body">Répondre</span></td>
+              <td><span class="ctx">X-32 champ réponse label</span></td>
+              <td><span class="lim">14 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.ticket.detail.reply.placeholder</span></td>
+              <td><span class="fr body">Répondre…</span></td>
+              <td><span class="ctx">X-32 placeholder</span></td>
+              <td><span class="lim">16 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.ticket.detail.reply.cta</span></td>
+              <td><span class="fr body">Envoyer</span></td>
+              <td><span class="ctx">X-32 bouton réponse</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.ticket.detail.photo.pull</span></td>
+              <td><span class="fr body">Pull · 1</span></td>
+              <td><span class="ctx">X-32 pièce jointe</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.ticket.detail.photo.shirts</span></td>
+              <td><span class="fr body">Chemises · 2</span></td>
+              <td><span class="ctx">X-32 pièce jointe</span></td>
+              <td><span class="lim">16 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.ticket.detail.not_found.title</span></td>
+              <td><span class="fr body">Ticket introuvable.</span></td>
+              <td><span class="ctx">X-32 stale link</span></td>
+              <td><span class="lim">26 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.ticket.detail.not_found.body</span></td>
+              <td><span class="fr body">Cette demande n'est pas liée à votre compte.</span></td>
+              <td><span class="ctx">X-32 stale link body</span></td>
+              <td><span class="lim">70 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.ticket.detail.not_found.cta</span></td>
+              <td><span class="fr body">Voir mes tickets</span></td>
+              <td><span class="ctx">X-32 stale link CTA</span></td>
+              <td><span class="lim">22 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.system.offline.greeting</span></td>
+              <td><span class="fr body">Bonjour {name}</span></td>
+              <td><span class="ctx">X-33 header</span></td>
+              <td><span class="lim">22 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.system.offline.status</span></td>
+              <td><span class="fr body">Hors ligne · dernière MAJ {time}</span></td>
+              <td><span class="ctx">X-33 ribbon</span></td>
+              <td><span class="lim">38 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.system.offline.next_visit</span></td>
+              <td><span class="fr body">Prochaine visite</span></td>
+              <td><span class="ctx">X-33 section</span></td>
+              <td><span class="lim">22 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.system.offline.worker_hidden</span></td>
+              <td><span class="fr body">infos cachées localement</span></td>
+              <td><span class="ctx">X-33 worker card</span></td>
+              <td><span class="lim">32 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.system.offline.retry_hint</span></td>
+              <td><span class="fr body">On vérifie le réseau toutes les 30 secondes.</span></td>
+              <td><span class="ctx">X-33 note</span></td>
+              <td><span class="lim">60 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.system.offline.retry_cta</span></td>
+              <td><span class="fr body">Réessayer</span></td>
+              <td><span class="ctx">X-33 bouton bas</span></td>
+              <td><span class="lim">14 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.system.maintenance.title</span></td>
+              <td><span class="fr body">Maintenance en cours.</span></td>
+              <td><span class="ctx">X-34 titre</span></td>
+              <td><span class="lim">28 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.system.maintenance.body</span></td>
+              <td>
+                <span class="fr body"
+                  >On améliore quelque chose pour vous. L'app revient dans {minutes} minutes
+                  environ.</span
+                >
+              </td>
+              <td><span class="ctx">X-34 body</span></td>
+              <td><span class="lim">96 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.system.maintenance.next_visit</span></td>
+              <td><span class="fr body">Votre prochaine visite</span></td>
+              <td><span class="ctx">X-34 carte</span></td>
+              <td><span class="lim">28 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.system.maintenance.next_visit_line</span></td>
+              <td><span class="fr body">{date} · {time} · {name}</span></td>
+              <td><span class="ctx">X-34 visite maintenue</span></td>
+              <td><span class="lim">42 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.system.maintenance.no_impact</span></td>
+              <td><span class="fr body">Maintenue · pas d'impact.</span></td>
+              <td><span class="ctx">X-34 sous-ligne</span></td>
+              <td><span class="lim">34 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.system.maintenance.emergency</span></td>
+              <td><span class="fr body">En cas d'urgence, appelez le bureau au {phone}.</span></td>
+              <td><span class="ctx">X-34 emergency</span></td>
+              <td><span class="lim">70 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.system.update.title_prefix</span></td>
+              <td><span class="fr body">Une nouvelle version</span></td>
+              <td><span class="ctx">X-35 titre emphase</span></td>
+              <td><span class="lim">28 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.system.update.title_suffix</span></td>
+              <td><span class="fr body">est disponible.</span></td>
+              <td><span class="ctx">X-35 titre suite</span></td>
+              <td><span class="lim">20 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.system.update.body</span></td>
+              <td>
+                <span class="fr body"
+                  >Mises à jour de sécurité importantes. La version actuelle ne fonctionne plus à
+                  partir d'aujourd'hui.</span
+                >
+              </td>
+              <td><span class="ctx">X-35 body</span></td>
+              <td><span class="lim">120 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.system.update.whats_new</span></td>
+              <td><span class="fr body">Quoi de neuf</span></td>
+              <td><span class="ctx">X-35 carte</span></td>
+              <td><span class="lim">16 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.system.update.item.reveal</span></td>
+              <td><span class="fr body">Reveal photos plus rapide</span></td>
+              <td><span class="ctx">X-35 bullet</span></td>
+              <td><span class="lim">32 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.system.update.item.tracking</span></td>
+              <td><span class="fr body">Meilleur suivi en route</span></td>
+              <td><span class="ctx">X-35 bullet</span></td>
+              <td><span class="lim">32 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.system.update.item.security</span></td>
+              <td><span class="fr body">Correctifs de sécurité</span></td>
+              <td><span class="ctx">X-35 bullet</span></td>
+              <td><span class="lim">32 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.system.update.cta</span></td>
+              <td><span class="fr body">Mettre à jour</span></td>
+              <td><span class="ctx">X-35 bouton bas</span></td>
+              <td><span class="lim">18 ch</span></td>
             </tr>
           </tbody>
         </table>

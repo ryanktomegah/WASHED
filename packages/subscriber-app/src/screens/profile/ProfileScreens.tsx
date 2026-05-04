@@ -66,7 +66,11 @@ export function ProfileX24(): ReactElement {
 
         <div className="profile-grow" />
 
-        <button className="profile-button ghost full" type="button">
+        <button
+          className="profile-button ghost full"
+          onClick={() => navigate('/support')}
+          type="button"
+        >
           {translate('subscriber.profile.cta_support')}
         </button>
         <button className="profile-button danger-outline full" type="button">

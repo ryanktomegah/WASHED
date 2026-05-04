@@ -24,6 +24,14 @@ const screenRoutes = [
   ['x-26-profile-notifications', '/#/profile/notifications', 'X-26'],
   ['x-27-profile-privacy', '/#/profile/privacy', 'X-27'],
   ['x-28-profile-delete', '/#/profile/delete', 'X-28'],
+  ['x-29-support-help', '/#/support', 'X-29'],
+  ['x-30-support-contact', '/#/support/contact', 'X-30'],
+  ['x-30s-support-contact-submitted', '/#/support/contact/submitted', 'X-30.S'],
+  ['x-31-support-tickets', '/#/support/tickets', 'X-31'],
+  ['x-32-support-ticket-detail', '/#/support/tickets/0421', 'X-32'],
+  ['x-33-offline', '/#/offline', 'X-33'],
+  ['x-34-maintenance', '/#/maintenance', 'X-34'],
+  ['x-35-update-required', '/#/update-required', 'X-35'],
 ] as const;
 
 test.describe('Subscriber implemented hub, visit, relationship, forfait, and profile flows through X-28', () => {
@@ -194,6 +202,45 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
         await expect(page.getByRole('button', { name: 'Supprimer définitivement' })).toBeDisabled();
       }
 
+      if (screenId === 'X-29') {
+        await expect(page.getByRole('heading', { name: 'On vous écoute.' })).toBeVisible();
+      }
+
+      if (screenId === 'X-30') {
+        await expect(
+          page.getByRole('heading', { name: 'De quoi voulez-vous parler ?' }),
+        ).toBeVisible();
+      }
+
+      if (screenId === 'X-30.S') {
+        await expect(page.getByRole('heading', { name: 'Message envoyé.' })).toBeVisible();
+      }
+
+      if (screenId === 'X-31') {
+        await expect(page.getByRole('heading', { name: 'Vos demandes.' })).toBeVisible();
+      }
+
+      if (screenId === 'X-32') {
+        // Demo ticket #0421 — the heading is the ticket title from the deck.
+        // Use a relaxed match since the deck title may evolve.
+        await expect(page.locator('[data-screen-id="X-32"]')).toBeVisible();
+        await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+      }
+
+      if (screenId === 'X-33') {
+        await expect(page.locator('[data-screen-id="X-33"]')).toBeVisible();
+      }
+
+      if (screenId === 'X-34') {
+        await expect(
+          page.getByRole('heading', { name: 'Maintenance en cours.' }),
+        ).toBeVisible();
+      }
+
+      if (screenId === 'X-35') {
+        await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+      }
+
       const screenshotPath = testInfo.outputPath(`${slug}-${testInfo.project.name}.png`);
       await page.screenshot({ fullPage: true, path: screenshotPath });
       await testInfo.attach(`${slug}-${testInfo.project.name}`, {
@@ -222,14 +269,16 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
     await expect(page.locator('[data-screen-id="X-17"]')).toBeVisible();
   });
 
-  test('X-10 worker card routes to X-18 worker profile', async ({ page }) => {
+  test('X-10 worker card routes to X-18 worker profile and back', async ({ page }) => {
     await page.goto('/#/hub');
 
     await page.getByRole('button', { name: 'Akouvi K.' }).click();
     await expect(page).toHaveURL(/#\/worker\/akouvi/u);
     await expect(page.locator('[data-screen-id="X-18"]')).toBeVisible();
 
-    await page.getByRole('button', { name: 'Accueil' }).click();
+    // X-18 is a sub-screen with a Retour back header (post useSafeBack
+    // refactor) — not a tab with bottom nav.
+    await page.getByRole('button', { name: 'Retour' }).click();
     await expect(page).toHaveURL(/#\/hub/u);
     await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
   });
@@ -254,10 +303,16 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
   });
 
   test('X-17 routes back to history and to issue reporting', async ({ page }) => {
-    await page.goto('/#/history/visit-2026-04-28');
+    // X-17 is a sub-screen — it uses a Retour back header (useSafeBack
+    // falls back to /history when there's no in-app history). Reach it
+    // through X-16 so the back stack includes the history list.
+    await page.goto('/#/history');
+    await page.getByRole('button', { name: /28 avr · 9 h 02/u }).click();
+    await expect(page).toHaveURL(/#\/history\/visit-2026-04-28/u);
+    await expect(page.locator('[data-screen-id="X-17"]')).toBeVisible();
 
-    await page.getByRole('button', { name: 'Visites' }).click();
-    await expect(page).toHaveURL(/#\/history/u);
+    await page.getByRole('button', { name: 'Retour' }).click();
+    await expect(page).toHaveURL(/#\/history$/u);
     await expect(page.locator('[data-screen-id="X-16"]')).toBeVisible();
 
     await page.goto('/#/history/visit-2026-04-28');
@@ -392,6 +447,53 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
     await page.getByRole('button', { name: 'Reprendre maintenant' }).click();
     await expect(page).toHaveURL(/#\/plan$/u);
     await expect(page.locator('[data-screen-id="X-19"]')).toBeVisible();
+  });
+
+  test('Support flow · profile → help → contact form → submitted; help → tickets list → ticket detail', async ({
+    page,
+  }) => {
+    await page.goto('/#/profile');
+    await page.getByRole('button', { name: 'Aide & support' }).click();
+    await expect(page).toHaveURL(/#\/support$/u);
+    await expect(page.locator('[data-screen-id="X-29"]')).toBeVisible();
+
+    // Contact form path.
+    await page.getByRole('button', { name: 'Écrire au bureau' }).click();
+    await expect(page).toHaveURL(/#\/support\/contact$/u);
+    await expect(page.locator('[data-screen-id="X-30"]')).toBeVisible();
+
+    // Submit is disabled until message + category are valid.
+    const submit = page.getByRole('button', { name: 'Envoyer au bureau' });
+    await expect(submit).toBeDisabled();
+
+    // Label is rendered uppercased in CSS but textarea aria-label resolves
+    // through `htmlFor`/`id`; use a case-insensitive match to be safe.
+    await page.getByLabel(/votre message/iu).fill('Test message');
+    await expect(submit).toBeEnabled();
+    await submit.click();
+
+    await expect(page).toHaveURL(/#\/support\/contact\/submitted$/u);
+    await expect(page.locator('[data-screen-id="X-30.S"]')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Message envoyé.' })).toBeVisible();
+
+    // From submitted, navigate to tickets list.
+    await page.getByRole('button', { name: 'Voir mes tickets' }).click();
+    await expect(page).toHaveURL(/#\/support\/tickets$/u);
+    await expect(page.locator('[data-screen-id="X-31"]')).toBeVisible();
+  });
+
+  test('System screens · X-33 offline, X-34 maintenance, X-35 update-required render via deep link', async ({
+    page,
+  }) => {
+    await page.goto('/#/offline');
+    await expect(page.locator('[data-screen-id="X-33"]')).toBeVisible();
+
+    await page.goto('/#/maintenance');
+    await expect(page.locator('[data-screen-id="X-34"]')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Maintenance en cours.' })).toBeVisible();
+
+    await page.goto('/#/update-required');
+    await expect(page.locator('[data-screen-id="X-35"]')).toBeVisible();
   });
 });
 

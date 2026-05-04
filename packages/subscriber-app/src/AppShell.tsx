@@ -32,6 +32,16 @@ import {
   ProfileX24,
 } from './screens/profile/ProfileScreens.js';
 import {
+  ContactBureauX30,
+  ContactSubmittedX30S,
+  HelpCenterX29,
+  MaintenanceX34,
+  OfflineX33,
+  TicketDetailX32,
+  TicketsX31,
+  UpdateRequiredX35,
+} from './screens/support/SupportScreens.js';
+import {
   WorkerChangeSubmittedX18C,
   WorkerChangeX18C,
   WorkerProfileX18,
@@ -52,6 +62,7 @@ import './screens/hub/hub.css';
 import './screens/history/history.css';
 import './screens/plan/plan.css';
 import './screens/profile/profile.css';
+import './screens/support/support.css';
 import './screens/worker-profile/workerProfile.css';
 import './screens/visits/visit.css';
 
@@ -86,6 +97,14 @@ export function AppShell(): ReactElement {
             <Route element={<NotificationsX26 />} path="/profile/notifications" />
             <Route element={<PrivacyX27 />} path="/profile/privacy" />
             <Route element={<DeleteAccountX28 />} path="/profile/delete" />
+            <Route element={<HelpCenterX29 />} path="/support" />
+            <Route element={<ContactBureauX30 />} path="/support/contact" />
+            <Route element={<ContactSubmittedX30S />} path="/support/contact/submitted" />
+            <Route element={<TicketsX31 />} path="/support/tickets" />
+            <Route element={<TicketDetailX32 />} path="/support/tickets/:ticketId" />
+            <Route element={<OfflineX33 />} path="/offline" />
+            <Route element={<MaintenanceX34 />} path="/maintenance" />
+            <Route element={<UpdateRequiredX35 />} path="/update-required" />
             <Route element={<WorkerProfileX18 />} path="/worker/:workerId" />
             <Route element={<WorkerChangeX18C />} path="/worker/:workerId/change" />
             <Route

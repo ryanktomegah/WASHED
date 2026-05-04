@@ -62,7 +62,7 @@ describe('Subscriber profile · X-24', () => {
     expect(screen.getByRole('button', { name: 'Profil' })).toHaveAttribute('aria-current', 'page');
   });
 
-  it('routes Adresse, Notifications, and Vie privée to their screens', () => {
+  it('routes Adresse, Notifications, Vie privée, and Aide to their screens', () => {
     const a = renderAt('/profile', <ProfileX24 />);
     fireEvent.click(screen.getByRole('button', { name: /Adresse/u }));
     expect(a.locationRef.current).toBe('/profile/address');
@@ -74,6 +74,10 @@ describe('Subscriber profile · X-24', () => {
     const p = renderAt('/profile', <ProfileX24 />);
     fireEvent.click(screen.getByRole('button', { name: /Vie privée/u }));
     expect(p.locationRef.current).toBe('/profile/privacy');
+
+    const s = renderAt('/profile', <ProfileX24 />);
+    fireEvent.click(screen.getByRole('button', { name: 'Aide & support' }));
+    expect(s.locationRef.current).toBe('/support');
   });
 });
 

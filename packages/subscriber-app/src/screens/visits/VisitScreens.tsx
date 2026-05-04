@@ -387,6 +387,13 @@ export function VisitIssueSubmittedX15S(): ReactElement {
           {translate('subscriber.visit.support.submitted.body')}
         </p>
         <div className="visit-grow" />
+        <button
+          className="visit-button primary full"
+          onClick={() => navigate('/support/tickets/0421')}
+          type="button"
+        >
+          {translate('subscriber.visit.support.submitted.ticket_cta')}
+        </button>
         <button className="visit-button ghost full" onClick={() => navigate('/hub')} type="button">
           {translate('subscriber.visit.return_home.cta')}
         </button>
