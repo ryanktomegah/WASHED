@@ -1,0 +1,462 @@
+/* ============================================================
+   X-19 Forfait + X-19.U upgrade + X-19.R paused +
+   X-22 pause confirm + X-22.A pause submitted
+   Locked to design/05-subscriber/subscriber.html:642-783, 1224-1345.
+   Reuses .hub-nav from hub.css for the bottom nav.
+   ============================================================ */
+
+.plan-screen {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--ink);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.plan-screen *,
+.plan-screen *::before,
+.plan-screen *::after {
+  box-sizing: border-box;
+}
+
+.plan-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px 20px 8px;
+}
+
+.plan-body-flow {
+  gap: 10px;
+}
+
+.plan-body-success {
+  align-items: center;
+  text-align: center;
+}
+
+.plan-grow {
+  flex: 1;
+  min-height: 8px;
+}
+
+.plan-header,
+.plan-back-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plan-back {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 28px;
+  line-height: 1;
+  padding: 0;
+}
+
+.plan-back:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.plan-eyebrow {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.plan-eyebrow.accent {
+  color: var(--primary);
+}
+
+.plan-eyebrow.accent-warn {
+  color: var(--accent, var(--primary));
+}
+
+.plan-section-eyebrow {
+  margin: 4px 0 0;
+}
+
+.plan-title {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.1;
+}
+
+.plan-title-accent {
+  color: var(--primary);
+  font-style: italic;
+}
+
+.plan-pause-accent {
+  color: var(--accent, var(--primary));
+  font-style: italic;
+}
+
+.plan-copy {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Active forfait card — dark/ink background per design contract. */
+.plan-active-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--ink);
+  color: var(--surface);
+  padding: 14px;
+}
+
+.plan-active-card-eyebrow {
+  color: rgba(250, 250, 247, 0.6);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  line-height: 1.25;
+}
+
+.plan-active-card-tier {
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.plan-active-card-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+
+.plan-active-card-row-label {
+  color: rgba(250, 250, 247, 0.6);
+  font-size: 11px;
+}
+
+.plan-active-card-row-value {
+  color: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+/* Next visit mini card — surface background, avatar + summary + sub. */
+.plan-next-visit-card {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  padding: 10px 12px;
+}
+
+.plan-next-visit-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.plan-next-visit-meta strong {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.plan-next-visit-meta span {
+  color: var(--ink-3);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.plan-avatar {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.plan-avatar-lg {
+  width: 36px;
+  height: 36px;
+  font-size: 11px;
+}
+
+/* Two-button row shared with X-19. */
+.plan-row2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.plan-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-min);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 12px 14px;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    background-color var(--d-fast) var(--ease-standard),
+    transform var(--d-fast) var(--ease-standard);
+}
+
+.plan-button:active {
+  transform: scale(0.98);
+}
+
+.plan-button.primary {
+  background: var(--primary);
+  color: white;
+}
+
+.plan-button.ghost {
+  border-color: var(--ink);
+  background: transparent;
+  color: var(--ink);
+}
+
+.plan-button.ink {
+  background: var(--ink);
+  color: white;
+}
+
+.plan-button.danger {
+  background: var(--danger, #c4622d);
+  color: white;
+}
+
+.plan-button.full {
+  width: 100%;
+}
+
+.plan-button.lg {
+  font-size: 14px;
+  padding: 14px 18px;
+}
+
+.plan-button-sm {
+  font-size: 12px;
+  padding: 10px 12px;
+}
+
+/* Cream highlight card — used in upgrade compare, paused worker, success
+   confirmations. Mirrors the .hub-streak-card styling. */
+.plan-cream-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line));
+  border-radius: 14px;
+  background: var(--primary-soft);
+  padding: 12px 14px;
+}
+
+.plan-cream-body {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Warn card — accent background for the pause-flow risk callouts. */
+.plan-warn-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid color-mix(in srgb, var(--accent, var(--primary)) 24%, var(--line));
+  border-radius: 14px;
+  background: var(--accent-soft, color-mix(in srgb, var(--accent, var(--primary)) 16%, white 84%));
+  padding: 10px 12px;
+}
+
+.plan-paused-headline {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.plan-paused-since {
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.plan-paused-worker {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.plan-paused-worker-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.plan-paused-worker-meta strong {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.plan-paused-worker-meta span {
+  color: var(--ink-3);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.plan-list-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  padding: 10px 12px;
+}
+
+.plan-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding-left: 16px;
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.plan-deadline-body {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Upgrade compare rows. */
+.plan-compare-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: 13px;
+}
+
+.plan-compare-current {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  text-decoration: line-through;
+}
+
+.plan-compare-new {
+  color: var(--primary);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.plan-compare-divider {
+  height: 1px;
+  background: color-mix(in srgb, var(--primary) 22%, transparent);
+  margin: 6px 0;
+}
+
+.plan-compare-row-savings {
+  font-size: 11px;
+}
+
+.plan-compare-savings {
+  color: var(--success, #2c7a4b);
+  font-family: var(--font-mono);
+}
+
+/* Success state — X-22.A. */
+.plan-success-title {
+  font-size: 28px;
+}
+
+.plan-success-copy {
+  max-width: 90%;
+  text-align: center;
+}
+
+.plan-success-card {
+  width: 100%;
+  text-align: left;
+}
+
+.plan-pause-glyph {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--accent-soft, color-mix(in srgb, var(--accent, var(--primary)) 18%, white 82%));
+  color: var(--accent, var(--primary));
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 14px;
+}
+
+@media (max-height: 700px) {
+  .plan-body {
+    gap: 9px;
+    padding-top: 18px;
+  }
+
+  .plan-title {
+    font-size: 24px;
+  }
+}

@@ -14,6 +14,11 @@ const screenRoutes = [
   ['x-18-worker-profile', '/#/worker/akouvi', 'X-18'],
   ['x-18c-worker-change', '/#/worker/akouvi/change', 'X-18.C'],
   ['x-18c-worker-change-submitted', '/#/worker/akouvi/change/submitted', 'X-18.C.S'],
+  ['x-19-plan', '/#/plan', 'X-19'],
+  ['x-19u-plan-upgrade', '/#/plan/upgrade', 'X-19.U'],
+  ['x-19r-plan-paused', '/#/plan/paused', 'X-19.R'],
+  ['x-22-plan-pause', '/#/plan/pause', 'X-22'],
+  ['x-22a-plan-pause-submitted', '/#/plan/pause/submitted', 'X-22.A'],
 ] as const;
 
 test.describe('Subscriber hub, visit, and relationship flows X-10 → X-18.C', () => {
@@ -97,6 +102,48 @@ test.describe('Subscriber hub, visit, and relationship flows X-10 → X-18.C', (
         await expect(
           page.getByText(/La prochaine visite reste maintenue avec Akouvi/u),
         ).toBeVisible();
+      }
+
+      if (screenId === 'X-19') {
+        await expect(page.getByText('Votre forfait')).toBeVisible();
+        await expect(
+          page.getByRole('heading', { name: /Compte bon jusqu'au 31 mai/u }),
+        ).toBeVisible();
+        await expect(page.getByText(/Une visite · 2\s500\s+XOF \/ mois/u)).toBeVisible();
+        await expect(page.getByText('Mardi 5 mai · 9 h 00')).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Forfait' })).toHaveAttribute(
+          'aria-current',
+          'page',
+        );
+      }
+
+      if (screenId === 'X-19.U') {
+        await expect(page.getByRole('heading', { name: 'Deux visites par mois.' })).toBeVisible();
+        await expect(page.getByText('Ce qui change')).toBeVisible();
+        await expect(
+          page.getByRole('button', { name: /Confirmer · 4\s500\s+XOF \/ mois/u }),
+        ).toBeVisible();
+      }
+
+      if (screenId === 'X-19.R') {
+        await expect(page.getByText('FORFAIT EN PAUSE')).toBeVisible();
+        await expect(
+          page.getByRole('heading', { name: 'Tout est prêt à reprendre.' }),
+        ).toBeVisible();
+        await expect(page.getByText('Akouvi K. vous attend.')).toBeVisible();
+        await expect(page.getByText(/14 août/u)).toBeVisible();
+      }
+
+      if (screenId === 'X-22') {
+        await expect(page.getByRole('heading', { name: 'Vous êtes sûre ?' })).toBeVisible();
+        await expect(page.getByText('Ce qui va arriver')).toBeVisible();
+        await expect(page.getByText("Si c'est une question de prix")).toBeVisible();
+      }
+
+      if (screenId === 'X-22.A') {
+        await expect(page.getByRole('heading', { name: /Pause/u })).toBeVisible();
+        await expect(page.getByText('Ce qui change maintenant')).toBeVisible();
+        await expect(page.getByText('Rappel · délai max')).toBeVisible();
       }
 
       const screenshotPath = testInfo.outputPath(`${slug}-${testInfo.project.name}.png`);
@@ -221,6 +268,41 @@ test.describe('Subscriber hub, visit, and relationship flows X-10 → X-18.C', (
     await page.getByRole('button', { name: "Fermer l'app sereinement" }).click();
     await expect(page).toHaveURL(/#\/hub/u);
     await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
+  });
+
+  test('Forfait flow · hub → plan → upgrade → keep, plan → pause → submitted → paused → resume', async ({
+    page,
+  }) => {
+    await page.goto('/#/hub');
+
+    // Open the plan tab from the hub bottom nav.
+    await page.getByRole('button', { name: 'Forfait' }).click();
+    await expect(page).toHaveURL(/#\/plan$/u);
+    await expect(page.locator('[data-screen-id="X-19"]')).toBeVisible();
+
+    // Upgrade flow.
+    await page.getByRole('button', { name: 'Passer à 2 visites' }).click();
+    await expect(page).toHaveURL(/#\/plan\/upgrade/u);
+    await expect(page.locator('[data-screen-id="X-19.U"]')).toBeVisible();
+    await page.getByRole('button', { name: 'Garder mon forfait' }).click();
+    await expect(page).toHaveURL(/#\/plan$/u);
+
+    // Pause flow.
+    await page.getByRole('button', { name: 'Mettre en pause' }).click();
+    await expect(page).toHaveURL(/#\/plan\/pause$/u);
+    await expect(page.locator('[data-screen-id="X-22"]')).toBeVisible();
+    await page.locator('button.plan-button.danger').click();
+    await expect(page).toHaveURL(/#\/plan\/pause\/submitted/u);
+    await expect(page.locator('[data-screen-id="X-22.A"]')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Compris' }).click();
+    await expect(page).toHaveURL(/#\/plan\/paused/u);
+    await expect(page.locator('[data-screen-id="X-19.R"]')).toBeVisible();
+
+    // Resume returns to active plan.
+    await page.getByRole('button', { name: 'Reprendre maintenant' }).click();
+    await expect(page).toHaveURL(/#\/plan$/u);
+    await expect(page.locator('[data-screen-id="X-19"]')).toBeVisible();
   });
 });
 

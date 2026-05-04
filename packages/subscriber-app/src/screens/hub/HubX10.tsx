@@ -141,7 +141,7 @@ export function HubX10(): ReactElement {
             <span aria-hidden="true" className="hub-nav-glyph" />
             {translate('subscriber.dashboard.tab.visits')}
           </button>
-          <button className="hub-nav-item" type="button" disabled>
+          <button className="hub-nav-item" onClick={() => navigate('/plan')} type="button">
             <span aria-hidden="true" className="hub-nav-glyph" />
             {translate('subscriber.dashboard.tab.plan')}
           </button>

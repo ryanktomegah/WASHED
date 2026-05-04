@@ -93,7 +93,7 @@
   <div class="crumb"><a href="../index.html">← Index</a> · 09 Copy Deck FR</div>
 
   <h1>Copy deck — <em>français</em></h1>
-  <p class="lede">Toutes les chaînes des trois applications, classées par app et surface. Chaque entrée a une clé i18n, un contexte d'usage, une limite de caractères, et le texte FR validé. Vocabulaire approuvé, vocabulaire interdit. Source de vérité pour <code style="font-family:var(--font-mono);font-size:13px;background:var(--bg-deep);padding:1px 5px;border-radius:3px">packages/i18n/fr.json</code>.</p>
+  <p class="lede">Toutes les chaînes des trois applications, classées par app et surface. Chaque entrée a une clé i18n, un contexte d'usage, une limite de caractères, et le texte FR validé. Vocabulaire approuvé, vocabulaire interdit. Source de vérité pour <code style="font-family:var(--font-mono);font-size:13px;background:var(--bg-deep);padding:1px 5px;border-radius:3px">packages/i18n/src/fr.json</code>.</p>
 
   <div class="annot"><b>Comment lire ce document</b>Les clés i18n suivent un schéma <code style="font-family:var(--font-mono)">scope.surface.element</code>. Exemple : <code style="font-family:var(--font-mono)">subscriber.dashboard.next_visit_label</code>. Les variables sont en {accolades}. Pluralisation gérée via ICU MessageFormat. Limites de caractères = visuel + accessibilité (200% dynamic type). Si vous dépassez, le design refuse la chaîne.</div>
 
@@ -169,17 +169,15 @@
   <!-- =================================================== -->
   <section class="section">
     <div class="num">01 · TABLE DES MATIÈRES</div>
-    <h2>147 chaînes · 3 apps</h2>
+    <h2>230 chaînes · 3 apps</h2>
     <div class="toc">
-      <a href="#sub-on">Abonné · Onboarding<span class="ct">21</span></a>
-      <a href="#sub-hub">Abonné · Hub<span class="ct">14</span></a>
-      <a href="#sub-vis">Abonné · Cycle visite<span class="ct">12</span></a>
+      <a href="#sub-on">Abonné · Onboarding<span class="ct">25</span></a>
+      <a href="#sub-hub">Abonné · Hub, tour, historique, profil laveuse<span class="ct">80</span></a>
+      <a href="#sub-vis">Abonné · Cycle visite<span class="ct">31</span></a>
       <a href="#sub-pay">Abonné · Paiement<span class="ct">10</span></a>
-      <a href="#sub-sub">Abonné · Abonnement<span class="ct">8</span></a>
-      <a href="#sub-spt">Abonné · Support<span class="ct">7</span></a>
       <a href="#wrk-on">Laveuse · Connexion<span class="ct">8</span></a>
       <a href="#wrk-tour">Laveuse · Tournée<span class="ct">11</span></a>
-      <a href="#wrk-vis">Laveuse · Cycle visite<span class="ct">14</span></a>
+      <a href="#wrk-vis">Laveuse · Cycle visite<span class="ct">17</span></a>
       <a href="#wrk-earn">Laveuse · Gains<span class="ct">7</span></a>
       <a href="#wrk-sos">Laveuse · SOS<span class="ct">5</span></a>
       <a href="#ops-mtch">Opérateur · Matching<span class="ct">9</span></a>
@@ -324,6 +322,62 @@
         <tr><td><span class="key">subscriber.worker.change.submit.cta</span></td><td><span class="fr body">Envoyer la demande</span></td><td><span class="ctx">X-18.C bouton principal</span></td><td><span class="lim">24 ch</span></td></tr>
         <tr><td><span class="key">subscriber.worker.change.submitted.title</span></td><td><span class="fr">Demande envoyée.</span></td><td><span class="ctx">X-18.C confirmation</span></td><td><span class="lim">24 ch</span></td></tr>
         <tr><td><span class="key">subscriber.worker.change.submitted.body</span></td><td><span class="fr body">Le bureau vous appelle dans la journée. La prochaine visite reste maintenue avec {name}.</span></td><td><span class="ctx">X-18.C confirmation body</span></td><td><span class="lim">100 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.eyebrow</span></td><td><span class="fr body">Votre forfait</span></td><td><span class="ctx">X-19 mono · majuscules</span></td><td><span class="lim">14 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.title.active</span></td><td><span class="fr">Compte bon jusqu'au {date}.</span></td><td><span class="ctx">X-19 italique sur la date</span></td><td><span class="lim">42 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.active_card.eyebrow</span></td><td><span class="fr body">Forfait actif</span></td><td><span class="ctx">X-19 carte sombre</span></td><td><span class="lim">14 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.active_card.tier</span></td><td><span class="fr body">{label} · {amount} / mois</span></td><td><span class="ctx">X-19 « Une visite · 2 500 XOF / mois »</span></td><td><span class="lim">36 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.active_card.next_charge_label</span></td><td><span class="fr body">Prochain prélèvement</span></td><td><span class="ctx">X-19 carte sombre · gauche</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.active_card.next_charge_value</span></td><td><span class="fr body">{date} · auto</span></td><td><span class="ctx">X-19 « 1 juin · auto » mono</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.next_visit.eyebrow</span></td><td><span class="fr body">Prochaine visite</span></td><td><span class="ctx">X-19 mini-carte</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.next_visit.summary</span></td><td><span class="fr body">{weekday} {date} · {time}</span></td><td><span class="ctx">X-19 « Mardi 5 mai · 9 h 00 »</span></td><td><span class="lim">36 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.next_visit.with_worker</span></td><td><span class="fr body">avec {name}</span></td><td><span class="ctx">X-19 sous-ligne</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.cta_upgrade</span></td><td><span class="fr body">Passer à 2 visites</span></td><td><span class="ctx">X-19 bouton secondaire</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.cta_pause</span></td><td><span class="fr body">Mettre en pause</span></td><td><span class="ctx">X-19 bouton secondaire</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.upgrade.header</span></td><td><span class="fr body">Passer à 2 visites</span></td><td><span class="ctx">X-19.U eyebrow back</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.upgrade.title</span></td><td><span class="fr">Deux visites par mois.</span></td><td><span class="ctx">X-19.U title</span></td><td><span class="lim">36 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.upgrade.body</span></td><td><span class="fr body">Effet au prochain cycle · {date}. Vous économisez {savings} par mois vs deux forfaits T1.</span></td><td><span class="ctx">X-19.U body</span></td><td><span class="lim">130 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.upgrade.changes_eyebrow</span></td><td><span class="fr body">Ce qui change</span></td><td><span class="ctx">X-19.U cream card</span></td><td><span class="lim">18 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.upgrade.current_label</span></td><td><span class="fr body">Forfait actuel</span></td><td><span class="ctx">X-19.U cream · gauche</span></td><td><span class="lim">18 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.upgrade.new_label</span></td><td><span class="fr body">Nouveau forfait</span></td><td><span class="ctx">X-19.U cream · gauche</span></td><td><span class="lim">18 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.upgrade.savings_label</span></td><td><span class="fr body">Économie / mois</span></td><td><span class="ctx">X-19.U cream · gauche</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.upgrade.effect_eyebrow</span></td><td><span class="fr body">Effet</span></td><td><span class="ctx">X-19.U liste</span></td><td><span class="lim">14 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.upgrade.effect.remaining</span></td><td><span class="fr body">Mois en cours · 1 visite restante</span></td><td><span class="ctx">X-19.U effet · 1</span></td><td><span class="lim">52 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.upgrade.effect.charge</span></td><td><span class="fr body">{date} · prélèvement de {amount}</span></td><td><span class="ctx">X-19.U effet · 2</span></td><td><span class="lim">52 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.upgrade.effect.bureau</span></td><td><span class="fr body">Le bureau vous contacte pour planifier le 2e créneau</span></td><td><span class="ctx">X-19.U effet · 3</span></td><td><span class="lim">68 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.upgrade.effect.same_worker</span></td><td><span class="fr body">{name} reste votre laveuse</span></td><td><span class="ctx">X-19.U effet · 4</span></td><td><span class="lim">36 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.upgrade.confirm.cta</span></td><td><span class="fr body">Confirmer · {amount} / mois</span></td><td><span class="ctx">X-19.U bouton primaire</span></td><td><span class="lim">36 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.upgrade.cancel.cta</span></td><td><span class="fr body">Garder mon forfait</span></td><td><span class="ctx">X-19.U bouton secondaire · partagé X-22</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.pause.header</span></td><td><span class="fr body">Mettre en pause</span></td><td><span class="ctx">X-22 eyebrow back</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.pause.title</span></td><td><span class="fr">Vous êtes sûre ?</span></td><td><span class="ctx">X-22 title — vouvoiement féminin</span></td><td><span class="lim">28 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.pause.body</span></td><td><span class="fr body">{name} ne reviendra plus tant que la pause est active. Le prélèvement de {amount} s'arrête au prochain mois.</span></td><td><span class="ctx">X-22 body</span></td><td><span class="lim">160 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.pause.warn_eyebrow</span></td><td><span class="fr body">Ce qui va arriver</span></td><td><span class="ctx">X-22 carte warn</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.pause.warn.cancel_visit</span></td><td><span class="fr body">Visite de {weekday} {date} annulée · vous gardez le crédit</span></td><td><span class="ctx">X-22 warn · 1</span></td><td><span class="lim">68 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.pause.warn.no_charge</span></td><td><span class="fr body">Pas de prélèvement le {date}</span></td><td><span class="ctx">X-22 warn · 2</span></td><td><span class="lim">36 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.pause.warn.resume</span></td><td><span class="fr body">Vous pouvez reprendre à tout moment</span></td><td><span class="ctx">X-22 warn · 3</span></td><td><span class="lim">52 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.pause.savings_eyebrow</span></td><td><span class="fr body">Si c'est une question de prix</span></td><td><span class="ctx">X-22 cream alternative</span></td><td><span class="lim">36 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.pause.savings_body</span></td><td><span class="fr body">Le forfait à 2 visites permet d'économiser {savings}.</span></td><td><span class="ctx">X-22 cream body</span></td><td><span class="lim">68 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.pause.confirm.cta</span></td><td><span class="fr body">Mettre en pause</span></td><td><span class="ctx">X-22 bouton danger</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.pause.success.title</span></td><td><span class="fr">Pause activée.</span></td><td><span class="ctx">X-22.A italique sur Pause</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.pause.success.body</span></td><td><span class="fr body">{name} est prévenue. Elle vous attend, sa place est réservée pendant 3 mois maximum.</span></td><td><span class="ctx">X-22.A body</span></td><td><span class="lim">130 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.pause.success.changes_eyebrow</span></td><td><span class="fr body">Ce qui change maintenant</span></td><td><span class="ctx">X-22.A cream card</span></td><td><span class="lim">36 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.pause.success.changes.visit</span></td><td><span class="fr body">Visite de {weekday} {date} : annulée · sans frais</span></td><td><span class="ctx">X-22.A item · 1</span></td><td><span class="lim">68 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.pause.success.changes.no_charge</span></td><td><span class="fr body">Pas de prélèvement le {date}</span></td><td><span class="ctx">X-22.A item · 2</span></td><td><span class="lim">36 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.pause.success.changes.data</span></td><td><span class="fr body">Vos données et historique conservés</span></td><td><span class="ctx">X-22.A item · 3</span></td><td><span class="lim">52 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.pause.success.changes.resume</span></td><td><span class="fr body">Vous pouvez reprendre à tout moment depuis Forfait</span></td><td><span class="ctx">X-22.A item · 4</span></td><td><span class="lim">68 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.pause.success.deadline_eyebrow</span></td><td><span class="fr body">Rappel · délai max</span></td><td><span class="ctx">X-22.A warn card</span></td><td><span class="lim">28 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.pause.success.deadline_body</span></td><td><span class="fr body">Sans reprise avant le {date}, votre compte sera clôturé automatiquement.</span></td><td><span class="ctx">X-22.A warn body</span></td><td><span class="lim">100 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.pause.success.cta</span></td><td><span class="fr body">Compris</span></td><td><span class="ctx">X-22.A bouton ink</span></td><td><span class="lim">14 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.paused.eyebrow</span></td><td><span class="fr body">Forfait en pause</span></td><td><span class="ctx">X-19.R warn card</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.paused.headline</span></td><td><span class="fr body">Aucune visite jusqu'à reprise.</span></td><td><span class="ctx">X-19.R warn body</span></td><td><span class="lim">42 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.paused.since</span></td><td><span class="fr body">Pause active depuis le {date} · jour {day} sur 90 max.</span></td><td><span class="ctx">X-19.R warn footnote</span></td><td><span class="lim">68 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.paused.title</span></td><td><span class="fr">Tout est prêt à reprendre.</span></td><td><span class="ctx">X-19.R Fraunces title</span></td><td><span class="lim">36 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.paused.worker_eyebrow</span></td><td><span class="fr body">Votre laveuse</span></td><td><span class="ctx">X-19.R cream card</span></td><td><span class="lim">14 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.paused.worker_line</span></td><td><span class="fr body">{name} vous attend.</span></td><td><span class="ctx">X-19.R cream body</span></td><td><span class="lim">28 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.paused.worker_sub</span></td><td><span class="fr body">Réservée pour vous · {months} mois ensemble</span></td><td><span class="ctx">X-19.R cream sub</span></td><td><span class="lim">52 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.paused.deadline_eyebrow</span></td><td><span class="fr body">Attention · délai max</span></td><td><span class="ctx">X-19.R card</span></td><td><span class="lim">28 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.paused.deadline_body</span></td><td><span class="fr body">La pause prend fin automatiquement au bout de 3 mois (le {date}). Au-delà, votre compte est clôturé et {name} peut être réassignée à un autre foyer.</span></td><td><span class="ctx">X-19.R body</span></td><td><span class="lim">200 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.paused.resume_cta</span></td><td><span class="fr body">Reprendre maintenant</span></td><td><span class="ctx">X-19.R bouton primaire</span></td><td><span class="lim">22 ch</span></td></tr>
+        <tr><td><span class="key">subscriber.plan.paused.extend_cta</span></td><td><span class="fr body">Prolonger la pause · contact bureau</span></td><td><span class="ctx">X-19.R bouton secondaire</span></td><td><span class="lim">42 ch</span></td></tr>
       </tbody>
     </table>
   </section>
@@ -617,7 +671,7 @@
     <p class="note">Cette page existe en deux formats:</p>
     <ul style="font-size:var(--text-sm);color:var(--ink-2);line-height:1.7;max-width:72ch">
       <li><b style="font-family:var(--font-mono);font-size:13px">copy.html</b> — ce document, source de vérité humaine. Prime sur tout.</li>
-      <li><b style="font-family:var(--font-mono);font-size:13px">packages/i18n/src/fr.json</b> — généré à partir de ce deck. Format ICU MessageFormat. Synchronisé via <code style="font-family:var(--font-mono);font-size:13px;background:var(--bg-deep);padding:1px 5px;border-radius:3px">pnpm i18n:sync</code>.</li>
+      <li><b style="font-family:var(--font-mono);font-size:13px">packages/i18n/src/fr.json</b> — généré à partir de ce deck. Format ICU MessageFormat. Synchronisé via <code style="font-family:var(--font-mono);font-size:13px;background:var(--bg-deep);padding:1px 5px;border-radius:3px">pnpm --filter @washed/i18n compile:fr</code>.</li>
       <li><b style="font-family:var(--font-mono);font-size:13px">packages/i18n/src/en.json</b> — vide en v1. Réservé pour v2.</li>
     </ul>
     <div class="annot" style="margin-top:var(--s-5)"><b>Règle d'or</b>Toute chaîne en production doit avoir une clé dans ce deck. Si un dev a besoin d'une chaîne qui n'existe pas ici, il l'ajoute en PR à ce document AVANT d'écrire le code. Pas l'inverse.</div>

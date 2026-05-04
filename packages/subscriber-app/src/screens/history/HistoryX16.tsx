@@ -73,7 +73,7 @@ export function HistoryX16(): ReactElement {
             <span aria-hidden="true" className="hub-nav-glyph" />
             {translate('subscriber.dashboard.tab.visits')}
           </button>
-          <button className="hub-nav-item" type="button" disabled>
+          <button className="hub-nav-item" type="button" onClick={() => navigate('/plan')}>
             <span aria-hidden="true" className="hub-nav-glyph" />
             {translate('subscriber.dashboard.tab.plan')}
           </button>
