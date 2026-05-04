@@ -3,12 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { formatXof, translate } from '@washed/i18n';
 
-import {
-  PAYMENT_PROVIDER_LABEL,
-  TIER_LABEL,
-  TIER_PRICE_XOF,
-  useSignup,
-} from './SignupContext.js';
+import { PAYMENT_PROVIDER_LABEL, TIER_LABEL, TIER_PRICE_XOF, useSignup } from './SignupContext.js';
 
 function shortPhone(phone: string): string {
   // "+228 90 12 34 56" → "90 12…" — show enough to recognise without exposing.
@@ -23,12 +18,36 @@ export function ReviewX07(): ReactElement {
   // Guard: a deep-link to /signup/review without prior steps must restart from
   // the splash, not jump to the post-signup welcome (which would fake success).
   useEffect(() => {
-    if (signup.tier === null || signup.paymentProvider === null) {
+    if (
+      signup.phone === '' ||
+      signup.address.neighborhood === '' ||
+      signup.address.street.trim() === '' ||
+      signup.tier === null
+    ) {
       navigate('/welcome', { replace: true });
+      return;
     }
-  }, [signup.tier, signup.paymentProvider, navigate]);
+    if (signup.paymentProvider === null) {
+      navigate('/signup/payment', { replace: true });
+    }
+  }, [
+    signup.phone,
+    signup.address.neighborhood,
+    signup.address.street,
+    signup.tier,
+    signup.paymentProvider,
+    navigate,
+  ]);
 
-  if (signup.tier === null || signup.paymentProvider === null) return <></>;
+  if (
+    signup.phone === '' ||
+    signup.address.neighborhood === '' ||
+    signup.address.street.trim() === '' ||
+    signup.tier === null ||
+    signup.paymentProvider === null
+  ) {
+    return <></>;
+  }
 
   const tier = signup.tier;
   const provider = signup.paymentProvider;
@@ -40,11 +59,7 @@ export function ReviewX07(): ReactElement {
   };
 
   return (
-    <main
-      aria-labelledby="x07-headline"
-      className="onboarding-screen"
-      data-screen-id="X-07"
-    >
+    <main aria-labelledby="x07-headline" className="onboarding-screen" data-screen-id="X-07">
       <div className="body">
         <div className="title-stack">
           <span className="h-sm">Récap</span>
@@ -86,8 +101,8 @@ export function ReviewX07(): ReactElement {
         <aside className="review-warn" aria-label="Prochaine étape">
           <span className="h-sm review-warn-eyebrow">Prochaine étape</span>
           <p className="p-sm">
-            Le bureau vous appelle dans la journée pour confirmer l'adresse et planifier la
-            première visite.
+            Le bureau vous appelle dans la journée pour confirmer l'adresse et planifier la première
+            visite.
           </p>
         </aside>
 
@@ -98,8 +113,15 @@ export function ReviewX07(): ReactElement {
             type="checkbox"
           />
           <span className="p-sm">
-            J'accepte les <a href="#/legal/terms" className="link">conditions</a> et la{' '}
-            <a href="#/legal/privacy" className="link">politique de confidentialité</a>.
+            J'accepte les{' '}
+            <a href="#/legal/terms" className="link">
+              conditions
+            </a>{' '}
+            et la{' '}
+            <a href="#/legal/privacy" className="link">
+              politique de confidentialité
+            </a>
+            .
           </span>
         </label>
 

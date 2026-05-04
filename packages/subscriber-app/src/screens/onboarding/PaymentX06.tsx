@@ -3,11 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
 
-import {
-  PAYMENT_PROVIDER_LABEL,
-  useSignup,
-  type SignupPaymentProvider,
-} from './SignupContext.js';
+import { PAYMENT_PROVIDER_LABEL, useSignup, type SignupPaymentProvider } from './SignupContext.js';
 
 interface ProviderOption {
   readonly provider: SignupPaymentProvider;
@@ -34,10 +30,21 @@ export function PaymentX06(): ReactElement {
     }
     if (signup.tier === null) {
       navigate('/welcome', { replace: true });
+      return;
     }
-  }, [signup.phone, signup.tier, navigate]);
+    if (signup.address.neighborhood === '' || signup.address.street.trim() === '') {
+      navigate('/signup/address', { replace: true });
+    }
+  }, [signup.phone, signup.tier, signup.address.neighborhood, signup.address.street, navigate]);
 
-  if (signup.phone === '' || signup.tier === null) return <></>;
+  if (
+    signup.phone === '' ||
+    signup.tier === null ||
+    signup.address.neighborhood === '' ||
+    signup.address.street.trim() === ''
+  ) {
+    return <></>;
+  }
 
   const onSelect = (provider: SignupPaymentProvider): void => {
     signup.setPaymentProvider(provider);
@@ -54,11 +61,7 @@ export function PaymentX06(): ReactElement {
   const phoneLine = signup.phone;
 
   return (
-    <main
-      aria-labelledby="x06-headline"
-      className="onboarding-screen"
-      data-screen-id="X-06"
-    >
+    <main aria-labelledby="x06-headline" className="onboarding-screen" data-screen-id="X-06">
       <div className="body tight">
         <div className="title-stack">
           <span className="h-sm">Paiement</span>
@@ -91,9 +94,7 @@ export function PaymentX06(): ReactElement {
                 <span aria-hidden="true" className="provider-radio" />
                 <span className="provider-body">
                   <strong>{PAYMENT_PROVIDER_LABEL[option.provider]}</strong>
-                  <span className="p-sm">
-                    {isDefault ? phoneLine : 'ajouter un numéro'}
-                  </span>
+                  <span className="p-sm">{isDefault ? phoneLine : 'ajouter un numéro'}</span>
                 </span>
                 <span aria-hidden="true" className="provider-network p-sm">
                   {option.tagline}

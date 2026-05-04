@@ -150,11 +150,20 @@ describe('Onboarding · X-03 OTP', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Modifier' }));
     expect(locationRef.current).toBe('/signup/phone');
   });
+
+  it('redirects to /signup/phone without flashing a placeholder phone', () => {
+    const { locationRef } = renderAt('/signup/otp', <OtpX03 />);
+
+    expect(locationRef.current).toBe('/signup/phone');
+    expect(screen.queryByText(/\+228 90/u)).not.toBeInTheDocument();
+  });
 });
 
 describe('Onboarding · X-04 Address', () => {
   it('collects the Lomé address and routes to tier once valid', () => {
-    const { locationRef } = renderAt('/signup/address', <AddressX04 />);
+    const { locationRef } = renderAt('/signup/address', <AddressX04 />, {
+      phone: '+228 90 12 34 56',
+    });
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-04');
     expect(screen.getByText('Étape 3 sur 4')).toBeInTheDocument();
@@ -168,11 +177,20 @@ describe('Onboarding · X-04 Address', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
     expect(locationRef.current).toBe('/signup/tier');
   });
+
+  it('redirects to /signup/phone when the deep-link arrives without a confirmed phone', () => {
+    const { locationRef } = renderAt('/signup/address', <AddressX04 />);
+
+    expect(locationRef.current).toBe('/signup/phone');
+  });
 });
 
 describe('Onboarding · X-05 Tier', () => {
   it('defaults to T1, lets the user choose T2, and routes to payment', () => {
-    const { locationRef } = renderAt('/signup/tier', <TierX05 />);
+    const { locationRef } = renderAt('/signup/tier', <TierX05 />, {
+      phone: '+228 90 12 34 56',
+      address: { neighborhood: 'Tokoin Forever', street: 'rue 254' },
+    });
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-05');
     expect(screen.getByText('Étape 4 sur 4')).toBeInTheDocument();
@@ -184,12 +202,27 @@ describe('Onboarding · X-05 Tier', () => {
 
     expect(locationRef.current).toBe('/signup/payment');
   });
+
+  it('redirects to /signup/phone when the deep-link arrives without a confirmed phone', () => {
+    const { locationRef } = renderAt('/signup/tier', <TierX05 />);
+
+    expect(locationRef.current).toBe('/signup/phone');
+  });
+
+  it('redirects to /signup/address when the deep-link arrives without an address', () => {
+    const { locationRef } = renderAt('/signup/tier', <TierX05 />, {
+      phone: '+228 90 12 34 56',
+    });
+
+    expect(locationRef.current).toBe('/signup/address');
+  });
 });
 
 describe('Onboarding · X-06 Payment', () => {
   it('shows payment providers and routes to review', () => {
     const { locationRef } = renderAt('/signup/payment', <PaymentX06 />, {
       phone: '+228 90 12 34 56',
+      address: { neighborhood: 'Tokoin Forever', street: 'rue 254' },
       tier: 'T1',
     });
 
@@ -217,6 +250,15 @@ describe('Onboarding · X-06 Payment', () => {
     });
 
     expect(locationRef.current).toBe('/welcome');
+  });
+
+  it('redirects to /signup/address when the deep-link arrives without an address', () => {
+    const { locationRef } = renderAt('/signup/payment', <PaymentX06 />, {
+      phone: '+228 90 12 34 56',
+      tier: 'T1',
+    });
+
+    expect(locationRef.current).toBe('/signup/address');
   });
 });
 
@@ -249,6 +291,16 @@ describe('Onboarding · X-07 Review', () => {
     const { locationRef } = renderAt('/signup/review', <ReviewX07 />);
 
     expect(locationRef.current).toBe('/welcome');
+  });
+
+  it('redirects to /signup/payment when only the payment provider is missing', () => {
+    const { locationRef } = renderAt('/signup/review', <ReviewX07 />, {
+      phone: '+228 90 12 34 56',
+      address: { neighborhood: 'Tokoin Forever', street: 'rue 254' },
+      tier: 'T1',
+    });
+
+    expect(locationRef.current).toBe('/signup/payment');
   });
 });
 

@@ -27,16 +27,18 @@ function maskPhone(phone: string): string {
 export function OtpX03(): ReactElement {
   const navigate = useNavigate();
   const signup = useSignup();
-  const phone = signup.phone === '' ? '+228 90 12 34 56' : signup.phone;
-  const maskedPhone = useMemo(() => maskPhone(phone), [phone]);
 
   useEffect(() => {
     if (signup.phone === '') navigate('/signup/phone', { replace: true });
   }, [signup.phone, navigate]);
 
+  const phone = signup.phone;
+  const maskedPhone = useMemo(() => maskPhone(phone), [phone]);
   const [digits, setDigits] = useState<string[]>(() => Array<string>(OTP_LENGTH).fill(''));
   const [secondsRemaining, setSecondsRemaining] = useState(RESEND_SECONDS);
-  const cellRefs = useRef<(HTMLInputElement | null)[]>(Array<HTMLInputElement | null>(OTP_LENGTH).fill(null));
+  const cellRefs = useRef<(HTMLInputElement | null)[]>(
+    Array<HTMLInputElement | null>(OTP_LENGTH).fill(null),
+  );
 
   useEffect(() => {
     cellRefs.current[0]?.focus();
@@ -136,12 +138,10 @@ export function OtpX03(): ReactElement {
     navigate('/signup/phone');
   };
 
+  if (signup.phone === '') return <></>;
+
   return (
-    <main
-      aria-labelledby="x03-headline"
-      className="onboarding-screen"
-      data-screen-id="X-03"
-    >
+    <main aria-labelledby="x03-headline" className="onboarding-screen" data-screen-id="X-03">
       <div className="body">
         <div className="title-stack">
           <span className="h-sm">
@@ -158,11 +158,7 @@ export function OtpX03(): ReactElement {
           </p>
         </div>
 
-        <div
-          aria-label={translate('subscriber.signup.otp.title')}
-          className="otp-row"
-          role="group"
-        >
+        <div aria-label={translate('subscriber.signup.otp.title')} className="otp-row" role="group">
           {digits.map((digit, index) => (
             <input
               aria-label={`Chiffre ${index + 1}`}
@@ -185,9 +181,7 @@ export function OtpX03(): ReactElement {
 
         <p className="p-sm">
           {secondsRemaining > 0 ? (
-            <>
-              {translate('subscriber.signup.otp.resend', 'fr', { seconds: secondsRemaining })}
-            </>
+            <>{translate('subscriber.signup.otp.resend', 'fr', { seconds: secondsRemaining })}</>
           ) : (
             <button className="link" onClick={onResend} type="button">
               Renvoyer le code

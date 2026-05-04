@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ReactElement } from 'react';
+import { useEffect, useState, type FormEvent, type ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
@@ -28,6 +28,10 @@ export function AddressX04(): ReactElement {
   const [street, setStreet] = useState(signup.address.street);
   const [landmark, setLandmark] = useState(signup.address.landmark);
 
+  useEffect(() => {
+    if (signup.phone === '') navigate('/signup/phone', { replace: true });
+  }, [signup.phone, navigate]);
+
   const isValid = neighborhood !== '' && street.trim().length >= 3;
 
   const onSubmit = (event: FormEvent<HTMLFormElement>): void => {
@@ -41,12 +45,10 @@ export function AddressX04(): ReactElement {
     navigate('/signup/tier');
   };
 
+  if (signup.phone === '') return <></>;
+
   return (
-    <main
-      aria-labelledby="x04-headline"
-      className="onboarding-screen"
-      data-screen-id="X-04"
-    >
+    <main aria-labelledby="x04-headline" className="onboarding-screen" data-screen-id="X-04">
       <form className="body tight" onSubmit={onSubmit}>
         <div className="title-stack">
           <span className="h-sm">

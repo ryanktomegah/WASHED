@@ -1,4 +1,4 @@
-import { type ReactElement } from 'react';
+import { useEffect, type ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { formatXof, translate } from '@washed/i18n';
@@ -21,6 +21,24 @@ export function TierX05(): ReactElement {
   const signup = useSignup();
   const selected: SignupTier = signup.tier ?? 'T1';
 
+  useEffect(() => {
+    if (signup.phone === '') {
+      navigate('/signup/phone', { replace: true });
+      return;
+    }
+    if (signup.address.neighborhood === '' || signup.address.street.trim() === '') {
+      navigate('/signup/address', { replace: true });
+    }
+  }, [signup.phone, signup.address.neighborhood, signup.address.street, navigate]);
+
+  if (
+    signup.phone === '' ||
+    signup.address.neighborhood === '' ||
+    signup.address.street.trim() === ''
+  ) {
+    return <></>;
+  }
+
   const onSelect = (tier: SignupTier): void => {
     signup.setTier(tier);
   };
@@ -31,11 +49,7 @@ export function TierX05(): ReactElement {
   };
 
   return (
-    <main
-      aria-labelledby="x05-headline"
-      className="onboarding-screen"
-      data-screen-id="X-05"
-    >
+    <main aria-labelledby="x05-headline" className="onboarding-screen" data-screen-id="X-05">
       <div className="body tight">
         <div className="title-stack">
           <span className="h-sm">
@@ -70,7 +84,9 @@ export function TierX05(): ReactElement {
                 {option.tier === selected ? <span className="tier-chip">choisi</span> : null}
               </div>
               <div className="tier-price">
-                <strong>{TIER_PRICE_XOF[option.tier].toLocaleString('fr-FR').replace(/ | /g, ' ')}</strong>
+                <strong>
+                  {TIER_PRICE_XOF[option.tier].toLocaleString('fr-FR').replace(/ | /g, ' ')}
+                </strong>
                 <span>XOF / mois</span>
               </div>
             </label>
