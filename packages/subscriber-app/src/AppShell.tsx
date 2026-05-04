@@ -22,6 +22,13 @@ import {
   PlanX19,
 } from './screens/plan/PlanScreens.js';
 import {
+  AddressEditX25,
+  DeleteAccountX28,
+  NotificationsX26,
+  PrivacyX27,
+  ProfileX24,
+} from './screens/profile/ProfileScreens.js';
+import {
   WorkerChangeSubmittedX18C,
   WorkerChangeX18C,
   WorkerProfileX18,
@@ -41,6 +48,7 @@ import './screens/onboarding/onboarding.css';
 import './screens/hub/hub.css';
 import './screens/history/history.css';
 import './screens/plan/plan.css';
+import './screens/profile/profile.css';
 import './screens/worker-profile/workerProfile.css';
 import './screens/visits/visit.css';
 
@@ -67,6 +75,11 @@ export function AppShell(): ReactElement {
             <Route element={<PlanPauseConfirmX22 />} path="/plan/pause" />
             <Route element={<PlanPausedSuccessX22A />} path="/plan/pause/submitted" />
             <Route element={<PlanPausedX19R />} path="/plan/paused" />
+            <Route element={<ProfileX24 />} path="/profile" />
+            <Route element={<AddressEditX25 />} path="/profile/address" />
+            <Route element={<NotificationsX26 />} path="/profile/notifications" />
+            <Route element={<PrivacyX27 />} path="/profile/privacy" />
+            <Route element={<DeleteAccountX28 />} path="/profile/delete" />
             <Route element={<WorkerProfileX18 />} path="/worker/:workerId" />
             <Route element={<WorkerChangeX18C />} path="/worker/:workerId/change" />
             <Route

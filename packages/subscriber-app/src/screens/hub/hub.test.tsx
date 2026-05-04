@@ -73,12 +73,22 @@ describe('Subscriber hub · X-10', () => {
     expect(screen.getByText('Dernière visite · 28 avril')).toBeVisible();
     expect(screen.getByText('32 visites')).toBeVisible();
 
-    // Nav — Accueil active; Visites + Forfait deliver. Profil still pending.
+    // Nav — Accueil active; Visites + Forfait + Profil all delivered.
     const home = screen.getByRole('button', { name: 'Accueil' });
     expect(home).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('button', { name: 'Visites' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Forfait' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Profil' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Profil' })).toBeEnabled();
+  });
+
+  it('routes the Profil nav item to X-24 profile', () => {
+    vi.setSystemTime(new Date('2026-05-03T09:30:00.000'));
+
+    const { locationRef } = renderAt('/hub', <HubX10 />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Profil' }));
+
+    expect(locationRef.current).toBe('/profile');
   });
 
   it('routes the Forfait nav item to X-19 plan', () => {

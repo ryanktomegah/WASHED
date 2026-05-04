@@ -19,6 +19,11 @@ const screenRoutes = [
   ['x-19r-plan-paused', '/#/plan/paused', 'X-19.R'],
   ['x-22-plan-pause', '/#/plan/pause', 'X-22'],
   ['x-22a-plan-pause-submitted', '/#/plan/pause/submitted', 'X-22.A'],
+  ['x-24-profile', '/#/profile', 'X-24'],
+  ['x-25-profile-address', '/#/profile/address', 'X-25'],
+  ['x-26-profile-notifications', '/#/profile/notifications', 'X-26'],
+  ['x-27-profile-privacy', '/#/profile/privacy', 'X-27'],
+  ['x-28-profile-delete', '/#/profile/delete', 'X-28'],
 ] as const;
 
 test.describe('Subscriber hub, visit, and relationship flows X-10 → X-18.C', () => {
@@ -146,6 +151,53 @@ test.describe('Subscriber hub, visit, and relationship flows X-10 → X-18.C', (
         await expect(page.getByText('Rappel · délai max')).toBeVisible();
       }
 
+      if (screenId === 'X-24') {
+        await expect(page.getByRole('heading', { name: 'Yawa Mensah' })).toBeVisible();
+        await expect(page.getByText('+228 90 12 34 56')).toBeVisible();
+        await expect(page.getByText('Abonnée depuis sept. 2025')).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Profil' })).toHaveAttribute(
+          'aria-current',
+          'page',
+        );
+      }
+
+      if (screenId === 'X-25') {
+        await expect(page.getByRole('heading', { name: 'Vous déménagez ?' })).toBeVisible();
+        await expect(page.getByText(/24-48 h/u)).toBeVisible();
+        await expect(
+          page.getByRole('button', { name: 'Envoyer pour validation' }),
+        ).toBeVisible();
+      }
+
+      if (screenId === 'X-26') {
+        await expect(
+          page.getByRole('heading', { name: 'Que voulez-vous recevoir ?' }),
+        ).toBeVisible();
+        await expect(page.getByRole('switch', { name: 'SMS · rappel J-1 et J' })).toHaveAttribute(
+          'aria-checked',
+          'true',
+        );
+        await expect(page.getByRole('switch', { name: 'Email mensuel · récap' })).toHaveAttribute(
+          'aria-checked',
+          'false',
+        );
+        await expect(page.getByText(/Aucune notification marketing/u)).toBeVisible();
+      }
+
+      if (screenId === 'X-27') {
+        await expect(page.getByRole('heading', { name: "Ce qu'on garde sur vous." })).toBeVisible();
+        await expect(page.getByText('DONNÉES DE COMPTE')).toBeVisible();
+        await expect(page.getByText('PHOTOS DE VISITE')).toBeVisible();
+        await expect(page.getByText('LOCALISATION')).toBeVisible();
+      }
+
+      if (screenId === 'X-28') {
+        await expect(page.getByRole('heading', { name: "C'est définitif." })).toBeVisible();
+        await expect(
+          page.getByRole('button', { name: 'Supprimer définitivement' }),
+        ).toBeDisabled();
+      }
+
       const screenshotPath = testInfo.outputPath(`${slug}-${testInfo.project.name}.png`);
       await page.screenshot({ fullPage: true, path: screenshotPath });
       await testInfo.attach(`${slug}-${testInfo.project.name}`, {
@@ -268,6 +320,47 @@ test.describe('Subscriber hub, visit, and relationship flows X-10 → X-18.C', (
     await page.getByRole('button', { name: "Fermer l'app sereinement" }).click();
     await expect(page).toHaveURL(/#\/hub/u);
     await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
+  });
+
+  test('Profil flow · hub → profile → address; profile → privacy → delete; typed-confirm gates the danger CTA', async ({
+    page,
+  }) => {
+    await page.goto('/#/hub');
+
+    await page.getByRole('button', { name: 'Profil' }).click();
+    await expect(page).toHaveURL(/#\/profile$/u);
+    await expect(page.locator('[data-screen-id="X-24"]')).toBeVisible();
+
+    // Address edit round-trip.
+    await page.getByRole('button', { name: /Adresse/u }).click();
+    await expect(page).toHaveURL(/#\/profile\/address/u);
+    await expect(page.locator('[data-screen-id="X-25"]')).toBeVisible();
+    await page.getByRole('button', { name: 'Envoyer pour validation' }).click();
+    await expect(page).toHaveURL(/#\/profile$/u);
+
+    // Privacy → delete with typed confirmation.
+    await page.getByRole('button', { name: /Vie privée/u }).click();
+    await expect(page).toHaveURL(/#\/profile\/privacy/u);
+    await expect(page.locator('[data-screen-id="X-27"]')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Supprimer mon compte' }).click();
+    await expect(page).toHaveURL(/#\/profile\/delete/u);
+    await expect(page.locator('[data-screen-id="X-28"]')).toBeVisible();
+
+    const danger = page.getByRole('button', { name: 'Supprimer définitivement' });
+    await expect(danger).toBeDisabled();
+
+    // Wrong casing keeps it disabled.
+    await page.getByLabel(/TAPEZ « SUPPRIMER »/u).fill('supprimer');
+    await expect(danger).toBeDisabled();
+
+    // Exact match enables it.
+    await page.getByLabel(/TAPEZ « SUPPRIMER »/u).fill('SUPPRIMER');
+    await expect(danger).toBeEnabled();
+
+    // Cancel routes back to privacy.
+    await page.getByRole('button', { name: 'Annuler' }).click();
+    await expect(page).toHaveURL(/#\/profile\/privacy/u);
   });
 
   test('Forfait flow · hub → plan → upgrade → keep, plan → pause → submitted → paused → resume', async ({
