@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { formatXof, translate } from '@washed/i18n';
 
+import { useSafeBack } from '../../navigation/useSafeBack.js';
 import { SUBSCRIBER_HISTORY_DEMO, type PastVisitEntry } from './historyDemoData.js';
 
 export function HistoryX16(): ReactElement {
@@ -89,6 +90,7 @@ export function HistoryX16(): ReactElement {
 
 export function HistoryDetailX17(): ReactElement {
   const navigate = useNavigate();
+  const goBack = useSafeBack('/history');
   const params = useParams();
   const { aggregates, recentVisits } = SUBSCRIBER_HISTORY_DEMO;
   const visit = recentVisits.find((entry) => entry.id === params.visitId);
@@ -109,12 +111,7 @@ export function HistoryDetailX17(): ReactElement {
     <main aria-labelledby="x17-headline" className="history-screen" data-screen-id="X-17">
       <div className="history-body">
         <header className="history-detail-header">
-          <button
-            aria-label={translate('subscriber.dashboard.tab.visits')}
-            className="history-back"
-            onClick={() => navigate('/history')}
-            type="button"
-          >
+          <button aria-label="Retour" className="history-back" onClick={goBack} type="button">
             ‹
           </button>
           <span className="history-eyebrow">

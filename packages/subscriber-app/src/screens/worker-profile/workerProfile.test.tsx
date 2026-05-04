@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactElement } from 'react';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -9,8 +9,11 @@ import {
   WorkerProfileX18,
 } from './WorkerProfileX18.js';
 
-function renderWorkerAt(path: string): { locationRef: { current: string } } {
-  const locationRef = { current: path };
+function renderWorkerAt(
+  path: string,
+  initialEntries: readonly string[] = [path],
+): { locationRef: { current: string } } {
+  const locationRef = { current: initialEntries.at(-1) ?? path };
 
   function Spy(): ReactElement {
     const location = useLocation();
@@ -18,13 +21,24 @@ function renderWorkerAt(path: string): { locationRef: { current: string } } {
     return null as unknown as ReactElement;
   }
 
+  function BrowserBackProbe(): ReactElement {
+    const navigate = useNavigate();
+
+    return (
+      <button onClick={() => navigate(-1)} type="button">
+        Browser back
+      </button>
+    );
+  }
+
   render(
-    <MemoryRouter initialEntries={[path]}>
+    <MemoryRouter initialEntries={[...initialEntries]} initialIndex={initialEntries.length - 1}>
       <Routes>
         <Route
           element={
             <>
               <WorkerProfileX18 />
+              <BrowserBackProbe />
               <Spy />
             </>
           }
@@ -34,6 +48,7 @@ function renderWorkerAt(path: string): { locationRef: { current: string } } {
           element={
             <>
               <WorkerChangeX18C />
+              <BrowserBackProbe />
               <Spy />
             </>
           }
@@ -43,12 +58,21 @@ function renderWorkerAt(path: string): { locationRef: { current: string } } {
           element={
             <>
               <WorkerChangeSubmittedX18C />
+              <BrowserBackProbe />
               <Spy />
             </>
           }
           path="/worker/:workerId/change/submitted"
         />
-        <Route element={<Spy />} path="*" />
+        <Route
+          element={
+            <>
+              <BrowserBackProbe />
+              <Spy />
+            </>
+          }
+          path="*"
+        />
       </Routes>
     </MemoryRouter>,
   );
@@ -82,12 +106,31 @@ describe('Subscriber worker profile · X-18', () => {
     expect(screen.getByRole('button', { name: 'Demander un changement' })).toBeVisible();
   });
 
-  it('routes the back control to the hub', () => {
+  it('routes the back control to the hub when opened directly', () => {
     const { locationRef } = renderWorkerAt('/worker/akouvi');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Accueil' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
 
     expect(locationRef.current).toBe('/hub');
+  });
+
+  it('replaces direct-open fallback entries so browser back does not loop to profile', () => {
+    const { locationRef } = renderWorkerAt('/worker/akouvi');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
+    expect(locationRef.current).toBe('/hub');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Browser back' }));
+
+    expect(locationRef.current).toBe('/hub');
+  });
+
+  it('routes the back control to the actual previous in-app page when history exists', () => {
+    const { locationRef } = renderWorkerAt('/worker/akouvi', ['/history', '/worker/akouvi']);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
+
+    expect(locationRef.current).toBe('/history');
   });
 
   it('routes the change request CTA to X-18.C', () => {
@@ -130,12 +173,23 @@ describe('Subscriber worker change request · X-18.C', () => {
     ).toBeVisible();
   });
 
-  it('routes back to X-18', () => {
+  it('routes back to X-18 when opened directly', () => {
     const { locationRef } = renderWorkerAt('/worker/akouvi/change');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Profil de la laveuse' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
 
     expect(locationRef.current).toBe('/worker/akouvi');
+  });
+
+  it('routes back to the actual previous in-app page when history exists', () => {
+    const { locationRef } = renderWorkerAt('/worker/akouvi/change', [
+      '/plan',
+      '/worker/akouvi/change',
+    ]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
+
+    expect(locationRef.current).toBe('/plan');
   });
 
   it('submits to confirmation', () => {

@@ -3,18 +3,20 @@ import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
 
+import { useSafeBack } from '../../navigation/useSafeBack.js';
 import { ISSUE_OPTIONS, RESCHEDULE_OPTIONS, SUBSCRIBER_VISIT_DEMO } from './visitDemoData.js';
 
 type RescheduleOptionId = (typeof RESCHEDULE_OPTIONS)[number]['id'];
 
 export function VisitDetailX11(): ReactElement {
   const navigate = useNavigate();
+  const goBack = useSafeBack('/hub');
   const visit = SUBSCRIBER_VISIT_DEMO;
 
   return (
     <main aria-labelledby="x11-headline" className="visit-screen" data-screen-id="X-11">
       <div className="visit-body">
-        <VisitBackHeader label={`Visite · ${visit.visitDateLabel}`} />
+        <VisitBackHeader label={`Visite · ${visit.visitDateLabel}`} onBack={goBack} />
 
         <h1 className="visit-title" id="x11-headline">
           {visit.workerName} arrive
@@ -77,6 +79,7 @@ export function VisitDetailX11(): ReactElement {
 
 export function VisitRescheduleX11M(): ReactElement {
   const navigate = useNavigate();
+  const goBack = useSafeBack('/visit/detail');
   const [selectedId, setSelectedId] = useState<RescheduleOptionId>(
     RESCHEDULE_OPTIONS[0]?.id ?? 'thu-07',
   );
@@ -84,7 +87,7 @@ export function VisitRescheduleX11M(): ReactElement {
   return (
     <main aria-labelledby="x11m-headline" className="visit-screen" data-screen-id="X-11.M">
       <div className="visit-body">
-        <VisitBackHeader label="Reporter une visite" />
+        <VisitBackHeader label="Reporter une visite" onBack={goBack} />
 
         <h1 className="visit-title" id="x11m-headline">
           {translate('subscriber.visit.reschedule.title')}
@@ -195,11 +198,7 @@ export function VisitInProgressX13(): ReactElement {
 
         <div className="visit-grow" />
 
-        <button
-          className="visit-button ghost full"
-          onClick={() => navigate('/hub')}
-          type="button"
-        >
+        <button className="visit-button ghost full" onClick={() => navigate('/hub')} type="button">
           Fermer l&apos;app sereinement
         </button>
       </div>
@@ -304,11 +303,7 @@ export function VisitFeedbackX15(): ReactElement {
 
         <div className="visit-grow" />
 
-        <button
-          className="visit-button ghost full"
-          onClick={() => navigate('/hub')}
-          type="button"
-        >
+        <button className="visit-button ghost full" onClick={() => navigate('/hub')} type="button">
           {translate('subscriber.visit.return_home.cta')}
         </button>
       </div>
@@ -318,6 +313,7 @@ export function VisitFeedbackX15(): ReactElement {
 
 export function VisitIssueX15S(): ReactElement {
   const navigate = useNavigate();
+  const goBack = useSafeBack('/visit/detail');
   const [selectedIssue, setSelectedIssue] = useState<(typeof ISSUE_OPTIONS)[number]>(
     ISSUE_OPTIONS[0] ?? 'Linge endommagé',
   );
@@ -325,7 +321,7 @@ export function VisitIssueX15S(): ReactElement {
   return (
     <main aria-labelledby="x15s-headline" className="visit-screen" data-screen-id="X-15.S">
       <div className="visit-body">
-        <VisitBackHeader label="Signaler un souci" />
+        <VisitBackHeader label="Signaler un souci" onBack={goBack} />
 
         <h1 className="visit-title" id="x15s-headline">
           Qu'est-ce
@@ -391,11 +387,7 @@ export function VisitIssueSubmittedX15S(): ReactElement {
           {translate('subscriber.visit.support.submitted.body')}
         </p>
         <div className="visit-grow" />
-        <button
-          className="visit-button ghost full"
-          onClick={() => navigate('/hub')}
-          type="button"
-        >
+        <button className="visit-button ghost full" onClick={() => navigate('/hub')} type="button">
           {translate('subscriber.visit.return_home.cta')}
         </button>
       </div>
@@ -403,10 +395,18 @@ export function VisitIssueSubmittedX15S(): ReactElement {
   );
 }
 
-function VisitBackHeader({ label }: { readonly label: string }): ReactElement {
+function VisitBackHeader({
+  label,
+  onBack,
+}: {
+  readonly label: string;
+  readonly onBack: () => void;
+}): ReactElement {
   return (
     <div className="visit-header">
-      <span aria-hidden="true">‹</span>
+      <button aria-label="Retour" className="visit-back" onClick={onBack} type="button">
+        ‹
+      </button>
       <span>{label}</span>
     </div>
   );

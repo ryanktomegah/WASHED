@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { formatXof, translate } from '@washed/i18n';
 
+import { useSafeBack } from '../../navigation/useSafeBack.js';
 import { SUBSCRIBER_PLAN_DEMO } from './subscriberPlanDemoData.js';
 import { PlanTabBar } from './PlanTabBar.js';
 
@@ -135,17 +136,14 @@ export function PlanX19(): ReactElement {
 }
 
 export function PlanPaymentHistoryX20(): ReactElement {
-  const navigate = useNavigate();
+  const goBack = useSafeBack('/plan');
   const { payment } = SUBSCRIBER_PLAN_DEMO;
   const totalXof = payment.receipts.reduce((sum, receipt) => sum + receipt.amountXof, 0);
 
   return (
     <main aria-labelledby="x20-headline" className="plan-screen" data-screen-id="X-20">
       <div className="plan-body plan-body-flow">
-        <BackHeader
-          label={translate('subscriber.payment.history.header')}
-          onBack={() => navigate('/plan')}
-        />
+        <BackHeader label={translate('subscriber.payment.history.header')} onBack={goBack} />
 
         <h1 className="plan-title" id="x20-headline">
           {translate('subscriber.payment.history.title', 'fr', {
@@ -208,6 +206,7 @@ export function PlanPaymentHistoryX20(): ReactElement {
 
 export function PlanPaymentMethodX21(): ReactElement {
   const navigate = useNavigate();
+  const goBack = useSafeBack('/plan');
   const { payment } = SUBSCRIBER_PLAN_DEMO;
   const initialProvider =
     payment.methods.find((method) => method.isActive)?.provider ??
@@ -218,10 +217,7 @@ export function PlanPaymentMethodX21(): ReactElement {
   return (
     <main aria-labelledby="x21-headline" className="plan-screen" data-screen-id="X-21">
       <div className="plan-body plan-body-flow">
-        <BackHeader
-          label={translate('subscriber.payment.method.header')}
-          onBack={() => navigate('/plan')}
-        />
+        <BackHeader label={translate('subscriber.payment.method.header')} onBack={goBack} />
 
         <h1 className="plan-title" id="x21-headline">
           {translate('subscriber.payment.method.title')}
@@ -342,15 +338,13 @@ export function PlanOverdueX23(): ReactElement {
 
 export function PlanUpgradeX19U(): ReactElement {
   const navigate = useNavigate();
+  const goBack = useSafeBack('/plan');
   const { upgrade } = SUBSCRIBER_PLAN_DEMO;
 
   return (
     <main aria-labelledby="x19u-headline" className="plan-screen" data-screen-id="X-19.U">
       <div className="plan-body plan-body-flow">
-        <BackHeader
-          label={translate('subscriber.plan.upgrade.header')}
-          onBack={() => navigate('/plan')}
-        />
+        <BackHeader label={translate('subscriber.plan.upgrade.header')} onBack={goBack} />
 
         <h1 className="plan-title" id="x19u-headline">
           {translate('subscriber.plan.upgrade.title')}
@@ -424,15 +418,13 @@ export function PlanUpgradeX19U(): ReactElement {
 
 export function PlanPauseConfirmX22(): ReactElement {
   const navigate = useNavigate();
+  const goBack = useSafeBack('/plan');
   const { active, upgrade } = SUBSCRIBER_PLAN_DEMO;
 
   return (
     <main aria-labelledby="x22-headline" className="plan-screen" data-screen-id="X-22">
       <div className="plan-body plan-body-flow">
-        <BackHeader
-          label={translate('subscriber.plan.pause.header')}
-          onBack={() => navigate('/plan')}
-        />
+        <BackHeader label={translate('subscriber.plan.pause.header')} onBack={goBack} />
 
         <h1 className="plan-title" id="x22-headline">
           {translate('subscriber.plan.pause.title')}

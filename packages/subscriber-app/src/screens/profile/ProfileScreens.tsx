@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
 
+import { useSafeBack } from '../../navigation/useSafeBack.js';
 import { ProfileTabBar } from './ProfileTabBar.js';
 import {
   LOME_NEIGHBORHOODS,
@@ -120,6 +121,7 @@ function ProfileMenuItem({
 // ──────────────────────────────────────────────────────────────────────────
 export function AddressEditX25(): ReactElement {
   const navigate = useNavigate();
+  const goBack = useSafeBack('/profile');
   const profile = SUBSCRIBER_PROFILE_DEMO;
   const [neighborhood, setNeighborhood] = useState<LomeNeighborhood>(
     profile.addressNeighborhood as LomeNeighborhood,
@@ -139,10 +141,7 @@ export function AddressEditX25(): ReactElement {
   return (
     <main aria-labelledby="x25-headline" className="profile-screen" data-screen-id="X-25">
       <form className="profile-body profile-body-flow" onSubmit={onSubmit}>
-        <BackHeader
-          label={translate('subscriber.address_edit.header')}
-          onBack={() => navigate('/profile')}
-        />
+        <BackHeader label={translate('subscriber.address_edit.header')} onBack={goBack} />
 
         <h1 className="profile-title" id="x25-headline">
           {translate('subscriber.address_edit.title')}
@@ -158,9 +157,7 @@ export function AddressEditX25(): ReactElement {
           <span className="profile-eyebrow accent-warn" id="x25-warn-eyebrow">
             {translate('subscriber.address_edit.warn_eyebrow')}
           </span>
-          <p className="profile-warn-body">
-            {translate('subscriber.address_edit.warn_body')}
-          </p>
+          <p className="profile-warn-body">{translate('subscriber.address_edit.warn_body')}</p>
         </section>
 
         <div className="profile-field">
@@ -171,9 +168,7 @@ export function AddressEditX25(): ReactElement {
             <select
               id="x25-neighborhood"
               name="neighborhood"
-              onChange={(event) =>
-                setNeighborhood(event.target.value as LomeNeighborhood)
-              }
+              onChange={(event) => setNeighborhood(event.target.value as LomeNeighborhood)}
               required
               value={neighborhood}
             >
@@ -227,11 +222,7 @@ export function AddressEditX25(): ReactElement {
 
         <div className="profile-grow" />
 
-        <button
-          className="profile-button primary full lg"
-          disabled={!isValid}
-          type="submit"
-        >
+        <button className="profile-button primary full lg" disabled={!isValid} type="submit">
           {translate('subscriber.address_edit.submit.cta')}
         </button>
       </form>
@@ -243,16 +234,15 @@ export function AddressEditX25(): ReactElement {
 // X-26 · Notifications
 // ──────────────────────────────────────────────────────────────────────────
 export function NotificationsX26(): ReactElement {
-  const navigate = useNavigate();
-  const [enabled, setEnabled] = useState<Record<NotificationToggleDemo['id'], boolean>>(
-    () =>
-      SUBSCRIBER_NOTIFICATION_DEFAULTS.reduce(
-        (acc, toggle) => {
-          acc[toggle.id] = toggle.defaultEnabled;
-          return acc;
-        },
-        {} as Record<NotificationToggleDemo['id'], boolean>,
-      ),
+  const goBack = useSafeBack('/profile');
+  const [enabled, setEnabled] = useState<Record<NotificationToggleDemo['id'], boolean>>(() =>
+    SUBSCRIBER_NOTIFICATION_DEFAULTS.reduce(
+      (acc, toggle) => {
+        acc[toggle.id] = toggle.defaultEnabled;
+        return acc;
+      },
+      {} as Record<NotificationToggleDemo['id'], boolean>,
+    ),
   );
   const profile = SUBSCRIBER_PROFILE_DEMO;
 
@@ -267,8 +257,7 @@ export function NotificationsX26(): ReactElement {
       return translate('subscriber.notifications.push_route.sub', 'fr', {
         name: profile.workerFirstName,
       });
-    if (id === 'push_reveal')
-      return translate('subscriber.notifications.push_reveal.sub');
+    if (id === 'push_reveal') return translate('subscriber.notifications.push_reveal.sub');
     return translate('subscriber.notifications.email_recap.sub');
   };
 
@@ -282,10 +271,7 @@ export function NotificationsX26(): ReactElement {
   return (
     <main aria-labelledby="x26-headline" className="profile-screen" data-screen-id="X-26">
       <div className="profile-body profile-body-flow">
-        <BackHeader
-          label={translate('subscriber.notifications.header')}
-          onBack={() => navigate('/profile')}
-        />
+        <BackHeader label={translate('subscriber.notifications.header')} onBack={goBack} />
 
         <h1 className="profile-title" id="x26-headline">
           {translate('subscriber.notifications.title')}
@@ -329,14 +315,12 @@ export function NotificationsX26(): ReactElement {
 // ──────────────────────────────────────────────────────────────────────────
 export function PrivacyX27(): ReactElement {
   const navigate = useNavigate();
+  const goBack = useSafeBack('/profile');
 
   return (
     <main aria-labelledby="x27-headline" className="profile-screen" data-screen-id="X-27">
       <div className="profile-body profile-body-flow">
-        <BackHeader
-          label={translate('subscriber.privacy.header')}
-          onBack={() => navigate('/profile')}
-        />
+        <BackHeader label={translate('subscriber.privacy.header')} onBack={goBack} />
 
         <h1 className="profile-title" id="x27-headline">
           {translate('subscriber.privacy.title')}
@@ -404,6 +388,7 @@ function PrivacyCard({
 // ──────────────────────────────────────────────────────────────────────────
 export function DeleteAccountX28(): ReactElement {
   const navigate = useNavigate();
+  const goBack = useSafeBack('/profile/privacy');
   const profile = SUBSCRIBER_PROFILE_DEMO;
   const requiredToken = translate('subscriber.delete.confirm.token');
   const [typed, setTyped] = useState('');
@@ -416,10 +401,7 @@ export function DeleteAccountX28(): ReactElement {
   return (
     <main aria-labelledby="x28-headline" className="profile-screen" data-screen-id="X-28">
       <div className="profile-body profile-body-flow">
-        <BackHeader
-          label={translate('subscriber.delete.header')}
-          onBack={() => navigate('/profile/privacy')}
-        />
+        <BackHeader label={translate('subscriber.delete.header')} onBack={goBack} />
 
         <h1 className="profile-title" id="x28-headline">
           {translate('subscriber.delete.title')}
@@ -505,12 +487,7 @@ function BackHeader({
 }): ReactElement {
   return (
     <header className="profile-back-header">
-      <button
-        aria-label="Retour"
-        className="profile-back"
-        onClick={onBack}
-        type="button"
-      >
+      <button aria-label="Retour" className="profile-back" onClick={onBack} type="button">
         ‹
       </button>
       <span className="profile-eyebrow">{label.toUpperCase()}</span>

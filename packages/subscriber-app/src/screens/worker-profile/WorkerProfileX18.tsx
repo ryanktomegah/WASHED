@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
 
+import { useSafeBack } from '../../navigation/useSafeBack.js';
 import { SUBSCRIBER_WORKER_PROFILE_DEMO } from './workerProfileDemoData.js';
 
 const CHANGE_REASONS = ['personal', 'quality', 'behavior', 'schedule', 'other'] as const;
@@ -11,6 +12,7 @@ type ChangeReason = (typeof CHANGE_REASONS)[number];
 
 export function WorkerProfileX18(): ReactElement {
   const navigate = useNavigate();
+  const goBack = useSafeBack('/hub');
   const params = useParams();
   const worker =
     params.workerId === SUBSCRIBER_WORKER_PROFILE_DEMO.id
@@ -28,9 +30,9 @@ export function WorkerProfileX18(): ReactElement {
       <div className="worker-profile-body">
         <header className="worker-profile-header">
           <button
-            aria-label={translate('subscriber.dashboard.tab.home')}
+            aria-label="Retour"
             className="worker-profile-back"
-            onClick={() => navigate('/hub')}
+            onClick={goBack}
             type="button"
           >
             ‹
@@ -117,6 +119,7 @@ export function WorkerChangeX18C(): ReactElement {
     params.workerId === SUBSCRIBER_WORKER_PROFILE_DEMO.id
       ? SUBSCRIBER_WORKER_PROFILE_DEMO
       : undefined;
+  const goBack = useSafeBack(`/worker/${worker?.id ?? SUBSCRIBER_WORKER_PROFILE_DEMO.id}`);
   const [reason, setReason] = useState<ChangeReason>('personal');
 
   useEffect(() => {
@@ -132,9 +135,9 @@ export function WorkerChangeX18C(): ReactElement {
       <div className="worker-profile-body">
         <header className="worker-profile-header">
           <button
-            aria-label={translate('subscriber.worker.profile.header')}
+            aria-label="Retour"
             className="worker-profile-back"
-            onClick={() => navigate(`/worker/${worker.id}`)}
+            onClick={goBack}
             type="button"
           >
             ‹

@@ -1,12 +1,15 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactElement } from 'react';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 
 import { HistoryDetailX17, HistoryX16 } from './HistoryX16.js';
 
-function renderHistoryAt(path: string): { locationRef: { current: string } } {
-  const locationRef = { current: path };
+function renderHistoryAt(
+  path: string,
+  initialEntries: readonly string[] = [path],
+): { locationRef: { current: string } } {
+  const locationRef = { current: initialEntries.at(-1) ?? path };
 
   function Spy(): ReactElement {
     const location = useLocation();
@@ -14,13 +17,24 @@ function renderHistoryAt(path: string): { locationRef: { current: string } } {
     return null as unknown as ReactElement;
   }
 
+  function BrowserBackProbe(): ReactElement {
+    const navigate = useNavigate();
+
+    return (
+      <button onClick={() => navigate(-1)} type="button">
+        Browser back
+      </button>
+    );
+  }
+
   render(
-    <MemoryRouter initialEntries={[path]}>
+    <MemoryRouter initialEntries={[...initialEntries]} initialIndex={initialEntries.length - 1}>
       <Routes>
         <Route
           element={
             <>
               <HistoryX16 />
+              <BrowserBackProbe />
               <Spy />
             </>
           }
@@ -30,6 +44,7 @@ function renderHistoryAt(path: string): { locationRef: { current: string } } {
           element={
             <>
               <HistoryDetailX17 />
+              <BrowserBackProbe />
               <Spy />
             </>
           }
@@ -103,12 +118,34 @@ describe('Subscriber history detail · X-17', () => {
     expect(screen.getByText(/0\sXOF/u)).toBeVisible();
   });
 
-  it('routes the back control to X-16 history', () => {
+  it('routes the back control to X-16 history when opened directly', () => {
     const { locationRef } = renderHistoryAt('/history/visit-2026-04-28');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Visites' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
 
     expect(locationRef.current).toBe('/history');
+  });
+
+  it('replaces direct-open fallback entries so browser back does not loop to detail', () => {
+    const { locationRef } = renderHistoryAt('/history/visit-2026-04-28');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
+    expect(locationRef.current).toBe('/history');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Browser back' }));
+
+    expect(locationRef.current).toBe('/history');
+  });
+
+  it('routes the back control to the actual previous in-app page when history exists', () => {
+    const { locationRef } = renderHistoryAt('/history/visit-2026-04-28', [
+      '/plan',
+      '/history/visit-2026-04-28',
+    ]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
+
+    expect(locationRef.current).toBe('/plan');
   });
 
   it('routes posteriori report action to the issue branch', () => {

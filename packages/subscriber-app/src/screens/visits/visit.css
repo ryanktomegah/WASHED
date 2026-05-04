@@ -56,11 +56,27 @@
   text-transform: uppercase;
 }
 
-.visit-header span:first-child {
+.visit-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
   color: var(--ink);
+  cursor: pointer;
+  font: inherit;
   font-size: 20px;
   letter-spacing: 0;
   line-height: 1;
+  padding: 0;
+}
+
+.visit-back:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .visit-title {

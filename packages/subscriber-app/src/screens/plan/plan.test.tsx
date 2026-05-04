@@ -14,8 +14,12 @@ import {
   PlanX19,
 } from './PlanScreens.js';
 
-function renderAt(path: string, element: ReactElement): { locationRef: { current: string } } {
-  const locationRef = { current: path };
+function renderAt(
+  path: string,
+  element: ReactElement,
+  initialEntries: readonly string[] = [path],
+): { locationRef: { current: string } } {
+  const locationRef = { current: initialEntries.at(-1) ?? path };
 
   function Spy(): ReactElement {
     const location = useLocation();
@@ -24,7 +28,7 @@ function renderAt(path: string, element: ReactElement): { locationRef: { current
   }
 
   render(
-    <MemoryRouter initialEntries={[path]}>
+    <MemoryRouter initialEntries={[...initialEntries]} initialIndex={initialEntries.length - 1}>
       <Routes>
         <Route
           element={
@@ -127,6 +131,16 @@ describe('Subscriber plan · X-21 Payment method', () => {
     const { locationRef } = renderAt('/plan/payment-method', <PlanPaymentMethodX21 />);
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
     expect(locationRef.current).toBe('/plan');
+  });
+
+  it('header back returns to the actual previous in-app page before falling back', () => {
+    const { locationRef } = renderAt('/plan/payment-method', <PlanPaymentMethodX21 />, [
+      '/history',
+      '/plan/payment-method',
+    ]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
+    expect(locationRef.current).toBe('/history');
   });
 });
 

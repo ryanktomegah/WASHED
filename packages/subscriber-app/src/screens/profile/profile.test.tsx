@@ -11,8 +11,12 @@ import {
   ProfileX24,
 } from './ProfileScreens.js';
 
-function renderAt(path: string, element: ReactElement): { locationRef: { current: string } } {
-  const locationRef = { current: path };
+function renderAt(
+  path: string,
+  element: ReactElement,
+  initialEntries: readonly string[] = [path],
+): { locationRef: { current: string } } {
+  const locationRef = { current: initialEntries.at(-1) ?? path };
 
   function Spy(): ReactElement {
     const location = useLocation();
@@ -21,7 +25,7 @@ function renderAt(path: string, element: ReactElement): { locationRef: { current
   }
 
   render(
-    <MemoryRouter initialEntries={[path]}>
+    <MemoryRouter initialEntries={[...initialEntries]} initialIndex={initialEntries.length - 1}>
       <Routes>
         <Route
           element={
@@ -55,10 +59,7 @@ describe('Subscriber profile · X-24', () => {
     expect(screen.getByRole('button', { name: /Vie privée/u })).toBeVisible();
 
     // Profil tab is active in the bottom nav.
-    expect(screen.getByRole('button', { name: 'Profil' })).toHaveAttribute(
-      'aria-current',
-      'page',
-    );
+    expect(screen.getByRole('button', { name: 'Profil' })).toHaveAttribute('aria-current', 'page');
   });
 
   it('routes Adresse, Notifications, and Vie privée to their screens', () => {
@@ -143,6 +144,16 @@ describe('Subscriber profile · X-27 Privacy', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Supprimer mon compte' }));
     expect(locationRef.current).toBe('/profile/delete');
+  });
+
+  it('header back returns to the actual previous in-app page before falling back', () => {
+    const { locationRef } = renderAt('/profile/privacy', <PrivacyX27 />, [
+      '/hub',
+      '/profile/privacy',
+    ]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
+    expect(locationRef.current).toBe('/hub');
   });
 });
 

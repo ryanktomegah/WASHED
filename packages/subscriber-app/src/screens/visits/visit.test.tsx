@@ -14,8 +14,12 @@ import {
   VisitRevealX14,
 } from './VisitScreens.js';
 
-function renderAt(path: string, element: ReactElement): { locationRef: { current: string } } {
-  const locationRef = { current: path };
+function renderAt(
+  path: string,
+  element: ReactElement,
+  initialEntries: readonly string[] = [path],
+): { locationRef: { current: string } } {
+  const locationRef = { current: initialEntries.at(-1) ?? path };
 
   function Spy(): ReactElement {
     const location = useLocation();
@@ -24,7 +28,7 @@ function renderAt(path: string, element: ReactElement): { locationRef: { current
   }
 
   render(
-    <MemoryRouter initialEntries={[path]}>
+    <MemoryRouter initialEntries={[...initialEntries]} initialIndex={initialEntries.length - 1}>
       <Routes>
         <Route
           element={
@@ -85,6 +89,16 @@ describe('Subscriber visit · X-11.M Reschedule', () => {
     expect(saturday.checked).toBe(true);
 
     fireEvent.click(screen.getByRole('button', { name: 'Confirmer le report' }));
+    expect(locationRef.current).toBe('/visit/detail');
+  });
+
+  it('returns to the actual previous visit page from the header control', () => {
+    const { locationRef } = renderAt('/visit/reschedule', <VisitRescheduleX11M />, [
+      '/visit/detail',
+      '/visit/reschedule',
+    ]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
     expect(locationRef.current).toBe('/visit/detail');
   });
 });
