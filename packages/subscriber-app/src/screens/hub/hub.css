@@ -293,3 +293,164 @@
     font-size: 38px;
   }
 }
+
+/* ============================================================
+   X-09 First-session tour — overlay on top of the hub.
+   Locked to design/05-subscriber/subscriber.html:1126-1152.
+   ============================================================ */
+
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  pointer-events: auto;
+}
+
+.tour-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(28, 18, 8, 0.55);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.tour-sheet {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: 22px 22px 0 0;
+  background: var(--ink);
+  color: white;
+  padding: 22px 22px calc(22px + env(safe-area-inset-bottom));
+  box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.28);
+}
+
+.tour-meta {
+  display: flex;
+  align-items: center;
+}
+
+.tour-eyebrow {
+  color: var(--primary-tint, color-mix(in srgb, var(--primary) 78%, white 22%));
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.tour-title {
+  margin: 0;
+  color: white;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+.tour-title em {
+  color: white;
+  font-style: italic;
+}
+
+.tour-body {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.tour-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.tour-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.tour-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.3);
+  transition: background-color var(--d-fast) var(--ease-standard),
+    width var(--d-fast) var(--ease-standard);
+}
+
+.tour-dot.active {
+  width: 16px;
+  background: var(--primary-tint, color-mix(in srgb, var(--primary) 78%, white 22%));
+}
+
+.tour-skip {
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.65);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 4px;
+  cursor: pointer;
+}
+
+.tour-skip:focus-visible {
+  outline: 2px solid var(--primary-tint, color-mix(in srgb, var(--primary) 78%, white 22%));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.tour-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.tour-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-min);
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: background-color var(--d-fast) var(--ease-standard),
+    transform var(--d-fast) var(--ease-standard);
+}
+
+.tour-button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.tour-button.secondary {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+}
+
+.tour-button.secondary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.tour-button.primary {
+  background: white;
+  color: var(--ink);
+}

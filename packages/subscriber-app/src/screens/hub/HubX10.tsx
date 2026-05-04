@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
 
+import { TourX09 } from './TourX09.js';
 import { greetingTimeOfDay, SUBSCRIBER_HUB_DEMO } from './subscriberHubData.js';
+import { useTourState } from './useTourState.js';
 
 // Renders deck key `subscriber.dashboard.streak.label` ({count} visites avec
 // {name}) with the count fragment italicised per design contract. We split on
@@ -38,6 +40,7 @@ export function HubX10(): ReactElement {
   const hub = SUBSCRIBER_HUB_DEMO;
   const timeOfDay = greetingTimeOfDay();
   const greetingKey = `subscriber.dashboard.greeting.${timeOfDay}` as const;
+  const tour = useTourState();
 
   const tenureLabel =
     hub.worker.tenureMonths === 0
@@ -147,6 +150,7 @@ export function HubX10(): ReactElement {
           </button>
         </nav>
       </div>
+      {tour.isOpen ? <TourX09 onDismiss={tour.dismiss} /> : null}
     </main>
   );
 }

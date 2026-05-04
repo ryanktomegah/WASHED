@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HubX10 } from './HubX10.js';
+import { TOUR_STORAGE_KEY } from './useTourState.js';
 
 function renderAt(path: string, element: ReactElement): { locationRef: { current: string } } {
   const locationRef = { current: path };
@@ -37,9 +38,13 @@ function renderAt(path: string, element: ReactElement): { locationRef: { current
 describe('Subscriber hub · X-10', () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    // Hub tests assert hub-only behavior — pre-mark the X-09 tour
+    // completed so it doesn't overlay the queries below.
+    window.localStorage.setItem(TOUR_STORAGE_KEY, '1');
   });
   afterEach(() => {
     vi.useRealTimers();
+    window.localStorage.removeItem(TOUR_STORAGE_KEY);
   });
 
   it('renders the locked deck copy: greeting, next visit, worker tenure, streak, nav', () => {
@@ -96,5 +101,64 @@ describe('Subscriber hub · X-10', () => {
 
     renderAt('/hub', <HubX10 />);
     expect(screen.getByText('Bonsoir Yawa.')).toBeVisible();
+  });
+});
+
+describe('Subscriber tour · X-09 (overlay on hub)', () => {
+  beforeEach(() => {
+    // Tour assertions need a clean storage so the overlay mounts.
+    window.localStorage.removeItem(TOUR_STORAGE_KEY);
+  });
+  afterEach(() => {
+    window.localStorage.removeItem(TOUR_STORAGE_KEY);
+  });
+
+  it('mounts step 1 over the hub on first visit, with deck copy', () => {
+    renderAt('/hub', <HubX10 />);
+
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveAttribute('data-screen-id', 'X-09');
+    expect(dialog).toHaveAccessibleName('Votre prochaine visite est ici.');
+    expect(screen.getByText(/1 \/ 3 · DÉCOUVERTE/u)).toBeVisible();
+    expect(
+      screen.getByText(
+        "Toutes les semaines, votre laveuse vient le jour convenu. Vous saurez quand elle arrive — par SMS et dans l'app.",
+      ),
+    ).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Précédent' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Suivant' })).toBeEnabled();
+  });
+
+  it('advances through step 2 → 3 then commits the completed flag on finish', () => {
+    renderAt('/hub', <HubX10 />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Suivant' }));
+    expect(screen.getByText(/2 \/ 3 · DÉCOUVERTE/u)).toBeVisible();
+    expect(
+      screen.getByRole('heading', { name: 'Votre laveuse, toujours la même.' }),
+    ).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Précédent' })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Suivant' }));
+    expect(screen.getByText(/3 \/ 3 · DÉCOUVERTE/u)).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Une relation qui dure.' })).toBeVisible();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Commencer' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(window.localStorage.getItem(TOUR_STORAGE_KEY)).toBe('1');
+  });
+
+  it('Passer dismisses immediately and persists the flag', () => {
+    renderAt('/hub', <HubX10 />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Passer' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(window.localStorage.getItem(TOUR_STORAGE_KEY)).toBe('1');
+  });
+
+  it('does not remount the tour on subsequent visits to the hub', () => {
+    window.localStorage.setItem(TOUR_STORAGE_KEY, '1');
+    renderAt('/hub', <HubX10 />);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

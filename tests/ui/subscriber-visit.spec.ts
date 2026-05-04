@@ -12,6 +12,15 @@ const screenRoutes = [
 ] as const;
 
 test.describe('Subscriber visit flow X-11 → X-15', () => {
+  // Most tests target post-onboarding state — pre-mark the X-09 first-session
+  // tour completed so the hub renders clean. The tour itself has its own spec
+  // below where the flag is explicitly cleared.
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('washed.x09.completed', '1');
+    });
+  });
+
   for (const [slug, route, screenId] of screenRoutes) {
     test(`${screenId} deep-link capture`, async ({ page }, testInfo) => {
       await page.goto(route);
@@ -99,6 +108,49 @@ test.describe('Subscriber visit flow X-11 → X-15', () => {
 
     await page.getByRole('button', { name: "Fermer l'app sereinement" }).click();
     await expect(page).toHaveURL(/#\/hub/u);
+    await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
+  });
+
+});
+
+// The X-09 first-session tour belongs to its own describe so it does NOT
+// inherit the parent suite's `localStorage.setItem('washed.x09.completed', '1')`
+// init script — that pre-set would suppress the tour we're trying to assert.
+test.describe('Subscriber tour X-09 (first session)', () => {
+  test('mounts on a fresh hub, walks 3 steps, persists the completed flag', async ({
+    page,
+  }, testInfo) => {
+    await page.goto('/#/hub');
+
+    const dialog = page.locator('[data-screen-id="X-09"]');
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toHaveAttribute('role', 'dialog');
+    await expect(page.getByText(/1 \/ 3 · DÉCOUVERTE/u)).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Votre prochaine visite est ici.' }),
+    ).toBeVisible();
+
+    const screenshotPath = testInfo.outputPath(`x-09-tour-step1-${testInfo.project.name}.png`);
+    await page.screenshot({ fullPage: true, path: screenshotPath });
+    await testInfo.attach(`x-09-tour-step1-${testInfo.project.name}`, {
+      contentType: 'image/png',
+      path: screenshotPath,
+    });
+
+    await page.getByRole('button', { name: 'Suivant' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Votre laveuse, toujours la même.' }),
+    ).toBeVisible();
+
+    await page.getByRole('button', { name: 'Suivant' }).click();
+    await expect(page.getByRole('heading', { name: 'Une relation qui dure.' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Commencer' }).click();
+    await expect(dialog).toBeHidden();
+
+    // Reload — the localStorage flag should keep the tour from re-mounting.
+    await page.reload();
+    await expect(dialog).toBeHidden();
     await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
   });
 });
