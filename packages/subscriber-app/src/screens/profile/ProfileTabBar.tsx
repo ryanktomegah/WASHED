@@ -9,7 +9,7 @@ import { translate } from '@washed/i18n';
 export function ProfileTabBar(): ReactElement {
   const navigate = useNavigate();
   return (
-    <nav className="hub-nav" aria-label="Navigation principale">
+    <nav className="hub-nav" aria-label={translate('common.navigation.main')}>
       <button className="hub-nav-item" type="button" onClick={() => navigate('/hub')}>
         <span aria-hidden="true" className="hub-nav-glyph" />
         {translate('subscriber.dashboard.tab.home')}

@@ -1,7 +1,8 @@
 import { useState, type ChangeEvent, type FormEvent, type ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { translate } from '@washed/i18n';
+import { translate, type WashedLocale } from '@washed/i18n';
+import { useActiveLocale } from '@washed/ui';
 
 import { useSafeBack } from '../../navigation/useSafeBack.js';
 import { ProfileTabBar } from './ProfileTabBar.js';
@@ -13,11 +14,57 @@ import {
   type NotificationToggleDemo,
 } from './profileDemoData.js';
 
+function dateFromIso(dateIso: string): Date {
+  return new Date(`${dateIso}T12:00:00.000Z`);
+}
+
+function localeTag(locale: WashedLocale): string {
+  return locale === 'fr' ? 'fr-TG' : 'en-US';
+}
+
+function capitalizeFirst(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function formatDayMonth(dateIso: string, locale: WashedLocale): string {
+  return new Intl.DateTimeFormat(localeTag(locale), {
+    day: 'numeric',
+    month: 'long',
+  }).format(dateFromIso(dateIso));
+}
+
+function formatShortMonthYear(dateIso: string, locale: WashedLocale): string {
+  return new Intl.DateTimeFormat(localeTag(locale), {
+    month: 'short',
+    year: 'numeric',
+  }).format(dateFromIso(dateIso));
+}
+
+function formatSentenceWeekday(dateIso: string, locale: WashedLocale): string {
+  const weekday = capitalizeFirst(
+    new Intl.DateTimeFormat(localeTag(locale), {
+      weekday: 'long',
+    }).format(dateFromIso(dateIso)),
+  );
+  return locale === 'fr' ? weekday.toLowerCase() : weekday;
+}
+
+function formatClockHour(time24h: string, locale: WashedLocale): string {
+  const [hour = '0'] = time24h.split(':');
+  const hour24 = Number(hour);
+  if (locale === 'fr') return `${hour24} h`;
+
+  const hour12 = ((hour24 + 11) % 12) + 1;
+  const period = hour24 >= 12 ? 'PM' : 'AM';
+  return `${hour12} ${period}`;
+}
+
 // ──────────────────────────────────────────────────────────────────────────
 // X-24 · Profile + settings list
 // ──────────────────────────────────────────────────────────────────────────
 export function ProfileX24(): ReactElement {
   const navigate = useNavigate();
+  const locale = useActiveLocale();
   const profile = SUBSCRIBER_PROFILE_DEMO;
 
   return (
@@ -37,14 +84,14 @@ export function ProfileX24(): ReactElement {
             </h1>
             <span>{profile.phoneDisplay}</span>
             <span>
-              {translate('subscriber.profile.member_since', 'fr', {
-                date: profile.memberSinceLabel,
+              {translate('subscriber.profile.member_since', {
+                date: formatShortMonthYear(profile.memberSinceIso, locale),
               })}
             </span>
           </div>
         </section>
 
-        <ul className="profile-menu" aria-label="Paramètres">
+        <ul className="profile-menu" aria-label={translate('subscriber.profile.menu.label')}>
           <ProfileMenuItem
             label={translate('subscriber.profile.menu.address')}
             value={profile.addressNeighborhood}
@@ -56,7 +103,7 @@ export function ProfileX24(): ReactElement {
           />
           <ProfileMenuItem
             label={translate('subscriber.profile.menu.language')}
-            badge={profile.languageCode}
+            badge={locale.toUpperCase()}
           />
           <ProfileMenuItem
             label={translate('subscriber.profile.menu.privacy')}
@@ -152,7 +199,7 @@ export function AddressEditX25(): ReactElement {
         </h1>
 
         <p className="profile-copy">
-          {translate('subscriber.address_edit.body', 'fr', {
+          {translate('subscriber.address_edit.body', {
             name: profile.workerFirstName,
           })}
         </p>
@@ -198,7 +245,7 @@ export function AddressEditX25(): ReactElement {
             id="x25-street"
             name="street"
             onChange={(event) => setStreet(event.target.value)}
-            placeholder="rue 18, immeuble jaune"
+            placeholder={translate('subscriber.address_edit.field.street.placeholder')}
             type="text"
             value={street}
           />
@@ -214,7 +261,7 @@ export function AddressEditX25(): ReactElement {
             id="x25-landmark"
             name="landmark"
             onChange={(event) => setLandmark(event.target.value)}
-            placeholder="en face de la pharmacie"
+            placeholder={translate('subscriber.address_edit.field.landmark.placeholder')}
             type="text"
             value={landmark}
           />
@@ -239,6 +286,7 @@ export function AddressEditX25(): ReactElement {
 // ──────────────────────────────────────────────────────────────────────────
 export function NotificationsX26(): ReactElement {
   const goBack = useSafeBack('/profile');
+  const locale = useActiveLocale();
   const [enabled, setEnabled] = useState<Record<NotificationToggleDemo['id'], boolean>>(() =>
     SUBSCRIBER_NOTIFICATION_DEFAULTS.reduce(
       (acc, toggle) => {
@@ -252,13 +300,13 @@ export function NotificationsX26(): ReactElement {
 
   const subFor = (id: NotificationToggleDemo['id']): string => {
     if (id === 'sms_reminder')
-      return translate('subscriber.notifications.sms_reminder.sub', 'fr', {
-        weekday: profile.nextVisit.weekday,
-        time: '9 h',
+      return translate('subscriber.notifications.sms_reminder.sub', {
+        weekday: formatSentenceWeekday(profile.nextVisit.dateIso, locale),
+        time: formatClockHour(profile.nextVisit.time24h, locale),
         hours: 21,
       });
     if (id === 'push_route')
-      return translate('subscriber.notifications.push_route.sub', 'fr', {
+      return translate('subscriber.notifications.push_route.sub', {
         name: profile.workerFirstName,
       });
     if (id === 'push_reveal') return translate('subscriber.notifications.push_reveal.sub');
@@ -393,6 +441,7 @@ function PrivacyCard({
 export function DeleteAccountX28(): ReactElement {
   const navigate = useNavigate();
   const goBack = useSafeBack('/profile/privacy');
+  const locale = useActiveLocale();
   const profile = SUBSCRIBER_PROFILE_DEMO;
   const requiredToken = translate('subscriber.delete.confirm.token');
   const [typed, setTyped] = useState('');
@@ -412,7 +461,7 @@ export function DeleteAccountX28(): ReactElement {
         </h1>
 
         <p className="profile-copy">
-          {translate('subscriber.delete.body', 'fr', {
+          {translate('subscriber.delete.body', {
             count: profile.visitsWithWorker,
             name: profile.workerFirstName,
           })}
@@ -424,14 +473,14 @@ export function DeleteAccountX28(): ReactElement {
           </span>
           <ul className="profile-list">
             <li>
-              {translate('subscriber.delete.warn.cancel_visit', 'fr', {
-                weekday: profile.nextVisit.weekday,
-                date: profile.nextVisit.date,
+              {translate('subscriber.delete.warn.cancel_visit', {
+                weekday: formatSentenceWeekday(profile.nextVisit.dateIso, locale),
+                date: formatDayMonth(profile.nextVisit.dateIso, locale),
               })}
             </li>
             <li>{translate('subscriber.delete.warn.photos')}</li>
             <li>
-              {translate('subscriber.delete.warn.reassign', 'fr', {
+              {translate('subscriber.delete.warn.reassign', {
                 name: profile.workerFirstName,
               })}
             </li>
@@ -491,7 +540,12 @@ function BackHeader({
 }): ReactElement {
   return (
     <header className="profile-back-header">
-      <button aria-label="Retour" className="profile-back" onClick={onBack} type="button">
+      <button
+        aria-label={translate('common.action.back')}
+        className="profile-back"
+        onClick={onBack}
+        type="button"
+      >
         ‹
       </button>
       <span className="profile-eyebrow">{label.toUpperCase()}</span>

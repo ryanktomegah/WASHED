@@ -14,22 +14,22 @@ export function WelcomeX08(): ReactElement {
           w
         </div>
 
-        <h1 aria-label="Bienvenue chez Washed." className="h-md welcome-title" id="x08-headline">
-          <em>Bienvenue</em>
+        <h1
+          aria-label={translate('subscriber.signup.welcome.title')}
+          className="h-md welcome-title"
+          id="x08-headline"
+        >
+          <em>{translate('subscriber.signup.welcome.title_prefix')}</em>
           <br />
-          chez Washed.
+          {translate('subscriber.signup.welcome.title_suffix')}
         </h1>
 
         <p className="p welcome-body">{translate('subscriber.signup.welcome.body')}</p>
 
         <div className="grow" />
 
-        <button
-          className="btn full primary"
-          onClick={() => navigate('/hub')}
-          type="button"
-        >
-          Voir mon accueil
+        <button className="btn full primary" onClick={() => navigate('/hub')} type="button">
+          {translate('subscriber.signup.welcome.cta')}
         </button>
       </div>
     </main>

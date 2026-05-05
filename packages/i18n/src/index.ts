@@ -41,12 +41,26 @@ export function normalizeLocale(locale: string | undefined): WashedLocale {
   return 'fr';
 }
 
+export function translate(key: MessageKey): string;
+export function translate(key: MessageKey, values: Record<string, string | number>): string;
 export function translate(
   key: MessageKey,
-  locale: WashedLocale = activeLocale,
-  values: Record<string, string | number> = {},
+  locale: WashedLocale,
+  values?: Record<string, string | number>,
+): string;
+export function translate(
+  key: MessageKey,
+  localeOrValues?: WashedLocale | Record<string, string | number>,
+  values?: Record<string, string | number>,
+): string;
+export function translate(
+  key: MessageKey,
+  localeOrValues: WashedLocale | Record<string, string | number> = activeLocale,
+  maybeValues: Record<string, string | number> = {},
 ): string {
-  const template = locale === 'en' ? en[key] ?? fr[key] : fr[key];
+  const locale = typeof localeOrValues === 'string' ? localeOrValues : activeLocale;
+  const values = typeof localeOrValues === 'string' ? maybeValues : localeOrValues;
+  const template = locale === 'en' ? (en[key] ?? fr[key]) : fr[key];
 
   return template.replace(/\{([A-Za-z0-9_]+)\}/gu, (match, valueKey: string) =>
     values[valueKey] === undefined ? match : String(values[valueKey]),
@@ -57,20 +71,27 @@ export function hasMessageKey(key: string): key is MessageKey {
   return Object.hasOwn(fr, key);
 }
 
-const xofFormat = new Intl.NumberFormat('fr-FR', {
-  maximumFractionDigits: 0,
-  minimumFractionDigits: 0,
-});
+const xofFormats: Record<WashedLocale, Intl.NumberFormat> = {
+  en: new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+  }),
+  fr: new Intl.NumberFormat('fr-FR', {
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+  }),
+};
 
-export function formatXof(amountMinor: bigint | number): string {
-  const amount = typeof amountMinor === 'bigint' ? Number(amountMinor) : amountMinor;
-  return `${xofFormat.format(amount).replace(/\s/g, ' ')} XOF`;
-}
-
-export function formatVisitDate(
-  value: Date | string,
+export function formatXof(
+  amountMinor: bigint | number,
   locale: WashedLocale = activeLocale,
 ): string {
+  const amount = typeof amountMinor === 'bigint' ? Number(amountMinor) : amountMinor;
+  const formatted = xofFormats[locale].format(amount).replace(/\s/g, ' ');
+  return `${formatted} XOF`;
+}
+
+export function formatVisitDate(value: Date | string, locale: WashedLocale = activeLocale): string {
   const date = typeof value === 'string' ? new Date(value) : value;
 
   return new Intl.DateTimeFormat(locale === 'fr' ? 'fr-TG' : 'en-TG', {

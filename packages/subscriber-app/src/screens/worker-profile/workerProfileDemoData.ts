@@ -6,9 +6,15 @@ export interface WorkerProfileDemo {
   readonly distanceFromHome: string;
   readonly tenureMonths: number;
   readonly visitCount: number;
-  readonly since: string;
+  readonly since: {
+    readonly en: string;
+    readonly fr: string;
+  };
   readonly regularHouseholds: number;
-  readonly languages: string;
+  readonly languages: {
+    readonly en: string;
+    readonly fr: string;
+  };
   readonly totalVisits: number;
   readonly cancellationsByWorker: number;
   readonly onTimeRateThisMonth: number;
@@ -22,9 +28,9 @@ export const SUBSCRIBER_WORKER_PROFILE_DEMO: WorkerProfileDemo = {
   distanceFromHome: '800 m',
   tenureMonths: 8,
   visitCount: 32,
-  since: 'septembre 2025',
+  since: { en: 'September 2025', fr: 'septembre 2025' },
   regularHouseholds: 14,
-  languages: 'français et éwé',
+  languages: { en: 'French and Ewe', fr: 'français et éwé' },
   totalVisits: 238,
   cancellationsByWorker: 0,
   onTimeRateThisMonth: 100,

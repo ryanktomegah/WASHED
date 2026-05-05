@@ -1,16 +1,42 @@
 import { type ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { translate } from '@washed/i18n';
+import { translate, type WashedLocale } from '@washed/i18n';
+import { useActiveLocale } from '@washed/ui';
 
 import { TourX09 } from './TourX09.js';
 import { greetingTimeOfDay, SUBSCRIBER_HUB_DEMO } from './subscriberHubData.js';
 import { useTourState } from './useTourState.js';
 
-// Renders deck key `subscriber.dashboard.streak.label` ({count} visites avec
-// {name}) with the count fragment italicised per design contract. We split on
-// " avec " — the deck-locked French connector — so the italic span tracks
-// translation changes to the count phrasing without needing a sub-key.
+function dateFromIso(dateIso: string): Date {
+  return new Date(`${dateIso}T12:00:00.000Z`);
+}
+
+function localeTag(locale: WashedLocale): string {
+  return locale === 'fr' ? 'fr-TG' : 'en-US';
+}
+
+function capitalizeFirst(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function formatWeekday(dateIso: string, locale: WashedLocale): string {
+  return capitalizeFirst(
+    new Intl.DateTimeFormat(localeTag(locale), {
+      weekday: 'long',
+    }).format(dateFromIso(dateIso)),
+  );
+}
+
+function formatDayMonth(dateIso: string, locale: WashedLocale): string {
+  return new Intl.DateTimeFormat(localeTag(locale), {
+    day: 'numeric',
+    month: 'long',
+  }).format(dateFromIso(dateIso));
+}
+
+// Renders the count fragment italicised per the design contract while allowing
+// each locale to choose its own connector before the worker name.
 function StreakLine({
   count,
   workerFirstName,
@@ -18,11 +44,11 @@ function StreakLine({
   readonly count: number;
   readonly workerFirstName: string;
 }): ReactElement {
-  const fullLine = translate('subscriber.dashboard.streak.label', 'fr', {
+  const fullLine = translate('subscriber.dashboard.streak.label', {
     count,
     name: workerFirstName,
   });
-  const connector = ' avec ';
+  const connector = fullLine.includes(' avec ') ? ' avec ' : ' with ';
   const splitAt = fullLine.indexOf(connector);
   if (splitAt === -1) return <>{fullLine}</>;
   const countPhrase = fullLine.slice(0, splitAt);
@@ -37,6 +63,7 @@ function StreakLine({
 
 export function HubX10(): ReactElement {
   const navigate = useNavigate();
+  const locale = useActiveLocale();
   const hub = SUBSCRIBER_HUB_DEMO;
   const timeOfDay = greetingTimeOfDay();
   const greetingKey = `subscriber.dashboard.greeting.${timeOfDay}` as const;
@@ -45,7 +72,7 @@ export function HubX10(): ReactElement {
   const tenureLabel =
     hub.worker.tenureMonths === 0
       ? translate('subscriber.dashboard.worker.tenure_first')
-      : translate('subscriber.dashboard.worker.tenure', 'fr', {
+      : translate('subscriber.dashboard.worker.tenure', {
           neighborhood: hub.worker.neighborhood,
           months: hub.worker.tenureMonths,
         });
@@ -55,7 +82,7 @@ export function HubX10(): ReactElement {
       <div className="hub-body">
         <header className="hub-header">
           <span className="hub-greeting" id="x10-headline">
-            {translate(greetingKey, 'fr', { name: hub.subscriberFirstName })}
+            {translate(greetingKey, { name: hub.subscriberFirstName })}
           </span>
           <span aria-hidden="true" className="hub-avatar hub-avatar-sm">
             {hub.subscriberFirstName.charAt(0)}
@@ -67,16 +94,16 @@ export function HubX10(): ReactElement {
             {translate('subscriber.dashboard.next_visit.label')}
           </span>
           <span className="hub-day">
-            <em>{hub.nextVisit.weekday}</em>
+            <em>{formatWeekday(hub.nextVisit.dateIso, locale)}</em>
           </span>
           <span className="hub-time">
-            {translate('subscriber.dashboard.next_visit.time', 'fr', {
+            {translate('subscriber.dashboard.next_visit.time', {
               hour: hub.nextVisit.hour,
               min: hub.nextVisit.minute.toString().padStart(2, '0'),
             })}
           </span>
           <span className="hub-countdown">
-            {translate('subscriber.dashboard.next_visit.countdown', 'fr', {
+            {translate('subscriber.dashboard.next_visit.countdown', {
               days: hub.nextVisit.inDays,
               hours: hub.nextVisit.inHours,
             })}
@@ -118,8 +145,8 @@ export function HubX10(): ReactElement {
 
         <aside className="hub-streak-card" aria-labelledby="x10-last-visit-label">
           <span className="hub-eyebrow accent" id="x10-last-visit-label">
-            {translate('subscriber.dashboard.last_visit.label', 'fr', {
-              date: hub.lastVisit.dateLabel,
+            {translate('subscriber.dashboard.last_visit.label', {
+              date: formatDayMonth(hub.lastVisit.dateIso, locale),
             })}
           </span>
           <p className="hub-streak-body">
@@ -132,7 +159,7 @@ export function HubX10(): ReactElement {
 
         <div className="hub-grow" />
 
-        <nav className="hub-nav" aria-label="Navigation principale">
+        <nav className="hub-nav" aria-label={translate('common.navigation.main')}>
           <button className="hub-nav-item active" type="button" aria-current="page">
             <span aria-hidden="true" className="hub-nav-glyph" />
             {translate('subscriber.dashboard.tab.home')}

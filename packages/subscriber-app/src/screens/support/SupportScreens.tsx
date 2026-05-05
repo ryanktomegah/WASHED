@@ -1,7 +1,8 @@
 import { useState, type ChangeEvent, type FormEvent, type ReactElement } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { translate } from '@washed/i18n';
+import { translate, type WashedLocale } from '@washed/i18n';
+import { useActiveLocale } from '@washed/ui';
 
 import { useSafeBack } from '../../navigation/useSafeBack.js';
 import {
@@ -14,10 +15,15 @@ import {
   SUPPORT_PHONE_HREF,
   SUPPORT_TICKETS,
   UPDATE_REQUIRED_URL,
+  type LocalizedTextDemo,
   type SupportCategoryId,
   type SupportFaqId,
   type SupportTicketDemo,
 } from './supportDemoData.js';
+
+function localized(value: LocalizedTextDemo, locale: WashedLocale): string {
+  return value[locale];
+}
 
 export function HelpCenterX29(): ReactElement {
   const navigate = useNavigate();
@@ -92,7 +98,7 @@ export function HelpCenterX29(): ReactElement {
           onClick={() => navigate('/support/tickets')}
           type="button"
         >
-          {translate('subscriber.support.help.tickets.cta', 'fr', { openCount })}
+          {translate('subscriber.support.help.tickets.cta', { openCount })}
         </button>
       </div>
     </main>
@@ -178,11 +184,14 @@ export function ContactSubmittedX30S(): ReactElement {
           {translate('subscriber.support.contact.submitted.title')}
         </h1>
         <p className="support-copy centered">
-          {translate('subscriber.support.contact.submitted.body', 'fr', { ticketId })}
+          {translate('subscriber.support.contact.submitted.body', { ticketId })}
         </p>
-        <section className="support-card cream full" aria-label="Ticket créé">
+        <section
+          className="support-card cream full"
+          aria-label={translate('subscriber.support.contact.submitted.created_label')}
+        >
           <span className="support-eyebrow accent">
-            {translate('subscriber.support.contact.submitted.card_eyebrow', 'fr', { ticketId })}
+            {translate('subscriber.support.contact.submitted.card_eyebrow', { ticketId })}
           </span>
           <p>{translate('subscriber.support.contact.submitted.card_status')}</p>
         </section>
@@ -253,6 +262,7 @@ export function TicketsX31(): ReactElement {
 export function TicketDetailX32(): ReactElement {
   const params = useParams();
   const goBack = useSafeBack('/support/tickets');
+  const locale = useActiveLocale();
   const [reply, setReply] = useState('');
   const ticket = findSupportTicket(params.ticketId);
 
@@ -289,14 +299,14 @@ export function TicketDetailX32(): ReactElement {
     <main aria-labelledby="x32-headline" className="support-screen" data-screen-id="X-32">
       <div className="support-body">
         <SupportBackHeader
-          label={translate('subscriber.support.ticket.detail.header', 'fr', {
+          label={translate('subscriber.support.ticket.detail.header', {
             ticketId: ticket.id,
           })}
           onBack={goBack}
         />
         <span className={`support-status ${ticket.status}`}>{statusText}</span>
         <h1 className="support-title ticket" id="x32-headline">
-          {ticket.title}
+          {localized(ticket.title, locale)}
         </h1>
 
         <div className="support-thread">
@@ -304,18 +314,22 @@ export function TicketDetailX32(): ReactElement {
             <article
               className={`support-message ${message.author}`}
               key={message.id}
-              aria-label={message.author === 'subscriber' ? 'Message abonné' : 'Message bureau'}
+              aria-label={
+                message.author === 'subscriber'
+                  ? translate('subscriber.support.ticket.detail.message_subscriber_label')
+                  : translate('subscriber.support.ticket.detail.message_office_label')
+              }
             >
               <span className="support-eyebrow">
                 {message.author === 'subscriber'
-                  ? translate('subscriber.support.ticket.detail.user_label', 'fr', {
-                      timeAgo: message.timeAgo,
+                  ? translate('subscriber.support.ticket.detail.user_label', {
+                      timeAgo: localized(message.timeAgo, locale),
                     })
-                  : translate('subscriber.support.ticket.detail.office_label', 'fr', {
-                      timeAgo: message.timeAgo,
+                  : translate('subscriber.support.ticket.detail.office_label', {
+                      timeAgo: localized(message.timeAgo, locale),
                     })}
               </span>
-              <p>{message.body}</p>
+              <p>{localized(message.body, locale)}</p>
               {message.author === 'subscriber' && ticket.attachments !== undefined ? (
                 <div className="support-attachment-row">
                   {ticket.attachments.map((attachment) => (
@@ -356,6 +370,7 @@ export function TicketDetailX32(): ReactElement {
 
 export function OfflineX33(): ReactElement {
   const navigate = useNavigate();
+  const locale = useActiveLocale();
   const visit = SUPPORT_DEMO.nextVisit;
 
   return (
@@ -363,7 +378,7 @@ export function OfflineX33(): ReactElement {
       <div className="support-body">
         <header className="support-topline">
           <span className="support-eyebrow">
-            {translate('subscriber.system.offline.greeting', 'fr', {
+            {translate('subscriber.system.offline.greeting', {
               name: SUPPORT_DEMO.subscriberFirstName,
             })}
           </span>
@@ -372,8 +387,8 @@ export function OfflineX33(): ReactElement {
 
         <div className="support-ribbon">
           <span className="support-ribbon-dot" />
-          {translate('subscriber.system.offline.status', 'fr', {
-            time: SUPPORT_DEMO.offlineLastSync,
+          {translate('subscriber.system.offline.status', {
+            time: localized(SUPPORT_DEMO.offlineLastSync, locale),
           }).toUpperCase()}
         </div>
 
@@ -382,12 +397,15 @@ export function OfflineX33(): ReactElement {
             {translate('subscriber.system.offline.next_visit')}
           </span>
           <h1 className="support-offline-time" id="x33-headline">
-            <em>{visit.weekday}</em>
-            <strong>{visit.time}</strong>
+            <em>{localized(visit.weekday, locale)}</em>
+            <strong>{localized(visit.time, locale)}</strong>
           </h1>
         </section>
 
-        <section className="support-worker-cache" aria-label="Laveuse en cache">
+        <section
+          className="support-worker-cache"
+          aria-label={translate('subscriber.system.offline.worker_cache_label')}
+        >
           <span aria-hidden="true" className="support-avatar" />
           <span>
             <strong>{visit.workerDisplayName}</strong>
@@ -410,10 +428,10 @@ export function OfflineX33(): ReactElement {
 }
 
 export function MaintenanceX34(): ReactElement {
+  const locale = useActiveLocale();
   const visit = SUPPORT_DEMO.nextVisit;
   const [emergencyPrefix, emergencySuffix = ''] = translate(
     'subscriber.system.maintenance.emergency',
-    'fr',
     {
       phone: '{phone}',
     },
@@ -430,7 +448,7 @@ export function MaintenanceX34(): ReactElement {
           {translate('subscriber.system.maintenance.title')}
         </h1>
         <p className="support-copy centered">
-          {translate('subscriber.system.maintenance.body', 'fr', {
+          {translate('subscriber.system.maintenance.body', {
             minutes: SUPPORT_DEMO.maintenanceEtaMinutes,
           })}
         </p>
@@ -439,9 +457,9 @@ export function MaintenanceX34(): ReactElement {
             {translate('subscriber.system.maintenance.next_visit')}
           </span>
           <strong>
-            {translate('subscriber.system.maintenance.next_visit_line', 'fr', {
-              date: visit.date,
-              time: visit.time,
+            {translate('subscriber.system.maintenance.next_visit_line', {
+              date: localized(visit.date, locale),
+              time: localized(visit.time, locale),
               name: visit.workerName,
             })}
           </strong>
@@ -497,22 +515,23 @@ function TicketListItem({
   readonly onOpen: () => void;
   readonly ticket: SupportTicketDemo;
 }): ReactElement {
+  const locale = useActiveLocale();
   const statusLabel =
     ticket.status === 'open'
-      ? translate('subscriber.support.tickets.status.open', 'fr', { ticketId: ticket.id })
-      : translate('subscriber.support.tickets.status.resolved', 'fr', { ticketId: ticket.id });
+      ? translate('subscriber.support.tickets.status.open', { ticketId: ticket.id })
+      : translate('subscriber.support.tickets.status.resolved', { ticketId: ticket.id });
 
   return (
     <button className={`support-ticket-card ${ticket.status}`} onClick={onOpen} type="button">
       <span className="support-ticket-row">
         <span className="support-eyebrow accent-status">{statusLabel}</span>
-        <small>{ticket.createdAgo}</small>
+        <small>{localized(ticket.createdAgo, locale)}</small>
       </span>
-      <strong>{ticket.title}</strong>
-      <span>{ticket.summary}</span>
+      <strong>{localized(ticket.title, locale)}</strong>
+      <span>{localized(ticket.summary, locale)}</span>
       {ticket.status === 'open' && ticket.agentName !== undefined ? (
         <em>
-          {translate('subscriber.support.tickets.open.progress', 'fr', {
+          {translate('subscriber.support.tickets.open.progress', {
             agentName: ticket.agentName,
           })}
         </em>
@@ -530,7 +549,12 @@ function SupportBackHeader({
 }): ReactElement {
   return (
     <div className="support-back-header">
-      <button aria-label="Retour" className="support-back" onClick={onBack} type="button">
+      <button
+        aria-label={translate('common.action.back')}
+        className="support-back"
+        onClick={onBack}
+        type="button"
+      >
         ‹
       </button>
       <span>{label}</span>

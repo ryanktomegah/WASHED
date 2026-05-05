@@ -7,14 +7,12 @@ export type PlanTier = 'T1' | 'T2';
 
 export interface ActivePlanDemo {
   readonly tier: PlanTier;
-  readonly tierLabel: string; // « Une visite », « Deux visites »
   readonly amountXof: number;
-  readonly nextChargeDate: string; // « 1 juin »
-  readonly accountGoodUntil: string; // « 31 mai »
+  readonly nextChargeDateIso: string;
+  readonly accountGoodUntilIso: string;
   readonly nextVisit: {
-    readonly weekday: string;
-    readonly date: string; // « 5 mai »
-    readonly time: string; // « 9 h 00 »
+    readonly dateIso: string;
+    readonly time24h: string;
     readonly workerName: string;
     readonly workerInitials: string;
   };
@@ -23,17 +21,17 @@ export interface ActivePlanDemo {
 export interface UpgradeDemo {
   readonly currentAmountXof: number;
   readonly newAmountXof: number;
-  readonly savingsXof: number; // « 500 XOF »
-  readonly effectiveDate: string; // « 1 juin »
-  readonly remainingThisMonth: number; // 1
+  readonly savingsXof: number;
+  readonly effectiveDateIso: string;
+  readonly remainingThisMonth: number;
   readonly workerFirstName: string;
 }
 
 export interface PausedPlanDemo {
-  readonly pauseStartDate: string; // « 14 mai »
-  readonly daysIntoPause: number; // 22
-  readonly maxDays: number; // 90
-  readonly autoCloseDate: string; // « 14 août »
+  readonly pauseStartDateIso: string;
+  readonly daysIntoPause: number;
+  readonly maxDays: number;
+  readonly autoCloseDateIso: string;
   readonly workerFirstName: string;
   readonly workerName: string;
   readonly workerInitials: string;
@@ -41,7 +39,7 @@ export interface PausedPlanDemo {
 }
 
 export interface PaymentReceiptDemo {
-  readonly date: string;
+  readonly dateIso: string;
   readonly provider: string;
   readonly reference: string;
   readonly amountXof: number;
@@ -70,14 +68,12 @@ export const SUBSCRIBER_PLAN_DEMO: {
 } = {
   active: {
     tier: 'T1',
-    tierLabel: 'Une visite',
     amountXof: 2_500,
-    nextChargeDate: '1 juin',
-    accountGoodUntil: '31 mai',
+    nextChargeDateIso: '2026-06-01',
+    accountGoodUntilIso: '2026-05-31',
     nextVisit: {
-      weekday: 'Mardi',
-      date: '5 mai',
-      time: '9 h 00',
+      dateIso: '2026-05-05',
+      time24h: '09:00',
       workerName: 'Akouvi K.',
       workerInitials: 'AK',
     },
@@ -86,15 +82,15 @@ export const SUBSCRIBER_PLAN_DEMO: {
     currentAmountXof: 2_500,
     newAmountXof: 4_500,
     savingsXof: 500,
-    effectiveDate: '1 juin',
+    effectiveDateIso: '2026-06-01',
     remainingThisMonth: 1,
     workerFirstName: 'Akouvi',
   },
   paused: {
-    pauseStartDate: '14 mai',
+    pauseStartDateIso: '2026-05-14',
     daysIntoPause: 22,
     maxDays: 90,
-    autoCloseDate: '14 août',
+    autoCloseDateIso: '2026-08-14',
     workerFirstName: 'Akouvi',
     workerName: 'Akouvi K.',
     workerInitials: 'AK',
@@ -105,14 +101,14 @@ export const SUBSCRIBER_PLAN_DEMO: {
     subscriberInitials: 'YM',
     historyMonths: 8,
     receipts: [
-      { date: '1 mai 2026', provider: 'TMoney', reference: 'MM-78423190', amountXof: 2_500 },
-      { date: '1 avril 2026', provider: 'TMoney', reference: 'MM-78421042', amountXof: 2_500 },
-      { date: '1 mars 2026', provider: 'TMoney', reference: 'MM-78420993', amountXof: 2_500 },
-      { date: '1 février 2026', provider: 'TMoney', reference: 'MM-78420122', amountXof: 2_500 },
-      { date: '1 janvier 2026', provider: 'TMoney', reference: 'MM-78419881', amountXof: 2_500 },
-      { date: '1 décembre 2025', provider: 'TMoney', reference: 'MM-78418640', amountXof: 2_500 },
-      { date: '1 novembre 2025', provider: 'TMoney', reference: 'MM-78417309', amountXof: 2_500 },
-      { date: '1 octobre 2025', provider: 'TMoney', reference: 'MM-78416277', amountXof: 2_500 },
+      { dateIso: '2026-05-01', provider: 'TMoney', reference: 'MM-78423190', amountXof: 2_500 },
+      { dateIso: '2026-04-01', provider: 'TMoney', reference: 'MM-78421042', amountXof: 2_500 },
+      { dateIso: '2026-03-01', provider: 'TMoney', reference: 'MM-78420993', amountXof: 2_500 },
+      { dateIso: '2026-02-01', provider: 'TMoney', reference: 'MM-78420122', amountXof: 2_500 },
+      { dateIso: '2026-01-01', provider: 'TMoney', reference: 'MM-78419881', amountXof: 2_500 },
+      { dateIso: '2025-12-01', provider: 'TMoney', reference: 'MM-78418640', amountXof: 2_500 },
+      { dateIso: '2025-11-01', provider: 'TMoney', reference: 'MM-78417309', amountXof: 2_500 },
+      { dateIso: '2025-10-01', provider: 'TMoney', reference: 'MM-78416277', amountXof: 2_500 },
     ],
     methods: [
       { provider: 'TMoney', phone: '+228 90 12 34 56', isActive: true },

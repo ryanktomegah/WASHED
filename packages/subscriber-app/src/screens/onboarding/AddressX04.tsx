@@ -52,7 +52,7 @@ export function AddressX04(): ReactElement {
       <form className="body tight" onSubmit={onSubmit}>
         <div className="title-stack">
           <span className="h-sm">
-            {translate('subscriber.signup.step_indicator', 'fr', { current: 3, total: 4 })}
+            {translate('subscriber.signup.step_indicator', { current: 3, total: 4 })}
           </span>
           <h1 className="h-md" id="x04-headline">
             {translate('subscriber.signup.address.title')}
@@ -62,7 +62,7 @@ export function AddressX04(): ReactElement {
 
         <div className="field">
           <label className="field-label" htmlFor="x04-neighborhood">
-            Quartier
+            {translate('subscriber.signup.address.field.neighborhood')}
           </label>
           <div className="select-shell">
             <select
@@ -73,7 +73,7 @@ export function AddressX04(): ReactElement {
               value={neighborhood}
             >
               <option disabled value="">
-                Choisissez un quartier
+                {translate('subscriber.signup.address.neighborhood.placeholder')}
               </option>
               {LOME_NEIGHBORHOODS.map((entry) => (
                 <option key={entry} value={entry}>
@@ -89,7 +89,7 @@ export function AddressX04(): ReactElement {
 
         <div className="field">
           <label className="field-label" htmlFor="x04-street">
-            Rue / détail
+            {translate('subscriber.signup.address.field.street')}
           </label>
           <div className="input-shell">
             <input
@@ -97,7 +97,7 @@ export function AddressX04(): ReactElement {
               id="x04-street"
               name="street"
               onChange={(event) => setStreet(event.target.value)}
-              placeholder="rue 254, maison bleue"
+              placeholder={translate('subscriber.signup.address.street.placeholder')}
               type="text"
               value={street}
             />
@@ -106,7 +106,7 @@ export function AddressX04(): ReactElement {
 
         <div className="field">
           <label className="field-label" htmlFor="x04-landmark">
-            Repère (facultatif)
+            {translate('subscriber.signup.address.field.landmark')}
           </label>
           <div className="input-shell">
             <input
@@ -114,7 +114,7 @@ export function AddressX04(): ReactElement {
               id="x04-landmark"
               name="landmark"
               onChange={(event) => setLandmark(event.target.value)}
-              placeholder="portail vert · sonnette à droite"
+              placeholder={translate('subscriber.signup.address.landmark.placeholder')}
               type="text"
               value={landmark}
             />
@@ -128,7 +128,7 @@ export function AddressX04(): ReactElement {
         <div className="grow" />
 
         <button className="btn full" disabled={!isValid} type="submit">
-          Continuer
+          {translate('subscriber.signup.continue.cta')}
         </button>
       </form>
     </main>

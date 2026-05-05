@@ -64,7 +64,7 @@ export function PaymentX06(): ReactElement {
     <main aria-labelledby="x06-headline" className="onboarding-screen" data-screen-id="X-06">
       <div className="body tight">
         <div className="title-stack">
-          <span className="h-sm">Paiement</span>
+          <span className="h-sm">{translate('subscriber.signup.payment.eyebrow')}</span>
           <h1 className="h-md" id="x06-headline">
             {translate('subscriber.signup.payment.title')}
           </h1>
@@ -94,7 +94,9 @@ export function PaymentX06(): ReactElement {
                 <span aria-hidden="true" className="provider-radio" />
                 <span className="provider-body">
                   <strong>{PAYMENT_PROVIDER_LABEL[option.provider]}</strong>
-                  <span className="p-sm">{isDefault ? phoneLine : 'ajouter un numéro'}</span>
+                  <span className="p-sm">
+                    {isDefault ? phoneLine : translate('subscriber.signup.payment.add_number')}
+                  </span>
                 </span>
                 <span aria-hidden="true" className="provider-network p-sm">
                   {option.tagline}
@@ -104,14 +106,12 @@ export function PaymentX06(): ReactElement {
           })}
         </fieldset>
 
-        <p className="p-sm">
-          Le 1<sup>er</sup> prélèvement a lieu après confirmation de l'adresse par le bureau.
-        </p>
+        <p className="p-sm">{translate('subscriber.signup.payment.note')}</p>
 
         <div className="grow" />
 
         <button className="btn full primary" onClick={onSubmit} type="button">
-          Continuer
+          {translate('subscriber.signup.continue.cta')}
         </button>
       </div>
     </main>

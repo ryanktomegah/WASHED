@@ -54,7 +54,7 @@ export function TourX09({ onDismiss }: TourX09Props): ReactElement {
       <section className="tour-sheet">
         <header className="tour-meta">
           <span className="tour-eyebrow">
-            {translate('subscriber.tour.step_indicator', 'fr', {
+            {translate('subscriber.tour.step_indicator', {
               current: stepIndex + 1,
               total,
             })}{' '}
@@ -92,9 +92,7 @@ export function TourX09({ onDismiss }: TourX09Props): ReactElement {
             {translate('subscriber.tour.cta_previous')}
           </button>
           <button className="tour-button primary" onClick={onNext} type="button">
-            {translate(
-              isLast ? 'subscriber.tour.cta_finish' : 'subscriber.tour.cta_next',
-            )}
+            {translate(isLast ? 'subscriber.tour.cta_finish' : 'subscriber.tour.cta_next')}
           </button>
         </div>
       </section>

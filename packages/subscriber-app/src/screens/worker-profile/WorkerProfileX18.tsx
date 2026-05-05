@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactElement } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
+import { useActiveLocale } from '@washed/ui';
 
 import { useSafeBack } from '../../navigation/useSafeBack.js';
 import { SUBSCRIBER_WORKER_PROFILE_DEMO } from './workerProfileDemoData.js';
@@ -13,6 +14,7 @@ type ChangeReason = (typeof CHANGE_REASONS)[number];
 export function WorkerProfileX18(): ReactElement {
   const navigate = useNavigate();
   const goBack = useSafeBack('/hub');
+  const locale = useActiveLocale();
   const params = useParams();
   const worker =
     params.workerId === SUBSCRIBER_WORKER_PROFILE_DEMO.id
@@ -30,7 +32,7 @@ export function WorkerProfileX18(): ReactElement {
       <div className="worker-profile-body">
         <header className="worker-profile-header">
           <button
-            aria-label="Retour"
+            aria-label={translate('common.action.back')}
             className="worker-profile-back"
             onClick={goBack}
             type="button"
@@ -51,7 +53,7 @@ export function WorkerProfileX18(): ReactElement {
               {worker.name}
             </h1>
             <p className="worker-profile-location">
-              {translate('subscriber.worker.profile.location', 'fr', {
+              {translate('subscriber.worker.profile.location', {
                 neighborhood: worker.neighborhood,
                 distance: worker.distanceFromHome,
               })}
@@ -66,7 +68,7 @@ export function WorkerProfileX18(): ReactElement {
           <div className="worker-profile-relation-grid">
             <MetricBlock
               label={translate('subscriber.worker.profile.relation.together')}
-              value={translate('subscriber.worker.profile.relation.months', 'fr', {
+              value={translate('subscriber.worker.profile.relation.months', {
                 months: worker.tenureMonths,
               })}
             />
@@ -79,17 +81,17 @@ export function WorkerProfileX18(): ReactElement {
         </section>
 
         <InfoCard
-          body={translate('subscriber.worker.profile.path.body', 'fr', {
-            since: worker.since,
+          body={translate('subscriber.worker.profile.path.body', {
+            since: worker.since[locale],
             households: worker.regularHouseholds,
-            languages: worker.languages,
+            languages: worker.languages[locale],
           })}
           id="x18-path-label"
           title={translate('subscriber.worker.profile.path.title')}
         />
 
         <InfoCard
-          body={translate('subscriber.worker.profile.reliability.body', 'fr', {
+          body={translate('subscriber.worker.profile.reliability.body', {
             visits: worker.totalVisits,
             cancellations: worker.cancellationsByWorker,
             onTimeRate: worker.onTimeRateThisMonth,
@@ -135,7 +137,7 @@ export function WorkerChangeX18C(): ReactElement {
       <div className="worker-profile-body">
         <header className="worker-profile-header">
           <button
-            aria-label="Retour"
+            aria-label={translate('common.action.back')}
             className="worker-profile-back"
             onClick={goBack}
             type="button"
@@ -151,7 +153,7 @@ export function WorkerChangeX18C(): ReactElement {
           {translate('subscriber.worker.change.title')}
         </h1>
         <p className="worker-profile-change-body">
-          {translate('subscriber.worker.change.body', 'fr', { name: firstName })}
+          {translate('subscriber.worker.change.body', { name: firstName })}
         </p>
 
         <fieldset className="worker-profile-choice-list">
@@ -172,7 +174,7 @@ export function WorkerChangeX18C(): ReactElement {
                 type="radio"
                 value={option}
               />
-              <span>{translate(changeReasonKey(option), 'fr', { name: firstName })}</span>
+              <span>{translate(changeReasonKey(option), { name: firstName })}</span>
             </label>
           ))}
         </fieldset>
@@ -181,7 +183,7 @@ export function WorkerChangeX18C(): ReactElement {
           <h2 className="worker-profile-eyebrow accent" id="x18c-note-title">
             {translate('subscriber.worker.change.note.title')}
           </h2>
-          <p>{translate('subscriber.worker.change.note.body', 'fr', { name: firstName })}</p>
+          <p>{translate('subscriber.worker.change.note.body', { name: firstName })}</p>
         </aside>
 
         <div className="worker-profile-grow" />
@@ -228,7 +230,7 @@ export function WorkerChangeSubmittedX18C(): ReactElement {
           {translate('subscriber.worker.change.submitted.title')}
         </h1>
         <p className="worker-profile-change-body">
-          {translate('subscriber.worker.change.submitted.body', 'fr', { name: firstName })}
+          {translate('subscriber.worker.change.submitted.body', { name: firstName })}
         </p>
 
         <div className="worker-profile-grow" />

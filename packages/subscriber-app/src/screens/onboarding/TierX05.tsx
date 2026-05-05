@@ -7,13 +7,21 @@ import { TIER_PRICE_XOF, useSignup, type SignupTier } from './SignupContext.js';
 
 interface TierOption {
   readonly tier: SignupTier;
-  readonly cadence: string;
-  readonly subline: string;
+  readonly labelKey: 'subscriber.signup.tier.t1.label' | 'subscriber.signup.tier.t2.label';
+  readonly sublineKey: 'subscriber.signup.tier.t1.subline' | 'subscriber.signup.tier.t2.subline';
 }
 
 const TIER_OPTIONS: readonly TierOption[] = [
-  { tier: 'T1', cadence: 'Une visite', subline: 'par mois · ~1 h 30' },
-  { tier: 'T2', cadence: 'Deux visites', subline: 'par mois · économie 500 XOF' },
+  {
+    tier: 'T1',
+    labelKey: 'subscriber.signup.tier.t1.label',
+    sublineKey: 'subscriber.signup.tier.t1.subline',
+  },
+  {
+    tier: 'T2',
+    labelKey: 'subscriber.signup.tier.t2.label',
+    sublineKey: 'subscriber.signup.tier.t2.subline',
+  },
 ];
 
 export function TierX05(): ReactElement {
@@ -53,12 +61,12 @@ export function TierX05(): ReactElement {
       <div className="body tight">
         <div className="title-stack">
           <span className="h-sm">
-            {translate('subscriber.signup.step_indicator', 'fr', { current: 4, total: 4 })}
+            {translate('subscriber.signup.step_indicator', { current: 4, total: 4 })}
           </span>
           <h1 className="h-md" id="x05-headline">
             {translate('subscriber.signup.tier.title')}
           </h1>
-          <p className="p-sm">Vous pouvez changer plus tard, sans frais.</p>
+          <p className="p-sm">{translate('subscriber.signup.tier.body')}</p>
         </div>
 
         <fieldset className="tier-grid" aria-labelledby="x05-headline">
@@ -78,16 +86,18 @@ export function TierX05(): ReactElement {
               />
               <div className="tier-card-head">
                 <div>
-                  <strong>{option.cadence}</strong>
-                  <span className="p-sm">{option.subline}</span>
+                  <strong>{translate(option.labelKey)}</strong>
+                  <span className="p-sm">{translate(option.sublineKey)}</span>
                 </div>
-                {option.tier === selected ? <span className="tier-chip">choisi</span> : null}
+                {option.tier === selected ? (
+                  <span className="tier-chip">
+                    {translate('subscriber.signup.tier.selected_badge')}
+                  </span>
+                ) : null}
               </div>
               <div className="tier-price">
-                <strong>
-                  {TIER_PRICE_XOF[option.tier].toLocaleString('fr-FR').replace(/ | /g, ' ')}
-                </strong>
-                <span>XOF / mois</span>
+                <strong>{formatXof(TIER_PRICE_XOF[option.tier]).replace(/\s*XOF$/u, '')}</strong>
+                <span>{translate('subscriber.signup.tier.price_suffix')}</span>
               </div>
             </label>
           ))}
@@ -96,7 +106,9 @@ export function TierX05(): ReactElement {
         <div className="grow" />
 
         <button className="btn full primary" onClick={onSubmit} type="button">
-          Continuer · {formatXof(TIER_PRICE_XOF[selected])}
+          {translate('subscriber.signup.tier.cta_continue_amount', {
+            amount: formatXof(TIER_PRICE_XOF[selected]),
+          })}
         </button>
       </div>
     </main>

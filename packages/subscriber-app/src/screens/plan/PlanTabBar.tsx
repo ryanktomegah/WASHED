@@ -12,7 +12,7 @@ export function PlanTabBar({
 } = {}): ReactElement {
   const navigate = useNavigate();
   return (
-    <nav className="hub-nav" aria-label="Navigation principale">
+    <nav className="hub-nav" aria-label={translate('common.navigation.main')}>
       <button
         aria-current={activeItem === 'home' ? 'page' : undefined}
         className={activeItem === 'home' ? 'hub-nav-item active' : 'hub-nav-item'}

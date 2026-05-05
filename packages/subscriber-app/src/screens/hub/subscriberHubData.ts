@@ -6,7 +6,7 @@
 export type GreetingTimeOfDay = 'morning' | 'afternoon' | 'evening';
 
 export interface NextVisitDemo {
-  readonly weekday: string;
+  readonly dateIso: string;
   readonly hour: number;
   readonly minute: number;
   readonly inDays: number;
@@ -22,7 +22,7 @@ export interface HubWorkerDemo {
 }
 
 export interface LastVisitDemo {
-  readonly dateLabel: string;
+  readonly dateIso: string;
   readonly streakCount: number;
 }
 
@@ -38,7 +38,7 @@ export interface SubscriberHubDemo {
 export const SUBSCRIBER_HUB_DEMO: SubscriberHubDemo = {
   subscriberFirstName: 'Yawa',
   nextVisit: {
-    weekday: 'Mardi',
+    dateIso: '2026-05-05',
     hour: 9,
     minute: 0,
     inDays: 2,
@@ -52,7 +52,7 @@ export const SUBSCRIBER_HUB_DEMO: SubscriberHubDemo = {
     isReady: true,
   },
   lastVisit: {
-    dateLabel: '28 avril',
+    dateIso: '2026-04-28',
     streakCount: 32,
   },
 };

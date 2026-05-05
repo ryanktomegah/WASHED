@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { formatXof, translate } from '@washed/i18n';
 
-import { PAYMENT_PROVIDER_LABEL, TIER_LABEL, TIER_PRICE_XOF, useSignup } from './SignupContext.js';
+import { PAYMENT_PROVIDER_LABEL, TIER_PRICE_XOF, useSignup } from './SignupContext.js';
 
 function shortPhone(phone: string): string {
   // "+228 90 12 34 56" → "90 12…" — show enough to recognise without exposing.
@@ -62,7 +62,7 @@ export function ReviewX07(): ReactElement {
     <main aria-labelledby="x07-headline" className="onboarding-screen" data-screen-id="X-07">
       <div className="body">
         <div className="title-stack">
-          <span className="h-sm">Récap</span>
+          <span className="h-sm">{translate('subscriber.signup.review.eyebrow')}</span>
           <h1 className="h-md" id="x07-headline">
             {translate('subscriber.signup.review.title')}
           </h1>
@@ -70,13 +70,18 @@ export function ReviewX07(): ReactElement {
 
         <dl className="review-card">
           <div className="review-row">
-            <dt>Forfait</dt>
+            <dt>{translate('subscriber.signup.review.field.tier')}</dt>
             <dd>
-              {TIER_LABEL[tier]} <span className="p-sm"> / mois</span>
+              {translate(
+                tier === 'T1'
+                  ? 'subscriber.signup.tier.t1.label'
+                  : 'subscriber.signup.tier.t2.label',
+              )}{' '}
+              <span className="p-sm">{translate('subscriber.signup.review.month_suffix')}</span>
             </dd>
           </div>
           <div className="review-row">
-            <dt>Adresse</dt>
+            <dt>{translate('subscriber.signup.review.field.address')}</dt>
             <dd>
               {signup.address.neighborhood}
               {signup.address.street === '' ? null : (
@@ -85,7 +90,7 @@ export function ReviewX07(): ReactElement {
             </dd>
           </div>
           <div className="review-row">
-            <dt>Paiement</dt>
+            <dt>{translate('subscriber.signup.review.field.payment')}</dt>
             <dd>
               {PAYMENT_PROVIDER_LABEL[provider]}{' '}
               <span className="p-sm">· {shortPhone(signup.phone)}</span>
@@ -93,17 +98,19 @@ export function ReviewX07(): ReactElement {
           </div>
           <div className="review-divider" aria-hidden="true" />
           <div className="review-row review-total">
-            <dt>Total mensuel</dt>
+            <dt>{translate('subscriber.signup.review.field.total')}</dt>
             <dd className="review-total-amount">{formatXof(totalXof)}</dd>
           </div>
         </dl>
 
-        <aside className="review-warn" aria-label="Prochaine étape">
-          <span className="h-sm review-warn-eyebrow">Prochaine étape</span>
-          <p className="p-sm">
-            Le bureau vous appelle dans la journée pour confirmer l'adresse et planifier la première
-            visite.
-          </p>
+        <aside
+          className="review-warn"
+          aria-label={translate('subscriber.signup.review.next_step.label')}
+        >
+          <span className="h-sm review-warn-eyebrow">
+            {translate('subscriber.signup.review.next_step.label')}
+          </span>
+          <p className="p-sm">{translate('subscriber.signup.review.next_step.body')}</p>
         </aside>
 
         <label className="consent-row">
@@ -113,13 +120,13 @@ export function ReviewX07(): ReactElement {
             type="checkbox"
           />
           <span className="p-sm">
-            J'accepte les{' '}
+            {translate('subscriber.signup.review.consent.prefix')}{' '}
             <a href="#/legal/terms" className="link">
-              conditions
+              {translate('subscriber.signup.review.consent.terms')}
             </a>{' '}
-            et la{' '}
+            {translate('subscriber.signup.review.consent.connector')}{' '}
             <a href="#/legal/privacy" className="link">
-              politique de confidentialité
+              {translate('subscriber.signup.review.consent.privacy')}
             </a>
             .
           </span>

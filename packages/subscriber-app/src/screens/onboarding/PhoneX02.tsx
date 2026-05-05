@@ -37,15 +37,11 @@ export function PhoneX02(): ReactElement {
   };
 
   return (
-    <main
-      aria-labelledby="x02-headline"
-      className="onboarding-screen"
-      data-screen-id="X-02"
-    >
+    <main aria-labelledby="x02-headline" className="onboarding-screen" data-screen-id="X-02">
       <form className="body" onSubmit={onSubmit}>
         <div className="title-stack">
           <span className="h-sm">
-            {translate('subscriber.signup.step_indicator', 'fr', { current: 1, total: 4 })}
+            {translate('subscriber.signup.step_indicator', { current: 1, total: 4 })}
           </span>
           <h1 className="h-md" id="x02-headline">
             {translate('subscriber.signup.phone.title')}
@@ -68,14 +64,12 @@ export function PhoneX02(): ReactElement {
               inputMode="tel"
               name="phone"
               onChange={onChange}
-              placeholder="90 12 34 56"
+              placeholder={translate('subscriber.signup.phone.placeholder')}
               type="tel"
               value={phone}
             />
           </div>
-          <p className="p-sm">
-            Le numéro reste privé. Jamais transmis à votre laveuse.
-          </p>
+          <p className="p-sm">{translate('subscriber.signup.phone.privacy_note')}</p>
         </div>
 
         <div className="grow" />

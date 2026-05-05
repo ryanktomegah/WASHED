@@ -145,15 +145,15 @@ export function OtpX03(): ReactElement {
       <div className="body">
         <div className="title-stack">
           <span className="h-sm">
-            {translate('subscriber.signup.step_indicator', 'fr', { current: 2, total: 4 })}
+            {translate('subscriber.signup.step_indicator', { current: 2, total: 4 })}
           </span>
           <h1 className="h-md" id="x03-headline">
             {translate('subscriber.signup.otp.title')}
           </h1>
           <p className="p">
-            {translate('subscriber.signup.otp.body', 'fr', { phone: maskedPhone })}{' '}
+            {translate('subscriber.signup.otp.body', { phone: maskedPhone })}{' '}
             <button className="link" onClick={onEditPhone} type="button">
-              Modifier
+              {translate('subscriber.signup.otp.edit_phone.cta')}
             </button>
           </p>
         </div>
@@ -161,7 +161,9 @@ export function OtpX03(): ReactElement {
         <div aria-label={translate('subscriber.signup.otp.title')} className="otp-row" role="group">
           {digits.map((digit, index) => (
             <input
-              aria-label={`Chiffre ${index + 1}`}
+              aria-label={translate('subscriber.signup.otp.digit_label', {
+                index: index + 1,
+              })}
               autoComplete={index === 0 ? 'one-time-code' : 'off'}
               className={`otp-cell${digit !== '' ? ' filled' : ''}`}
               inputMode="numeric"
@@ -181,10 +183,10 @@ export function OtpX03(): ReactElement {
 
         <p className="p-sm">
           {secondsRemaining > 0 ? (
-            <>{translate('subscriber.signup.otp.resend', 'fr', { seconds: secondsRemaining })}</>
+            <>{translate('subscriber.signup.otp.resend', { seconds: secondsRemaining })}</>
           ) : (
             <button className="link" onClick={onResend} type="button">
-              Renvoyer le code
+              {translate('subscriber.signup.otp.resend_now.cta')}
             </button>
           )}
         </p>
@@ -192,9 +194,9 @@ export function OtpX03(): ReactElement {
         <div className="grow" />
 
         <p className="p-sm footer-hint">
-          Pas reçu après 30 s ?{' '}
+          {translate('subscriber.signup.otp.help_prefix')}{' '}
           <a className="link" href="tel:+22890000000">
-            Appeler le bureau
+            {translate('subscriber.signup.otp.call_office.cta')}
           </a>
         </p>
       </div>

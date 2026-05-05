@@ -6,16 +6,15 @@ export interface SubscriberProfileDemo {
   readonly fullName: string;
   readonly initials: string;
   readonly phoneDisplay: string;
-  readonly memberSinceLabel: string;
+  readonly memberSinceIso: string;
   readonly addressNeighborhood: string;
   readonly addressStreet: string;
   readonly addressLandmark: string;
-  readonly languageCode: 'FR' | 'EN';
   readonly workerFirstName: string;
   readonly visitsWithWorker: number;
   readonly nextVisit: {
-    readonly weekday: string;
-    readonly date: string;
+    readonly dateIso: string;
+    readonly time24h: string;
   };
 }
 
@@ -23,16 +22,15 @@ export const SUBSCRIBER_PROFILE_DEMO: SubscriberProfileDemo = {
   fullName: 'Yawa Mensah',
   initials: 'YM',
   phoneDisplay: '+228 90 12 34 56',
-  memberSinceLabel: 'sept. 2025',
+  memberSinceIso: '2025-09-01',
   addressNeighborhood: 'Tokoin Casablanca',
   addressStreet: 'rue 254, maison bleue',
   addressLandmark: 'portail vert · sonnette à droite',
-  languageCode: 'FR',
   workerFirstName: 'Akouvi',
   visitsWithWorker: 32,
   nextVisit: {
-    weekday: 'mardi',
-    date: '5 mai',
+    dateIso: '2026-05-05',
+    time24h: '09:00',
   },
 };
 

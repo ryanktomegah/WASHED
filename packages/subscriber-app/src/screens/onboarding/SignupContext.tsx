@@ -117,11 +117,6 @@ export const TIER_PRICE_XOF: Record<SignupTier, number> = {
   T2: 4500,
 };
 
-export const TIER_LABEL: Record<SignupTier, string> = {
-  T1: 'Une visite',
-  T2: 'Deux visites',
-};
-
 export const PAYMENT_PROVIDER_LABEL: Record<SignupPaymentProvider, string> = {
   tmoney: 'TMoney',
   mixx: 'Mixx by Yas',

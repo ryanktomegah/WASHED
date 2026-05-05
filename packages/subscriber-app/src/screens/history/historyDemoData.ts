@@ -6,13 +6,12 @@ export type VisitStatus = 'clean' | 'issue';
 
 export interface PastVisitEntry {
   readonly id: string;
-  readonly dateLabel: string;
-  readonly detailDateLabel: string;
-  readonly arrivalTime: string;
-  readonly beforePhotoTime: string;
-  readonly afterPhotoTime: string;
-  readonly completedTime: string;
-  readonly duration: string;
+  readonly dateIso: string;
+  readonly arrivalTime24h: string;
+  readonly beforePhotoTime24h: string;
+  readonly afterPhotoTime24h: string;
+  readonly completedTime24h: string;
+  readonly durationMinutes: number;
   readonly paymentAmountXof: number;
   readonly status: VisitStatus;
   readonly mostRecent: boolean;
@@ -40,52 +39,48 @@ export const SUBSCRIBER_HISTORY_DEMO: SubscriberHistoryDemo = {
   recentVisits: [
     {
       id: 'visit-2026-04-28',
-      dateLabel: '28 avr',
-      detailDateLabel: '28 avril',
-      arrivalTime: '9 h 02',
-      beforePhotoTime: '9 h 03',
-      afterPhotoTime: '10 h 04',
-      completedTime: '10 h 07',
-      duration: '1 h 06',
+      dateIso: '2026-04-28',
+      arrivalTime24h: '09:02',
+      beforePhotoTime24h: '09:03',
+      afterPhotoTime24h: '10:04',
+      completedTime24h: '10:07',
+      durationMinutes: 66,
       paymentAmountXof: 0,
       status: 'clean',
       mostRecent: true,
     },
     {
       id: 'visit-2026-04-21',
-      dateLabel: '21 avr',
-      detailDateLabel: '21 avril',
-      arrivalTime: '9 h 00',
-      beforePhotoTime: '9 h 02',
-      afterPhotoTime: '10 h 10',
-      completedTime: '10 h 12',
-      duration: '1 h 12',
+      dateIso: '2026-04-21',
+      arrivalTime24h: '09:00',
+      beforePhotoTime24h: '09:02',
+      afterPhotoTime24h: '10:10',
+      completedTime24h: '10:12',
+      durationMinutes: 72,
       paymentAmountXof: 0,
       status: 'clean',
       mostRecent: false,
     },
     {
       id: 'visit-2026-04-14',
-      dateLabel: '14 avr',
-      detailDateLabel: '14 avril',
-      arrivalTime: '9 h 04',
-      beforePhotoTime: '9 h 05',
-      afterPhotoTime: '10 h 00',
-      completedTime: '10 h 02',
-      duration: '58 min',
+      dateIso: '2026-04-14',
+      arrivalTime24h: '09:04',
+      beforePhotoTime24h: '09:05',
+      afterPhotoTime24h: '10:00',
+      completedTime24h: '10:02',
+      durationMinutes: 58,
       paymentAmountXof: 0,
       status: 'clean',
       mostRecent: false,
     },
     {
       id: 'visit-2026-04-07',
-      dateLabel: '7 avr',
-      detailDateLabel: '7 avril',
-      arrivalTime: '9 h 00',
-      beforePhotoTime: '9 h 01',
-      afterPhotoTime: '10 h 19',
-      completedTime: '10 h 22',
-      duration: '1 h 22',
+      dateIso: '2026-04-07',
+      arrivalTime24h: '09:00',
+      beforePhotoTime24h: '09:01',
+      afterPhotoTime24h: '10:19',
+      completedTime24h: '10:22',
+      durationMinutes: 82,
       paymentAmountXof: 0,
       status: 'clean',
       mostRecent: false,

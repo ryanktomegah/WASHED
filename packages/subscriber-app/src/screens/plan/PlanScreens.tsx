@@ -1,15 +1,14 @@
 import { type ReactElement, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { formatXof, translate } from '@washed/i18n';
+import { formatXof, translate, type WashedLocale } from '@washed/i18n';
+import { useActiveLocale } from '@washed/ui';
 
 import { useSafeBack } from '../../navigation/useSafeBack.js';
 import { SUBSCRIBER_PLAN_DEMO } from './subscriberPlanDemoData.js';
 import { PlanTabBar } from './PlanTabBar.js';
 
-// Renders the plan title `Compte bon jusqu'au {date}.` with the date
-// italicised in primary terracotta. Splits on the deck-locked date token
-// position so the italic span tracks deck phrasing changes.
+// Renders the plan title with the date italicised in primary terracotta.
 function PlanActiveTitle({
   text,
   accentDate,
@@ -30,11 +29,73 @@ function PlanActiveTitle({
   );
 }
 
+function dateFromIso(dateIso: string): Date {
+  return new Date(`${dateIso}T12:00:00.000Z`);
+}
+
+function localeTag(locale: WashedLocale): string {
+  return locale === 'fr' ? 'fr-TG' : 'en-US';
+}
+
+function capitalizeFirst(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function formatDayMonth(dateIso: string, locale: WashedLocale): string {
+  return new Intl.DateTimeFormat(localeTag(locale), {
+    day: 'numeric',
+    month: 'long',
+  }).format(dateFromIso(dateIso));
+}
+
+function formatFullDate(dateIso: string, locale: WashedLocale): string {
+  return new Intl.DateTimeFormat(localeTag(locale), {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(dateFromIso(dateIso));
+}
+
+function formatWeekday(dateIso: string, locale: WashedLocale): string {
+  return capitalizeFirst(
+    new Intl.DateTimeFormat(localeTag(locale), {
+      weekday: 'long',
+    }).format(dateFromIso(dateIso)),
+  );
+}
+
+function formatSentenceWeekday(dateIso: string, locale: WashedLocale): string {
+  const weekday = formatWeekday(dateIso, locale);
+  return locale === 'fr' ? weekday.toLowerCase() : weekday;
+}
+
+function formatPlanTime(time24h: string, locale: WashedLocale): string {
+  const [hour = '0', minute = '00'] = time24h.split(':');
+  if (locale === 'fr') return `${Number(hour)} h ${minute.padStart(2, '0')}`;
+
+  const hour24 = Number(hour);
+  const hour12 = ((hour24 + 11) % 12) + 1;
+  const period = hour24 >= 12 ? 'PM' : 'AM';
+  return `${hour12}:${minute.padStart(2, '0')} ${period}`;
+}
+
+function activePlanLabel(tier: 'T1' | 'T2'): string {
+  return translate(
+    tier === 'T1' ? 'subscriber.signup.tier.t1.label' : 'subscriber.signup.tier.t2.label',
+  );
+}
+
 export function PlanX19(): ReactElement {
   const navigate = useNavigate();
+  const locale = useActiveLocale();
   const { active } = SUBSCRIBER_PLAN_DEMO;
-  const titleText = translate('subscriber.plan.title.active', 'fr', {
-    date: active.accountGoodUntil,
+  const accountGoodUntil = formatDayMonth(active.accountGoodUntilIso, locale);
+  const nextChargeDate = formatDayMonth(active.nextChargeDateIso, locale);
+  const nextVisitWeekday = formatWeekday(active.nextVisit.dateIso, locale);
+  const nextVisitDate = formatDayMonth(active.nextVisit.dateIso, locale);
+  const nextVisitTime = formatPlanTime(active.nextVisit.time24h, locale);
+  const titleText = translate('subscriber.plan.title.active', {
+    date: accountGoodUntil,
   });
 
   return (
@@ -45,7 +106,7 @@ export function PlanX19(): ReactElement {
         </header>
 
         <h1 className="plan-title" id="x19-headline">
-          <PlanActiveTitle text={titleText} accentDate={active.accountGoodUntil} />
+          <PlanActiveTitle text={titleText} accentDate={accountGoodUntil} />
         </h1>
 
         <section className="plan-active-card" aria-labelledby="x19-active-card-eyebrow">
@@ -53,8 +114,8 @@ export function PlanX19(): ReactElement {
             {translate('subscriber.plan.active_card.eyebrow').toUpperCase()}
           </span>
           <span className="plan-active-card-tier">
-            {translate('subscriber.plan.active_card.tier', 'fr', {
-              label: active.tierLabel,
+            {translate('subscriber.plan.active_card.tier', {
+              label: activePlanLabel(active.tier),
               amount: formatXof(active.amountXof),
             })}
           </span>
@@ -63,8 +124,8 @@ export function PlanX19(): ReactElement {
               {translate('subscriber.plan.active_card.next_charge_label')}
             </span>
             <span className="plan-active-card-row-value">
-              {translate('subscriber.plan.active_card.next_charge_value', 'fr', {
-                date: active.nextChargeDate,
+              {translate('subscriber.plan.active_card.next_charge_value', {
+                date: nextChargeDate,
               })}
             </span>
           </div>
@@ -79,14 +140,14 @@ export function PlanX19(): ReactElement {
           </span>
           <div className="plan-next-visit-meta">
             <strong>
-              {translate('subscriber.plan.next_visit.summary', 'fr', {
-                weekday: active.nextVisit.weekday,
-                date: active.nextVisit.date,
-                time: active.nextVisit.time,
+              {translate('subscriber.plan.next_visit.summary', {
+                weekday: nextVisitWeekday,
+                date: nextVisitDate,
+                time: nextVisitTime,
               })}
             </strong>
             <span>
-              {translate('subscriber.plan.next_visit.with_worker', 'fr', {
+              {translate('subscriber.plan.next_visit.with_worker', {
                 name: active.nextVisit.workerName,
               })}
             </span>
@@ -137,6 +198,7 @@ export function PlanX19(): ReactElement {
 
 export function PlanPaymentHistoryX20(): ReactElement {
   const goBack = useSafeBack('/plan');
+  const locale = useActiveLocale();
   const { payment } = SUBSCRIBER_PLAN_DEMO;
   const totalXof = payment.receipts.reduce((sum, receipt) => sum + receipt.amountXof, 0);
 
@@ -146,7 +208,7 @@ export function PlanPaymentHistoryX20(): ReactElement {
         <BackHeader label={translate('subscriber.payment.history.header')} onBack={goBack} />
 
         <h1 className="plan-title" id="x20-headline">
-          {translate('subscriber.payment.history.title', 'fr', {
+          {translate('subscriber.payment.history.title', {
             months: payment.historyMonths,
           })}
         </h1>
@@ -163,7 +225,7 @@ export function PlanPaymentHistoryX20(): ReactElement {
           </div>
           <div className="plan-payment-summary-right">
             <span className="plan-cream-body">
-              {translate('subscriber.payment.history.count_label', 'fr', {
+              {translate('subscriber.payment.history.count_label', {
                 count: payment.historyMonths,
               })}
             </span>
@@ -184,7 +246,7 @@ export function PlanPaymentHistoryX20(): ReactElement {
           {payment.receipts.map((receipt) => (
             <li className="plan-payment-row" key={receipt.reference}>
               <div>
-                <strong>{receipt.date}</strong>
+                <strong>{formatFullDate(receipt.dateIso, locale)}</strong>
                 <span>
                   {receipt.provider} · {receipt.reference}
                 </span>
@@ -281,6 +343,7 @@ export function PlanPaymentMethodX21(): ReactElement {
 
 export function PlanOverdueX23(): ReactElement {
   const navigate = useNavigate();
+  const locale = useActiveLocale();
   const { active, payment } = SUBSCRIBER_PLAN_DEMO;
 
   return (
@@ -288,7 +351,7 @@ export function PlanOverdueX23(): ReactElement {
       <div className="plan-body">
         <header className="plan-header">
           <span className="plan-eyebrow">
-            {translate('subscriber.dashboard.greeting.morning', 'fr', {
+            {translate('subscriber.dashboard.greeting.morning', {
               name: payment.subscriberFirstName,
             })}
           </span>
@@ -324,7 +387,7 @@ export function PlanOverdueX23(): ReactElement {
           <span className="plan-eyebrow" id="x23-next-visit">
             {translate('subscriber.payment.overdue.next_visit_eyebrow')}
           </span>
-          <strong>{active.nextVisit.weekday}</strong>
+          <strong>{formatWeekday(active.nextVisit.dateIso, locale)}</strong>
           <span>{translate('subscriber.payment.overdue.waiting')}</span>
         </section>
 
@@ -339,7 +402,9 @@ export function PlanOverdueX23(): ReactElement {
 export function PlanUpgradeX19U(): ReactElement {
   const navigate = useNavigate();
   const goBack = useSafeBack('/plan');
+  const locale = useActiveLocale();
   const { upgrade } = SUBSCRIBER_PLAN_DEMO;
+  const effectiveDate = formatDayMonth(upgrade.effectiveDateIso, locale);
 
   return (
     <main aria-labelledby="x19u-headline" className="plan-screen" data-screen-id="X-19.U">
@@ -351,8 +416,8 @@ export function PlanUpgradeX19U(): ReactElement {
         </h1>
 
         <p className="plan-copy">
-          {translate('subscriber.plan.upgrade.body', 'fr', {
-            date: upgrade.effectiveDate,
+          {translate('subscriber.plan.upgrade.body', {
+            date: effectiveDate,
             savings: formatXof(upgrade.savingsXof),
           })}
         </p>
@@ -383,14 +448,14 @@ export function PlanUpgradeX19U(): ReactElement {
           <ul className="plan-list">
             <li>{translate('subscriber.plan.upgrade.effect.remaining')}</li>
             <li>
-              {translate('subscriber.plan.upgrade.effect.charge', 'fr', {
-                date: upgrade.effectiveDate,
+              {translate('subscriber.plan.upgrade.effect.charge', {
+                date: effectiveDate,
                 amount: formatXof(upgrade.newAmountXof),
               })}
             </li>
             <li>{translate('subscriber.plan.upgrade.effect.bureau')}</li>
             <li>
-              {translate('subscriber.plan.upgrade.effect.same_worker', 'fr', {
+              {translate('subscriber.plan.upgrade.effect.same_worker', {
                 name: upgrade.workerFirstName,
               })}
             </li>
@@ -404,7 +469,7 @@ export function PlanUpgradeX19U(): ReactElement {
           onClick={() => navigate('/plan')}
           type="button"
         >
-          {translate('subscriber.plan.upgrade.confirm.cta', 'fr', {
+          {translate('subscriber.plan.upgrade.confirm.cta', {
             amount: formatXof(upgrade.newAmountXof),
           })}
         </button>
@@ -419,7 +484,11 @@ export function PlanUpgradeX19U(): ReactElement {
 export function PlanPauseConfirmX22(): ReactElement {
   const navigate = useNavigate();
   const goBack = useSafeBack('/plan');
+  const locale = useActiveLocale();
   const { active, upgrade } = SUBSCRIBER_PLAN_DEMO;
+  const nextChargeDate = formatDayMonth(active.nextChargeDateIso, locale);
+  const nextVisitWeekday = formatSentenceWeekday(active.nextVisit.dateIso, locale);
+  const nextVisitDate = formatDayMonth(active.nextVisit.dateIso, locale);
 
   return (
     <main aria-labelledby="x22-headline" className="plan-screen" data-screen-id="X-22">
@@ -431,7 +500,7 @@ export function PlanPauseConfirmX22(): ReactElement {
         </h1>
 
         <p className="plan-copy">
-          {translate('subscriber.plan.pause.body', 'fr', {
+          {translate('subscriber.plan.pause.body', {
             name: active.nextVisit.workerName.split(' ')[0] ?? active.nextVisit.workerName,
             amount: formatXof(active.amountXof),
           })}
@@ -443,14 +512,14 @@ export function PlanPauseConfirmX22(): ReactElement {
           </span>
           <ul className="plan-list">
             <li>
-              {translate('subscriber.plan.pause.warn.cancel_visit', 'fr', {
-                weekday: active.nextVisit.weekday.toLowerCase(),
-                date: active.nextVisit.date,
+              {translate('subscriber.plan.pause.warn.cancel_visit', {
+                weekday: nextVisitWeekday,
+                date: nextVisitDate,
               })}
             </li>
             <li>
-              {translate('subscriber.plan.pause.warn.no_charge', 'fr', {
-                date: active.nextChargeDate,
+              {translate('subscriber.plan.pause.warn.no_charge', {
+                date: nextChargeDate,
               })}
             </li>
             <li>{translate('subscriber.plan.pause.warn.resume')}</li>
@@ -462,7 +531,7 @@ export function PlanPauseConfirmX22(): ReactElement {
             {translate('subscriber.plan.pause.savings_eyebrow')}
           </span>
           <p className="plan-cream-body">
-            {translate('subscriber.plan.pause.savings_body', 'fr', {
+            {translate('subscriber.plan.pause.savings_body', {
               savings: formatXof(upgrade.savingsXof),
             })}
           </p>
@@ -487,7 +556,12 @@ export function PlanPauseConfirmX22(): ReactElement {
 
 export function PlanPausedSuccessX22A(): ReactElement {
   const navigate = useNavigate();
+  const locale = useActiveLocale();
   const { active, paused } = SUBSCRIBER_PLAN_DEMO;
+  const nextChargeDate = formatDayMonth(active.nextChargeDateIso, locale);
+  const nextVisitWeekday = formatSentenceWeekday(active.nextVisit.dateIso, locale);
+  const nextVisitDate = formatDayMonth(active.nextVisit.dateIso, locale);
+  const autoCloseDate = formatDayMonth(paused.autoCloseDateIso, locale);
   const titleText = translate('subscriber.plan.pause.success.title');
 
   return (
@@ -504,7 +578,7 @@ export function PlanPausedSuccessX22A(): ReactElement {
         </h1>
 
         <p className="plan-copy plan-success-copy">
-          {translate('subscriber.plan.pause.success.body', 'fr', {
+          {translate('subscriber.plan.pause.success.body', {
             name: paused.workerFirstName,
           })}
         </p>
@@ -518,14 +592,14 @@ export function PlanPausedSuccessX22A(): ReactElement {
           </span>
           <ul className="plan-list">
             <li>
-              {translate('subscriber.plan.pause.success.changes.visit', 'fr', {
-                weekday: active.nextVisit.weekday.toLowerCase(),
-                date: active.nextVisit.date,
+              {translate('subscriber.plan.pause.success.changes.visit', {
+                weekday: nextVisitWeekday,
+                date: nextVisitDate,
               })}
             </li>
             <li>
-              {translate('subscriber.plan.pause.success.changes.no_charge', 'fr', {
-                date: active.nextChargeDate,
+              {translate('subscriber.plan.pause.success.changes.no_charge', {
+                date: nextChargeDate,
               })}
             </li>
             <li>{translate('subscriber.plan.pause.success.changes.data')}</li>
@@ -541,8 +615,8 @@ export function PlanPausedSuccessX22A(): ReactElement {
             {translate('subscriber.plan.pause.success.deadline_eyebrow')}
           </span>
           <p className="plan-cream-body">
-            {translate('subscriber.plan.pause.success.deadline_body', 'fr', {
-              date: paused.autoCloseDate,
+            {translate('subscriber.plan.pause.success.deadline_body', {
+              date: autoCloseDate,
             })}
           </p>
         </section>
@@ -563,7 +637,10 @@ export function PlanPausedSuccessX22A(): ReactElement {
 
 export function PlanPausedX19R(): ReactElement {
   const navigate = useNavigate();
+  const locale = useActiveLocale();
   const { paused } = SUBSCRIBER_PLAN_DEMO;
+  const pauseStartDate = formatDayMonth(paused.pauseStartDateIso, locale);
+  const autoCloseDate = formatDayMonth(paused.autoCloseDateIso, locale);
 
   return (
     <main aria-labelledby="x19r-headline" className="plan-screen" data-screen-id="X-19.R">
@@ -580,8 +657,8 @@ export function PlanPausedX19R(): ReactElement {
             {translate('subscriber.plan.paused.headline')}
           </strong>
           <span className="plan-paused-since">
-            {translate('subscriber.plan.paused.since', 'fr', {
-              date: paused.pauseStartDate,
+            {translate('subscriber.plan.paused.since', {
+              date: pauseStartDate,
               day: paused.daysIntoPause,
             })}
           </span>
@@ -601,12 +678,12 @@ export function PlanPausedX19R(): ReactElement {
             </span>
             <div className="plan-paused-worker-meta">
               <strong>
-                {translate('subscriber.plan.paused.worker_line', 'fr', {
+                {translate('subscriber.plan.paused.worker_line', {
                   name: paused.workerName,
                 })}
               </strong>
               <span>
-                {translate('subscriber.plan.paused.worker_sub', 'fr', {
+                {translate('subscriber.plan.paused.worker_sub', {
                   months: paused.tenureMonths,
                 })}
               </span>
@@ -619,8 +696,8 @@ export function PlanPausedX19R(): ReactElement {
             {translate('subscriber.plan.paused.deadline_eyebrow').toUpperCase()}
           </span>
           <p className="plan-deadline-body">
-            {translate('subscriber.plan.paused.deadline_body', 'fr', {
-              date: paused.autoCloseDate,
+            {translate('subscriber.plan.paused.deadline_body', {
+              date: autoCloseDate,
               name: paused.workerFirstName,
             })}
           </p>
@@ -658,7 +735,12 @@ function BackHeader({
 }): ReactElement {
   return (
     <header className="plan-back-header">
-      <button aria-label="Retour" className="plan-back" onClick={onBack} type="button">
+      <button
+        aria-label={translate('common.action.back')}
+        className="plan-back"
+        onClick={onBack}
+        type="button"
+      >
         ‹
       </button>
       <span className="plan-eyebrow">{label.toUpperCase()}</span>

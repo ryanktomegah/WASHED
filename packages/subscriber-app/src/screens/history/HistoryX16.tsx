@@ -1,13 +1,49 @@
 import { useEffect, type ReactElement } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { formatXof, translate } from '@washed/i18n';
+import { formatXof, translate, type WashedLocale } from '@washed/i18n';
+import { useActiveLocale } from '@washed/ui';
 
 import { useSafeBack } from '../../navigation/useSafeBack.js';
 import { SUBSCRIBER_HISTORY_DEMO, type PastVisitEntry } from './historyDemoData.js';
 
+function dateFromIso(dateIso: string): Date {
+  return new Date(`${dateIso}T12:00:00.000Z`);
+}
+
+function localeTag(locale: WashedLocale): string {
+  return locale === 'fr' ? 'fr-TG' : 'en-US';
+}
+
+function formatDayMonth(dateIso: string, locale: WashedLocale, month: 'short' | 'long'): string {
+  const formatted = new Intl.DateTimeFormat(localeTag(locale), {
+    day: 'numeric',
+    month,
+  }).format(dateFromIso(dateIso));
+  return locale === 'fr' && month === 'short' ? formatted.replace('.', '') : formatted;
+}
+
+function formatClockTime(time24h: string, locale: WashedLocale): string {
+  const [hour = '0', minute = '00'] = time24h.split(':');
+  if (locale === 'fr') return `${Number(hour)} h ${minute.padStart(2, '0')}`;
+
+  const hour24 = Number(hour);
+  const hour12 = ((hour24 + 11) % 12) + 1;
+  const period = hour24 >= 12 ? 'PM' : 'AM';
+  return `${hour12}:${minute.padStart(2, '0')} ${period}`;
+}
+
+function formatDuration(minutes: number, locale: WashedLocale): string {
+  if (minutes < 60) return `${minutes} min`;
+
+  const hours = Math.floor(minutes / 60);
+  const remainder = (minutes % 60).toString().padStart(2, '0');
+  return locale === 'fr' ? `${hours} h ${remainder}` : `${hours} hr ${remainder}`;
+}
+
 export function HistoryX16(): ReactElement {
   const navigate = useNavigate();
+  const locale = useActiveLocale();
   const { aggregates, recentVisits } = SUBSCRIBER_HISTORY_DEMO;
   const totalPaid = formatXof(aggregates.totalPaidXof);
   const totalPaidAmount = totalPaid.replace(/\s*XOF$/u, '').trim();
@@ -15,7 +51,7 @@ export function HistoryX16(): ReactElement {
   const titleKey =
     aggregates.tenureMonths === 0 ? 'subscriber.history.title_first' : 'subscriber.history.title';
 
-  const titleText = translate(titleKey, 'fr', {
+  const titleText = translate(titleKey, {
     name: aggregates.workerFirstName,
     months: aggregates.tenureMonths,
   });
@@ -58,14 +94,18 @@ export function HistoryX16(): ReactElement {
         <ul className="history-list">
           {recentVisits.map((visit) => (
             <li key={visit.id}>
-              <PastVisitCard entry={visit} onClick={() => navigate(`/history/${visit.id}`)} />
+              <PastVisitCard
+                entry={visit}
+                locale={locale}
+                onClick={() => navigate(`/history/${visit.id}`)}
+              />
             </li>
           ))}
         </ul>
 
         <div className="history-grow" />
 
-        <nav className="hub-nav" aria-label="Navigation principale">
+        <nav className="hub-nav" aria-label={translate('common.navigation.main')}>
           <button className="hub-nav-item" type="button" onClick={() => navigate('/hub')}>
             <span aria-hidden="true" className="hub-nav-glyph" />
             {translate('subscriber.dashboard.tab.home')}
@@ -92,6 +132,7 @@ export function HistoryDetailX17(): ReactElement {
   const navigate = useNavigate();
   const goBack = useSafeBack('/history');
   const params = useParams();
+  const locale = useActiveLocale();
   const { aggregates, recentVisits } = SUBSCRIBER_HISTORY_DEMO;
   const visit = recentVisits.find((entry) => entry.id === params.visitId);
 
@@ -102,8 +143,9 @@ export function HistoryDetailX17(): ReactElement {
   if (visit === undefined) return <></>;
 
   const detailTitle = translate('subscriber.history.detail.good_title');
-  const detailSubtitle = translate('subscriber.history.detail.duration_with_worker', 'fr', {
-    duration: visit.duration,
+  const duration = formatDuration(visit.durationMinutes, locale);
+  const detailSubtitle = translate('subscriber.history.detail.duration_with_worker', {
+    duration,
     name: aggregates.workerFirstName,
   });
 
@@ -111,12 +153,17 @@ export function HistoryDetailX17(): ReactElement {
     <main aria-labelledby="x17-headline" className="history-screen" data-screen-id="X-17">
       <div className="history-body">
         <header className="history-detail-header">
-          <button aria-label="Retour" className="history-back" onClick={goBack} type="button">
+          <button
+            aria-label={translate('common.action.back')}
+            className="history-back"
+            onClick={goBack}
+            type="button"
+          >
             ‹
           </button>
           <span className="history-eyebrow">
-            {translate('subscriber.history.detail.header', 'fr', {
-              date: visit.detailDateLabel,
+            {translate('subscriber.history.detail.header', {
+              date: formatDayMonth(visit.dateIso, locale, 'long'),
             })}
           </span>
         </header>
@@ -130,7 +177,10 @@ export function HistoryDetailX17(): ReactElement {
           <span>{detailSubtitle}</span>
         </h1>
 
-        <section aria-label="Photos avant et après" className="history-photo-grid">
+        <section
+          aria-label={translate('subscriber.visit.reveal.photos_label')}
+          className="history-photo-grid"
+        >
           <div className="history-photo before">
             <span>{translate('subscriber.history.detail.before')}</span>
           </div>
@@ -146,19 +196,19 @@ export function HistoryDetailX17(): ReactElement {
           <dl className="history-timeline">
             <DetailRow
               label={translate('subscriber.history.detail.arrival')}
-              value={visit.arrivalTime}
+              value={formatClockTime(visit.arrivalTime24h, locale)}
             />
             <DetailRow
               label={translate('subscriber.history.detail.before_photo')}
-              value={visit.beforePhotoTime}
+              value={formatClockTime(visit.beforePhotoTime24h, locale)}
             />
             <DetailRow
               label={translate('subscriber.history.detail.after_photo')}
-              value={visit.afterPhotoTime}
+              value={formatClockTime(visit.afterPhotoTime24h, locale)}
             />
             <DetailRow
               label={translate('subscriber.history.detail.completed')}
-              value={visit.completedTime}
+              value={formatClockTime(visit.completedTime24h, locale)}
             />
           </dl>
         </section>
@@ -226,9 +276,11 @@ function DetailRow({
 
 function PastVisitCard({
   entry,
+  locale,
   onClick,
 }: {
   readonly entry: PastVisitEntry;
+  readonly locale: WashedLocale;
   readonly onClick: () => void;
 }): ReactElement {
   const subtitleKey =
@@ -246,9 +298,12 @@ function PastVisitCard({
       <span aria-hidden="true" className="history-card-avatar" />
       <span className="history-card-meta">
         <strong>
-          {entry.dateLabel} · {entry.arrivalTime}
+          {formatDayMonth(entry.dateIso, locale, 'short')} ·{' '}
+          {formatClockTime(entry.arrivalTime24h, locale)}
         </strong>
-        <span>{translate(subtitleKey, 'fr', { duration: entry.duration })}</span>
+        <span>
+          {translate(subtitleKey, { duration: formatDuration(entry.durationMinutes, locale) })}
+        </span>
       </span>
       <span
         aria-label={translate(statusLabelKey)}
