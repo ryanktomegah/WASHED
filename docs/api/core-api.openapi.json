@@ -135,8 +135,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/LomePricingDto"
                 }
               }
             }
@@ -203,15 +202,14 @@
           "auth"
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "additionalProperties": true
+                "$ref": "#/components/schemas/StartOtpChallengeRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -219,8 +217,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/OtpChallengeDto"
                 }
               }
             }
@@ -245,15 +242,14 @@
           "auth"
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "additionalProperties": true
+                "$ref": "#/components/schemas/VerifyOtpChallengeRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -261,8 +257,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/AuthSessionDto"
                 }
               }
             }
@@ -287,15 +282,14 @@
           "auth"
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "additionalProperties": true
+                "$ref": "#/components/schemas/RefreshAuthSessionRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -303,8 +297,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/AuthSessionDto"
                 }
               }
             }
@@ -535,8 +528,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/SubscriptionDetailDto"
                 }
               }
             }
@@ -569,6 +561,15 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -577,8 +578,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/SubscriptionBillingHistoryDto"
                 }
               }
             }
@@ -820,8 +820,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/MatchingQueueDto"
                 }
               }
             }
@@ -836,7 +835,29 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "countryCode",
+            "required": false,
+            "schema": {
+              "enum": [
+                "TG"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ]
       }
     },
     "/v1/operator/workers/{workerId}/profile": {
@@ -1070,8 +1091,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/ServiceCellListDto"
                 }
               }
             }
@@ -1086,7 +1106,27 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date",
+            "required": false,
+            "schema": {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ]
       }
     },
     "/v1/operator/audit-events": {
@@ -1132,8 +1172,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/NotificationMessageListDto"
                 }
               }
             }
@@ -1148,7 +1187,82 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "aggregateId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "aggregateType",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "channel",
+            "required": false,
+            "schema": {
+              "enum": [
+                "in_app",
+                "push",
+                "sms",
+                "whatsapp"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "countryCode",
+            "required": false,
+            "schema": {
+              "enum": [
+                "TG"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "failed",
+                "pending",
+                "sent",
+                "suppressed_quiet_hours"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "templateKey",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "/v1/operator/payment-attempts": {
@@ -1163,8 +1277,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/PaymentAttemptListDto"
                 }
               }
             }
@@ -1179,7 +1292,49 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "countryCode",
+            "required": false,
+            "schema": {
+              "enum": [
+                "TG"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "provider",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "failed",
+                "succeeded"
+              ],
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "/v1/operator/beta-metrics": {
@@ -1194,8 +1349,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/BetaMetricsDto"
                 }
               }
             }
@@ -1210,7 +1364,20 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "countryCode",
+            "required": false,
+            "schema": {
+              "enum": [
+                "TG"
+              ],
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "/v1/operator/payment-attempts/{paymentAttemptId}/refunds": {
@@ -1587,15 +1754,14 @@
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "additionalProperties": true
+                "$ref": "#/components/schemas/CheckInVisitRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -1603,8 +1769,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/CheckInVisitDto"
                 }
               }
             }
@@ -1640,15 +1805,14 @@
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "additionalProperties": true
+                "$ref": "#/components/schemas/CheckOutVisitRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -1656,8 +1820,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/CheckOutVisitDto"
                 }
               }
             }
@@ -1693,15 +1856,14 @@
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "additionalProperties": true
+                "$ref": "#/components/schemas/WorkerIssueRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -1709,8 +1871,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/WorkerIssueDto"
                 }
               }
             }
@@ -1746,15 +1907,14 @@
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "additionalProperties": true
+                "$ref": "#/components/schemas/VisitPhotoRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -1762,8 +1922,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/VisitPhotoDto"
                 }
               }
             }
@@ -2147,8 +2306,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/DisputeListDto"
                 }
               }
             }
@@ -2163,7 +2321,41 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "escalated",
+                "open",
+                "resolved_for_subscriber",
+                "resolved_for_worker"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subscriptionId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "/v1/operator/disputes/{disputeId}/resolve": {
@@ -2402,6 +2594,15 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2410,8 +2611,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/WorkerRouteDto"
                 }
               }
             }
@@ -2452,8 +2652,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/WorkerProfileDto"
                 }
               }
             }
@@ -2489,15 +2688,14 @@
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "additionalProperties": true
+                "$ref": "#/components/schemas/WorkerUnavailabilityRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -2505,8 +2703,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/WorkerUnavailabilityDto"
                 }
               }
             }
@@ -2579,6 +2776,15 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "month",
+            "required": true,
+            "schema": {
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2587,8 +2793,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/WorkerEarningsDto"
                 }
               }
             }
@@ -2882,12 +3087,7 @@
   "components": {
     "schemas": {
       "ErrorResponse": {
-        "type": "object",
-        "required": [
-          "code",
-          "message",
-          "traceId"
-        ],
+        "additionalProperties": false,
         "properties": {
           "code": {
             "type": "string"
@@ -2899,7 +3099,2441 @@
             "type": "string"
           }
         },
-        "additionalProperties": true
+        "required": [
+          "code",
+          "message",
+          "traceId"
+        ],
+        "type": "object"
+      },
+      "MoneyDto": {
+        "additionalProperties": false,
+        "properties": {
+          "amountMinor": {
+            "pattern": "^-?\\d+$",
+            "type": "string"
+          },
+          "currencyCode": {
+            "enum": [
+              "XOF"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "amountMinor",
+          "currencyCode"
+        ],
+        "type": "object"
+      },
+      "AddressDto": {
+        "additionalProperties": false,
+        "properties": {
+          "gpsLatitude": {
+            "maximum": 90,
+            "minimum": -90,
+            "type": "number"
+          },
+          "gpsLongitude": {
+            "maximum": 180,
+            "minimum": -180,
+            "type": "number"
+          },
+          "landmark": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "neighborhood": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "gpsLatitude",
+          "gpsLongitude",
+          "landmark",
+          "neighborhood"
+        ],
+        "type": "object"
+      },
+      "SchedulePreferenceDto": {
+        "additionalProperties": false,
+        "properties": {
+          "dayOfWeek": {
+            "enum": [
+              "friday",
+              "monday",
+              "saturday",
+              "sunday",
+              "thursday",
+              "tuesday",
+              "wednesday"
+            ],
+            "type": "string"
+          },
+          "timeWindow": {
+            "enum": [
+              "afternoon",
+              "morning"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "dayOfWeek",
+          "timeWindow"
+        ],
+        "type": "object"
+      },
+      "LocationDto": {
+        "additionalProperties": false,
+        "properties": {
+          "latitude": {
+            "maximum": 90,
+            "minimum": -90,
+            "type": "number"
+          },
+          "longitude": {
+            "maximum": 180,
+            "minimum": -180,
+            "type": "number"
+          }
+        },
+        "required": [
+          "latitude",
+          "longitude"
+        ],
+        "type": "object"
+      },
+      "AuthSessionDto": {
+        "additionalProperties": false,
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "accessTokenExpiresAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "refreshTokenExpiresAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "operator",
+              "subscriber",
+              "worker"
+            ],
+            "type": "string"
+          },
+          "sessionId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "userId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "accessToken",
+          "accessTokenExpiresAt",
+          "refreshToken",
+          "refreshTokenExpiresAt",
+          "role",
+          "sessionId",
+          "userId"
+        ],
+        "type": "object"
+      },
+      "OtpChallengeDto": {
+        "additionalProperties": false,
+        "properties": {
+          "challengeId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "phoneNumber": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "testCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "challengeId",
+          "expiresAt",
+          "phoneNumber",
+          "provider",
+          "testCode"
+        ],
+        "type": "object"
+      },
+      "StartOtpChallengeRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "countryCode": {
+            "enum": [
+              "TG"
+            ],
+            "type": "string"
+          },
+          "phoneNumber": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "countryCode",
+          "phoneNumber"
+        ],
+        "type": "object"
+      },
+      "VerifyOtpChallengeRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "challengeId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "code": {
+            "pattern": "^\\d{6}$",
+            "type": "string"
+          },
+          "deviceId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "operator",
+              "subscriber",
+              "worker"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "challengeId",
+          "code",
+          "deviceId",
+          "role"
+        ],
+        "type": "object"
+      },
+      "RefreshAuthSessionRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "refreshToken": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "refreshToken"
+        ],
+        "type": "object"
+      },
+      "PricingTierDto": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "enum": [
+              "T1",
+              "T2"
+            ],
+            "type": "string"
+          },
+          "monthlyPrice": {
+            "$ref": "#/components/schemas/MoneyDto"
+          },
+          "nameKey": {
+            "type": "string"
+          },
+          "visitsPerCycle": {
+            "enum": [
+              1,
+              2
+            ],
+            "type": "integer"
+          }
+        },
+        "required": [
+          "code",
+          "monthlyPrice",
+          "nameKey",
+          "visitsPerCycle"
+        ],
+        "type": "object"
+      },
+      "LomePricingDto": {
+        "additionalProperties": false,
+        "properties": {
+          "countryCode": {
+            "enum": [
+              "TG"
+            ],
+            "type": "string"
+          },
+          "tiers": {
+            "items": {
+              "$ref": "#/components/schemas/PricingTierDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "countryCode",
+          "tiers"
+        ],
+        "type": "object"
+      },
+      "VisitSummaryDto": {
+        "additionalProperties": false,
+        "properties": {
+          "scheduledDate": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string"
+          },
+          "scheduledTimeWindow": {
+            "enum": [
+              "afternoon",
+              "morning"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "cancelled",
+              "completed",
+              "disputed",
+              "in_progress",
+              "no_show",
+              "scheduled"
+            ],
+            "type": "string"
+          },
+          "visitId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "workerId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "scheduledDate",
+          "scheduledTimeWindow",
+          "status",
+          "visitId",
+          "workerId"
+        ],
+        "type": "object"
+      },
+      "AssignedWorkerDto": {
+        "additionalProperties": false,
+        "properties": {
+          "averageRating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "completedVisitCount": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "disputeCount": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "workerId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "averageRating",
+          "completedVisitCount",
+          "displayName",
+          "disputeCount",
+          "workerId"
+        ],
+        "type": "object"
+      },
+      "SupportCreditDto": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/MoneyDto"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "creditId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "createdAt",
+          "creditId",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "SubscriptionDetailDto": {
+        "additionalProperties": false,
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/AddressDto"
+          },
+          "assignedWorker": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AssignedWorkerDto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "countryCode": {
+            "enum": [
+              "TG"
+            ],
+            "type": "string"
+          },
+          "monthlyPriceMinor": {
+            "pattern": "^\\d+$",
+            "type": "string"
+          },
+          "phoneNumber": {
+            "type": "string"
+          },
+          "recentVisits": {
+            "items": {
+              "$ref": "#/components/schemas/VisitSummaryDto"
+            },
+            "type": "array"
+          },
+          "schedulePreference": {
+            "$ref": "#/components/schemas/SchedulePreferenceDto"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "cancelled",
+              "paused",
+              "payment_overdue",
+              "pending_match"
+            ],
+            "type": "string"
+          },
+          "subscriberId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "subscriptionId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "supportCredits": {
+            "items": {
+              "$ref": "#/components/schemas/SupportCreditDto"
+            },
+            "type": "array"
+          },
+          "tierCode": {
+            "enum": [
+              "T1",
+              "T2"
+            ],
+            "type": "string"
+          },
+          "upcomingVisits": {
+            "items": {
+              "$ref": "#/components/schemas/VisitSummaryDto"
+            },
+            "type": "array"
+          },
+          "visitsPerCycle": {
+            "enum": [
+              1,
+              2
+            ],
+            "type": "integer"
+          }
+        },
+        "required": [
+          "address",
+          "assignedWorker",
+          "countryCode",
+          "monthlyPriceMinor",
+          "phoneNumber",
+          "recentVisits",
+          "schedulePreference",
+          "status",
+          "subscriberId",
+          "subscriptionId",
+          "supportCredits",
+          "tierCode",
+          "upcomingVisits",
+          "visitsPerCycle"
+        ],
+        "type": "object"
+      },
+      "SubscriptionBillingItemDto": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/MoneyDto"
+          },
+          "itemId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "itemType": {
+            "enum": [
+              "charge",
+              "refund"
+            ],
+            "type": "string"
+          },
+          "occurredAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "paymentAttemptId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "providerReference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "refundId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "type": "string"
+          },
+          "subscriptionId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "itemId",
+          "itemType",
+          "occurredAt",
+          "paymentAttemptId",
+          "provider",
+          "providerReference",
+          "reason",
+          "refundId",
+          "status",
+          "subscriptionId"
+        ],
+        "type": "object"
+      },
+      "SubscriptionBillingHistoryDto": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SubscriptionBillingItemDto"
+            },
+            "type": "array"
+          },
+          "limit": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "subscriptionId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "limit",
+          "subscriptionId"
+        ],
+        "type": "object"
+      },
+      "WorkerRouteVisitDto": {
+        "additionalProperties": false,
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/AddressDto"
+          },
+          "scheduledDate": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string"
+          },
+          "scheduledTimeWindow": {
+            "enum": [
+              "afternoon",
+              "morning"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "cancelled",
+              "completed",
+              "disputed",
+              "in_progress",
+              "no_show",
+              "scheduled"
+            ],
+            "type": "string"
+          },
+          "subscriberPhoneNumber": {
+            "type": "string"
+          },
+          "subscriptionId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "visitId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "address",
+          "scheduledDate",
+          "scheduledTimeWindow",
+          "status",
+          "subscriberPhoneNumber",
+          "subscriptionId",
+          "visitId"
+        ],
+        "type": "object"
+      },
+      "WorkerRouteDto": {
+        "additionalProperties": false,
+        "properties": {
+          "date": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string"
+          },
+          "visits": {
+            "items": {
+              "$ref": "#/components/schemas/WorkerRouteVisitDto"
+            },
+            "type": "array"
+          },
+          "workerId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "visits",
+          "workerId"
+        ],
+        "type": "object"
+      },
+      "WorkerProfileDto": {
+        "additionalProperties": false,
+        "properties": {
+          "countryCode": {
+            "enum": [
+              "TG"
+            ],
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "maxActiveSubscriptions": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "serviceNeighborhoods": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "applicant",
+              "inactive",
+              "onboarding",
+              "suspended"
+            ],
+            "type": "string"
+          },
+          "workerId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "countryCode",
+          "displayName",
+          "maxActiveSubscriptions",
+          "serviceNeighborhoods",
+          "status",
+          "workerId"
+        ],
+        "type": "object"
+      },
+      "WorkerPayoutDto": {
+        "additionalProperties": false,
+        "properties": {
+          "advanceRequestId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "amount": {
+            "$ref": "#/components/schemas/MoneyDto"
+          },
+          "createdByOperatorUserId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "failureReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "note": {
+            "type": "string"
+          },
+          "paidAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "payoutId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "payoutType": {
+            "type": "string"
+          },
+          "periodMonth": {
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "providerReference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "failed",
+              "paid"
+            ],
+            "type": "string"
+          },
+          "workerId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "workerName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "advanceRequestId",
+          "amount",
+          "createdByOperatorUserId",
+          "failureReason",
+          "note",
+          "paidAt",
+          "payoutId",
+          "payoutType",
+          "periodMonth",
+          "provider",
+          "providerReference",
+          "status",
+          "workerId",
+          "workerName"
+        ],
+        "type": "object"
+      },
+      "WorkerEarningsDto": {
+        "additionalProperties": false,
+        "properties": {
+          "completedVisits": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "floor": {
+            "$ref": "#/components/schemas/MoneyDto"
+          },
+          "month": {
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+            "type": "string"
+          },
+          "netDue": {
+            "$ref": "#/components/schemas/MoneyDto"
+          },
+          "paidOutTotal": {
+            "$ref": "#/components/schemas/MoneyDto"
+          },
+          "payoutHistory": {
+            "items": {
+              "$ref": "#/components/schemas/WorkerPayoutDto"
+            },
+            "type": "array"
+          },
+          "total": {
+            "$ref": "#/components/schemas/MoneyDto"
+          },
+          "visitBonusTotal": {
+            "$ref": "#/components/schemas/MoneyDto"
+          },
+          "workerId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "completedVisits",
+          "floor",
+          "month",
+          "netDue",
+          "paidOutTotal",
+          "payoutHistory",
+          "total",
+          "visitBonusTotal",
+          "workerId"
+        ],
+        "type": "object"
+      },
+      "CheckInVisitRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "checkedInAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "fallbackCode": {
+            "type": "string"
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationDto"
+          },
+          "workerId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "checkedInAt",
+          "location",
+          "workerId"
+        ],
+        "type": "object"
+      },
+      "CheckInVisitDto": {
+        "additionalProperties": false,
+        "properties": {
+          "checkedInAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "in_progress"
+            ],
+            "type": "string"
+          },
+          "visitId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "workerId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "checkedInAt",
+          "status",
+          "visitId",
+          "workerId"
+        ],
+        "type": "object"
+      },
+      "CheckOutVisitRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "checkedOutAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "fallbackCode": {
+            "type": "string"
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationDto"
+          },
+          "workerId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "checkedOutAt",
+          "location",
+          "workerId"
+        ],
+        "type": "object"
+      },
+      "CheckOutVisitDto": {
+        "additionalProperties": false,
+        "properties": {
+          "bonus": {
+            "$ref": "#/components/schemas/MoneyDto"
+          },
+          "checkedOutAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "completed"
+            ],
+            "type": "string"
+          },
+          "visitId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "workerId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "bonus",
+          "checkedOutAt",
+          "status",
+          "visitId",
+          "workerId"
+        ],
+        "type": "object"
+      },
+      "VisitPhotoRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "byteSize": {
+            "maximum": 5000000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "capturedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "contentType": {
+            "enum": [
+              "image/jpeg",
+              "image/png",
+              "image/webp"
+            ],
+            "type": "string"
+          },
+          "objectKey": {
+            "maxLength": 512,
+            "minLength": 4,
+            "type": "string"
+          },
+          "photoType": {
+            "enum": [
+              "after",
+              "before"
+            ],
+            "type": "string"
+          },
+          "workerId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "byteSize",
+          "capturedAt",
+          "contentType",
+          "objectKey",
+          "photoType",
+          "workerId"
+        ],
+        "type": "object"
+      },
+      "VisitPhotoDto": {
+        "additionalProperties": false,
+        "properties": {
+          "byteSize": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "capturedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "contentType": {
+            "enum": [
+              "image/jpeg",
+              "image/png",
+              "image/webp"
+            ],
+            "type": "string"
+          },
+          "objectKey": {
+            "type": "string"
+          },
+          "photoId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "photoType": {
+            "enum": [
+              "after",
+              "before"
+            ],
+            "type": "string"
+          },
+          "uploadedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "visitId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "workerId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "byteSize",
+          "capturedAt",
+          "contentType",
+          "objectKey",
+          "photoId",
+          "photoType",
+          "uploadedAt",
+          "visitId",
+          "workerId"
+        ],
+        "type": "object"
+      },
+      "WorkerIssueRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "issueType": {
+            "enum": [
+              "access_issue",
+              "client_unavailable",
+              "other",
+              "safety_concern",
+              "supplies_missing"
+            ],
+            "type": "string"
+          },
+          "workerId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "createdAt",
+          "description",
+          "issueType",
+          "workerId"
+        ],
+        "type": "object"
+      },
+      "WorkerIssueDto": {
+        "additionalProperties": false,
+        "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AddressDto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "handledByOperatorUserId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "issueId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "issueType": {
+            "enum": [
+              "access_issue",
+              "client_unavailable",
+              "other",
+              "safety_concern",
+              "supplies_missing"
+            ],
+            "type": "string"
+          },
+          "resolutionNote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resolvedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scheduledDate": {
+            "anyOf": [
+              {
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scheduledTimeWindow": {
+            "anyOf": [
+              {
+                "enum": [
+                  "afternoon",
+                  "morning"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "acknowledged",
+              "open",
+              "resolved"
+            ],
+            "type": "string"
+          },
+          "subscriberPhoneNumber": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "subscriptionId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "visitId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "workerId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "address",
+          "createdAt",
+          "description",
+          "handledByOperatorUserId",
+          "issueId",
+          "issueType",
+          "resolutionNote",
+          "resolvedAt",
+          "scheduledDate",
+          "scheduledTimeWindow",
+          "status",
+          "subscriberPhoneNumber",
+          "subscriptionId",
+          "visitId",
+          "workerId"
+        ],
+        "type": "object"
+      },
+      "WorkerUnavailabilityRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "date": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string"
+          },
+          "reason": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "createdAt",
+          "date",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "WorkerUnavailabilityDto": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "date": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "unavailabilityId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "workerId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "createdAt",
+          "date",
+          "reason",
+          "unavailabilityId",
+          "workerId"
+        ],
+        "type": "object"
+      },
+      "PaymentAttemptDto": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/MoneyDto"
+          },
+          "chargedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "paymentAttemptId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "providerReference": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "failed",
+              "succeeded"
+            ],
+            "type": "string"
+          },
+          "subscriptionId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "subscriptionStatus": {
+            "enum": [
+              "active",
+              "cancelled",
+              "paused",
+              "payment_overdue",
+              "pending_match"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "chargedAt",
+          "idempotencyKey",
+          "paymentAttemptId",
+          "provider",
+          "providerReference",
+          "status",
+          "subscriptionId",
+          "subscriptionStatus"
+        ],
+        "type": "object"
+      },
+      "PaymentAttemptSummaryDto": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/MoneyDto"
+          },
+          "chargedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "countryCode": {
+            "enum": [
+              "TG"
+            ],
+            "type": "string"
+          },
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "paymentAttemptId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "providerReference": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "failed",
+              "succeeded"
+            ],
+            "type": "string"
+          },
+          "subscriptionId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "subscriptionStatus": {
+            "enum": [
+              "active",
+              "cancelled",
+              "paused",
+              "payment_overdue",
+              "pending_match"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "chargedAt",
+          "countryCode",
+          "idempotencyKey",
+          "paymentAttemptId",
+          "provider",
+          "providerReference",
+          "status",
+          "subscriptionId",
+          "subscriptionStatus"
+        ],
+        "type": "object"
+      },
+      "PaymentAttemptListDto": {
+        "additionalProperties": false,
+        "properties": {
+          "countryCode": {
+            "enum": [
+              "TG"
+            ],
+            "type": "string"
+          },
+          "filters": {
+            "additionalProperties": false,
+            "properties": {
+              "provider": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "failed",
+                      "succeeded"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "provider",
+              "status"
+            ],
+            "type": "object"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentAttemptSummaryDto"
+            },
+            "type": "array"
+          },
+          "limit": {
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "countryCode",
+          "filters",
+          "items",
+          "limit"
+        ],
+        "type": "object"
+      },
+      "NotificationMessageDto": {
+        "additionalProperties": false,
+        "properties": {
+          "aggregateId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "aggregateType": {
+            "type": "string"
+          },
+          "attemptCount": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "availableAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "channel": {
+            "enum": [
+              "in_app",
+              "push",
+              "sms",
+              "whatsapp"
+            ],
+            "type": "string"
+          },
+          "countryCode": {
+            "enum": [
+              "TG"
+            ],
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "eventId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "failureReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lastAttemptAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "messageId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "providerReference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recipientRole": {
+            "enum": [
+              "operator",
+              "subscriber",
+              "worker"
+            ],
+            "type": "string"
+          },
+          "recipientUserId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sentAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "failed",
+              "pending",
+              "sent",
+              "suppressed_quiet_hours"
+            ],
+            "type": "string"
+          },
+          "templateKey": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "aggregateId",
+          "aggregateType",
+          "attemptCount",
+          "availableAt",
+          "channel",
+          "countryCode",
+          "createdAt",
+          "eventId",
+          "failureReason",
+          "lastAttemptAt",
+          "messageId",
+          "payload",
+          "provider",
+          "providerReference",
+          "recipientRole",
+          "recipientUserId",
+          "sentAt",
+          "status",
+          "templateKey"
+        ],
+        "type": "object"
+      },
+      "NotificationMessageListDto": {
+        "additionalProperties": false,
+        "properties": {
+          "countryCode": {
+            "enum": [
+              "TG"
+            ],
+            "type": "string"
+          },
+          "filters": {
+            "additionalProperties": false,
+            "properties": {
+              "aggregateId": {
+                "anyOf": [
+                  {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "aggregateType": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "channel": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "in_app",
+                      "push",
+                      "sms",
+                      "whatsapp"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "failed",
+                      "pending",
+                      "sent",
+                      "suppressed_quiet_hours"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "templateKey": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "aggregateId",
+              "aggregateType",
+              "channel",
+              "status",
+              "templateKey"
+            ],
+            "type": "object"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NotificationMessageDto"
+            },
+            "type": "array"
+          },
+          "limit": {
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "countryCode",
+          "filters",
+          "items",
+          "limit"
+        ],
+        "type": "object"
+      },
+      "DisputeDto": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "disputeId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "issueType": {
+            "enum": [
+              "damaged_item",
+              "missing_item",
+              "other",
+              "worker_no_show"
+            ],
+            "type": "string"
+          },
+          "openedByUserId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "resolvedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resolvedByOperatorUserId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resolutionNote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "escalated",
+              "open",
+              "resolved_for_subscriber",
+              "resolved_for_worker"
+            ],
+            "type": "string"
+          },
+          "subscriberCredit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MoneyDto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "subscriberCreditId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "subscriberPhoneNumber": {
+            "type": "string"
+          },
+          "subscriptionId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "visitId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "workerId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "createdAt",
+          "description",
+          "disputeId",
+          "issueType",
+          "openedByUserId",
+          "resolvedAt",
+          "resolvedByOperatorUserId",
+          "resolutionNote",
+          "status",
+          "subscriberCredit",
+          "subscriberCreditId",
+          "subscriptionId",
+          "visitId",
+          "workerId"
+        ],
+        "type": "object"
+      },
+      "DisputeListDto": {
+        "additionalProperties": false,
+        "properties": {
+          "filters": {
+            "additionalProperties": false,
+            "properties": {
+              "status": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "escalated",
+                      "open",
+                      "resolved_for_subscriber",
+                      "resolved_for_worker"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "subscriptionId": {
+                "anyOf": [
+                  {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "status",
+              "subscriptionId"
+            ],
+            "type": "object"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DisputeDto"
+            },
+            "type": "array"
+          },
+          "limit": {
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "filters",
+          "items",
+          "limit"
+        ],
+        "type": "object"
+      },
+      "MatchingQueueItemDto": {
+        "additionalProperties": false,
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/AddressDto"
+          },
+          "assignmentDueAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "monthlyPriceMinor": {
+            "pattern": "^\\d+$",
+            "type": "string"
+          },
+          "phoneNumber": {
+            "type": "string"
+          },
+          "queuedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "schedulePreference": {
+            "$ref": "#/components/schemas/SchedulePreferenceDto"
+          },
+          "status": {
+            "enum": [
+              "pending_match"
+            ],
+            "type": "string"
+          },
+          "subscriberId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "subscriptionId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "tierCode": {
+            "enum": [
+              "T1",
+              "T2"
+            ],
+            "type": "string"
+          },
+          "visitsPerCycle": {
+            "enum": [
+              1,
+              2
+            ],
+            "type": "integer"
+          }
+        },
+        "required": [
+          "address",
+          "assignmentDueAt",
+          "monthlyPriceMinor",
+          "phoneNumber",
+          "queuedAt",
+          "schedulePreference",
+          "status",
+          "subscriberId",
+          "subscriptionId",
+          "tierCode",
+          "visitsPerCycle"
+        ],
+        "type": "object"
+      },
+      "MatchingQueueDto": {
+        "additionalProperties": false,
+        "properties": {
+          "countryCode": {
+            "enum": [
+              "TG"
+            ],
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MatchingQueueItemDto"
+            },
+            "type": "array"
+          },
+          "limit": {
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "countryCode",
+          "items",
+          "limit"
+        ],
+        "type": "object"
+      },
+      "ServiceCellDto": {
+        "additionalProperties": false,
+        "properties": {
+          "activeSubscriptions": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "activeWorkers": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "capacityRemaining": {
+            "type": "integer"
+          },
+          "completedVisits": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "inProgressVisits": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "scheduledVisits": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "serviceCell": {
+            "type": "string"
+          },
+          "totalCapacity": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "utilizationPercent": {
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "activeSubscriptions",
+          "activeWorkers",
+          "capacityRemaining",
+          "completedVisits",
+          "inProgressVisits",
+          "scheduledVisits",
+          "serviceCell",
+          "totalCapacity",
+          "utilizationPercent"
+        ],
+        "type": "object"
+      },
+      "ServiceCellListDto": {
+        "additionalProperties": false,
+        "properties": {
+          "date": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceCellDto"
+            },
+            "type": "array"
+          },
+          "limit": {
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "date",
+          "items",
+          "limit"
+        ],
+        "type": "object"
+      },
+      "BetaMetricsDto": {
+        "additionalProperties": false,
+        "properties": {
+          "countryCode": {
+            "enum": [
+              "TG"
+            ],
+            "type": "string"
+          },
+          "disputes": {
+            "additionalProperties": false,
+            "properties": {
+              "escalated": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "open": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "resolvedForSubscriber": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "resolvedForWorker": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "total": {
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "escalated",
+              "open",
+              "resolvedForSubscriber",
+              "resolvedForWorker",
+              "total"
+            ],
+            "type": "object"
+          },
+          "generatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "nps": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "payments": {
+            "additionalProperties": false,
+            "properties": {
+              "failed": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "successRate": {
+                "anyOf": [
+                  {
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "succeeded": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "total": {
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "failed",
+              "successRate",
+              "succeeded",
+              "total"
+            ],
+            "type": "object"
+          },
+          "refunds": {
+            "additionalProperties": false,
+            "properties": {
+              "total": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "totalAmountMinor": {
+                "pattern": "^\\d+$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "total",
+              "totalAmountMinor"
+            ],
+            "type": "object"
+          },
+          "subscribers": {
+            "additionalProperties": false,
+            "properties": {
+              "active": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "cancelled": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "paymentOverdue": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "pendingMatch": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "total": {
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "active",
+              "cancelled",
+              "paymentOverdue",
+              "pendingMatch",
+              "total"
+            ],
+            "type": "object"
+          },
+          "supportLoad": {
+            "additionalProperties": false,
+            "properties": {
+              "openWorkerIssues": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "resolvedWorkerIssues": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "totalWorkerIssues": {
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "openWorkerIssues",
+              "resolvedWorkerIssues",
+              "totalWorkerIssues"
+            ],
+            "type": "object"
+          },
+          "visits": {
+            "additionalProperties": false,
+            "properties": {
+              "averageDurationMinutes": {
+                "anyOf": [
+                  {
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "cancelled": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "completed": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "completionRate": {
+                "anyOf": [
+                  {
+                    "maximum": 1,
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "disputed": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "noShow": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "skipped": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "totalClosed": {
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "averageDurationMinutes",
+              "cancelled",
+              "completed",
+              "completionRate",
+              "disputed",
+              "noShow",
+              "skipped",
+              "totalClosed"
+            ],
+            "type": "object"
+          },
+          "workerEarnings": {
+            "additionalProperties": false,
+            "properties": {
+              "failedPayouts": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "paidPayouts": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "totalPaidMinor": {
+                "pattern": "^\\d+$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "failedPayouts",
+              "paidPayouts",
+              "totalPaidMinor"
+            ],
+            "type": "object"
+          },
+          "workerSatisfaction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "countryCode",
+          "disputes",
+          "generatedAt",
+          "nps",
+          "payments",
+          "refunds",
+          "subscribers",
+          "supportLoad",
+          "visits",
+          "workerEarnings",
+          "workerSatisfaction"
+        ],
+        "type": "object"
       }
     }
   }

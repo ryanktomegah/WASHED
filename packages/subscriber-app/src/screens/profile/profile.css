@@ -72,7 +72,7 @@
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.12em;
+  letter-spacing: 0;
   line-height: 1.25;
   text-transform: uppercase;
 }
@@ -126,7 +126,7 @@
   font-family: var(--font-mono);
   font-size: 14px;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -263,12 +263,12 @@
 
 .profile-button.primary {
   background: var(--primary);
-  color: white;
+  color: var(--surface);
 }
 
 .profile-button.primary:disabled {
   background: color-mix(in srgb, var(--primary) 35%, var(--surface) 65%);
-  color: rgba(255, 255, 255, 0.65);
+  color: color-mix(in srgb, var(--surface) 65%, transparent);
   cursor: not-allowed;
 }
 
@@ -280,13 +280,13 @@
 
 .profile-button.danger-outline {
   background: transparent;
-  border-color: var(--danger, #c4622d);
-  color: var(--danger, #c4622d);
+  border-color: var(--danger);
+  color: var(--danger);
 }
 
 .profile-button.danger {
-  background: var(--danger, #c4622d);
-  color: white;
+  background: var(--danger);
+  color: var(--surface);
 }
 
 .profile-button.danger:disabled {
@@ -301,7 +301,10 @@
   gap: 4px;
   border: 1px solid color-mix(in srgb, var(--accent, var(--primary)) 24%, var(--line));
   border-radius: 14px;
-  background: var(--accent-soft, color-mix(in srgb, var(--accent, var(--primary)) 16%, white 84%));
+  background: var(
+    --accent-soft,
+    color-mix(in srgb, var(--accent, var(--primary)) 16%, var(--surface) 84%)
+  );
   padding: 10px 12px;
 }
 
@@ -352,7 +355,7 @@
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.12em;
+  letter-spacing: 0;
 }
 
 .profile-input,
@@ -364,7 +367,7 @@
   background: var(--surface);
   color: var(--ink);
   font: inherit;
-  font-size: 14px;
+  font-size: 16px;
   padding: 12px 14px;
   appearance: none;
   -webkit-appearance: none;
@@ -383,8 +386,8 @@
 
 .profile-input-mono {
   font-family: var(--font-mono);
-  font-size: 13px;
-  letter-spacing: 0.04em;
+  font-size: 16px;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -409,8 +412,12 @@
   border: 1px solid var(--line);
   border-radius: 14px;
   background:
-    linear-gradient(90deg, rgba(196, 98, 45, 0.1) 1px, transparent 1px),
-    linear-gradient(rgba(196, 98, 45, 0.1) 1px, transparent 1px),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--primary) 10%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(color-mix(in srgb, var(--primary) 10%, transparent) 1px, transparent 1px),
     var(--surface);
   background-size: 24px 24px;
   overflow: hidden;
@@ -425,7 +432,7 @@
   border: 3px solid var(--surface);
   border-radius: 999px;
   background: var(--primary);
-  box-shadow: 0 4px 12px rgba(28, 18, 8, 0.18);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--ink) 18%, transparent);
   transform: translate(-50%, -50%);
 }
 
@@ -499,8 +506,8 @@
   width: 20px;
   height: 20px;
   border-radius: 999px;
-  background: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  background: var(--surface);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--ink) 20%, transparent);
   transition: transform var(--d-fast) var(--ease-standard);
 }
 
@@ -516,5 +523,148 @@
 
   .profile-title {
     font-size: 24px;
+  }
+}
+
+.profile-body {
+  gap: 14px;
+  min-height: 0;
+  padding: 24px 20px 0;
+}
+
+.profile-body-flow {
+  gap: 12px;
+}
+
+.profile-back {
+  width: 32px;
+  height: 32px;
+  font-size: inherit;
+}
+
+.profile-back svg {
+  width: 20px;
+  height: 20px;
+}
+
+.profile-back:focus-visible,
+.profile-button:focus-visible,
+.profile-menu-row-inner:focus-visible,
+.profile-input:focus,
+.profile-select-shell select:focus,
+.profile-switch:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+.profile-title,
+.profile-name {
+  font-weight: 550;
+  line-height: 1.08;
+}
+
+.profile-avatar {
+  letter-spacing: 0;
+}
+
+.profile-menu,
+.profile-warn-card,
+.profile-info-card,
+.profile-input,
+.profile-select-shell select,
+.profile-mini-map {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.profile-menu-row-inner {
+  padding: 14px 12px;
+}
+
+.profile-button {
+  min-height: 46px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.profile-button.primary {
+  background: var(--primary);
+  color: var(--surface);
+}
+
+.profile-button.primary:disabled {
+  background: var(--line);
+  color: var(--ink-3);
+}
+
+.profile-button.ghost {
+  border-color: var(--line-2);
+  background: transparent;
+  color: var(--ink);
+}
+
+.profile-button.danger,
+.profile-button.danger-outline {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.profile-warn-card {
+  background: var(--accent-soft);
+}
+
+.profile-mini-map {
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--primary) 10%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(color-mix(in srgb, var(--primary) 10%, transparent) 1px, transparent 1px),
+    var(--surface-2);
+  background-size: 24px 24px;
+}
+
+.profile-mini-map-pin {
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--ink) 18%, transparent);
+}
+
+.profile-input-mono {
+  letter-spacing: 0;
+}
+
+.profile-switch.on {
+  background: var(--primary);
+}
+
+@media (max-height: 700px) {
+  .profile-body {
+    gap: 10px;
+    padding-top: 18px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .profile-screen {
+    --bg: #111111;
+    --surface: #111111;
+    --surface-2: #1a1a1a;
+    --ink: #fafafa;
+    --ink-2: #c7c7c7;
+    --ink-3: #a3a3a3;
+    --ink-4: #737373;
+    --line: #262626;
+    --line-2: #333333;
+    --primary: #0a3d1f;
+    --primary-on: #ffffff;
+    --primary-tint: #0f1f15;
+    --primary-soft: #0c1610;
+    --success: #48c078;
+    --warn: #e0a030;
+    --danger: #f05959;
   }
 }

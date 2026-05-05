@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactElement } from 'react';
+import { Check, ChevronLeft } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
@@ -37,7 +38,7 @@ export function WorkerProfileX18(): ReactElement {
             onClick={goBack}
             type="button"
           >
-            ‹
+            <ChevronLeft aria-hidden="true" />
           </button>
           <span className="worker-profile-eyebrow">
             {translate('subscriber.worker.profile.header')}
@@ -142,7 +143,7 @@ export function WorkerChangeX18C(): ReactElement {
             onClick={goBack}
             type="button"
           >
-            ‹
+            <ChevronLeft aria-hidden="true" />
           </button>
           <span className="worker-profile-eyebrow">
             {translate('subscriber.worker.change.header')}
@@ -224,7 +225,7 @@ export function WorkerChangeSubmittedX18C(): ReactElement {
     >
       <div className="worker-profile-body worker-profile-submitted">
         <span aria-hidden="true" className="worker-profile-submitted-mark">
-          ✓
+          <Check />
         </span>
         <h1 className="worker-profile-change-title" id="x18c-submitted-headline">
           {translate('subscriber.worker.change.submitted.title')}

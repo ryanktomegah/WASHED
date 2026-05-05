@@ -20,9 +20,9 @@ describe('Washed i18n', () => {
   });
 
   it('translates onboarding copy from the deck', () => {
-    expect(translate('subscriber.signup.phone.title')).toBe('Votre numéro de téléphone.');
+    expect(translate('subscriber.signup.phone.title')).toBe('Votre numéro de téléphone');
     expect(translate('subscriber.signup.phone.cta')).toBe('Recevoir le code');
-    expect(translate('subscriber.signup.otp.title')).toBe('Le code reçu par SMS.');
+    expect(translate('subscriber.signup.otp.title')).toBe('Le code reçu par SMS');
   });
 
   it('returns the EN translation when present and falls back to FR otherwise', () => {
@@ -41,14 +41,14 @@ describe('Washed i18n', () => {
   });
 
   it('interpolates ICU-style {variables}', () => {
-    expect(
-      translate('subscriber.signup.step_indicator', 'fr', { current: 1, total: 8 }),
-    ).toBe('Étape 1 sur 8');
-    expect(
-      translate('subscriber.signup.otp.body', 'fr', { phone: '+228 90 ●● ●● 56' }),
-    ).toBe('Six chiffres envoyés au +228 90 ●● ●● 56.');
-    expect(translate('subscriber.signup.otp.resend', 'fr', { seconds: 30 })).toBe(
-      'Renvoyer dans 30 s',
+    expect(translate('subscriber.signup.step_indicator', 'fr', { current: 1, total: 8 })).toBe(
+      'Étape 1 / 8',
+    );
+    expect(translate('subscriber.signup.otp.body', 'fr', { phone: '+228 90 •••• 56' })).toBe(
+      'Six chiffres envoyés au +228 90 •••• 56.',
+    );
+    expect(translate('subscriber.signup.otp.resend', 'fr', { timer: '0:24 s' })).toBe(
+      'Renvoyer dans 0:24 s',
     );
   });
 

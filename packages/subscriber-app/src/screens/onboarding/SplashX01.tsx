@@ -8,47 +8,33 @@ export function SplashX01(): ReactElement {
   const navigate = useNavigate();
   const { setLocale } = useLocale();
 
-  const continueInFrench = (): void => {
+  const continueSignup = (): void => {
     setLocale('fr');
     navigate('/signup/phone');
   };
 
-  const continueInEnglish = (): void => {
-    setLocale('en');
-    navigate('/signup/phone');
+  const continueExistingAccount = (): void => {
+    setLocale('fr');
+    navigate('/hub');
   };
 
   return (
-    <main
-      aria-labelledby="x01-headline"
-      className="onboarding-screen dark"
-      data-screen-id="X-01"
-    >
+    <main aria-labelledby="x01-headline" className="onboarding-screen splash" data-screen-id="X-01">
       <div className="body center">
         <div>
           <h1 className="splash-mark" id="x01-headline">
-            washed<span aria-hidden="true">.</span>
+            Washed<span aria-hidden="true">.</span>
           </h1>
           <div className="splash-tagline">{translate('subscriber.splash.tagline')}</div>
         </div>
       </div>
       <div className="splash-cta-stack">
-        <div className="row2">
-          <button
-            className="btn full surface"
-            onClick={continueInFrench}
-            type="button"
-          >
-            {translate('subscriber.splash.lang.fr')}
-          </button>
-          <button
-            className="btn full surface"
-            onClick={continueInEnglish}
-            type="button"
-          >
-            {translate('subscriber.splash.lang.en')}
-          </button>
-        </div>
+        <button className="btn full primary" onClick={continueSignup} type="button">
+          {translate('subscriber.splash.cta_continue')}
+        </button>
+        <button className="btn full ghost" onClick={continueExistingAccount} type="button">
+          {translate('subscriber.splash.cta_existing')}
+        </button>
       </div>
     </main>
   );

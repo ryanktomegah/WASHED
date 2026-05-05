@@ -5,8 +5,6 @@ import { translate } from '@washed/i18n';
 
 import { useSignup } from './SignupContext.js';
 
-// Locked Lomé neighborhood list — covers the operator-validated zones for v1.
-// Source: design/03-information-architecture/sitemap.html section 04 (matching).
 const LOME_NEIGHBORHOODS = [
   'Adidogomé',
   'Agoè',
@@ -26,7 +24,6 @@ export function AddressX04(): ReactElement {
   const signup = useSignup();
   const [neighborhood, setNeighborhood] = useState(signup.address.neighborhood);
   const [street, setStreet] = useState(signup.address.street);
-  const [landmark, setLandmark] = useState(signup.address.landmark);
 
   useEffect(() => {
     if (signup.phone === '') navigate('/signup/phone', { replace: true });
@@ -40,7 +37,7 @@ export function AddressX04(): ReactElement {
     signup.setAddress({
       neighborhood,
       street: street.trim(),
-      landmark: landmark.trim(),
+      landmark: '',
     });
     navigate('/signup/tier');
   };
@@ -50,7 +47,13 @@ export function AddressX04(): ReactElement {
   return (
     <main aria-labelledby="x04-headline" className="onboarding-screen" data-screen-id="X-04">
       <form className="body tight" onSubmit={onSubmit}>
-        <div className="title-stack">
+        <div className="title-stack no-progress">
+          <div aria-hidden="true" className="steps">
+            <i className="on" />
+            <i className="on" />
+            <i className="on" />
+            <i />
+          </div>
           <span className="h-sm">
             {translate('subscriber.signup.step_indicator', { current: 3, total: 4 })}
           </span>
@@ -65,6 +68,11 @@ export function AddressX04(): ReactElement {
             {translate('subscriber.signup.address.field.neighborhood')}
           </label>
           <div className="select-shell">
+            <span aria-hidden="true" className="select-value">
+              {neighborhood === ''
+                ? translate('subscriber.signup.address.neighborhood.placeholder')
+                : neighborhood}
+            </span>
             <select
               id="x04-neighborhood"
               name="neighborhood"
@@ -100,23 +108,6 @@ export function AddressX04(): ReactElement {
               placeholder={translate('subscriber.signup.address.street.placeholder')}
               type="text"
               value={street}
-            />
-          </div>
-        </div>
-
-        <div className="field">
-          <label className="field-label" htmlFor="x04-landmark">
-            {translate('subscriber.signup.address.field.landmark')}
-          </label>
-          <div className="input-shell">
-            <input
-              autoComplete="off"
-              id="x04-landmark"
-              name="landmark"
-              onChange={(event) => setLandmark(event.target.value)}
-              placeholder={translate('subscriber.signup.address.landmark.placeholder')}
-              type="text"
-              value={landmark}
             />
           </div>
         </div>

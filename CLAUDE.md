@@ -76,6 +76,7 @@ Fastify HTTP API. Two repository implementations swap at boot via `DATABASE_URL`
 Domain events are first-class. Every state-change writes to **both** `audit_events` (append-only operator/legal trace) and `outbox_events` (unpublished integration stream) in the same transaction, and may also create `notification_messages` rows for push/SMS delivery. Events are registered in a contract catalog before they can be written; launch-critical events have strict payload validation. The full HTTP surface is enumerated in `README.md`.
 
 Worker control flags worth knowing about:
+
 - `NOTIFICATION_DELIVERY_WORKER_ENABLED` — drives push/SMS delivery
 - `PAYMENT_RECONCILIATION_WORKER_ENABLED` — periodic payment reconciliation runs
 - `OTP_PROVIDER` (`test`/`sms_http`) and `PAYMENT_PROVIDER` (`mock`/`mobile_money_http`) gate real I/O behind `*_REAL_*_ENABLED` flags so local dev never hits real providers by accident
@@ -102,6 +103,7 @@ The four-tab bottom nav (`hub-nav` class shared across hub/history/plan/profile)
 ### Tests
 
 Vitest (`*.test.ts`/`*.test.tsx`) is colocated next to source. Playwright UI tests live in `tests/ui/` and run against the apps' production Vite builds on ports 6173/6174/6175 via the `webServer` block in `playwright.config.ts`. The subscriber spec runs at **two viewports**:
+
 - `subscriber-mobile` — iPhone 15 Pro (393×852), the design target
 - `subscriber-iphone-se` — iPhone SE 3rd gen (375×667), the layout floor (Playwright's named `iPhone SE` device is the 2016 1st-gen at 320×568, **so the viewport is overridden explicitly**)
 

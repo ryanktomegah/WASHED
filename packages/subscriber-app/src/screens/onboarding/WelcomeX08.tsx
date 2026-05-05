@@ -8,26 +8,15 @@ export function WelcomeX08(): ReactElement {
   return (
     <main aria-labelledby="x08-headline" className="onboarding-screen" data-screen-id="X-08">
       <div className="body center">
-        <div className="grow" />
+        <div aria-hidden="true" className="welcome-avatar" />
 
-        <div aria-hidden="true" className="welcome-glyph">
-          w
-        </div>
-
-        <h1
-          aria-label={translate('subscriber.signup.welcome.title')}
-          className="h-md welcome-title"
-          id="x08-headline"
-        >
-          <em>{translate('subscriber.signup.welcome.title_prefix')}</em>
-          <br />
-          {translate('subscriber.signup.welcome.title_suffix')}
+        <h1 className="h-md welcome-title" id="x08-headline">
+          {translate('subscriber.signup.welcome.title')}
         </h1>
 
         <p className="p welcome-body">{translate('subscriber.signup.welcome.body')}</p>
-
-        <div className="grow" />
-
+      </div>
+      <div className="welcome-actions">
         <button className="btn full primary" onClick={() => navigate('/hub')} type="button">
           {translate('subscriber.signup.welcome.cta')}
         </button>

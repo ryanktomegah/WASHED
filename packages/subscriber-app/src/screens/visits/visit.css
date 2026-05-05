@@ -1,8 +1,3 @@
-/* ============================================================
-   Subscriber visit cycle — X-11..X-15
-   Static demo routes for the active visit flow.
-   ============================================================ */
-
 .visit-screen {
   display: flex;
   min-height: 100vh;
@@ -24,18 +19,25 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
+  min-height: 0;
   padding: 24px 20px;
 }
 
 .visit-body.tight {
-  gap: 8px;
+  gap: 10px;
 }
 
 .visit-body.center {
   align-items: center;
   justify-content: center;
   text-align: center;
+}
+
+.visit-screen[data-screen-id='X-11'] .visit-body {
+  gap: 12px;
+  overflow: hidden;
+  padding: 12px 22px 18px;
 }
 
 .visit-grow {
@@ -51,30 +53,31 @@
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.1em;
-  line-height: 1.2;
+  letter-spacing: 0;
+  line-height: 1.3;
   text-transform: uppercase;
 }
 
 .visit-back {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
+  display: inline-grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
   border: 0;
   border-radius: 999px;
   background: transparent;
   color: var(--ink);
   cursor: pointer;
-  font: inherit;
-  font-size: 20px;
-  letter-spacing: 0;
-  line-height: 1;
   padding: 0;
 }
 
-.visit-back:focus-visible {
+.visit-back svg {
+  width: 20px;
+  height: 20px;
+}
+
+.visit-back:focus-visible,
+.visit-button:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
@@ -84,14 +87,36 @@
   color: var(--ink);
   font-family: var(--font-display);
   font-size: 28px;
-  font-weight: 500;
+  font-weight: 550;
   letter-spacing: 0;
-  line-height: 1.1;
+  line-height: 1.08;
+}
+
+.visit-screen[data-screen-id='X-11'] .visit-title {
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.12;
+}
+
+.visit-title-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.visit-kicker {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.35;
+  text-transform: uppercase;
 }
 
 .visit-title em {
   color: var(--primary);
-  font-style: italic;
+  font-style: normal;
 }
 
 .visit-title.centered,
@@ -103,13 +128,73 @@
 .visit-note {
   margin: 0;
   color: var(--ink-2);
-  font-size: 15px;
-  line-height: 1.45;
+  font-size: 14px;
+  line-height: 1.48;
 }
 
 .visit-note {
   color: var(--ink-3);
   font-size: 12px;
+}
+
+.visit-screen[data-screen-id='X-11'] .visit-copy {
+  font-size: 13px;
+  line-height: 1.48;
+}
+
+.visit-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+  margin: 0;
+  padding: 14px;
+}
+
+.visit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.visit-row dt {
+  margin: 0;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.visit-row dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.25;
+  text-align: right;
+}
+
+.visit-rule {
+  height: 1px;
+  margin: 10px 0;
+  background: color-mix(in srgb, var(--line) 65%, var(--surface));
+}
+
+.visit-notice {
+  border: 1px solid color-mix(in srgb, var(--warn) 25%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.45;
+  margin: 0;
+  padding: 12px;
+}
+
+.visit-body.tight > .visit-note {
   text-align: center;
 }
 
@@ -119,8 +204,8 @@
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.1em;
-  line-height: 1.25;
+  letter-spacing: 0;
+  line-height: 1.3;
   text-transform: uppercase;
 }
 
@@ -134,19 +219,27 @@
   gap: 6px;
 }
 
+.visit-chip,
+.visit-panel,
+.visit-choice,
+.visit-metric-card {
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
 .visit-chip {
   display: inline-flex;
-  align-items: center;
   min-height: 26px;
+  align-items: center;
   border-radius: 999px;
-  background: var(--surface);
   color: var(--ink-2);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
   padding: 5px 10px;
 }
 
 .visit-chip.success {
+  border-color: transparent;
   background: var(--success-soft);
   color: var(--success);
   text-transform: uppercase;
@@ -155,15 +248,12 @@
 .visit-panel {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--surface);
-  padding: 10px 12px;
+  gap: 8px;
+  border-radius: 10px;
+  padding: 12px;
 }
 
 .visit-panel.cream {
-  border-color: color-mix(in srgb, var(--primary) 18%, var(--line));
   background: var(--primary-soft);
 }
 
@@ -178,50 +268,44 @@
 .visit-panel p {
   margin: 0;
   color: var(--ink-2);
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: 13px;
+  line-height: 1.48;
 }
 
 .visit-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   margin: 0;
-  padding-left: 16px;
+  padding-left: 17px;
   color: var(--ink-2);
-  font-size: 12px;
-  line-height: 1.55;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .visit-button {
   display: inline-flex;
+  min-height: 46px;
   align-items: center;
   justify-content: center;
-  min-height: var(--tap-min);
   border: 1px solid transparent;
-  border-radius: 999px;
-  font: inherit;
-  font-size: 15px;
-  font-weight: 600;
-  padding: 14px 18px;
-  text-align: center;
+  border-radius: 10px;
   cursor: pointer;
-  transition:
-    background-color var(--d-fast) var(--ease-standard),
-    transform var(--d-fast) var(--ease-standard);
-}
-
-.visit-button:active {
-  transform: scale(0.98);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  padding: 13px 16px;
+  text-align: center;
 }
 
 .visit-button.primary {
   background: var(--primary);
-  color: white;
+  color: var(--primary-on);
 }
 
 .visit-button.ghost {
-  border-color: var(--ink);
+  border-color: var(--line-2);
   background: transparent;
   color: var(--ink);
 }
@@ -233,7 +317,28 @@
 .visit-row2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .visit-screen {
+    --bg: #111111;
+    --surface: #111111;
+    --surface-2: #1a1a1a;
+    --ink: #fafafa;
+    --ink-2: #c7c7c7;
+    --ink-3: #a3a3a3;
+    --ink-4: #737373;
+    --line: #262626;
+    --line-2: #333333;
+    --primary: #0a3d1f;
+    --primary-on: #ffffff;
+    --primary-tint: #0f1f15;
+    --primary-soft: #0c1610;
+    --success: #48c078;
+    --warn: #e0a030;
+    --danger: #f05959;
+  }
 }
 
 .visit-choice-list {
@@ -251,21 +356,18 @@
 
 .visit-choice {
   display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
+  min-height: 46px;
+  grid-template-columns: 20px minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
-  min-height: var(--tap-min);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--surface);
+  gap: 12px;
+  border-radius: 10px;
   cursor: pointer;
   padding: 12px;
 }
 
 .visit-choice.selected {
-  border-width: 2px;
   border-color: var(--primary);
-  padding: 11px;
+  background: var(--primary-soft);
 }
 
 .visit-choice strong,
@@ -276,7 +378,7 @@
 .visit-choice strong {
   color: var(--ink);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 550;
   line-height: 1.25;
 }
 
@@ -284,11 +386,12 @@
   margin-top: 2px;
   color: var(--ink-3);
   font-size: 12px;
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
 .visit-choice:focus-within {
-  box-shadow: var(--focus-ring);
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .visit-radio {
@@ -296,7 +399,7 @@
   width: 18px;
   height: 18px;
   place-items: center;
-  border: 2px solid var(--ink-3);
+  border: 1.5px solid var(--ink-3);
   border-radius: 999px;
 }
 
@@ -305,8 +408,8 @@
 }
 
 .visit-choice.selected .visit-radio::after {
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
   border-radius: 999px;
   background: var(--primary);
   content: '';
@@ -318,24 +421,28 @@
   height: 1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
+  border: 0;
+  margin: -1px;
+  padding: 0;
   white-space: nowrap;
 }
 
 .visit-map {
   position: relative;
+  min-height: 274px;
   overflow: hidden;
-  height: 280px;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: 10px;
   background:
-    linear-gradient(90deg, rgba(196, 98, 45, 0.12) 1px, transparent 1px),
-    linear-gradient(rgba(196, 98, 45, 0.12) 1px, transparent 1px), var(--surface-2);
+    linear-gradient(90deg, color-mix(in srgb, var(--primary) 9%, transparent) 1px, transparent 1px),
+    linear-gradient(color-mix(in srgb, var(--primary) 9%, transparent) 1px, transparent 1px),
+    var(--surface-2);
   background-size: 36px 36px;
 }
 
 .visit-map-path {
   position: absolute;
-  height: 7px;
+  height: 6px;
   border-radius: 999px;
   background: var(--primary);
 }
@@ -361,7 +468,7 @@
   height: 24px;
   border: 4px solid var(--surface);
   border-radius: 999px;
-  box-shadow: 0 8px 18px rgba(28, 18, 8, 0.18);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--ink) 14%, transparent);
 }
 
 .worker-pin {
@@ -373,19 +480,20 @@
 .home-pin {
   top: 60px;
   left: 200px;
-  background: #1e90ff;
+  background: var(--accent);
 }
 
 .visit-map-label {
   position: absolute;
   z-index: 2;
-  border-radius: 4px;
-  color: white;
+  border-radius: 6px;
+  color: var(--surface);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 500;
+  letter-spacing: 0;
   line-height: 1;
-  padding: 4px 6px;
+  padding: 5px 7px;
   text-transform: uppercase;
 }
 
@@ -398,7 +506,7 @@
 .home-label {
   top: 42px;
   left: 164px;
-  background: #1e90ff;
+  background: var(--accent);
 }
 
 .visit-metric-card {
@@ -406,9 +514,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   align-items: center;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--surface);
+  border-radius: 10px;
   padding: 12px;
 }
 
@@ -416,63 +522,62 @@
   display: block;
   color: var(--ink-3);
   font-size: 12px;
-  line-height: 1.25;
+  line-height: 1.3;
 }
 
 .visit-metric-card strong {
   display: block;
-  margin-top: 2px;
+  margin-top: 3px;
   color: var(--ink);
-  font-family: var(--font-display);
+  font-family: var(--font-mono);
   font-size: 18px;
-  font-weight: 500;
+  font-weight: 550;
+  letter-spacing: 0;
   line-height: 1.1;
 }
 
 .visit-metric-card .accent {
   color: var(--primary);
-  font-size: 20px;
-  font-style: italic;
+  font-style: normal;
 }
 
 .visit-photo-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 4px;
+  gap: 8px;
 }
 
 .visit-photo {
   display: grid;
-  min-height: 0;
   aspect-ratio: 1;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: 14px;
-  color: rgba(255, 255, 255, 0.66);
+  border-radius: 10px;
+  color: var(--surface);
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 500;
-  line-height: 1.2;
+  letter-spacing: 0;
+  line-height: 1.3;
   text-align: center;
   text-transform: uppercase;
 }
 
 .visit-photo.before {
-  background: linear-gradient(135deg, #4a3622, #1c1208);
+  background: linear-gradient(135deg, var(--ink-2), var(--ink));
 }
 
 .visit-photo.after {
   background:
-    radial-gradient(circle at 24% 30%, rgba(255, 253, 248, 0.4), transparent 24%),
-    linear-gradient(135deg, #d9a46b, #c4622d);
-  color: rgba(28, 18, 8, 0.8);
+    radial-gradient(circle at 26% 26%, var(--accent-soft), transparent 30%),
+    linear-gradient(135deg, var(--primary-tint), var(--primary-soft));
+  color: var(--primary);
 }
 
 .visit-recap {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   margin: 0;
 }
 
@@ -481,6 +586,7 @@
   justify-content: space-between;
   gap: 12px;
   font-size: 12px;
+  line-height: 1.35;
 }
 
 .visit-recap dt,
@@ -495,41 +601,44 @@
 .visit-recap dd {
   color: var(--ink);
   font-family: var(--font-mono);
+  letter-spacing: 0;
 }
 
 .visit-checkmark {
   display: grid;
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   place-items: center;
   border-radius: 999px;
   background: var(--success-soft);
   color: var(--success);
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
+}
+
+.visit-checkmark svg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2.5;
 }
 
 .visit-counter {
-  color: var(--ink);
-  font-family: var(--font-display);
-  font-size: 30px;
-  font-style: italic;
-  font-weight: 500;
+  color: var(--primary);
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 550;
   letter-spacing: 0;
   line-height: 1.1;
 }
 
 @media (max-height: 700px) {
   .visit-body {
-    gap: 9px;
+    gap: 10px;
     padding-top: 18px;
     padding-bottom: 18px;
   }
 
   .visit-panel {
-    padding: 9px 11px;
+    padding: 10px;
   }
 
   .visit-photo-grid {

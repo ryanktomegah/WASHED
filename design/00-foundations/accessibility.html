@@ -1,232 +1,695 @@
 <!doctype html>
-<html lang="fr"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Washed — Accessibilité</title>
-<link rel="stylesheet" href="../shared/tokens.css">
-<style>
-  body { background: var(--bg); }
-  .page { max-width: 1100px; margin: 0 auto; padding: var(--s-9) var(--s-6) var(--s-11); }
-  .crumb { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3); margin-bottom: var(--s-6); }
-  .crumb a { color: var(--ink-3); text-decoration: none; }
-  h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(40px, 6vw, 64px); letter-spacing: -0.02em; line-height: 1.05; margin: 0 0 var(--s-5); }
-  h1 em { font-style: italic; color: var(--primary); }
-  .lede { font-size: var(--text-lg); color: var(--ink-2); max-width: 60ch; line-height: 1.55; margin: 0 0 var(--s-9); }
-  .section { margin-top: var(--s-10); padding-top: var(--s-7); border-top: 1px solid var(--line); }
-  .section h2 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-2xl); letter-spacing: -0.01em; margin: 0 0 var(--s-2); }
-  .section .sub { color: var(--ink-3); margin: 0 0 var(--s-6); max-width: 60ch; }
-  .num { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); letter-spacing: 0.12em; margin-bottom: var(--s-2); }
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Washed — Accessibilité</title>
+    <link rel="stylesheet" href="../shared/tokens.css" />
+    <style>
+      body {
+        background: var(--bg);
+      }
+      .page {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: var(--s-9) var(--s-6) var(--s-11);
+      }
+      .crumb {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--ink-3);
+        margin-bottom: var(--s-6);
+      }
+      .crumb a {
+        color: var(--ink-3);
+        text-decoration: none;
+      }
+      h1 {
+        font-family: var(--font-display);
+        font-weight: 500;
+        font-size: clamp(40px, 6vw, 64px);
+        letter-spacing: -0.02em;
+        line-height: 1.05;
+        margin: 0 0 var(--s-5);
+      }
+      h1 em {
+        font-style: italic;
+        color: var(--primary);
+      }
+      .lede {
+        font-size: var(--text-lg);
+        color: var(--ink-2);
+        max-width: 60ch;
+        line-height: 1.55;
+        margin: 0 0 var(--s-9);
+      }
+      .section {
+        margin-top: var(--s-10);
+        padding-top: var(--s-7);
+        border-top: 1px solid var(--line);
+      }
+      .section h2 {
+        font-family: var(--font-display);
+        font-weight: 500;
+        font-size: var(--text-2xl);
+        letter-spacing: -0.01em;
+        margin: 0 0 var(--s-2);
+      }
+      .section .sub {
+        color: var(--ink-3);
+        margin: 0 0 var(--s-6);
+        max-width: 60ch;
+      }
+      .num {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--ink-3);
+        letter-spacing: 0.12em;
+        margin-bottom: var(--s-2);
+      }
 
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-5); }
-  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-5); }
-  @media (max-width: 720px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--s-5);
+      }
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--s-5);
+      }
+      @media (max-width: 720px) {
+        .grid-2,
+        .grid-3 {
+          grid-template-columns: 1fr;
+        }
+      }
 
-  .contrast-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-5); padding: var(--s-3) 0; border-bottom: 1px solid var(--line); align-items: center; }
-  .contrast-row .pair { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); padding: var(--s-4); }
-  .contrast-row .pair .demo { font-family: var(--font-display); font-size: var(--text-xl); margin-bottom: var(--s-2); }
-  .contrast-row .pair .demo-body { font-family: var(--font-body); font-size: var(--text-sm); }
-  .contrast-row .meta { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); }
-  .contrast-row .meta .ratio { font-size: var(--text-md); color: var(--ink); display: block; margin-bottom: var(--s-1); }
-  .contrast-row .meta .pass { color: var(--success); }
-  .contrast-row .meta .fail { color: var(--danger); }
+      .contrast-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--s-5);
+        padding: var(--s-3) 0;
+        border-bottom: 1px solid var(--line);
+        align-items: center;
+      }
+      .contrast-row .pair {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--r-sm);
+        padding: var(--s-4);
+      }
+      .contrast-row .pair .demo {
+        font-family: var(--font-display);
+        font-size: var(--text-xl);
+        margin-bottom: var(--s-2);
+      }
+      .contrast-row .pair .demo-body {
+        font-family: var(--font-body);
+        font-size: var(--text-sm);
+      }
+      .contrast-row .meta {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--ink-3);
+      }
+      .contrast-row .meta .ratio {
+        font-size: var(--text-md);
+        color: var(--ink);
+        display: block;
+        margin-bottom: var(--s-1);
+      }
+      .contrast-row .meta .pass {
+        color: var(--success);
+      }
+      .contrast-row .meta .fail {
+        color: var(--danger);
+      }
 
-  .target-demo { display: flex; gap: var(--s-3); margin-top: var(--s-3); align-items: center; flex-wrap: wrap; }
-  .tap-44 { width: 44px; height: 44px; border-radius: 999px; border: 2px dashed var(--primary); display: grid; place-items: center; background: var(--primary-soft); color: var(--primary); font-family: var(--font-mono); font-size: var(--text-xs); }
-  .tap-32 { width: 32px; height: 32px; border-radius: 999px; border: 2px dashed var(--danger); display: grid; place-items: center; background: var(--danger-soft); color: var(--danger); font-family: var(--font-mono); font-size: var(--text-xs); }
+      .target-demo {
+        display: flex;
+        gap: var(--s-3);
+        margin-top: var(--s-3);
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .tap-44 {
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+        border: 2px dashed var(--primary);
+        display: grid;
+        place-items: center;
+        background: var(--primary-soft);
+        color: var(--primary);
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+      }
+      .tap-32 {
+        width: 32px;
+        height: 32px;
+        border-radius: 999px;
+        border: 2px dashed var(--danger);
+        display: grid;
+        place-items: center;
+        background: var(--danger-soft);
+        color: var(--danger);
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+      }
 
-  .checklist { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-6); }
-  .checklist h4 { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 500; margin: 0 0 var(--s-4); }
-  .checklist ul { list-style: none; padding: 0; margin: 0; }
-  .checklist li { padding: var(--s-3) 0; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 24px 1fr; gap: var(--s-3); align-items: start; font-size: var(--text-sm); line-height: 1.55; }
-  .checklist li:last-child { border-bottom: none; }
-  .checklist .check { width: 18px; height: 18px; border: 2px solid var(--success); border-radius: 4px; background: var(--success-soft); display: grid; place-items: center; color: var(--success); font-weight: 700; font-size: 12px; margin-top: 2px; }
-  .checklist .key { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); display: block; margin-top: 2px; }
-</style></head>
-<body data-theme="subscriber">
-<div class="page">
-  <div class="crumb"><a href="../index.html">← Index</a> · 00 Foundations · Accessibilité</div>
+      .checklist {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--r-md);
+        padding: var(--s-6);
+      }
+      .checklist h4 {
+        font-family: var(--font-display);
+        font-size: var(--text-lg);
+        font-weight: 500;
+        margin: 0 0 var(--s-4);
+      }
+      .checklist ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .checklist li {
+        padding: var(--s-3) 0;
+        border-bottom: 1px solid var(--line);
+        display: grid;
+        grid-template-columns: 24px 1fr;
+        gap: var(--s-3);
+        align-items: start;
+        font-size: var(--text-sm);
+        line-height: 1.55;
+      }
+      .checklist li:last-child {
+        border-bottom: none;
+      }
+      .checklist .check {
+        width: 18px;
+        height: 18px;
+        border: 2px solid var(--success);
+        border-radius: 4px;
+        background: var(--success-soft);
+        display: grid;
+        place-items: center;
+        color: var(--success);
+        font-weight: 700;
+        font-size: 12px;
+        margin-top: 2px;
+      }
+      .checklist .key {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--ink-3);
+        display: block;
+        margin-top: 2px;
+      }
+    </style>
+  </head>
+  <body data-theme="subscriber">
+    <div class="page">
+      <div class="crumb"><a href="../index.html">← Index</a> · 00 Foundations · Accessibilité</div>
 
-  <h1>L'accessibilité <em>n'est pas</em> optionnelle.</h1>
-  <p class="lede">WCAG 2.1 AA est le plancher, pas le plafond. Cette page documente les contrats que chaque écran doit honorer. Si une décision de design rend l'application inutilisable pour un utilisateur — daltonien, malvoyant, motrice limitée, technologie d'assistance — la décision est mauvaise et doit être révisée.</p>
+      <h1>L'accessibilité <em>n'est pas</em> optionnelle.</h1>
+      <p class="lede">
+        WCAG 2.1 AA est le plancher, pas le plafond. Cette page documente les contrats que chaque
+        écran doit honorer. Si une décision de design rend l'application inutilisable pour un
+        utilisateur — daltonien, malvoyant, motrice limitée, technologie d'assistance — la décision
+        est mauvaise et doit être révisée.
+      </p>
 
-  <!-- CONTRASTS -->
-  <section class="section">
-    <div class="num">01 · CONTRASTES</div>
-    <h2>Ratios mesurés</h2>
-    <p class="sub">Texte normal ≥ 4.5:1, texte large (≥18pt ou ≥14pt bold) ≥ 3:1, éléments graphiques ≥ 3:1. Chaque combinaison de couleurs est mesurée.</p>
+      <!-- CONTRASTS -->
+      <section class="section">
+        <div class="num">01 · CONTRASTES</div>
+        <h2>Ratios mesurés</h2>
+        <p class="sub">
+          Texte normal ≥ 4.5:1, texte large (≥18pt ou ≥14pt bold) ≥ 3:1, éléments graphiques ≥ 3:1.
+          Chaque combinaison de couleurs est mesurée.
+        </p>
 
-    <div class="contrast-row">
-      <div class="pair" style="background:#FAF6F0">
-        <div class="demo" style="color: #1C1208">Mardi 9 h</div>
-        <div class="demo-body" style="color: #1C1208">Akouvi est en route. Elle arrive dans 15 min.</div>
-      </div>
-      <div class="meta">
-        <span class="ratio">14.8 : 1</span>
-        ink #1C1208 sur bg #FAF6F0<br>
-        <span class="pass">✓ AAA · normal · large · graphique</span>
-      </div>
+        <div class="contrast-row">
+          <div class="pair" style="background: #faf6f0">
+            <div class="demo" style="color: #1c1208">Mardi 9 h</div>
+            <div class="demo-body" style="color: #1c1208">
+              Akouvi est en route. Elle arrive dans 15 min.
+            </div>
+          </div>
+          <div class="meta">
+            <span class="ratio">14.8 : 1</span>
+            ink #1C1208 sur bg #FAF6F0<br />
+            <span class="pass">✓ AAA · normal · large · graphique</span>
+          </div>
+        </div>
+
+        <div class="contrast-row">
+          <div class="pair" style="background: #fffdf8">
+            <div class="demo-body" style="color: #4a3622">
+              Visite hebdomadaire · 8 mois de relation
+            </div>
+          </div>
+          <div class="meta">
+            <span class="ratio">9.2 : 1</span>
+            ink-2 #4A3622 sur surface #FFFDF8<br />
+            <span class="pass">✓ AAA · normal</span>
+          </div>
+        </div>
+
+        <div class="contrast-row">
+          <div class="pair" style="background: #fffdf8">
+            <div
+              class="demo-body"
+              style="
+                color: #8c7258;
+                font-family: var(--font-mono);
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 0.12em;
+              "
+            >
+              PROCHAINE VISITE
+            </div>
+          </div>
+          <div class="meta">
+            <span class="ratio">4.6 : 1</span>
+            ink-3 #8C7258 sur surface #FFFDF8<br />
+            <span class="pass">✓ AA · normal</span>
+            <span style="color: var(--warn); display: block; margin-top: 2px"
+              >⚠ Réservé aux labels secondaires, jamais le contenu principal</span
+            >
+          </div>
+        </div>
+
+        <div class="contrast-row">
+          <div
+            class="pair"
+            style="background: #c4622d; border-radius: 999px; padding: 12px 24px; max-width: 200px"
+          >
+            <div class="demo-body" style="color: #fffdf8; font-weight: 600; text-align: center">
+              Confirmer
+            </div>
+          </div>
+          <div class="meta">
+            <span class="ratio">4.7 : 1</span>
+            surface #FFFDF8 sur primary #C4622D<br />
+            <span class="pass">✓ AA · texte de bouton</span>
+          </div>
+        </div>
+
+        <div class="contrast-row">
+          <div
+            class="pair"
+            style="
+              background: #fff3ee;
+              border-radius: var(--r-sm);
+              padding: var(--s-3);
+              max-width: 280px;
+            "
+          >
+            <div class="demo-body" style="color: #9c4a1f">Le paiement n'a pas abouti.</div>
+          </div>
+          <div class="meta">
+            <span class="ratio">5.4 : 1</span>
+            primary-deep #9C4A1F sur primary-soft #FFF3EE<br />
+            <span class="pass">✓ AA · banner texte</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAP TARGETS -->
+      <section class="section">
+        <div class="num">02 · CIBLES TACTILES</div>
+        <h2>44 × 44 pt minimum</h2>
+        <p class="sub">
+          Toute zone tappable, sur n'importe quel écran, fait au moins 44&nbsp;pt sur iOS et
+          48&nbsp;dp sur Android. Le visuel peut être plus petit, mais la zone d'interaction
+          respecte le minimum.
+        </p>
+        <div class="target-demo">
+          <div class="tap-44">44</div>
+          <div class="tap-44">44</div>
+          <div class="tap-44">44</div>
+          <div class="tap-32" title="interdit">32</div>
+          <div
+            style="font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3)"
+          >
+            — interdit, même si le pictogramme est petit
+          </div>
+        </div>
+      </section>
+
+      <!-- DYNAMIC TYPE -->
+      <section class="section">
+        <div class="num">03 · TAILLE DYNAMIQUE</div>
+        <h2>200 % sans casser la mise en page</h2>
+        <p class="sub">
+          L'utilisateur peut agrandir le texte jusqu'à 200&nbsp;% sans qu'aucun écran soit cassé.
+          Les conteneurs s'agrandissent, les colonnes se réorganisent, rien ne déborde.
+        </p>
+        <div class="grid-3">
+          <div
+            style="
+              background: var(--surface);
+              border: 1px solid var(--line);
+              border-radius: var(--r-md);
+              padding: var(--s-5);
+            "
+          >
+            <div
+              style="
+                font-family: var(--font-mono);
+                font-size: var(--text-xs);
+                color: var(--primary);
+                margin-bottom: var(--s-3);
+              "
+            >
+              100 %
+            </div>
+            <div
+              style="
+                font-family: var(--font-display);
+                font-size: 24px;
+                font-weight: 500;
+                line-height: 1.2;
+              "
+            >
+              Mardi 9 h
+            </div>
+            <div style="font-size: 14px; color: var(--ink-3); margin-top: 4px">
+              Akouvi K. · Tokoin
+            </div>
+          </div>
+          <div
+            style="
+              background: var(--surface);
+              border: 1px solid var(--line);
+              border-radius: var(--r-md);
+              padding: var(--s-5);
+            "
+          >
+            <div
+              style="
+                font-family: var(--font-mono);
+                font-size: var(--text-xs);
+                color: var(--primary);
+                margin-bottom: var(--s-3);
+              "
+            >
+              150 %
+            </div>
+            <div
+              style="
+                font-family: var(--font-display);
+                font-size: 36px;
+                font-weight: 500;
+                line-height: 1.15;
+              "
+            >
+              Mardi 9 h
+            </div>
+            <div style="font-size: 21px; color: var(--ink-3); margin-top: 6px">
+              Akouvi K. · Tokoin
+            </div>
+          </div>
+          <div
+            style="
+              background: var(--surface);
+              border: 1px solid var(--line);
+              border-radius: var(--r-md);
+              padding: var(--s-5);
+            "
+          >
+            <div
+              style="
+                font-family: var(--font-mono);
+                font-size: var(--text-xs);
+                color: var(--primary);
+                margin-bottom: var(--s-3);
+              "
+            >
+              200 %
+            </div>
+            <div
+              style="
+                font-family: var(--font-display);
+                font-size: 48px;
+                font-weight: 500;
+                line-height: 1.1;
+              "
+            >
+              Mardi<br />9 h
+            </div>
+            <div style="font-size: 28px; color: var(--ink-3); margin-top: 8px">
+              Akouvi K.<br />Tokoin
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHECKLIST -->
+      <section class="section">
+        <div class="num">04 · CHECKLIST PAR ÉCRAN</div>
+        <h2>Avant de livrer un écran</h2>
+        <p class="sub">
+          Un écran qui n'a pas passé cette checklist n'est pas livrable. Le designer le vérifie, le
+          développeur le re-vérifie, le QA le contrôle.
+        </p>
+
+        <div class="grid-2">
+          <div class="checklist">
+            <h4>Visuel &amp; couleur</h4>
+            <ul>
+              <li>
+                <span class="check">✓</span>
+                <div>
+                  Tous les contrastes texte/fond ≥ 4.5:1 (≥ 3:1 si grand)<span class="key"
+                    >contraste.tester</span
+                  >
+                </div>
+              </li>
+              <li>
+                <span class="check">✓</span>
+                <div>
+                  Aucune information portée par la couleur seule (toujours doublée par texte ou
+                  icône)<span class="key">no.color.only</span>
+                </div>
+              </li>
+              <li>
+                <span class="check">✓</span>
+                <div>
+                  Mode sombre OS respecté quand l'utilisateur l'active (v2)<span class="key"
+                    >prefers-color-scheme</span
+                  >
+                </div>
+              </li>
+              <li>
+                <span class="check">✓</span>
+                <div>
+                  État focus visible sur tout élément interactif (anneau 3px primary)<span
+                    class="key"
+                    >focus-visible</span
+                  >
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div class="checklist">
+            <h4>Tactile &amp; moteur</h4>
+            <ul>
+              <li>
+                <span class="check">✓</span>
+                <div>
+                  Toute cible tactile ≥ 44 pt iOS / 48 dp Android, même si le glyphe est petit<span
+                    class="key"
+                    >min.tap-target</span
+                  >
+                </div>
+              </li>
+              <li>
+                <span class="check">✓</span>
+                <div>
+                  Aucune action critique uniquement par geste (toujours un bouton équivalent)<span
+                    class="key"
+                    >no.gesture-only</span
+                  >
+                </div>
+              </li>
+              <li>
+                <span class="check">✓</span>
+                <div>
+                  Confirmation pour toute action destructive (annuler, supprimer, désabonner)<span
+                    class="key"
+                    >destructive.confirm</span
+                  >
+                </div>
+              </li>
+              <li>
+                <span class="check">✓</span>
+                <div>
+                  Aucune limite de temps pour compléter une saisie<span class="key"
+                    >no.time-limit</span
+                  >
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div class="checklist">
+            <h4>Lecture d'écran</h4>
+            <ul>
+              <li>
+                <span class="check">✓</span>
+                <div>
+                  Tous les éléments interactifs ont un label accessible en français<span class="key"
+                    >accessibilityLabel</span
+                  >
+                </div>
+              </li>
+              <li>
+                <span class="check">✓</span>
+                <div>
+                  Ordre de lecture cohérent avec l'ordre visuel<span class="key"
+                    >reading.order</span
+                  >
+                </div>
+              </li>
+              <li>
+                <span class="check">✓</span>
+                <div>
+                  Annonces de changement d'état (loading, error, success) via live region<span
+                    class="key"
+                    >aria-live</span
+                  >
+                </div>
+              </li>
+              <li>
+                <span class="check">✓</span>
+                <div>
+                  Images de profil ont alt avec le nom; images décoratives ont alt vide<span
+                    class="key"
+                    >img.alt</span
+                  >
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div class="checklist">
+            <h4>Texte &amp; saisie</h4>
+            <ul>
+              <li>
+                <span class="check">✓</span>
+                <div>
+                  Texte agrandi jusqu'à 200 % sans débordement ni superposition<span class="key"
+                    >dynamic.type</span
+                  >
+                </div>
+              </li>
+              <li>
+                <span class="check">✓</span>
+                <div>
+                  Champs de saisie ont label persistant (pas placeholder seul)<span class="key"
+                    >label.persistent</span
+                  >
+                </div>
+              </li>
+              <li>
+                <span class="check">✓</span>
+                <div>
+                  Erreurs de saisie expliquées en mots, pas codes<span class="key"
+                    >error.human</span
+                  >
+                </div>
+              </li>
+              <li>
+                <span class="check">✓</span>
+                <div>
+                  Auto-complete et inputmode corrects (tel, numeric, otp)<span class="key"
+                    >inputmode</span
+                  >
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- LITERACY -->
+      <section class="section">
+        <div class="num">05 · LITTÉRATIE</div>
+        <h2>Bas niveau de lecture</h2>
+        <p class="sub">
+          Une partie du public laveuse a un niveau de lecture limité. La copie suit la règle CE2 —
+          phrases courtes, mots usuels, pas de jargon.
+        </p>
+        <div class="grid-2">
+          <div class="checklist">
+            <h4>Pour la laveuse</h4>
+            <ul>
+              <li>
+                <span class="check">✓</span>
+                <div>Phrases ≤ 12 mots</div>
+              </li>
+              <li>
+                <span class="check">✓</span>
+                <div>Verbes à l'impératif présent (« Prenez la photo »)</div>
+              </li>
+              <li>
+                <span class="check">✓</span>
+                <div>Toujours une icône à côté de chaque action critique</div>
+              </li>
+              <li>
+                <span class="check">✓</span>
+                <div>Audio FR optionnel pour les instructions clé (v2)</div>
+              </li>
+              <li>
+                <span class="check">✓</span>
+                <div>Numéros affichés en gros, séparés par groupes de deux</div>
+              </li>
+            </ul>
+          </div>
+          <div class="checklist">
+            <h4>Pour l'abonné</h4>
+            <ul>
+              <li>
+                <span class="check">✓</span>
+                <div>Phrases ≤ 18 mots, niveau presse quotidienne</div>
+              </li>
+              <li>
+                <span class="check">✓</span>
+                <div>Vocabulaire courant — pas de termes financiers ou techniques sans glose</div>
+              </li>
+              <li>
+                <span class="check">✓</span>
+                <div>Toute mention légale a un résumé en une phrase au-dessus</div>
+              </li>
+              <li>
+                <span class="check">✓</span>
+                <div>Anglais différé : pas avant le marché Accra/Ghana en v3</div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <p
+        style="
+          margin-top: var(--s-10);
+          font-family: var(--font-mono);
+          font-size: var(--text-xs);
+          color: var(--ink-3);
+          text-transform: uppercase;
+          letter-spacing: 0.12em;
+        "
+      >
+        — Fin · v2.0 · 2026
+      </p>
     </div>
-
-    <div class="contrast-row">
-      <div class="pair" style="background:#FFFDF8">
-        <div class="demo-body" style="color: #4A3622">Visite hebdomadaire · 8 mois de relation</div>
-      </div>
-      <div class="meta">
-        <span class="ratio">9.2 : 1</span>
-        ink-2 #4A3622 sur surface #FFFDF8<br>
-        <span class="pass">✓ AAA · normal</span>
-      </div>
-    </div>
-
-    <div class="contrast-row">
-      <div class="pair" style="background:#FFFDF8">
-        <div class="demo-body" style="color: #8C7258; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;">PROCHAINE VISITE</div>
-      </div>
-      <div class="meta">
-        <span class="ratio">4.6 : 1</span>
-        ink-3 #8C7258 sur surface #FFFDF8<br>
-        <span class="pass">✓ AA · normal</span>
-        <span style="color: var(--warn); display: block; margin-top: 2px;">⚠ Réservé aux labels secondaires, jamais le contenu principal</span>
-      </div>
-    </div>
-
-    <div class="contrast-row">
-      <div class="pair" style="background:#C4622D; border-radius: 999px; padding: 12px 24px; max-width: 200px;">
-        <div class="demo-body" style="color: #FFFDF8; font-weight: 600; text-align: center;">Confirmer</div>
-      </div>
-      <div class="meta">
-        <span class="ratio">4.7 : 1</span>
-        surface #FFFDF8 sur primary #C4622D<br>
-        <span class="pass">✓ AA · texte de bouton</span>
-      </div>
-    </div>
-
-    <div class="contrast-row">
-      <div class="pair" style="background:#FFF3EE; border-radius: var(--r-sm); padding: var(--s-3); max-width: 280px;">
-        <div class="demo-body" style="color: #9C4A1F">Le paiement n'a pas abouti.</div>
-      </div>
-      <div class="meta">
-        <span class="ratio">5.4 : 1</span>
-        primary-deep #9C4A1F sur primary-soft #FFF3EE<br>
-        <span class="pass">✓ AA · banner texte</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- TAP TARGETS -->
-  <section class="section">
-    <div class="num">02 · CIBLES TACTILES</div>
-    <h2>44 × 44 pt minimum</h2>
-    <p class="sub">Toute zone tappable, sur n'importe quel écran, fait au moins 44&nbsp;pt sur iOS et 48&nbsp;dp sur Android. Le visuel peut être plus petit, mais la zone d'interaction respecte le minimum.</p>
-    <div class="target-demo">
-      <div class="tap-44">44</div>
-      <div class="tap-44">44</div>
-      <div class="tap-44">44</div>
-      <div class="tap-32" title="interdit">32</div>
-      <div style="font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3);">— interdit, même si le pictogramme est petit</div>
-    </div>
-  </section>
-
-  <!-- DYNAMIC TYPE -->
-  <section class="section">
-    <div class="num">03 · TAILLE DYNAMIQUE</div>
-    <h2>200 % sans casser la mise en page</h2>
-    <p class="sub">L'utilisateur peut agrandir le texte jusqu'à 200&nbsp;% sans qu'aucun écran soit cassé. Les conteneurs s'agrandissent, les colonnes se réorganisent, rien ne déborde.</p>
-    <div class="grid-3">
-      <div style="background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-5);">
-        <div style="font-family: var(--font-mono); font-size: var(--text-xs); color: var(--primary); margin-bottom: var(--s-3);">100 %</div>
-        <div style="font-family: var(--font-display); font-size: 24px; font-weight: 500; line-height: 1.2;">Mardi 9 h</div>
-        <div style="font-size: 14px; color: var(--ink-3); margin-top: 4px;">Akouvi K. · Tokoin</div>
-      </div>
-      <div style="background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-5);">
-        <div style="font-family: var(--font-mono); font-size: var(--text-xs); color: var(--primary); margin-bottom: var(--s-3);">150 %</div>
-        <div style="font-family: var(--font-display); font-size: 36px; font-weight: 500; line-height: 1.15;">Mardi 9 h</div>
-        <div style="font-size: 21px; color: var(--ink-3); margin-top: 6px;">Akouvi K. · Tokoin</div>
-      </div>
-      <div style="background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-5);">
-        <div style="font-family: var(--font-mono); font-size: var(--text-xs); color: var(--primary); margin-bottom: var(--s-3);">200 %</div>
-        <div style="font-family: var(--font-display); font-size: 48px; font-weight: 500; line-height: 1.1;">Mardi<br>9 h</div>
-        <div style="font-size: 28px; color: var(--ink-3); margin-top: 8px;">Akouvi K.<br>Tokoin</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- CHECKLIST -->
-  <section class="section">
-    <div class="num">04 · CHECKLIST PAR ÉCRAN</div>
-    <h2>Avant de livrer un écran</h2>
-    <p class="sub">Un écran qui n'a pas passé cette checklist n'est pas livrable. Le designer le vérifie, le développeur le re-vérifie, le QA le contrôle.</p>
-
-    <div class="grid-2">
-      <div class="checklist">
-        <h4>Visuel &amp; couleur</h4>
-        <ul>
-          <li><span class="check">✓</span><div>Tous les contrastes texte/fond ≥ 4.5:1 (≥ 3:1 si grand)<span class="key">contraste.tester</span></div></li>
-          <li><span class="check">✓</span><div>Aucune information portée par la couleur seule (toujours doublée par texte ou icône)<span class="key">no.color.only</span></div></li>
-          <li><span class="check">✓</span><div>Mode sombre OS respecté quand l'utilisateur l'active (v2)<span class="key">prefers-color-scheme</span></div></li>
-          <li><span class="check">✓</span><div>État focus visible sur tout élément interactif (anneau 3px primary)<span class="key">focus-visible</span></div></li>
-        </ul>
-      </div>
-
-      <div class="checklist">
-        <h4>Tactile &amp; moteur</h4>
-        <ul>
-          <li><span class="check">✓</span><div>Toute cible tactile ≥ 44 pt iOS / 48 dp Android, même si le glyphe est petit<span class="key">min.tap-target</span></div></li>
-          <li><span class="check">✓</span><div>Aucune action critique uniquement par geste (toujours un bouton équivalent)<span class="key">no.gesture-only</span></div></li>
-          <li><span class="check">✓</span><div>Confirmation pour toute action destructive (annuler, supprimer, désabonner)<span class="key">destructive.confirm</span></div></li>
-          <li><span class="check">✓</span><div>Aucune limite de temps pour compléter une saisie<span class="key">no.time-limit</span></div></li>
-        </ul>
-      </div>
-
-      <div class="checklist">
-        <h4>Lecture d'écran</h4>
-        <ul>
-          <li><span class="check">✓</span><div>Tous les éléments interactifs ont un label accessible en français<span class="key">accessibilityLabel</span></div></li>
-          <li><span class="check">✓</span><div>Ordre de lecture cohérent avec l'ordre visuel<span class="key">reading.order</span></div></li>
-          <li><span class="check">✓</span><div>Annonces de changement d'état (loading, error, success) via live region<span class="key">aria-live</span></div></li>
-          <li><span class="check">✓</span><div>Images de profil ont alt avec le nom; images décoratives ont alt vide<span class="key">img.alt</span></div></li>
-        </ul>
-      </div>
-
-      <div class="checklist">
-        <h4>Texte &amp; saisie</h4>
-        <ul>
-          <li><span class="check">✓</span><div>Texte agrandi jusqu'à 200 % sans débordement ni superposition<span class="key">dynamic.type</span></div></li>
-          <li><span class="check">✓</span><div>Champs de saisie ont label persistant (pas placeholder seul)<span class="key">label.persistent</span></div></li>
-          <li><span class="check">✓</span><div>Erreurs de saisie expliquées en mots, pas codes<span class="key">error.human</span></div></li>
-          <li><span class="check">✓</span><div>Auto-complete et inputmode corrects (tel, numeric, otp)<span class="key">inputmode</span></div></li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- LITERACY -->
-  <section class="section">
-    <div class="num">05 · LITTÉRATIE</div>
-    <h2>Bas niveau de lecture</h2>
-    <p class="sub">Une partie du public laveuse a un niveau de lecture limité. La copie suit la règle CE2 — phrases courtes, mots usuels, pas de jargon.</p>
-    <div class="grid-2">
-      <div class="checklist">
-        <h4>Pour la laveuse</h4>
-        <ul>
-          <li><span class="check">✓</span><div>Phrases ≤ 12 mots</div></li>
-          <li><span class="check">✓</span><div>Verbes à l'impératif présent (« Prenez la photo »)</div></li>
-          <li><span class="check">✓</span><div>Toujours une icône à côté de chaque action critique</div></li>
-          <li><span class="check">✓</span><div>Audio FR optionnel pour les instructions clé (v2)</div></li>
-          <li><span class="check">✓</span><div>Numéros affichés en gros, séparés par groupes de deux</div></li>
-        </ul>
-      </div>
-      <div class="checklist">
-        <h4>Pour l'abonné</h4>
-        <ul>
-          <li><span class="check">✓</span><div>Phrases ≤ 18 mots, niveau presse quotidienne</div></li>
-          <li><span class="check">✓</span><div>Vocabulaire courant — pas de termes financiers ou techniques sans glose</div></li>
-          <li><span class="check">✓</span><div>Toute mention légale a un résumé en une phrase au-dessus</div></li>
-          <li><span class="check">✓</span><div>Anglais différé : pas avant le marché Accra/Ghana en v3</div></li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <p style="margin-top: var(--s-10); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.12em;">— Fin · v2.0 · 2026</p>
-</div>
-</body></html>
+  </body>
+</html>

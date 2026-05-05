@@ -20,23 +20,20 @@ test('capture all 8 onboarding screens at iPhone SE', async ({ page }) => {
   await expect(page.locator('[data-screen-id="X-04"]')).toBeVisible();
   await page.screenshot({ path: 'screenshots/x04-address-iphone-se.png', fullPage: true });
 
-  await page.getByLabel('Quartier').selectOption('Tokoin Forever');
+  await page.getByLabel('Quartier').selectOption('Tokoin Casablanca');
   await page.getByLabel('Rue / détail').fill('rue 254, maison bleue');
   await page.getByRole('button', { name: 'Continuer' }).click();
   await expect(page.locator('[data-screen-id="X-05"]')).toBeVisible();
   await page.screenshot({ path: 'screenshots/x05-tier-iphone-se.png', fullPage: true });
 
-  await page.locator('label.tier-card', { hasText: 'Deux visites' }).click();
-  await page.getByRole('button', { name: /Continuer · 4/u }).click();
+  await page.getByRole('button', { name: /Continuer · 2/u }).click();
   await expect(page.locator('[data-screen-id="X-06"]')).toBeVisible();
   await page.screenshot({ path: 'screenshots/x06-payment-iphone-se.png', fullPage: true });
 
-  await page.locator('label.provider-card', { hasText: 'Flooz' }).click();
   await page.getByRole('button', { name: 'Continuer' }).click();
   await expect(page.locator('[data-screen-id="X-07"]')).toBeVisible();
   await page.screenshot({ path: 'screenshots/x07-review-iphone-se.png', fullPage: true });
 
-  await page.getByRole('checkbox').check();
   await page.getByRole('button', { name: "Confirmer l'abonnement" }).click();
   await expect(page.locator('[data-screen-id="X-08"]')).toBeVisible();
   await page.screenshot({ path: 'screenshots/x08-welcome-iphone-se.png', fullPage: true });

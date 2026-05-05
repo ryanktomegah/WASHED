@@ -1,24 +1,20 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  getWashedTheme,
-  sharedTokens,
-  subscriberTheme,
-  washedThemes,
-} from './index.js';
+import { getWashedTheme, sharedTokens, subscriberTheme, washedThemes } from './index.js';
 
 describe('Washed design tokens', () => {
   it('preserves one audience theme per frontend surface', () => {
     expect(Object.keys(washedThemes).sort()).toEqual(['operator', 'subscriber', 'worker']);
   });
 
-  it('keeps the subscriber Savannah palette from the design files', () => {
+  it('keeps the subscriber Geist Green palette from the design files', () => {
     expect(getWashedTheme('subscriber').colors).toMatchObject({
-      bg: '#FAF6F0',
-      ink: '#1C1208',
-      primary: '#C4622D',
-      accent: '#B8870A',
-      success: '#4A7C3F',
+      bg: '#FFFFFF',
+      ink: '#0A0A0A',
+      primary: '#0A3D1F',
+      primaryOn: '#FFFFFF',
+      accent: '#A66B00',
+      success: '#0A3D1F',
     });
   });
 
@@ -38,10 +34,10 @@ describe('Washed design tokens', () => {
     expect(sharedTokens.tap.min).toBe('44px');
   });
 
-  it('exposes the foundations type stack: Fraunces / Inter / JetBrains Mono', () => {
-    expect(sharedTokens.font.display).toContain('Fraunces');
-    expect(sharedTokens.font.body).toContain('Inter');
-    expect(sharedTokens.font.mono).toContain('JetBrains Mono');
+  it('exposes the foundations type stack: Geist / Geist Mono', () => {
+    expect(sharedTokens.font.display).toContain('Geist');
+    expect(sharedTokens.font.body).toContain('Geist');
+    expect(sharedTokens.font.mono).toContain('Geist Mono');
   });
 
   it('emits the 4-based spacing scale with 12 stops (--s-0 .. --s-11)', () => {
@@ -61,8 +57,8 @@ describe('Washed design tokens', () => {
 
   it('refuses bounce/spring — only the three approved easings', () => {
     expect(sharedTokens.motion.easing.standard).toBe('cubic-bezier(0.2, 0.8, 0.2, 1)');
-    expect(sharedTokens.motion.easing.emphasized).toBe('cubic-bezier(0.32, 0.72, 0, 1)');
-    expect(sharedTokens.motion.easing.snap).toBe('cubic-bezier(0.4, 0, 0.2, 1)');
+    expect(sharedTokens.motion.easing.decelerate).toBe('cubic-bezier(0, 0, 0.2, 1)');
+    expect(sharedTokens.motion.easing.accelerate).toBe('cubic-bezier(0.4, 0, 1, 1)');
   });
 
   it('shares the spacing/font/motion grammar across every theme', () => {

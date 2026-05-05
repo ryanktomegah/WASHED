@@ -1,10 +1,5 @@
 import { getWashedTheme, type WashedTheme, type WashedThemeName } from '@washed/design-tokens';
-import {
-  getActiveLocale,
-  setActiveLocale,
-  subscribeLocale,
-  type WashedLocale,
-} from '@washed/i18n';
+import { getActiveLocale, setActiveLocale, subscribeLocale, type WashedLocale } from '@washed/i18n';
 import {
   createContext,
   forwardRef,
@@ -164,7 +159,9 @@ const LocaleContext = createContext<LocaleContextValue>({
 
 export interface LocaleProviderProps {
   readonly children: ReactNode;
+  readonly defaultLocale?: WashedLocale;
   readonly storageKey?: string;
+  readonly supportedLocales?: readonly WashedLocale[];
 }
 
 function readStoredLocale(storageKey: string): WashedLocale | null {
@@ -178,32 +175,47 @@ function readStoredLocale(storageKey: string): WashedLocale | null {
   return null;
 }
 
+function resolveProviderLocale(
+  locale: WashedLocale | null,
+  defaultLocale: WashedLocale,
+  supportedLocales: readonly WashedLocale[],
+): WashedLocale {
+  if (locale !== null && supportedLocales.includes(locale)) return locale;
+  if (supportedLocales.includes(defaultLocale)) return defaultLocale;
+  return supportedLocales[0] ?? defaultLocale;
+}
+
 export function LocaleProvider({
   children,
+  defaultLocale = 'fr',
   storageKey = LOCALE_STORAGE_KEY,
+  supportedLocales = ['fr', 'en'],
 }: LocaleProviderProps): ReactElement {
   const [locale, setLocaleState] = useState<WashedLocale>(() => {
     const stored = readStoredLocale(storageKey);
-    if (stored !== null) {
-      setActiveLocale(stored);
-      return stored;
-    }
-    return getActiveLocale();
+    const initialLocale = resolveProviderLocale(
+      stored ?? getActiveLocale(),
+      defaultLocale,
+      supportedLocales,
+    );
+    setActiveLocale(initialLocale);
+    return initialLocale;
   });
 
   useEffect(() => subscribeLocale(() => setLocaleState(getActiveLocale())), []);
 
   const setLocale = useCallback(
     (next: WashedLocale): void => {
-      setActiveLocale(next);
+      const resolvedLocale = resolveProviderLocale(next, defaultLocale, supportedLocales);
+      setActiveLocale(resolvedLocale);
       if (typeof window === 'undefined') return;
       try {
-        window.localStorage.setItem(storageKey, next);
+        window.localStorage.setItem(storageKey, resolvedLocale);
       } catch {
         // ignore storage failures
       }
     },
-    [storageKey],
+    [defaultLocale, storageKey, supportedLocales],
   );
 
   const value = useMemo<LocaleContextValue>(() => ({ locale, setLocale }), [locale, setLocale]);
@@ -298,10 +310,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
 
   return (
     <div style={{ display: 'grid', gap: 8, ...style }}>
-      <label
-        htmlFor={inputId}
-        style={{ color: theme.colors.ink, fontSize: 14, fontWeight: 700 }}
-      >
+      <label htmlFor={inputId} style={{ color: theme.colors.ink, fontSize: 14, fontWeight: 700 }}>
         {label}
       </label>
       <input

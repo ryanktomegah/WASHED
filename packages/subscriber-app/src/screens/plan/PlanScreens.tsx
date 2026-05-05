@@ -1,4 +1,5 @@
 import { type ReactElement, useState } from 'react';
+import { ChevronLeft, Pause } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { formatXof, translate, type WashedLocale } from '@washed/i18n';
@@ -8,7 +9,6 @@ import { useSafeBack } from '../../navigation/useSafeBack.js';
 import { SUBSCRIBER_PLAN_DEMO } from './subscriberPlanDemoData.js';
 import { PlanTabBar } from './PlanTabBar.js';
 
-// Renders the plan title with the date italicised in primary terracotta.
 function PlanActiveTitle({
   text,
   accentDate,
@@ -81,7 +81,7 @@ function formatPlanTime(time24h: string, locale: WashedLocale): string {
 
 function activePlanLabel(tier: 'T1' | 'T2'): string {
   return translate(
-    tier === 'T1' ? 'subscriber.signup.tier.t1.label' : 'subscriber.signup.tier.t2.label',
+    tier === 'T1' ? 'subscriber.plan.tier.t1.label' : 'subscriber.plan.tier.t2.label',
   );
 }
 
@@ -570,7 +570,7 @@ export function PlanPausedSuccessX22A(): ReactElement {
         <div className="plan-grow" />
 
         <span aria-hidden="true" className="plan-pause-glyph">
-          ⏸
+          <Pause />
         </span>
 
         <h1 className="plan-title plan-success-title" id="x22a-headline">
@@ -741,7 +741,7 @@ function BackHeader({
         onClick={onBack}
         type="button"
       >
-        ‹
+        <ChevronLeft aria-hidden="true" />
       </button>
       <span className="plan-eyebrow">{label.toUpperCase()}</span>
     </header>

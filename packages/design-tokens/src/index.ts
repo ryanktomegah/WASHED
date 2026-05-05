@@ -13,6 +13,7 @@ export interface WashedColorTokens {
   readonly line2: string;
   readonly primary: string;
   readonly primaryDeep: string;
+  readonly primaryOn: string;
   readonly primarySoft: string;
   readonly primaryTint: string;
   readonly accent: string;
@@ -70,8 +71,8 @@ export interface WashedMotionTokens {
   };
   readonly easing: {
     readonly standard: string;
-    readonly emphasized: string;
-    readonly snap: string;
+    readonly decelerate: string;
+    readonly accelerate: string;
   };
 }
 
@@ -93,9 +94,9 @@ export interface WashedTheme {
 
 export const sharedTokens = {
   font: {
-    display: "'Fraunces', 'Times New Roman', serif",
-    body: "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif",
-    mono: "'JetBrains Mono', ui-monospace, 'SF Mono', monospace",
+    display: "'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif",
+    body: "'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif",
+    mono: "'Geist Mono', ui-monospace, 'SF Mono', monospace",
   },
   text: {
     xs: '11px',
@@ -141,8 +142,8 @@ export const sharedTokens = {
     duration: { fast: '120ms', base: '200ms', slow: '320ms', emphasis: '480ms' },
     easing: {
       standard: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
-      emphasized: 'cubic-bezier(0.32, 0.72, 0, 1)',
-      snap: 'cubic-bezier(0.4, 0, 0.2, 1)',
+      decelerate: 'cubic-bezier(0, 0, 0.2, 1)',
+      accelerate: 'cubic-bezier(0.4, 0, 1, 1)',
     },
   },
   tap: { min: '44px' },
@@ -151,29 +152,30 @@ export const sharedTokens = {
 export const subscriberTheme = {
   name: 'subscriber',
   colors: {
-    bg: '#FAF6F0',
-    bgDeep: '#F2EAD9',
-    surface: '#FFFDF8',
-    surface2: '#FFF8EE',
-    ink: '#1C1208',
-    ink2: '#4A3622',
-    ink3: '#8C7258',
-    ink4: '#B8A088',
-    line: '#EAE0D5',
-    line2: '#DCCDB8',
-    primary: '#C4622D',
-    primaryDeep: '#9C4A1F',
-    primarySoft: '#FFF3EE',
-    primaryTint: '#F5DDD0',
-    accent: '#B8870A',
-    accentSoft: '#FEF0C0',
-    success: '#4A7C3F',
-    successSoft: '#DFF0DA',
-    danger: '#C03020',
-    dangerSoft: '#FDECEA',
-    warn: '#B5651D',
-    warnSoft: '#FCEAD3',
-    focusRing: '0 0 0 3px rgba(196, 98, 45, 0.32)',
+    bg: '#FFFFFF',
+    bgDeep: '#FAFAFA',
+    surface: '#FFFFFF',
+    surface2: '#FAFAFA',
+    ink: '#0A0A0A',
+    ink2: '#525252',
+    ink3: '#737373',
+    ink4: '#A3A3A3',
+    line: '#E5E5E5',
+    line2: '#D4D4D4',
+    primary: '#0A3D1F',
+    primaryDeep: '#062B16',
+    primaryOn: '#FFFFFF',
+    primarySoft: '#F5F9F6',
+    primaryTint: '#E8F2EC',
+    accent: '#A66B00',
+    accentSoft: '#FFF6E0',
+    success: '#0A3D1F',
+    successSoft: '#E8F2EC',
+    danger: '#B81F1F',
+    dangerSoft: '#FDEAEA',
+    warn: '#A66B00',
+    warnSoft: '#FFF6E0',
+    focusRing: '0 0 0 3px rgba(10, 61, 31, 0.30)',
   },
   shared: sharedTokens,
 } as const satisfies WashedTheme;
@@ -193,6 +195,7 @@ export const workerTheme = {
     line2: '#C5D4CB',
     primary: '#1A5C34',
     primaryDeep: '#0F3D22',
+    primaryOn: '#FFFFFF',
     primarySoft: '#EAF6EE',
     primaryTint: '#C8ECD5',
     accent: '#D4900E',
@@ -223,6 +226,7 @@ export const operatorTheme = {
     line2: '#CFCDDA',
     primary: '#3B1F7A',
     primaryDeep: '#28135A',
+    primaryOn: '#FFFFFF',
     primarySoft: '#F0EBFF',
     primaryTint: '#D9D0FF',
     accent: '#3B1F7A',

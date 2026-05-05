@@ -3,26 +3,12 @@ import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
 
-import { PAYMENT_PROVIDER_LABEL, useSignup, type SignupPaymentProvider } from './SignupContext.js';
-
-interface ProviderOption {
-  readonly provider: SignupPaymentProvider;
-  readonly tagline: string;
-}
-
-const PROVIDER_OPTIONS: readonly ProviderOption[] = [
-  { provider: 'tmoney', tagline: 'Togocom' },
-  { provider: 'mixx', tagline: 'Yas' },
-  { provider: 'flooz', tagline: 'Moov Africa' },
-];
+import { useSignup } from './SignupContext.js';
 
 export function PaymentX06(): ReactElement {
   const navigate = useNavigate();
   const signup = useSignup();
-  const selected: SignupPaymentProvider = signup.paymentProvider ?? 'tmoney';
 
-  // Guard: a deep-link to /signup/payment without a confirmed phone or tier
-  // means earlier steps were skipped — bounce to the right resume point.
   useEffect(() => {
     if (signup.phone === '') {
       navigate('/signup/phone', { replace: true });
@@ -46,19 +32,12 @@ export function PaymentX06(): ReactElement {
     return <></>;
   }
 
-  const onSelect = (provider: SignupPaymentProvider): void => {
-    signup.setPaymentProvider(provider);
-  };
-
   const onSubmit = (): void => {
-    if (signup.paymentProvider === null) signup.setPaymentProvider(selected);
+    signup.setPaymentProvider('tmoney');
     navigate('/signup/review');
   };
 
-  // Show the user's confirmed phone next to the default-selected wallet so
-  // they can spot a mismatch immediately. Other providers prompt to add a
-  // dedicated number — captured in a follow-up screen, not this one.
-  const phoneLine = signup.phone;
+  const phoneLine = signup.phone.replace(/^\+228\s*/u, '');
 
   return (
     <main aria-labelledby="x06-headline" className="onboarding-screen" data-screen-id="X-06">
@@ -71,42 +50,26 @@ export function PaymentX06(): ReactElement {
           <p className="p">{translate('subscriber.signup.payment.body')}</p>
         </div>
 
-        <fieldset className="provider-list" aria-labelledby="x06-headline">
-          <legend className="visually-hidden">
-            {translate('subscriber.signup.payment.title')}
-          </legend>
-          {PROVIDER_OPTIONS.map((option) => {
-            const isSelected = option.provider === selected;
-            const isDefault = option.provider === 'tmoney';
-            return (
-              <label
-                className={`provider-card${isSelected ? ' is-selected' : ''}`}
-                key={option.provider}
-              >
-                <input
-                  checked={isSelected}
-                  className="visually-hidden"
-                  name="paymentProvider"
-                  onChange={() => onSelect(option.provider)}
-                  type="radio"
-                  value={option.provider}
-                />
-                <span aria-hidden="true" className="provider-radio" />
-                <span className="provider-body">
-                  <strong>{PAYMENT_PROVIDER_LABEL[option.provider]}</strong>
-                  <span className="p-sm">
-                    {isDefault ? phoneLine : translate('subscriber.signup.payment.add_number')}
-                  </span>
-                </span>
-                <span aria-hidden="true" className="provider-network p-sm">
-                  {option.tagline}
-                </span>
-              </label>
-            );
-          })}
-        </fieldset>
+        <div className="field">
+          <span className="field-label">
+            {translate('subscriber.signup.payment.provider_label')}
+          </span>
+          <div className="input-shell">TMoney</div>
+        </div>
 
-        <p className="p-sm">{translate('subscriber.signup.payment.note')}</p>
+        <div className="field">
+          <label className="visually-hidden" htmlFor="x06-phone">
+            {translate('subscriber.signup.payment.phone_label')}
+          </label>
+          <div className="input-shell">
+            <span aria-hidden="true" className="input-prefix">
+              +228
+            </span>
+            <input id="x06-phone" readOnly type="tel" value={phoneLine} />
+          </div>
+        </div>
+
+        <p className="notice">{translate('subscriber.signup.payment.note')}</p>
 
         <div className="grow" />
 

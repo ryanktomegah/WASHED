@@ -1,4 +1,5 @@
 import { useState, type ReactElement } from 'react';
+import { Check, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { translate, type WashedLocale } from '@washed/i18n';
@@ -88,87 +89,47 @@ function formatVisitCounter(count: number, locale: WashedLocale): string {
 
 export function VisitDetailX11(): ReactElement {
   const navigate = useNavigate();
-  const goBack = useSafeBack('/hub');
-  const locale = useActiveLocale();
-  const visit = SUBSCRIBER_VISIT_DEMO;
-  const arrivalTime = formatClockTime(visit.arrivalTime24h, locale);
 
   return (
     <main aria-labelledby="x11-headline" className="visit-screen" data-screen-id="X-11">
       <div className="visit-body">
-        <VisitBackHeader
-          label={translate('subscriber.visit.detail.header', {
-            date: formatVisitDateLabel(visit.visitDateIso, locale),
-          })}
-          onBack={goBack}
-        />
-
-        <h1 className="visit-title" id="x11-headline">
-          <VisitTimeTitle
-            text={translate('subscriber.visit.detail.title', {
-              name: visit.workerName,
-              time: arrivalTime,
-            })}
-            time={arrivalTime}
-          />
-        </h1>
-
-        <div
-          className="visit-chip-row"
-          aria-label={translate('subscriber.visit.detail.chips_label')}
-        >
-          <span className="visit-chip success">
-            {formatTenureLabel(visit.tenureMonths, locale)}
-          </span>
-          <span className="visit-chip">{visit.neighborhood}</span>
-          <span className="visit-chip">
-            {formatEstimatedDuration(visit.estimatedDurationMinutes, locale)}
-          </span>
+        <div className="visit-title-stack">
+          <span className="visit-kicker">{translate('subscriber.visit.detail.kicker')}</span>
+          <h1 className="visit-title" id="x11-headline">
+            {translate('subscriber.visit.detail.title')}
+          </h1>
         </div>
 
-        <section className="visit-panel" aria-labelledby="x11-brings">
-          <h2 className="visit-eyebrow" id="x11-brings">
-            {translate('subscriber.visit.detail.brings.title')}
-          </h2>
-          <p>{translate('subscriber.visit.detail.brings.body')}</p>
-        </section>
+        <p className="visit-copy">{translate('subscriber.visit.detail.body')}</p>
 
-        <section className="visit-panel" aria-labelledby="x11-reminders">
-          <h2 className="visit-eyebrow" id="x11-reminders">
-            {translate('subscriber.visit.detail.reminders.title')}
-          </h2>
-          <ul className="visit-list">
-            <li>{translate('subscriber.visit.detail.reminder.sms')}</li>
-            <li>{translate('subscriber.visit.detail.reminder.push')}</li>
-            <li>{translate('subscriber.visit.detail.reminder.photos')}</li>
-          </ul>
-        </section>
+        <dl className="visit-card">
+          <div className="visit-row">
+            <dt>{translate('subscriber.visit.detail.address.label')}</dt>
+            <dd>Tokoin Casablanca</dd>
+          </div>
+          <div className="visit-rule" aria-hidden="true" />
+          <div className="visit-row">
+            <dt>{translate('subscriber.visit.detail.duration.label')}</dt>
+            <dd>1 h 15</dd>
+          </div>
+          <div className="visit-rule" aria-hidden="true" />
+          <div className="visit-row">
+            <dt>{translate('subscriber.visit.detail.tier.label')}</dt>
+            <dd>1 visite / mois</dd>
+          </div>
+        </dl>
+
+        <p className="visit-notice">{translate('subscriber.visit.detail.report_note')}</p>
 
         <div className="visit-grow" />
 
         <button
           className="visit-button primary full"
-          onClick={() => navigate('/visit/en-route')}
+          onClick={() => navigate('/visit/reschedule')}
           type="button"
         >
-          {translate('subscriber.visit.detail.follow.cta')}
+          {translate('subscriber.visit.detail.report.cta')}
         </button>
-        <div className="visit-row2">
-          <button
-            className="visit-button ghost"
-            onClick={() => navigate('/visit/reschedule')}
-            type="button"
-          >
-            {translate('subscriber.visit.detail.report.cta')}
-          </button>
-          <button
-            className="visit-button ghost"
-            onClick={() => navigate('/visit/issue')}
-            type="button"
-          >
-            {translate('subscriber.visit.feedback.issue')}
-          </button>
-        </div>
       </div>
     </main>
   );
@@ -418,7 +379,7 @@ export function VisitFeedbackX15(): ReactElement {
       <div className="visit-body center">
         <div className="visit-grow" />
         <div aria-hidden="true" className="visit-checkmark">
-          ✓
+          <Check />
         </div>
         <h1 className="visit-title centered" id="x15-headline">
           {translate('subscriber.visit.thanks.title')}
@@ -514,7 +475,7 @@ export function VisitIssueSubmittedX15S(): ReactElement {
       <div className="visit-body center">
         <div className="visit-grow" />
         <div aria-hidden="true" className="visit-checkmark">
-          ✓
+          <Check />
         </div>
         <h1 className="visit-title centered" id="x15s-submitted-headline">
           {translate('subscriber.visit.support.submitted.title')}
@@ -553,7 +514,7 @@ function VisitBackHeader({
         onClick={onBack}
         type="button"
       >
-        ‹
+        <ChevronLeft aria-hidden="true" />
       </button>
       <span>{label}</span>
     </div>

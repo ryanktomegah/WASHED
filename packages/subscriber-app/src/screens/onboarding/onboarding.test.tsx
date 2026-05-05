@@ -49,28 +49,28 @@ function renderAt(
 }
 
 describe('Onboarding · X-01 Splash', () => {
-  it('renders the headline, tagline, and both locale CTAs enabled', () => {
+  it('renders the headline, tagline, and account CTAs enabled', () => {
     renderAt('/welcome', <SplashX01 />);
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-01');
-    expect(screen.getByText("L'appli laveuse pour Lomé.")).toBeInTheDocument();
+    expect(screen.getByText("L'app abonné · Lomé")).toBeInTheDocument();
 
-    expect(screen.getByRole('button', { name: 'Français' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'English' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Continuer' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: "J'ai déjà un compte" })).toBeEnabled();
   });
 
-  it('routes to /signup/phone when the user picks Français', () => {
+  it('routes to /signup/phone when the user continues signup', () => {
     const { locationRef } = renderAt('/welcome', <SplashX01 />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Français' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
     expect(locationRef.current).toBe('/signup/phone');
   });
 
-  it('routes to /signup/phone when the user picks English', () => {
+  it('routes to /hub when the user already has an account', () => {
     const { locationRef } = renderAt('/welcome', <SplashX01 />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'English' }));
-    expect(locationRef.current).toBe('/signup/phone');
+    fireEvent.click(screen.getByRole('button', { name: "J'ai déjà un compte" }));
+    expect(locationRef.current).toBe('/hub');
   });
 });
 
@@ -79,9 +79,12 @@ describe('Onboarding · X-02 Phone', () => {
     renderAt('/signup/phone', <PhoneX02 />);
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-02');
-    expect(screen.getByText('Étape 1 sur 4')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Votre numéro de téléphone.' })).toBeInTheDocument();
-    expect(screen.getByText('On vous envoie un code par SMS pour confirmer.')).toBeInTheDocument();
+    expect(screen.getByText('Étape 1 / 4')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Votre numéro de téléphone' })).toBeInTheDocument();
+    expect(
+      screen.getByText('On vous envoie un code à 6 chiffres pour confirmer.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Confidentiel — non transmis à la laveuse.')).toBeInTheDocument();
 
     expect(screen.getByRole('button', { name: 'Recevoir le code' })).toBeDisabled();
   });
@@ -118,20 +121,22 @@ describe('Onboarding · X-03 OTP', () => {
     renderAt('/signup/otp', <OtpX03 />, { phone: '+228 90 12 34 56' });
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-03');
-    expect(screen.getByText('Étape 2 sur 4')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Le code reçu par SMS.' })).toBeInTheDocument();
+    expect(screen.getByText('Étape 2 / 4')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Le code reçu par SMS' })).toBeInTheDocument();
     expect(screen.getAllByRole('textbox')).toHaveLength(6);
-    expect(screen.getByText('Renvoyer dans 30 s')).toBeInTheDocument();
+    expect(screen.getByText(/Renvoyer dans 0:24 s/u)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Appeler le bureau' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Modifier' })).not.toBeInTheDocument();
   });
 
   it('counts the resend timer down once per second', () => {
     renderAt('/signup/otp', <OtpX03 />, { phone: '+228 90 12 34 56' });
 
-    expect(screen.getByText('Renvoyer dans 30 s')).toBeInTheDocument();
+    expect(screen.getByText(/Renvoyer dans 0:24 s/u)).toBeInTheDocument();
     act(() => {
       vi.advanceTimersByTime(2000);
     });
-    expect(screen.getByText('Renvoyer dans 28 s')).toBeInTheDocument();
+    expect(screen.getByText(/Renvoyer dans 0:22 s/u)).toBeInTheDocument();
   });
 
   it('auto-advances cell focus on input and supports paste-fan-out', () => {
@@ -145,15 +150,6 @@ describe('Onboarding · X-03 OTP', () => {
     expect(cells[1]!.value).toBe('8');
     expect(cells[2]!.value).toBe('2');
     expect(document.activeElement).toBe(cells[3]);
-  });
-
-  it('routes back to /signup/phone when the user taps Modifier', () => {
-    const { locationRef } = renderAt('/signup/otp', <OtpX03 />, {
-      phone: '+228 90 12 34 56',
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: 'Modifier' }));
-    expect(locationRef.current).toBe('/signup/phone');
   });
 
   it('redirects to /signup/phone without flashing a placeholder phone', () => {
@@ -171,10 +167,12 @@ describe('Onboarding · X-04 Address', () => {
     });
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-04');
-    expect(screen.getByText('Étape 3 sur 4')).toBeInTheDocument();
+    expect(screen.getByText('Étape 3 / 4')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Continuer' })).toBeDisabled();
 
-    fireEvent.change(screen.getByLabelText('Quartier'), { target: { value: 'Tokoin Forever' } });
+    fireEvent.change(screen.getByLabelText('Quartier'), {
+      target: { value: 'Tokoin Casablanca' },
+    });
     fireEvent.change(screen.getByLabelText('Rue / détail'), {
       target: { value: 'rue 254, maison bleue' },
     });
@@ -194,15 +192,19 @@ describe('Onboarding · X-05 Tier', () => {
   it('defaults to T1, lets the user choose T2, and routes to payment', () => {
     const { locationRef } = renderAt('/signup/tier', <TierX05 />, {
       phone: '+228 90 12 34 56',
-      address: { neighborhood: 'Tokoin Forever', street: 'rue 254' },
+      address: { neighborhood: 'Tokoin Casablanca', street: 'rue 254' },
     });
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-05');
-    expect(screen.getByText('Étape 4 sur 4')).toBeInTheDocument();
-    expect(screen.getByText('Une visite')).toBeInTheDocument();
-    expect(screen.getByText('Deux visites')).toBeInTheDocument();
+    expect(screen.getByText('Étape 4 / 4')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Choisissez votre rythme' })).toBeInTheDocument();
+    expect(screen.getByText('1 visite / mois')).toBeInTheDocument();
+    expect(screen.getByText('2 visites / mois')).toBeInTheDocument();
+    expect(
+      screen.getByText('Prix validé avant chaque prélèvement Mobile Money.'),
+    ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByLabelText(/Deux visites/u));
+    fireEvent.click(screen.getByLabelText(/2 visites \/ mois/u));
     fireEvent.click(screen.getByRole('button', { name: /Continuer · 4/ }));
 
     expect(locationRef.current).toBe('/signup/payment');
@@ -224,20 +226,24 @@ describe('Onboarding · X-05 Tier', () => {
 });
 
 describe('Onboarding · X-06 Payment', () => {
-  it('shows payment providers and routes to review', () => {
+  it('shows the Mobile Money details and routes to review', () => {
     const { locationRef } = renderAt('/signup/payment', <PaymentX06 />, {
       phone: '+228 90 12 34 56',
-      address: { neighborhood: 'Tokoin Forever', street: 'rue 254' },
+      address: { neighborhood: 'Tokoin Casablanca', street: 'rue 254' },
       tier: 'T1',
     });
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-06');
     expect(screen.getByText('Paiement')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Ajoutez votre moyen de paiement' }),
+    ).toBeInTheDocument();
     expect(screen.getByText('TMoney')).toBeInTheDocument();
-    expect(screen.getByText('Mixx by Yas')).toBeInTheDocument();
-    expect(screen.getByText('Flooz')).toBeInTheDocument();
+    expect(screen.getByLabelText('Numéro Mobile Money')).toHaveValue('90 12 34 56');
+    expect(
+      screen.getByText('Vous validez le prélèvement depuis votre téléphone.'),
+    ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByLabelText(/Flooz/u));
     fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
 
     expect(locationRef.current).toBe('/signup/review');
@@ -270,22 +276,26 @@ describe('Onboarding · X-06 Payment', () => {
 describe('Onboarding · X-07 Review', () => {
   const completeSignup: SignupInitialState = {
     phone: '+228 90 12 34 56',
-    address: { neighborhood: 'Tokoin Forever', street: 'rue 254' },
-    tier: 'T2',
+    address: { neighborhood: 'Tokoin Casablanca', street: 'rue 254' },
+    tier: 'T1',
     paymentProvider: 'tmoney',
   };
 
-  it('requires consent before confirmation', () => {
+  it('shows the locked recap and confirms the subscription', () => {
     const { locationRef } = renderAt('/signup/review', <ReviewX07 />, completeSignup);
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-07');
     expect(screen.getByText('Récap')).toBeInTheDocument();
-    expect(screen.getByText('Tokoin Forever')).toBeInTheDocument();
+    expect(screen.getByText('Tokoin Casablanca')).toBeInTheDocument();
+    expect(screen.getByText('1 visite / mois')).toBeInTheDocument();
+    expect(screen.getByText('TMoney · 90 12…')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Le bureau vous appelle dans la journée pour confirmer l'adresse et planifier la première visite.",
+      ),
+    ).toBeInTheDocument();
 
     const cta = screen.getByRole('button', { name: "Confirmer l'abonnement" });
-    expect(cta).toBeDisabled();
-
-    fireEvent.click(screen.getByRole('checkbox'));
     expect(cta).toBeEnabled();
     fireEvent.click(cta);
 
@@ -301,7 +311,7 @@ describe('Onboarding · X-07 Review', () => {
   it('redirects to /signup/payment when only the payment provider is missing', () => {
     const { locationRef } = renderAt('/signup/review', <ReviewX07 />, {
       phone: '+228 90 12 34 56',
-      address: { neighborhood: 'Tokoin Forever', street: 'rue 254' },
+      address: { neighborhood: 'Tokoin Casablanca', street: 'rue 254' },
       tier: 'T1',
     });
 

@@ -1,67 +1,41 @@
-// X-10 Hub demo data — locked to the visual contract at
-// design/05-subscriber/subscriber.html:333-371. Each field maps 1:1 to a
-// copy-deck placeholder so the hub can swap to live API data in Sprint-2
-// without touching the JSX.
-
-export type GreetingTimeOfDay = 'morning' | 'afternoon' | 'evening';
-
-export interface NextVisitDemo {
-  readonly dateIso: string;
-  readonly hour: number;
-  readonly minute: number;
-  readonly inDays: number;
-  readonly inHours: number;
+export interface SubscriberHubVisit {
+  readonly status: string;
+  readonly time: string;
+  readonly date: string;
 }
 
-export interface HubWorkerDemo {
+export interface SubscriberHubWorker {
   readonly name: string;
-  readonly initials: string;
-  readonly neighborhood: string;
-  readonly tenureMonths: number;
-  readonly isReady: boolean;
+  readonly detail: string;
 }
 
-export interface LastVisitDemo {
-  readonly dateIso: string;
-  readonly streakCount: number;
+export interface SubscriberHubPlan {
+  readonly label: string;
+  readonly renewsOn: string;
+  readonly progressPct: number;
 }
 
 export interface SubscriberHubDemo {
   readonly subscriberFirstName: string;
-  readonly nextVisit: NextVisitDemo;
-  readonly worker: HubWorkerDemo;
-  readonly lastVisit: LastVisitDemo;
+  readonly visit: SubscriberHubVisit;
+  readonly worker: SubscriberHubWorker;
+  readonly plan: SubscriberHubPlan;
 }
 
-// Aligned with SUBSCRIBER_VISIT_DEMO in ../visits/visitDemoData.ts so the
-// hub → X-11 transition reads as the same active visit.
 export const SUBSCRIBER_HUB_DEMO: SubscriberHubDemo = {
-  subscriberFirstName: 'Yawa',
-  nextVisit: {
-    dateIso: '2026-05-05',
-    hour: 9,
-    minute: 0,
-    inDays: 2,
-    inHours: 21,
+  subscriberFirstName: 'Mariam',
+  visit: {
+    status: 'confirmée',
+    time: '9:00',
+    date: 'mar 7 mai',
   },
   worker: {
     name: 'Akouvi K.',
-    initials: 'AK',
-    neighborhood: 'Tokoin',
-    tenureMonths: 8,
-    isReady: true,
+    detail: 'votre laveuse · 8 mois',
   },
-  lastVisit: {
-    dateIso: '2026-04-28',
-    streakCount: 32,
+  plan: {
+    label: 'forfait actif',
+    renewsOn: '31 mai',
+    progressPct: 64,
   },
 };
-
-export function greetingTimeOfDay(now: Date = new Date()): GreetingTimeOfDay {
-  const hour = now.getHours();
-  // Deck contracts: 5–12 morning, 12–18 afternoon, 18–24 evening.
-  // Pre-5h falls into evening per the deck (no late-night greeting key).
-  if (hour >= 5 && hour < 12) return 'morning';
-  if (hour >= 12 && hour < 18) return 'afternoon';
-  return 'evening';
-}

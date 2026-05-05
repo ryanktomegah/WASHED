@@ -1,196 +1,783 @@
 <!doctype html>
-<html lang="fr"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Washed — Tokens &amp; thèmes</title>
-<link rel="stylesheet" href="../shared/tokens.css">
-<style>
-  body { background: var(--bg); }
-  .page { max-width: 1200px; margin: 0 auto; padding: var(--s-9) var(--s-6) var(--s-11); }
-  .crumb { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3); margin-bottom: var(--s-6); }
-  .crumb a { color: var(--ink-3); text-decoration: none; }
-  h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(40px, 6vw, 64px); letter-spacing: -0.02em; line-height: 1.05; margin: 0 0 var(--s-5); }
-  h1 em { font-style: italic; color: var(--primary); }
-  .lede { font-size: var(--text-lg); color: var(--ink-2); max-width: 60ch; line-height: 1.55; margin: 0 0 var(--s-9); }
-  .section { margin-top: var(--s-10); padding-top: var(--s-7); border-top: 1px solid var(--line); }
-  .section h2 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-2xl); letter-spacing: -0.01em; margin: 0 0 var(--s-2); }
-  .section .sub { color: var(--ink-3); margin: 0 0 var(--s-6); max-width: 60ch; }
-  .num { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); letter-spacing: 0.12em; margin-bottom: var(--s-2); }
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Washed — Tokens &amp; thèmes</title>
+    <link rel="stylesheet" href="../shared/tokens.css" />
+    <style>
+      body {
+        background: var(--bg);
+      }
+      .page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: var(--s-9) var(--s-6) var(--s-11);
+      }
+      .crumb {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--ink-3);
+        margin-bottom: var(--s-6);
+      }
+      .crumb a {
+        color: var(--ink-3);
+        text-decoration: none;
+      }
+      h1 {
+        font-family: var(--font-display);
+        font-weight: 500;
+        font-size: clamp(40px, 6vw, 64px);
+        letter-spacing: -0.02em;
+        line-height: 1.05;
+        margin: 0 0 var(--s-5);
+      }
+      h1 em {
+        font-style: italic;
+        color: var(--primary);
+      }
+      .lede {
+        font-size: var(--text-lg);
+        color: var(--ink-2);
+        max-width: 60ch;
+        line-height: 1.55;
+        margin: 0 0 var(--s-9);
+      }
+      .section {
+        margin-top: var(--s-10);
+        padding-top: var(--s-7);
+        border-top: 1px solid var(--line);
+      }
+      .section h2 {
+        font-family: var(--font-display);
+        font-weight: 500;
+        font-size: var(--text-2xl);
+        letter-spacing: -0.01em;
+        margin: 0 0 var(--s-2);
+      }
+      .section .sub {
+        color: var(--ink-3);
+        margin: 0 0 var(--s-6);
+        max-width: 60ch;
+      }
+      .num {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--ink-3);
+        letter-spacing: 0.12em;
+        margin-bottom: var(--s-2);
+      }
 
-  /* Theme tabs */
-  .tabs { display: flex; gap: var(--s-2); margin-bottom: var(--s-6); }
-  .tab { background: var(--surface); border: 1px solid var(--line); padding: 10px 18px; border-radius: 999px; font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; cursor: pointer; transition: all var(--d-base); }
-  .tab[aria-selected="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+      /* Theme tabs */
+      .tabs {
+        display: flex;
+        gap: var(--s-2);
+        margin-bottom: var(--s-6);
+      }
+      .tab {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        padding: 10px 18px;
+        border-radius: 999px;
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        cursor: pointer;
+        transition: all var(--d-base);
+      }
+      .tab[aria-selected='true'] {
+        background: var(--ink);
+        color: var(--surface);
+        border-color: var(--ink);
+      }
 
-  /* Theme preview cards */
-  .theme-row { display: grid; grid-template-columns: 320px 1fr; gap: var(--s-6); margin-bottom: var(--s-7); align-items: start; }
-  .theme-info { position: sticky; top: var(--s-5); }
-  .theme-info h3 { font-family: var(--font-display); font-weight: 500; font-size: var(--text-xl); margin: 0 0 var(--s-2); letter-spacing: -0.01em; }
-  .theme-info .audience { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; color: var(--primary); margin-bottom: var(--s-3); }
-  .theme-info p { color: var(--ink-3); font-size: var(--text-sm); line-height: 1.55; margin: 0 0 var(--s-3); }
-  .theme-info .id { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); }
+      /* Theme preview cards */
+      .theme-row {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: var(--s-6);
+        margin-bottom: var(--s-7);
+        align-items: start;
+      }
+      .theme-info {
+        position: sticky;
+        top: var(--s-5);
+      }
+      .theme-info h3 {
+        font-family: var(--font-display);
+        font-weight: 500;
+        font-size: var(--text-xl);
+        margin: 0 0 var(--s-2);
+        letter-spacing: -0.01em;
+      }
+      .theme-info .audience {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--primary);
+        margin-bottom: var(--s-3);
+      }
+      .theme-info p {
+        color: var(--ink-3);
+        font-size: var(--text-sm);
+        line-height: 1.55;
+        margin: 0 0 var(--s-3);
+      }
+      .theme-info .id {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--ink-3);
+      }
 
-  .swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--s-3); }
-  .sw { border-radius: var(--r-sm); overflow: hidden; border: 1px solid var(--line); background: var(--surface); }
-  .sw .chip { aspect-ratio: 1; }
-  .sw .meta { padding: var(--s-2); }
-  .sw .name { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-2); }
-  .sw .hex { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); margin-top: 2px; }
+      .swatches {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: var(--s-3);
+      }
+      .sw {
+        border-radius: var(--r-sm);
+        overflow: hidden;
+        border: 1px solid var(--line);
+        background: var(--surface);
+      }
+      .sw .chip {
+        aspect-ratio: 1;
+      }
+      .sw .meta {
+        padding: var(--s-2);
+      }
+      .sw .name {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--ink-2);
+      }
+      .sw .hex {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--ink-3);
+        margin-top: 2px;
+      }
 
-  /* Spacing scale */
-  .scale-row { display: flex; align-items: center; gap: var(--s-5); padding: var(--s-3) 0; border-bottom: 1px solid var(--line); }
-  .scale-row .name { width: 80px; font-family: var(--font-mono); font-size: var(--text-sm); color: var(--ink); }
-  .scale-row .px { width: 80px; font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); }
-  .scale-row .bar { height: 14px; background: var(--primary); border-radius: 3px; }
-  .scale-row .use { margin-left: auto; font-size: var(--text-sm); color: var(--ink-3); }
+      /* Spacing scale */
+      .scale-row {
+        display: flex;
+        align-items: center;
+        gap: var(--s-5);
+        padding: var(--s-3) 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .scale-row .name {
+        width: 80px;
+        font-family: var(--font-mono);
+        font-size: var(--text-sm);
+        color: var(--ink);
+      }
+      .scale-row .px {
+        width: 80px;
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--ink-3);
+      }
+      .scale-row .bar {
+        height: 14px;
+        background: var(--primary);
+        border-radius: 3px;
+      }
+      .scale-row .use {
+        margin-left: auto;
+        font-size: var(--text-sm);
+        color: var(--ink-3);
+      }
 
-  /* Radius */
-  .radii { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--s-4); }
-  .radius-card { aspect-ratio: 1; background: var(--primary); display: grid; place-items: end center; padding: var(--s-3); }
-  .radius-card .label { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--surface); }
+      /* Radius */
+      .radii {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: var(--s-4);
+      }
+      .radius-card {
+        aspect-ratio: 1;
+        background: var(--primary);
+        display: grid;
+        place-items: end center;
+        padding: var(--s-3);
+      }
+      .radius-card .label {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--surface);
+      }
 
-  /* Shadows */
-  .shadows { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-5); }
-  .shadow-card { background: var(--surface); border-radius: var(--r-md); padding: var(--s-7); text-align: center; }
-  .shadow-card.s1 { box-shadow: var(--shadow-card); }
-  .shadow-card.s2 { box-shadow: var(--shadow-elevated); }
-  .shadow-card.s3 { box-shadow: var(--shadow-overlay); }
-  .shadow-card .name { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3); }
+      /* Shadows */
+      .shadows {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--s-5);
+      }
+      .shadow-card {
+        background: var(--surface);
+        border-radius: var(--r-md);
+        padding: var(--s-7);
+        text-align: center;
+      }
+      .shadow-card.s1 {
+        box-shadow: var(--shadow-card);
+      }
+      .shadow-card.s2 {
+        box-shadow: var(--shadow-elevated);
+      }
+      .shadow-card.s3 {
+        box-shadow: var(--shadow-overlay);
+      }
+      .shadow-card .name {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--ink-3);
+      }
 
-  @media (max-width: 880px) { .theme-row { grid-template-columns: 1fr; } .swatches { grid-template-columns: repeat(4, 1fr); } .radii { grid-template-columns: repeat(3, 1fr); } .shadows { grid-template-columns: 1fr; } }
-</style></head>
-<body data-theme="subscriber">
-<div class="page">
-  <div class="crumb"><a href="../index.html">← Index</a> · 00 Foundations · Tokens &amp; thèmes</div>
-
-  <h1>Trois <em>thèmes</em>, une famille.</h1>
-  <p class="lede">Chaque application a sa palette adaptée à son auditoire et son contexte d'usage. Mais toutes partagent la même grammaire — espacement, rayons, ombres, mouvement, typographie. Source de vérité&nbsp;: <span class="mono">packages/design-tokens/src/index.ts</span>.</p>
-
-  <!-- THEMES -->
-  <section class="section">
-    <div class="num">01 · THÈMES</div>
-    <h2>Couleurs par auditoire</h2>
-    <p class="sub">Trois palettes, trois ambiances de travail. La grammaire reste identique pour qu'un composant puisse vivre dans n'importe quel thème sans modification.</p>
-
-    <!-- Subscriber -->
-    <div class="theme-row" data-theme="subscriber" style="background: var(--bg); padding: var(--s-7); border-radius: var(--r-lg); margin-bottom: var(--s-5)">
-      <div class="theme-info">
-        <div class="audience">Auditoire · Abonné</div>
-        <h3>Savane · cream warm</h3>
-        <p>L'application abonné est domestique, calme, chaleureuse. Crème comme fond, terracotta comme pouls, ocre pour les accents secondaires. Espresso pour le texte. Un foyer, pas un dashboard.</p>
-        <div class="id">data-theme="subscriber"</div>
+      @media (max-width: 880px) {
+        .theme-row {
+          grid-template-columns: 1fr;
+        }
+        .swatches {
+          grid-template-columns: repeat(4, 1fr);
+        }
+        .radii {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        .shadows {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body data-theme="subscriber">
+    <div class="page">
+      <div class="crumb">
+        <a href="../index.html">← Index</a> · 00 Foundations · Tokens &amp; thèmes
       </div>
-      <div class="swatches">
-        <div class="sw"><div class="chip" style="background:#FAF6F0;border-bottom:1px solid var(--line)"></div><div class="meta"><div class="name">bg</div><div class="hex">#FAF6F0</div></div></div>
-        <div class="sw"><div class="chip" style="background:#F2EAD9"></div><div class="meta"><div class="name">bg-deep</div><div class="hex">#F2EAD9</div></div></div>
-        <div class="sw"><div class="chip" style="background:#FFFDF8;border-bottom:1px solid var(--line)"></div><div class="meta"><div class="name">surface</div><div class="hex">#FFFDF8</div></div></div>
-        <div class="sw"><div class="chip" style="background:#1C1208"></div><div class="meta"><div class="name">ink</div><div class="hex">#1C1208</div></div></div>
-        <div class="sw"><div class="chip" style="background:#C4622D"></div><div class="meta"><div class="name">primary</div><div class="hex">#C4622D</div></div></div>
-        <div class="sw"><div class="chip" style="background:#B8870A"></div><div class="meta"><div class="name">accent</div><div class="hex">#B8870A</div></div></div>
-        <div class="sw"><div class="chip" style="background:#9C4A1F"></div><div class="meta"><div class="name">primary-deep</div><div class="hex">#9C4A1F</div></div></div>
-        <div class="sw"><div class="chip" style="background:#FFF3EE"></div><div class="meta"><div class="name">primary-soft</div><div class="hex">#FFF3EE</div></div></div>
-        <div class="sw"><div class="chip" style="background:#4A7C3F"></div><div class="meta"><div class="name">success</div><div class="hex">#4A7C3F</div></div></div>
-        <div class="sw"><div class="chip" style="background:#C03020"></div><div class="meta"><div class="name">danger</div><div class="hex">#C03020</div></div></div>
-        <div class="sw"><div class="chip" style="background:#B5651D"></div><div class="meta"><div class="name">warn</div><div class="hex">#B5651D</div></div></div>
-        <div class="sw"><div class="chip" style="background:#EAE0D5"></div><div class="meta"><div class="name">line</div><div class="hex">#EAE0D5</div></div></div>
-      </div>
-    </div>
 
-    <!-- Worker -->
-    <div class="theme-row" data-theme="worker" style="background: var(--bg); padding: var(--s-7); border-radius: var(--r-lg); margin-bottom: var(--s-5)">
-      <div class="theme-info">
-        <div class="audience" style="color: var(--primary)">Auditoire · Laveuse</div>
-        <h3>Forêt · tool clarity</h3>
-        <p>L'application laveuse est un outil de travail. Vert profond pour le pouls — couleur de croissance, de revenu. Fonds neutres et propres pour la lisibilité au soleil. Plus de contraste, moins de chaleur.</p>
-        <div class="id">data-theme="worker"</div>
-      </div>
-      <div class="swatches">
-        <div class="sw"><div class="chip" style="background:#F5F8F6"></div><div class="meta"><div class="name">bg</div><div class="hex">#F5F8F6</div></div></div>
-        <div class="sw"><div class="chip" style="background:#EAF1EC"></div><div class="meta"><div class="name">bg-deep</div><div class="hex">#EAF1EC</div></div></div>
-        <div class="sw"><div class="chip" style="background:#FFFFFF;border-bottom:1px solid var(--line)"></div><div class="meta"><div class="name">surface</div><div class="hex">#FFFFFF</div></div></div>
-        <div class="sw"><div class="chip" style="background:#0E1A12"></div><div class="meta"><div class="name">ink</div><div class="hex">#0E1A12</div></div></div>
-        <div class="sw"><div class="chip" style="background:#1A5C34"></div><div class="meta"><div class="name">primary</div><div class="hex">#1A5C34</div></div></div>
-        <div class="sw"><div class="chip" style="background:#D4900E"></div><div class="meta"><div class="name">accent</div><div class="hex">#D4900E</div></div></div>
-        <div class="sw"><div class="chip" style="background:#0F3D22"></div><div class="meta"><div class="name">primary-deep</div><div class="hex">#0F3D22</div></div></div>
-        <div class="sw"><div class="chip" style="background:#EAF6EE"></div><div class="meta"><div class="name">primary-soft</div><div class="hex">#EAF6EE</div></div></div>
-        <div class="sw"><div class="chip" style="background:#2A7A48"></div><div class="meta"><div class="name">success</div><div class="hex">#2A7A48</div></div></div>
-        <div class="sw"><div class="chip" style="background:#BE3030"></div><div class="meta"><div class="name">danger</div><div class="hex">#BE3030</div></div></div>
-        <div class="sw"><div class="chip" style="background:#B5651D"></div><div class="meta"><div class="name">warn</div><div class="hex">#B5651D</div></div></div>
-        <div class="sw"><div class="chip" style="background:#DDE8E2"></div><div class="meta"><div class="name">line</div><div class="hex">#DDE8E2</div></div></div>
-      </div>
-    </div>
+      <h1>Trois <em>thèmes</em>, une famille.</h1>
+      <p class="lede">
+        Chaque application a sa palette adaptée à son auditoire et son contexte d'usage. Mais toutes
+        partagent la même grammaire — espacement, rayons, ombres, mouvement, typographie. Source de
+        vérité&nbsp;: <span class="mono">packages/design-tokens/src/index.ts</span>.
+      </p>
 
-    <!-- Operator -->
-    <div class="theme-row" data-theme="operator" style="background: var(--bg); padding: var(--s-7); border-radius: var(--r-lg)">
-      <div class="theme-info">
-        <div class="audience" style="color: var(--primary)">Auditoire · Opérateur</div>
-        <h3>Admin · dense neutral</h3>
-        <p>La console opérateur est un poste de pilotage. Fonds presque blancs, texte presque noir, aubergine comme accent unique. Densité maximale, distractions minimales. La couleur sert à signaler, pas à décorer.</p>
-        <div class="id">data-theme="operator"</div>
-      </div>
-      <div class="swatches">
-        <div class="sw"><div class="chip" style="background:#F7F7FB"></div><div class="meta"><div class="name">bg</div><div class="hex">#F7F7FB</div></div></div>
-        <div class="sw"><div class="chip" style="background:#ECEBF2"></div><div class="meta"><div class="name">bg-deep</div><div class="hex">#ECEBF2</div></div></div>
-        <div class="sw"><div class="chip" style="background:#FFFFFF;border-bottom:1px solid var(--line)"></div><div class="meta"><div class="name">surface</div><div class="hex">#FFFFFF</div></div></div>
-        <div class="sw"><div class="chip" style="background:#15131D"></div><div class="meta"><div class="name">ink</div><div class="hex">#15131D</div></div></div>
-        <div class="sw"><div class="chip" style="background:#3B1F7A"></div><div class="meta"><div class="name">primary</div><div class="hex">#3B1F7A</div></div></div>
-        <div class="sw"><div class="chip" style="background:#3B1F7A"></div><div class="meta"><div class="name">accent</div><div class="hex">#3B1F7A</div></div></div>
-        <div class="sw"><div class="chip" style="background:#28135A"></div><div class="meta"><div class="name">primary-deep</div><div class="hex">#28135A</div></div></div>
-        <div class="sw"><div class="chip" style="background:#F0EBFF"></div><div class="meta"><div class="name">primary-soft</div><div class="hex">#F0EBFF</div></div></div>
-        <div class="sw"><div class="chip" style="background:#2A7A48"></div><div class="meta"><div class="name">success</div><div class="hex">#2A7A48</div></div></div>
-        <div class="sw"><div class="chip" style="background:#BE3030"></div><div class="meta"><div class="name">danger</div><div class="hex">#BE3030</div></div></div>
-        <div class="sw"><div class="chip" style="background:#B5651D"></div><div class="meta"><div class="name">warn</div><div class="hex">#B5651D</div></div></div>
-        <div class="sw"><div class="chip" style="background:#E2E1EA"></div><div class="meta"><div class="name">line</div><div class="hex">#E2E1EA</div></div></div>
-      </div>
-    </div>
-  </section>
+      <!-- THEMES -->
+      <section class="section">
+        <div class="num">01 · THÈMES</div>
+        <h2>Couleurs par auditoire</h2>
+        <p class="sub">
+          Trois palettes, trois ambiances de travail. La grammaire reste identique pour qu'un
+          composant puisse vivre dans n'importe quel thème sans modification.
+        </p>
 
-  <!-- SPACING -->
-  <section class="section">
-    <div class="num">02 · ESPACEMENT</div>
-    <h2>Échelle de 4</h2>
-    <p class="sub">Toutes les valeurs sont des multiples de 4&nbsp;px. Onze paliers nommés. Pas de valeurs ad hoc.</p>
-    <div>
-      <div class="scale-row"><div class="name">--s-1</div><div class="px">4 px</div><div class="bar" style="width: 4px"></div><div class="use">icon padding · pill gap</div></div>
-      <div class="scale-row"><div class="name">--s-2</div><div class="px">8 px</div><div class="bar" style="width: 8px"></div><div class="use">tight gap · row gap</div></div>
-      <div class="scale-row"><div class="name">--s-3</div><div class="px">12 px</div><div class="bar" style="width: 12px"></div><div class="use">card inner gap</div></div>
-      <div class="scale-row"><div class="name">--s-4</div><div class="px">16 px</div><div class="bar" style="width: 16px"></div><div class="use">default body gap</div></div>
-      <div class="scale-row"><div class="name">--s-5</div><div class="px">20 px</div><div class="bar" style="width: 20px"></div><div class="use">card padding</div></div>
-      <div class="scale-row"><div class="name">--s-6</div><div class="px">24 px</div><div class="bar" style="width: 24px"></div><div class="use">section spacing</div></div>
-      <div class="scale-row"><div class="name">--s-7</div><div class="px">32 px</div><div class="bar" style="width: 32px"></div><div class="use">card padding generous</div></div>
-      <div class="scale-row"><div class="name">--s-8</div><div class="px">40 px</div><div class="bar" style="width: 40px"></div><div class="use">block separation</div></div>
-      <div class="scale-row"><div class="name">--s-9</div><div class="px">56 px</div><div class="bar" style="width: 56px"></div><div class="use">page padding top</div></div>
-      <div class="scale-row"><div class="name">--s-10</div><div class="px">80 px</div><div class="bar" style="width: 80px"></div><div class="use">section break</div></div>
-      <div class="scale-row"><div class="name">--s-11</div><div class="px">120 px</div><div class="bar" style="width: 120px"></div><div class="use">page bottom · hero</div></div>
-    </div>
-  </section>
+        <!-- Subscriber -->
+        <div
+          class="theme-row"
+          data-theme="subscriber"
+          style="
+            background: var(--bg);
+            padding: var(--s-7);
+            border-radius: var(--r-lg);
+            margin-bottom: var(--s-5);
+          "
+        >
+          <div class="theme-info">
+            <div class="audience">Auditoire · Abonné</div>
+            <h3>Savane · cream warm</h3>
+            <p>
+              L'application abonné est domestique, calme, chaleureuse. Crème comme fond, terracotta
+              comme pouls, ocre pour les accents secondaires. Espresso pour le texte. Un foyer, pas
+              un dashboard.
+            </p>
+            <div class="id">data-theme="subscriber"</div>
+          </div>
+          <div class="swatches">
+            <div class="sw">
+              <div
+                class="chip"
+                style="background: #faf6f0; border-bottom: 1px solid var(--line)"
+              ></div>
+              <div class="meta">
+                <div class="name">bg</div>
+                <div class="hex">#FAF6F0</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #f2ead9"></div>
+              <div class="meta">
+                <div class="name">bg-deep</div>
+                <div class="hex">#F2EAD9</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div
+                class="chip"
+                style="background: #fffdf8; border-bottom: 1px solid var(--line)"
+              ></div>
+              <div class="meta">
+                <div class="name">surface</div>
+                <div class="hex">#FFFDF8</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #1c1208"></div>
+              <div class="meta">
+                <div class="name">ink</div>
+                <div class="hex">#1C1208</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #c4622d"></div>
+              <div class="meta">
+                <div class="name">primary</div>
+                <div class="hex">#C4622D</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #b8870a"></div>
+              <div class="meta">
+                <div class="name">accent</div>
+                <div class="hex">#B8870A</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #9c4a1f"></div>
+              <div class="meta">
+                <div class="name">primary-deep</div>
+                <div class="hex">#9C4A1F</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #fff3ee"></div>
+              <div class="meta">
+                <div class="name">primary-soft</div>
+                <div class="hex">#FFF3EE</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #4a7c3f"></div>
+              <div class="meta">
+                <div class="name">success</div>
+                <div class="hex">#4A7C3F</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #c03020"></div>
+              <div class="meta">
+                <div class="name">danger</div>
+                <div class="hex">#C03020</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #b5651d"></div>
+              <div class="meta">
+                <div class="name">warn</div>
+                <div class="hex">#B5651D</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #eae0d5"></div>
+              <div class="meta">
+                <div class="name">line</div>
+                <div class="hex">#EAE0D5</div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-  <!-- RADII -->
-  <section class="section">
-    <div class="num">03 · RAYONS</div>
-    <h2>Coins arrondis</h2>
-    <p class="sub">Six paliers. Le plus utilisé est <span class="mono">--r-md</span> pour les cartes, <span class="mono">--r-pill</span> pour les boutons primaires.</p>
-    <div class="radii">
-      <div><div class="radius-card" style="border-radius: 6px"><div class="label">--r-xs · 6</div></div></div>
-      <div><div class="radius-card" style="border-radius: 10px"><div class="label">--r-sm · 10</div></div></div>
-      <div><div class="radius-card" style="border-radius: 14px"><div class="label">--r-md · 14</div></div></div>
-      <div><div class="radius-card" style="border-radius: 20px"><div class="label">--r-lg · 20</div></div></div>
-      <div><div class="radius-card" style="border-radius: 28px"><div class="label">--r-xl · 28</div></div></div>
-      <div><div class="radius-card" style="border-radius: 999px"><div class="label">--r-pill</div></div></div>
-    </div>
-  </section>
+        <!-- Worker -->
+        <div
+          class="theme-row"
+          data-theme="worker"
+          style="
+            background: var(--bg);
+            padding: var(--s-7);
+            border-radius: var(--r-lg);
+            margin-bottom: var(--s-5);
+          "
+        >
+          <div class="theme-info">
+            <div class="audience" style="color: var(--primary)">Auditoire · Laveuse</div>
+            <h3>Forêt · tool clarity</h3>
+            <p>
+              L'application laveuse est un outil de travail. Vert profond pour le pouls — couleur de
+              croissance, de revenu. Fonds neutres et propres pour la lisibilité au soleil. Plus de
+              contraste, moins de chaleur.
+            </p>
+            <div class="id">data-theme="worker"</div>
+          </div>
+          <div class="swatches">
+            <div class="sw">
+              <div class="chip" style="background: #f5f8f6"></div>
+              <div class="meta">
+                <div class="name">bg</div>
+                <div class="hex">#F5F8F6</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #eaf1ec"></div>
+              <div class="meta">
+                <div class="name">bg-deep</div>
+                <div class="hex">#EAF1EC</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div
+                class="chip"
+                style="background: #ffffff; border-bottom: 1px solid var(--line)"
+              ></div>
+              <div class="meta">
+                <div class="name">surface</div>
+                <div class="hex">#FFFFFF</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #0e1a12"></div>
+              <div class="meta">
+                <div class="name">ink</div>
+                <div class="hex">#0E1A12</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #1a5c34"></div>
+              <div class="meta">
+                <div class="name">primary</div>
+                <div class="hex">#1A5C34</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #d4900e"></div>
+              <div class="meta">
+                <div class="name">accent</div>
+                <div class="hex">#D4900E</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #0f3d22"></div>
+              <div class="meta">
+                <div class="name">primary-deep</div>
+                <div class="hex">#0F3D22</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #eaf6ee"></div>
+              <div class="meta">
+                <div class="name">primary-soft</div>
+                <div class="hex">#EAF6EE</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #2a7a48"></div>
+              <div class="meta">
+                <div class="name">success</div>
+                <div class="hex">#2A7A48</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #be3030"></div>
+              <div class="meta">
+                <div class="name">danger</div>
+                <div class="hex">#BE3030</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #b5651d"></div>
+              <div class="meta">
+                <div class="name">warn</div>
+                <div class="hex">#B5651D</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #dde8e2"></div>
+              <div class="meta">
+                <div class="name">line</div>
+                <div class="hex">#DDE8E2</div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-  <!-- SHADOWS -->
-  <section class="section">
-    <div class="num">04 · OMBRES</div>
-    <h2>Élévation</h2>
-    <p class="sub">Trois paliers seulement. Plus rares qu'on ne pense — la plupart des séparations se font avec une bordure 1&nbsp;px <span class="mono">--line</span>.</p>
-    <div class="shadows">
-      <div class="shadow-card s1"><div class="name">--shadow-card</div><div style="margin-top: var(--s-3); color: var(--ink-3); font-size: var(--text-sm)">cartes au repos</div></div>
-      <div class="shadow-card s2"><div class="name">--shadow-elevated</div><div style="margin-top: var(--s-3); color: var(--ink-3); font-size: var(--text-sm)">menus, popovers</div></div>
-      <div class="shadow-card s3"><div class="name">--shadow-overlay</div><div style="margin-top: var(--s-3); color: var(--ink-3); font-size: var(--text-sm)">sheets modales, dialogs</div></div>
-    </div>
-  </section>
+        <!-- Operator -->
+        <div
+          class="theme-row"
+          data-theme="operator"
+          style="background: var(--bg); padding: var(--s-7); border-radius: var(--r-lg)"
+        >
+          <div class="theme-info">
+            <div class="audience" style="color: var(--primary)">Auditoire · Opérateur</div>
+            <h3>Admin · dense neutral</h3>
+            <p>
+              La console opérateur est un poste de pilotage. Fonds presque blancs, texte presque
+              noir, aubergine comme accent unique. Densité maximale, distractions minimales. La
+              couleur sert à signaler, pas à décorer.
+            </p>
+            <div class="id">data-theme="operator"</div>
+          </div>
+          <div class="swatches">
+            <div class="sw">
+              <div class="chip" style="background: #f7f7fb"></div>
+              <div class="meta">
+                <div class="name">bg</div>
+                <div class="hex">#F7F7FB</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #ecebf2"></div>
+              <div class="meta">
+                <div class="name">bg-deep</div>
+                <div class="hex">#ECEBF2</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div
+                class="chip"
+                style="background: #ffffff; border-bottom: 1px solid var(--line)"
+              ></div>
+              <div class="meta">
+                <div class="name">surface</div>
+                <div class="hex">#FFFFFF</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #15131d"></div>
+              <div class="meta">
+                <div class="name">ink</div>
+                <div class="hex">#15131D</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #3b1f7a"></div>
+              <div class="meta">
+                <div class="name">primary</div>
+                <div class="hex">#3B1F7A</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #3b1f7a"></div>
+              <div class="meta">
+                <div class="name">accent</div>
+                <div class="hex">#3B1F7A</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #28135a"></div>
+              <div class="meta">
+                <div class="name">primary-deep</div>
+                <div class="hex">#28135A</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #f0ebff"></div>
+              <div class="meta">
+                <div class="name">primary-soft</div>
+                <div class="hex">#F0EBFF</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #2a7a48"></div>
+              <div class="meta">
+                <div class="name">success</div>
+                <div class="hex">#2A7A48</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #be3030"></div>
+              <div class="meta">
+                <div class="name">danger</div>
+                <div class="hex">#BE3030</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #b5651d"></div>
+              <div class="meta">
+                <div class="name">warn</div>
+                <div class="hex">#B5651D</div>
+              </div>
+            </div>
+            <div class="sw">
+              <div class="chip" style="background: #e2e1ea"></div>
+              <div class="meta">
+                <div class="name">line</div>
+                <div class="hex">#E2E1EA</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-  <p style="margin-top: var(--s-10); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.12em;">— Fin · v2.0 · 2026</p>
-</div>
-</body></html>
+      <!-- SPACING -->
+      <section class="section">
+        <div class="num">02 · ESPACEMENT</div>
+        <h2>Échelle de 4</h2>
+        <p class="sub">
+          Toutes les valeurs sont des multiples de 4&nbsp;px. Onze paliers nommés. Pas de valeurs ad
+          hoc.
+        </p>
+        <div>
+          <div class="scale-row">
+            <div class="name">--s-1</div>
+            <div class="px">4 px</div>
+            <div class="bar" style="width: 4px"></div>
+            <div class="use">icon padding · pill gap</div>
+          </div>
+          <div class="scale-row">
+            <div class="name">--s-2</div>
+            <div class="px">8 px</div>
+            <div class="bar" style="width: 8px"></div>
+            <div class="use">tight gap · row gap</div>
+          </div>
+          <div class="scale-row">
+            <div class="name">--s-3</div>
+            <div class="px">12 px</div>
+            <div class="bar" style="width: 12px"></div>
+            <div class="use">card inner gap</div>
+          </div>
+          <div class="scale-row">
+            <div class="name">--s-4</div>
+            <div class="px">16 px</div>
+            <div class="bar" style="width: 16px"></div>
+            <div class="use">default body gap</div>
+          </div>
+          <div class="scale-row">
+            <div class="name">--s-5</div>
+            <div class="px">20 px</div>
+            <div class="bar" style="width: 20px"></div>
+            <div class="use">card padding</div>
+          </div>
+          <div class="scale-row">
+            <div class="name">--s-6</div>
+            <div class="px">24 px</div>
+            <div class="bar" style="width: 24px"></div>
+            <div class="use">section spacing</div>
+          </div>
+          <div class="scale-row">
+            <div class="name">--s-7</div>
+            <div class="px">32 px</div>
+            <div class="bar" style="width: 32px"></div>
+            <div class="use">card padding generous</div>
+          </div>
+          <div class="scale-row">
+            <div class="name">--s-8</div>
+            <div class="px">40 px</div>
+            <div class="bar" style="width: 40px"></div>
+            <div class="use">block separation</div>
+          </div>
+          <div class="scale-row">
+            <div class="name">--s-9</div>
+            <div class="px">56 px</div>
+            <div class="bar" style="width: 56px"></div>
+            <div class="use">page padding top</div>
+          </div>
+          <div class="scale-row">
+            <div class="name">--s-10</div>
+            <div class="px">80 px</div>
+            <div class="bar" style="width: 80px"></div>
+            <div class="use">section break</div>
+          </div>
+          <div class="scale-row">
+            <div class="name">--s-11</div>
+            <div class="px">120 px</div>
+            <div class="bar" style="width: 120px"></div>
+            <div class="use">page bottom · hero</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RADII -->
+      <section class="section">
+        <div class="num">03 · RAYONS</div>
+        <h2>Coins arrondis</h2>
+        <p class="sub">
+          Six paliers. Le plus utilisé est <span class="mono">--r-md</span> pour les cartes,
+          <span class="mono">--r-pill</span> pour les boutons primaires.
+        </p>
+        <div class="radii">
+          <div>
+            <div class="radius-card" style="border-radius: 6px">
+              <div class="label">--r-xs · 6</div>
+            </div>
+          </div>
+          <div>
+            <div class="radius-card" style="border-radius: 10px">
+              <div class="label">--r-sm · 10</div>
+            </div>
+          </div>
+          <div>
+            <div class="radius-card" style="border-radius: 14px">
+              <div class="label">--r-md · 14</div>
+            </div>
+          </div>
+          <div>
+            <div class="radius-card" style="border-radius: 20px">
+              <div class="label">--r-lg · 20</div>
+            </div>
+          </div>
+          <div>
+            <div class="radius-card" style="border-radius: 28px">
+              <div class="label">--r-xl · 28</div>
+            </div>
+          </div>
+          <div>
+            <div class="radius-card" style="border-radius: 999px">
+              <div class="label">--r-pill</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SHADOWS -->
+      <section class="section">
+        <div class="num">04 · OMBRES</div>
+        <h2>Élévation</h2>
+        <p class="sub">
+          Trois paliers seulement. Plus rares qu'on ne pense — la plupart des séparations se font
+          avec une bordure 1&nbsp;px <span class="mono">--line</span>.
+        </p>
+        <div class="shadows">
+          <div class="shadow-card s1">
+            <div class="name">--shadow-card</div>
+            <div style="margin-top: var(--s-3); color: var(--ink-3); font-size: var(--text-sm)">
+              cartes au repos
+            </div>
+          </div>
+          <div class="shadow-card s2">
+            <div class="name">--shadow-elevated</div>
+            <div style="margin-top: var(--s-3); color: var(--ink-3); font-size: var(--text-sm)">
+              menus, popovers
+            </div>
+          </div>
+          <div class="shadow-card s3">
+            <div class="name">--shadow-overlay</div>
+            <div style="margin-top: var(--s-3); color: var(--ink-3); font-size: var(--text-sm)">
+              sheets modales, dialogs
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <p
+        style="
+          margin-top: var(--s-10);
+          font-family: var(--font-mono);
+          font-size: var(--text-xs);
+          color: var(--ink-3);
+          text-transform: uppercase;
+          letter-spacing: 0.12em;
+        "
+      >
+        — Fin · v2.0 · 2026
+      </p>
+    </div>
+  </body>
+</html>

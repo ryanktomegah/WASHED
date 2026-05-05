@@ -6,7 +6,6 @@ import { formatXof, translate } from '@washed/i18n';
 import { PAYMENT_PROVIDER_LABEL, TIER_PRICE_XOF, useSignup } from './SignupContext.js';
 
 function shortPhone(phone: string): string {
-  // "+228 90 12 34 56" → "90 12…" — show enough to recognise without exposing.
   const groups = phone.split(' ');
   if (groups.length < 5) return phone;
   return `${groups[1]} ${groups[2]}…`;
@@ -15,8 +14,7 @@ function shortPhone(phone: string): string {
 export function ReviewX07(): ReactElement {
   const navigate = useNavigate();
   const signup = useSignup();
-  // Guard: a deep-link to /signup/review without prior steps must restart from
-  // the splash, not jump to the post-signup welcome (which would fake success).
+
   useEffect(() => {
     if (
       signup.phone === '' ||
@@ -54,9 +52,13 @@ export function ReviewX07(): ReactElement {
   const totalXof = TIER_PRICE_XOF[tier];
 
   const onSubmit = (): void => {
-    if (!signup.consentAccepted) return;
     navigate('/signup/welcome');
   };
+
+  const tierLabel = translate(
+    tier === 'T1' ? 'subscriber.signup.tier.t1.label' : 'subscriber.signup.tier.t2.label',
+  );
+  const paymentLabel = `${PAYMENT_PROVIDER_LABEL[provider]} · ${shortPhone(signup.phone)}`;
 
   return (
     <main aria-labelledby="x07-headline" className="onboarding-screen" data-screen-id="X-07">
@@ -71,75 +73,37 @@ export function ReviewX07(): ReactElement {
         <dl className="review-card">
           <div className="review-row">
             <dt>{translate('subscriber.signup.review.field.tier')}</dt>
-            <dd>
-              {translate(
-                tier === 'T1'
-                  ? 'subscriber.signup.tier.t1.label'
-                  : 'subscriber.signup.tier.t2.label',
-              )}{' '}
-              <span className="p-sm">{translate('subscriber.signup.review.month_suffix')}</span>
-            </dd>
-          </div>
-          <div className="review-row">
-            <dt>{translate('subscriber.signup.review.field.address')}</dt>
-            <dd>
-              {signup.address.neighborhood}
-              {signup.address.street === '' ? null : (
-                <span className="p-sm"> · {signup.address.street}</span>
-              )}
-            </dd>
-          </div>
-          <div className="review-row">
-            <dt>{translate('subscriber.signup.review.field.payment')}</dt>
-            <dd>
-              {PAYMENT_PROVIDER_LABEL[provider]}{' '}
-              <span className="p-sm">· {shortPhone(signup.phone)}</span>
-            </dd>
+            <dd>{tierLabel}</dd>
           </div>
           <div className="review-divider" aria-hidden="true" />
-          <div className="review-row review-total">
+          <div className="review-row">
+            <dt>{translate('subscriber.signup.review.field.address')}</dt>
+            <dd>{signup.address.neighborhood}</dd>
+          </div>
+          <div className="review-divider" aria-hidden="true" />
+          <div className="review-row">
+            <dt>{translate('subscriber.signup.review.field.payment')}</dt>
+            <dd>{paymentLabel}</dd>
+          </div>
+          <div className="review-divider" aria-hidden="true" />
+          <div className="review-row">
             <dt>{translate('subscriber.signup.review.field.total')}</dt>
-            <dd className="review-total-amount">{formatXof(totalXof)}</dd>
+            <dd>{formatXof(totalXof)}</dd>
           </div>
         </dl>
 
-        <aside
-          className="review-warn"
-          aria-label={translate('subscriber.signup.review.next_step.label')}
-        >
-          <span className="h-sm review-warn-eyebrow">
-            {translate('subscriber.signup.review.next_step.label')}
-          </span>
-          <p className="p-sm">{translate('subscriber.signup.review.next_step.body')}</p>
-        </aside>
+        <p className="notice">{translate('subscriber.signup.review.next_step.body')}</p>
 
-        <label className="consent-row">
-          <input
-            checked={signup.consentAccepted}
-            onChange={(event) => signup.setConsentAccepted(event.target.checked)}
-            type="checkbox"
-          />
-          <span className="p-sm">
-            {translate('subscriber.signup.review.consent.prefix')}{' '}
-            <a href="#/legal/terms" className="link">
-              {translate('subscriber.signup.review.consent.terms')}
-            </a>{' '}
-            {translate('subscriber.signup.review.consent.connector')}{' '}
-            <a href="#/legal/privacy" className="link">
-              {translate('subscriber.signup.review.consent.privacy')}
-            </a>
-            .
-          </span>
-        </label>
+        <p className="p-sm">
+          {translate('subscriber.signup.review.consent.prefix')}{' '}
+          {translate('subscriber.signup.review.consent.terms')}{' '}
+          {translate('subscriber.signup.review.consent.connector')}{' '}
+          {translate('subscriber.signup.review.consent.privacy')}
+        </p>
 
         <div className="grow" />
 
-        <button
-          className="btn full primary"
-          disabled={!signup.consentAccepted}
-          onClick={onSubmit}
-          type="button"
-        >
+        <button className="btn full primary" onClick={onSubmit} type="button">
           {translate('subscriber.signup.review.cta')}
         </button>
       </div>

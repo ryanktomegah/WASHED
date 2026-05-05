@@ -19,8 +19,9 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 12px;
-  padding: 24px 20px 8px;
+  gap: 14px;
+  min-height: 0;
+  padding: 24px 20px;
 }
 
 .worker-profile-header {
@@ -31,23 +32,30 @@
 
 .worker-profile-back {
   display: inline-grid;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   place-items: center;
   border: 0;
-  border-radius: 999px;
+  border-radius: 10px;
   background: transparent;
   color: var(--ink);
   cursor: pointer;
-  font-family: var(--font-mono);
-  font-size: 28px;
   line-height: 1;
   padding: 0;
 }
 
+.worker-profile-back svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+}
+
 .worker-profile-back:focus-visible,
-.worker-profile-change-button:focus-visible {
-  outline: none;
+.worker-profile-change-button:focus-visible,
+.worker-profile-submit-button:focus-visible,
+.worker-profile-choice:focus-within {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
   box-shadow: var(--focus-ring);
 }
 
@@ -56,7 +64,7 @@
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.12em;
+  letter-spacing: 0;
   line-height: 1.25;
   text-transform: uppercase;
 }
@@ -84,7 +92,7 @@
   font-family: var(--font-mono);
   font-size: 14px;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
 }
 
 .worker-profile-name {
@@ -124,7 +132,7 @@
 .worker-profile-relation-card,
 .worker-profile-card {
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 10px;
   background: var(--surface);
 }
 
@@ -156,9 +164,9 @@
 
 .worker-profile-metric strong {
   color: var(--ink);
-  font-family: var(--font-display);
+  font-family: var(--font-mono);
   font-size: 24px;
-  font-style: italic;
+  font-style: normal;
   font-weight: 500;
   line-height: 1.05;
 }
@@ -203,7 +211,7 @@
   gap: 10px;
   min-height: 46px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 10px;
   background: var(--surface);
   color: var(--ink);
   cursor: pointer;
@@ -214,8 +222,7 @@
 
 .worker-profile-choice.is-selected {
   border-color: var(--primary);
-  border-width: 2px;
-  padding: 9px 10px;
+  background: var(--primary-soft);
 }
 
 .worker-profile-radio {
@@ -256,7 +263,7 @@
   flex-direction: column;
   gap: 4px;
   border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--line));
-  border-radius: 14px;
+  border-radius: 10px;
   background: var(--accent-soft);
   padding: 10px 12px;
 }
@@ -277,7 +284,7 @@
 .worker-profile-submit-button {
   min-height: var(--tap-min);
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: 10px;
   background: var(--surface);
   color: var(--primary);
   cursor: pointer;
@@ -288,8 +295,8 @@
 }
 
 .worker-profile-submit-button {
-  border-color: var(--ink);
-  background: var(--ink);
+  border-color: var(--primary);
+  background: var(--primary);
   color: var(--surface);
 }
 
@@ -305,14 +312,18 @@
 
 .worker-profile-submitted-mark {
   display: grid;
-  width: 72px;
-  height: 72px;
+  width: 56px;
+  height: 56px;
   place-items: center;
   border-radius: 999px;
   background: var(--success-soft);
   color: var(--success);
-  font-size: 36px;
-  font-weight: 700;
+}
+
+.worker-profile-submitted-mark svg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2.25;
 }
 
 @media (max-height: 700px) {
@@ -324,5 +335,26 @@
   .worker-profile-avatar {
     width: 52px;
     height: 52px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .worker-profile-screen {
+    --bg: #111111;
+    --surface: #111111;
+    --surface-2: #1a1a1a;
+    --ink: #fafafa;
+    --ink-2: #c7c7c7;
+    --ink-3: #a3a3a3;
+    --ink-4: #737373;
+    --line: #262626;
+    --line-2: #333333;
+    --primary: #0a3d1f;
+    --primary-on: #ffffff;
+    --primary-tint: #0f1f15;
+    --primary-soft: #0c1610;
+    --success: #48c078;
+    --warn: #e0a030;
+    --danger: #f05959;
   }
 }

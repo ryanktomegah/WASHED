@@ -22,7 +22,6 @@ export interface SignupState {
   readonly address: SignupAddress;
   readonly tier: SignupTier | null;
   readonly paymentProvider: SignupPaymentProvider | null;
-  readonly consentAccepted: boolean;
 }
 
 export interface SignupContextValue extends SignupState {
@@ -30,7 +29,6 @@ export interface SignupContextValue extends SignupState {
   readonly setAddress: (address: SignupAddress) => void;
   readonly setTier: (tier: SignupTier) => void;
   readonly setPaymentProvider: (provider: SignupPaymentProvider) => void;
-  readonly setConsentAccepted: (accepted: boolean) => void;
   readonly reset: () => void;
 }
 
@@ -43,7 +41,6 @@ const defaultSignupState: SignupState = {
   address: { neighborhood: '', street: '', landmark: '' },
   tier: null,
   paymentProvider: null,
-  consentAccepted: false,
 };
 
 const SignupContext = createContext<SignupContextValue | null>(null);
@@ -80,10 +77,6 @@ export function SignupProvider({
     setState((current) => ({ ...current, paymentProvider }));
   }, []);
 
-  const setConsentAccepted = useCallback((consentAccepted: boolean) => {
-    setState((current) => ({ ...current, consentAccepted }));
-  }, []);
-
   const reset = useCallback(() => {
     setState(defaultSignupState);
   }, []);
@@ -95,10 +88,9 @@ export function SignupProvider({
       setAddress,
       setTier,
       setPaymentProvider,
-      setConsentAccepted,
       reset,
     }),
-    [state, setPhone, setAddress, setTier, setPaymentProvider, setConsentAccepted, reset],
+    [state, setPhone, setAddress, setTier, setPaymentProvider, reset],
   );
 
   return <SignupContext.Provider value={value}>{children}</SignupContext.Provider>;

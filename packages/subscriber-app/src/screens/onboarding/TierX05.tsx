@@ -1,28 +1,33 @@
 import { useEffect, type ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { formatXof, translate } from '@washed/i18n';
+import { translate } from '@washed/i18n';
 
-import { TIER_PRICE_XOF, useSignup, type SignupTier } from './SignupContext.js';
+import { useSignup, type SignupTier } from './SignupContext.js';
 
 interface TierOption {
   readonly tier: SignupTier;
   readonly labelKey: 'subscriber.signup.tier.t1.label' | 'subscriber.signup.tier.t2.label';
-  readonly sublineKey: 'subscriber.signup.tier.t1.subline' | 'subscriber.signup.tier.t2.subline';
+  readonly priceKey: 'subscriber.signup.tier.t1.price' | 'subscriber.signup.tier.t2.price';
 }
 
 const TIER_OPTIONS: readonly TierOption[] = [
   {
     tier: 'T1',
     labelKey: 'subscriber.signup.tier.t1.label',
-    sublineKey: 'subscriber.signup.tier.t1.subline',
+    priceKey: 'subscriber.signup.tier.t1.price',
   },
   {
     tier: 'T2',
     labelKey: 'subscriber.signup.tier.t2.label',
-    sublineKey: 'subscriber.signup.tier.t2.subline',
+    priceKey: 'subscriber.signup.tier.t2.price',
   },
 ];
+
+const TIER_PRICE_KEY: Record<SignupTier, TierOption['priceKey']> = {
+  T1: 'subscriber.signup.tier.t1.price',
+  T2: 'subscriber.signup.tier.t2.price',
+};
 
 export function TierX05(): ReactElement {
   const navigate = useNavigate();
@@ -59,14 +64,20 @@ export function TierX05(): ReactElement {
   return (
     <main aria-labelledby="x05-headline" className="onboarding-screen" data-screen-id="X-05">
       <div className="body tight">
-        <div className="title-stack">
+        <div className="title-stack no-progress">
+          <div aria-hidden="true" className="steps">
+            <i className="on" />
+            <i className="on" />
+            <i className="on" />
+            <i className="on" />
+          </div>
           <span className="h-sm">
             {translate('subscriber.signup.step_indicator', { current: 4, total: 4 })}
           </span>
           <h1 className="h-md" id="x05-headline">
             {translate('subscriber.signup.tier.title')}
           </h1>
-          <p className="p-sm">{translate('subscriber.signup.tier.body')}</p>
+          <p className="p">{translate('subscriber.signup.tier.body')}</p>
         </div>
 
         <fieldset className="tier-grid" aria-labelledby="x05-headline">
@@ -87,27 +98,27 @@ export function TierX05(): ReactElement {
               <div className="tier-card-head">
                 <div>
                   <strong>{translate(option.labelKey)}</strong>
-                  <span className="p-sm">{translate(option.sublineKey)}</span>
-                </div>
-                {option.tier === selected ? (
-                  <span className="tier-chip">
-                    {translate('subscriber.signup.tier.selected_badge')}
+                  <span className="p-sm">
+                    {translate(
+                      option.tier === selected
+                        ? 'subscriber.signup.tier.selected_badge'
+                        : 'subscriber.signup.tier.available_badge',
+                    )}
                   </span>
-                ) : null}
-              </div>
-              <div className="tier-price">
-                <strong>{formatXof(TIER_PRICE_XOF[option.tier]).replace(/\s*XOF$/u, '')}</strong>
-                <span>{translate('subscriber.signup.tier.price_suffix')}</span>
+                </div>
+                <span className="tier-price-value">{translate(option.priceKey)}</span>
               </div>
             </label>
           ))}
         </fieldset>
 
+        <p className="p-sm">{translate('subscriber.signup.tier.pricing_note')}</p>
+
         <div className="grow" />
 
         <button className="btn full primary" onClick={onSubmit} type="button">
           {translate('subscriber.signup.tier.cta_continue_amount', {
-            amount: formatXof(TIER_PRICE_XOF[selected]),
+            amount: translate(TIER_PRICE_KEY[selected]),
           })}
         </button>
       </div>

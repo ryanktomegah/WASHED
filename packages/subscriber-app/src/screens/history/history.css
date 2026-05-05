@@ -1,9 +1,3 @@
-/* ============================================================
-   X-16 Visit History — l'actif relationnel
-   Locked to design/05-subscriber/subscriber.html:546-571.
-   Reuses .hub-nav from hub.css for the bottom nav.
-   ============================================================ */
-
 .history-screen {
   display: flex;
   min-height: 100vh;
@@ -25,8 +19,9 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 12px;
-  padding: 24px 20px 8px;
+  gap: 14px;
+  min-height: 0;
+  padding: 24px 20px 0;
 }
 
 .history-grow {
@@ -34,9 +29,14 @@
   min-height: 8px;
 }
 
-.history-header {
+.history-header,
+.history-detail-header {
   display: flex;
   align-items: center;
+}
+
+.history-detail-header {
+  gap: 8px;
 }
 
 .history-eyebrow {
@@ -44,8 +44,8 @@
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.12em;
-  line-height: 1.25;
+  letter-spacing: 0;
+  line-height: 1.3;
   text-transform: uppercase;
 }
 
@@ -54,31 +54,38 @@
   color: var(--ink);
   font-family: var(--font-display);
   font-size: 28px;
-  font-weight: 500;
+  font-weight: 550;
   letter-spacing: 0;
-  line-height: 1.1;
+  line-height: 1.08;
 }
 
 .history-title-accent {
   color: var(--primary);
-  font-style: italic;
+  font-style: normal;
+}
+
+.history-stats-card,
+.history-card,
+.history-detail-card,
+.history-report-button {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
 }
 
 .history-stats-card {
-  display: flex;
-  align-items: stretch;
-  justify-content: space-between;
-  gap: 16px;
-  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line));
-  border-radius: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
   background: var(--primary-soft);
-  padding: 12px 14px;
+  padding: 14px;
 }
 
 .history-stat {
   display: flex;
+  min-width: 0;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .history-stat.align-right {
@@ -88,33 +95,34 @@
 
 .history-stat-label {
   color: var(--ink-3);
-  font-size: 12px;
-  line-height: 1.25;
+  font-size: 11px;
+  line-height: 1.3;
 }
 
 .history-stat-value {
   color: var(--ink);
-  font-family: var(--font-display);
+  font-family: var(--font-mono);
   font-size: 22px;
-  font-weight: 500;
-  line-height: 1.05;
+  font-weight: 550;
+  letter-spacing: 0;
+  line-height: 1;
 }
 
 .history-stat-value small {
   color: var(--ink-3);
-  font-family: var(--font-mono);
+  font: inherit;
   font-size: 11px;
-  font-weight: 400;
+  font-weight: 500;
 }
 
 .history-recent-label {
-  margin: 4px 0 0;
+  margin: 2px 0 0;
 }
 
 .history-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -122,63 +130,71 @@
 
 .history-card {
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
   width: 100%;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--surface);
-  font: inherit;
-  text-align: left;
-  padding: 10px 12px;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
   cursor: pointer;
-  transition: background-color var(--d-fast) var(--ease-standard);
+  font: inherit;
+  padding: 12px;
+  text-align: left;
 }
 
-.history-card:hover,
-.history-card:focus-visible {
-  background: color-mix(in srgb, var(--primary-soft) 60%, var(--surface) 40%);
-  outline: none;
+.history-card:focus-visible,
+.history-back:focus-visible,
+.history-report-button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .history-card-avatar {
   display: block;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 999px;
-  background: var(--primary-soft);
+  background:
+    radial-gradient(circle at 68% 30%, var(--accent-soft), transparent 18px), var(--primary-tint);
 }
 
 .history-card-meta {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
   min-width: 0;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .history-card-meta strong {
+  overflow: hidden;
   color: var(--ink);
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 550;
   line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .history-card-meta span {
+  overflow: hidden;
   color: var(--ink-3);
   font-size: 12px;
-  line-height: 1.3;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .history-card-chip {
   display: grid;
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   place-items: center;
   border-radius: 999px;
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1;
+}
+
+.history-card-chip svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.4;
 }
 
 .history-card-chip.clean {
@@ -187,42 +203,32 @@
 }
 
 .history-card-chip.issue {
-  background: var(--danger-soft, color-mix(in srgb, var(--primary) 22%, white 78%));
-  color: var(--primary);
-}
-
-.history-detail-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  background: var(--danger-soft);
+  color: var(--danger);
 }
 
 .history-back {
   display: inline-grid;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   place-items: center;
   border: 0;
   border-radius: 999px;
   background: transparent;
   color: var(--ink);
   cursor: pointer;
-  font-family: var(--font-mono);
-  font-size: 28px;
-  line-height: 1;
   padding: 0;
 }
 
-.history-back:focus-visible,
-.history-report-button:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+.history-back svg {
+  width: 20px;
+  height: 20px;
 }
 
 .history-detail-title {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .history-detail-title span {
@@ -232,7 +238,7 @@
 .history-photo-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 
 .history-photo {
@@ -241,43 +247,38 @@
   place-items: center;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 14px;
-  color: rgba(255, 253, 248, 0.7);
+  border-radius: 10px;
+  color: var(--surface);
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.08em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
 .history-photo.before {
-  border-color: color-mix(in srgb, var(--ink) 22%, transparent);
   background:
-    linear-gradient(135deg, rgba(255, 253, 248, 0.08), transparent 44%),
-    linear-gradient(135deg, #4a3622, #1c1208);
+    linear-gradient(135deg, color-mix(in srgb, var(--ink) 86%, transparent), var(--ink)), var(--ink);
 }
 
 .history-photo.after {
   background:
-    radial-gradient(circle at 72% 24%, rgba(255, 253, 248, 0.75), transparent 24%),
-    linear-gradient(135deg, var(--surface), var(--primary-soft));
+    radial-gradient(circle at 68% 22%, var(--accent-soft), transparent 36%),
+    linear-gradient(135deg, var(--primary-tint), var(--primary-soft));
   color: var(--primary);
 }
 
 .history-detail-card {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--surface);
-  padding: 10px 12px;
+  gap: 8px;
+  padding: 12px;
 }
 
 .history-timeline {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 6px;
   margin: 0;
 }
 
@@ -286,7 +287,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 14px;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.35;
 }
 
@@ -299,29 +300,48 @@
   color: var(--ink);
   font-family: var(--font-mono);
   font-weight: 500;
+  letter-spacing: 0;
   text-align: right;
 }
 
 .history-report-button {
-  min-height: var(--tap-min);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--surface);
+  min-height: 46px;
   color: var(--primary);
   cursor: pointer;
   font: inherit;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   padding: 0 18px;
 }
 
 @media (max-height: 700px) {
   .history-body {
-    gap: 9px;
+    gap: 10px;
     padding-top: 18px;
   }
 
   .history-title {
     font-size: 24px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .history-screen {
+    --bg: #111111;
+    --surface: #111111;
+    --surface-2: #1a1a1a;
+    --ink: #fafafa;
+    --ink-2: #c7c7c7;
+    --ink-3: #a3a3a3;
+    --ink-4: #737373;
+    --line: #262626;
+    --line-2: #333333;
+    --primary: #0a3d1f;
+    --primary-on: #ffffff;
+    --primary-tint: #0f1f15;
+    --primary-soft: #0c1610;
+    --success: #48c078;
+    --warn: #e0a030;
+    --danger: #f05959;
   }
 }

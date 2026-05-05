@@ -4,7 +4,7 @@ export type SubscriberVisitStage = 'arrived' | 'enRoute' | 'inProgress' | 'sched
 export type SubscriberVisitStatus = 'rescheduled' | 'scheduled' | 'skipped';
 export type SubscriptionStatus = 'active' | 'cancelled';
 export type SubscriptionPaymentStatus = 'current' | 'overdue' | 'recovered';
-export type SubscriptionTierCode = 'T1' | 'T2' | 'T3';
+export type SubscriptionTierCode = 'T1' | 'T2';
 
 export type WorkerVisitStep =
   | 'afterPhoto'

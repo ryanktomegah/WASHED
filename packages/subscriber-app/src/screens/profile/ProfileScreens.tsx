@@ -1,4 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent, type ReactElement } from 'react';
+import { ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { translate, type WashedLocale } from '@washed/i18n';
@@ -59,9 +60,6 @@ function formatClockHour(time24h: string, locale: WashedLocale): string {
   return `${hour12} ${period}`;
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// X-24 · Profile + settings list
-// ──────────────────────────────────────────────────────────────────────────
 export function ProfileX24(): ReactElement {
   const navigate = useNavigate();
   const locale = useActiveLocale();
@@ -529,8 +527,6 @@ export function DeleteAccountX28(): ReactElement {
 }
 
 // ──────────────────────────────────────────────────────────────────────────
-// Shared back header
-// ──────────────────────────────────────────────────────────────────────────
 function BackHeader({
   label,
   onBack,
@@ -546,7 +542,7 @@ function BackHeader({
         onClick={onBack}
         type="button"
       >
-        ‹
+        <ChevronLeft aria-hidden="true" />
       </button>
       <span className="profile-eyebrow">{label.toUpperCase()}</span>
     </header>

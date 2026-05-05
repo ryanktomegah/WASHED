@@ -46,7 +46,7 @@
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0;
   line-height: 1.25;
   text-transform: uppercase;
 }
@@ -67,7 +67,7 @@
   font-family: var(--font-display);
   font-size: 30px;
   font-weight: 500;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   line-height: 1.05;
 }
 
@@ -82,7 +82,7 @@
 
 .support-title em {
   color: var(--primary);
-  font-style: italic;
+  font-style: normal;
 }
 
 .support-copy {
@@ -179,7 +179,7 @@
   place-items: center;
   border-radius: 999px;
   background: var(--primary);
-  color: white;
+  color: var(--surface);
   font-size: 15px;
 }
 
@@ -361,7 +361,7 @@
 
 .support-button.primary {
   background: var(--primary);
-  color: white;
+  color: var(--surface);
 }
 
 .support-button.ghost {
@@ -373,7 +373,7 @@
 .support-button.dark {
   flex: 0 0 auto;
   background: var(--ink);
-  color: white;
+  color: var(--surface);
 }
 
 .support-button:disabled {
@@ -430,10 +430,10 @@
 
 .support-system-icon.brand {
   background: var(--primary);
-  color: white;
+  color: var(--surface);
   font-family: var(--font-display);
   font-size: 26px;
-  font-style: italic;
+  font-style: normal;
   font-weight: 600;
 }
 
@@ -515,20 +515,20 @@
   min-height: 72px;
   place-items: center;
   border-radius: 12px;
-  color: rgba(255, 255, 255, 0.75);
+  color: color-mix(in srgb, var(--surface) 75%, transparent);
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0;
 }
 
 .support-attachment.red {
-  background: linear-gradient(135deg, #c03020, #7a1f18);
+  background: linear-gradient(135deg, var(--danger), var(--danger));
 }
 
 .support-attachment.cream {
-  background: linear-gradient(135deg, #ffe5dc, #f5c8b8);
-  color: rgba(0, 0, 0, 0.48);
+  background: linear-gradient(135deg, var(--accent-soft), var(--primary-tint));
+  color: color-mix(in srgb, var(--ink) 48%, transparent);
 }
 
 .support-reply-row {
@@ -548,7 +548,7 @@
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0;
   line-height: 1.2;
   padding: 8px 10px;
 }
@@ -583,18 +583,18 @@
   font-family: var(--font-display);
   font-size: 44px;
   font-weight: 500;
-  letter-spacing: -0.04em;
+  letter-spacing: 0;
   line-height: 0.98;
 }
 
 .support-offline-time em {
   color: var(--ink);
-  font-style: italic;
+  font-style: normal;
 }
 
 .support-offline-time strong {
   color: var(--primary);
-  font-style: italic;
+  font-style: normal;
   font-weight: 500;
 }
 
@@ -647,4 +647,172 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+.support-body {
+  gap: 14px;
+  min-height: 0;
+  padding: 24px 20px;
+}
+
+.support-title {
+  font-size: 28px;
+  font-weight: 550;
+  letter-spacing: 0;
+  line-height: 1.08;
+}
+
+.support-title.ticket {
+  font-size: 24px;
+}
+
+.support-title em {
+  font-style: normal;
+}
+
+.support-back {
+  width: 32px;
+  height: 32px;
+  font-size: inherit;
+}
+
+.support-back svg,
+.support-call-icon svg,
+.support-chevron svg,
+.support-checkmark svg,
+.support-system-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.support-back:focus-visible,
+.support-button:focus-visible,
+.support-faq-toggle:focus-visible,
+.support-ticket-card:focus-visible,
+.support-call-card:focus-visible,
+.support-input:focus-visible,
+.support-textarea:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+.support-call-card,
+.support-card,
+.support-ticket-card,
+.support-choice,
+.support-faq,
+.support-textarea,
+.support-input,
+.support-worker-cache,
+.support-message {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.support-call-card,
+.support-card.cream,
+.support-message.office {
+  background: var(--primary-soft);
+}
+
+.support-call-icon,
+.support-button.primary,
+.support-button.dark,
+.support-system-icon.brand {
+  background: var(--primary);
+  color: var(--surface);
+}
+
+.support-checkmark {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.support-system-icon.warn {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.support-choice.selected,
+.support-ticket-card.open {
+  border-width: 1px;
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.support-button {
+  min-height: 46px;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+
+.support-button.ghost {
+  border-color: var(--line-2);
+  background: transparent;
+  color: var(--ink);
+}
+
+.support-textarea,
+.support-input {
+  min-height: 46px;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+.support-attachment {
+  color: var(--surface);
+  letter-spacing: 0;
+}
+
+.support-attachment.red {
+  background: linear-gradient(135deg, var(--danger), var(--ink));
+}
+
+.support-attachment.cream {
+  background: linear-gradient(135deg, var(--accent-soft), var(--primary-tint));
+  color: var(--ink-2);
+}
+
+.support-ribbon {
+  letter-spacing: 0;
+}
+
+.support-offline-time,
+.support-offline-time em,
+.support-offline-time strong,
+.support-system-icon.brand {
+  font-style: normal;
+  letter-spacing: 0;
+}
+
+@media (max-height: 700px) {
+  .support-body {
+    gap: 10px;
+    padding-top: 18px;
+    padding-bottom: 18px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .support-screen {
+    --bg: #111111;
+    --surface: #111111;
+    --surface-2: #1a1a1a;
+    --ink: #fafafa;
+    --ink-2: #c7c7c7;
+    --ink-3: #a3a3a3;
+    --ink-4: #737373;
+    --line: #262626;
+    --line-2: #333333;
+    --primary: #0a3d1f;
+    --primary-on: #ffffff;
+    --primary-tint: #0f1f15;
+    --primary-soft: #0c1610;
+    --success: #48c078;
+    --warn: #e0a030;
+    --danger: #f05959;
+  }
 }

@@ -22,6 +22,28 @@ for (const [method, path] of readFastifyRoutes(appSource)) {
 }
 
 const operationIds = new Set();
+const liveDataOperationIds = new Set([
+  'checkInVisit',
+  'checkOutVisit',
+  'createWorkerUnavailability',
+  'getOperatorBetaMetrics',
+  'getSubscriptionDetail',
+  'getWorkerEarnings',
+  'getWorkerProfile',
+  'getWorkerRoute',
+  'listLomePricing',
+  'listOperatorDisputes',
+  'listOperatorMatchingQueue',
+  'listOperatorNotifications',
+  'listOperatorPaymentAttempts',
+  'listOperatorServiceCells',
+  'listSubscriptionBillingHistory',
+  'recordVisitPhoto',
+  'refreshAuthSession',
+  'reportWorkerIssue',
+  'startOtpChallenge',
+  'verifyOtpChallenge',
+]);
 
 for (const [path, methods] of Object.entries(contract.paths ?? {})) {
   for (const [method, operation] of Object.entries(methods)) {
@@ -40,6 +62,16 @@ for (const [path, methods] of Object.entries(contract.paths ?? {})) {
     }
 
     operationIds.add(operation.operationId);
+
+    if (liveDataOperationIds.has(operation.operationId)) {
+      assertLiveDataOperationIsTyped(method, path, operation);
+    }
+  }
+}
+
+for (const operationId of liveDataOperationIds) {
+  if (!operationIds.has(operationId)) {
+    throw new Error(`Live-data OpenAPI contract is missing ${operationId}.`);
   }
 }
 
@@ -67,4 +99,51 @@ function normalizeFastifyPath(path) {
 
 function routeKey([method, path]) {
   return `${method.toLowerCase()} ${path}`;
+}
+
+function assertLiveDataOperationIsTyped(method, path, operation) {
+  const location = `${method.toUpperCase()} ${path}`;
+
+  if (operation.requestBody !== undefined) {
+    const requestSchema = operation.requestBody.content?.['application/json']?.schema;
+
+    if (isGenericObjectSchema(requestSchema)) {
+      throw new Error(`${location} uses a generic live-data request schema.`);
+    }
+  }
+
+  const successResponses = Object.entries(operation.responses ?? {}).filter(([status]) =>
+    /^2\d\d$/u.test(status),
+  );
+
+  if (successResponses.length === 0) {
+    throw new Error(`${location} is missing a 2xx response.`);
+  }
+
+  for (const [status, response] of successResponses) {
+    const responseSchema = response.content?.['application/json']?.schema;
+
+    if (responseSchema === undefined) {
+      throw new Error(`${location} ${status} response is missing an application/json schema.`);
+    }
+
+    if (isGenericObjectSchema(responseSchema)) {
+      throw new Error(`${location} ${status} uses a generic live-data response schema.`);
+    }
+  }
+}
+
+function isGenericObjectSchema(schema) {
+  if (schema === undefined || schema.$ref !== undefined) {
+    return false;
+  }
+
+  return (
+    schema.type === 'object' &&
+    schema.additionalProperties === true &&
+    Object.keys(schema.properties ?? {}).length === 0 &&
+    schema.oneOf === undefined &&
+    schema.anyOf === undefined &&
+    schema.allOf === undefined
+  );
 }

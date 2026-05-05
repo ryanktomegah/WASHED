@@ -1,4 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent, type ReactElement } from 'react';
+import { Check, ChevronLeft, ChevronRight, Phone, Settings } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { translate, type WashedLocale } from '@washed/i18n';
@@ -40,14 +41,14 @@ export function HelpCenterX29(): ReactElement {
 
         <a className="support-call-card" href={SUPPORT_PHONE_HREF}>
           <span aria-hidden="true" className="support-call-icon">
-            ☎
+            <Phone />
           </span>
           <span className="support-call-copy">
             <strong>{translate('subscriber.support.help.call.title')}</strong>
             <small>{translate('subscriber.support.help.call.detail')}</small>
           </span>
           <span aria-hidden="true" className="support-chevron">
-            ›
+            <ChevronRight />
           </span>
         </a>
 
@@ -178,7 +179,7 @@ export function ContactSubmittedX30S(): ReactElement {
       <div className="support-body center">
         <div className="support-grow" />
         <div aria-hidden="true" className="support-checkmark">
-          ✓
+          <Check />
         </div>
         <h1 className="support-title centered" id="x30s-headline">
           {translate('subscriber.support.contact.submitted.title')}
@@ -442,7 +443,7 @@ export function MaintenanceX34(): ReactElement {
       <div className="support-body center">
         <div className="support-grow" />
         <div aria-hidden="true" className="support-system-icon warn">
-          ⚙
+          <Settings />
         </div>
         <h1 className="support-title centered" id="x34-headline">
           {translate('subscriber.system.maintenance.title')}
@@ -555,7 +556,7 @@ function SupportBackHeader({
         onClick={onBack}
         type="button"
       >
-        ‹
+        <ChevronLeft aria-hidden="true" />
       </button>
       <span>{label}</span>
     </div>

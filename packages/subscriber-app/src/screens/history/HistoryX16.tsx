@@ -1,4 +1,13 @@
 import { useEffect, type ReactElement } from 'react';
+import {
+  CalendarDays,
+  Check,
+  ChevronLeft,
+  Home,
+  TriangleAlert,
+  UserRound,
+  WalletCards,
+} from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { formatXof, translate, type WashedLocale } from '@washed/i18n';
@@ -107,19 +116,19 @@ export function HistoryX16(): ReactElement {
 
         <nav className="hub-nav" aria-label={translate('common.navigation.main')}>
           <button className="hub-nav-item" type="button" onClick={() => navigate('/hub')}>
-            <span aria-hidden="true" className="hub-nav-glyph" />
+            <Home aria-hidden="true" className="hub-nav-glyph" />
             {translate('subscriber.dashboard.tab.home')}
           </button>
           <button className="hub-nav-item active" type="button" aria-current="page">
-            <span aria-hidden="true" className="hub-nav-glyph" />
+            <CalendarDays aria-hidden="true" className="hub-nav-glyph" />
             {translate('subscriber.dashboard.tab.visits')}
           </button>
           <button className="hub-nav-item" type="button" onClick={() => navigate('/plan')}>
-            <span aria-hidden="true" className="hub-nav-glyph" />
+            <WalletCards aria-hidden="true" className="hub-nav-glyph" />
             {translate('subscriber.dashboard.tab.plan')}
           </button>
           <button className="hub-nav-item" type="button" onClick={() => navigate('/profile')}>
-            <span aria-hidden="true" className="hub-nav-glyph" />
+            <UserRound aria-hidden="true" className="hub-nav-glyph" />
             {translate('subscriber.dashboard.tab.profile')}
           </button>
         </nav>
@@ -159,7 +168,7 @@ export function HistoryDetailX17(): ReactElement {
             onClick={goBack}
             type="button"
           >
-            ‹
+            <ChevronLeft aria-hidden="true" />
           </button>
           <span className="history-eyebrow">
             {translate('subscriber.history.detail.header', {
@@ -310,7 +319,11 @@ function PastVisitCard({
         className={`history-card-chip${entry.status === 'clean' ? ' clean' : ' issue'}`}
         role="img"
       >
-        {entry.status === 'clean' ? '✓' : '!'}
+        {entry.status === 'clean' ? (
+          <Check aria-hidden="true" />
+        ) : (
+          <TriangleAlert aria-hidden="true" />
+        )}
       </span>
     </button>
   );

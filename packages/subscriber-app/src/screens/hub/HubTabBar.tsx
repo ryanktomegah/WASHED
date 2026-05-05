@@ -4,11 +4,11 @@ import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
 
-export function ProfileTabBar(): ReactElement {
+export function HubTabBar(): ReactElement {
   const navigate = useNavigate();
   return (
     <nav className="hub-nav" aria-label={translate('common.navigation.main')}>
-      <button className="hub-nav-item" type="button" onClick={() => navigate('/hub')}>
+      <button aria-current="page" className="hub-nav-item active" type="button">
         <Home aria-hidden="true" className="hub-nav-glyph" />
         {translate('subscriber.dashboard.tab.home')}
       </button>
@@ -20,7 +20,7 @@ export function ProfileTabBar(): ReactElement {
         <WalletCards aria-hidden="true" className="hub-nav-glyph" />
         {translate('subscriber.dashboard.tab.plan')}
       </button>
-      <button className="hub-nav-item active" type="button" aria-current="page">
+      <button className="hub-nav-item" type="button" onClick={() => navigate('/profile')}>
         <UserRound aria-hidden="true" className="hub-nav-glyph" />
         {translate('subscriber.dashboard.tab.profile')}
       </button>

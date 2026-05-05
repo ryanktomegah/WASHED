@@ -48,32 +48,20 @@ function renderAt(
 }
 
 describe('Subscriber visit · X-11 Detail', () => {
-  it('renders the deck copy and routes all in-scope actions', () => {
+  it('renders the locked visit detail and routes the report action', () => {
     const { locationRef } = renderAt('/visit/detail', <VisitDetailX11 />);
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-11');
-    expect(screen.getByRole('heading', { name: /Akouvi K\. arrive à 9 h 00\./u })).toBeVisible();
-    expect(screen.getByText("Ce qu'elle apporte")).toBeVisible();
-    expect(
-      screen.getByText("Rien — vous fournissez l'eau, le savon et la bassine, comme d'habitude."),
-    ).toBeVisible();
+    expect(screen.getByText('Prochaine visite')).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Mardi 7 mai · 9:00' })).toBeVisible();
+    expect(screen.getByText('Akouvi K. vient pour votre visite mensuelle.')).toBeVisible();
+    expect(screen.getByText('Tokoin Casablanca')).toBeVisible();
+    expect(screen.getByText('1 h 15')).toBeVisible();
+    expect(screen.getByText('1 visite / mois')).toBeVisible();
+    expect(screen.getByText("Vous pouvez reporter jusqu'à 18 h la veille.")).toBeVisible();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Suivre Akouvi' }));
-    expect(locationRef.current).toBe('/visit/en-route');
-  });
-
-  it('routes reporter action', () => {
-    const { locationRef } = renderAt('/visit/detail', <VisitDetailX11 />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Reporter' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Reporter la visite' }));
     expect(locationRef.current).toBe('/visit/reschedule');
-  });
-
-  it('routes issue action', () => {
-    const { locationRef } = renderAt('/visit/detail', <VisitDetailX11 />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Signaler un souci' }));
-    expect(locationRef.current).toBe('/visit/issue');
   });
 });
 

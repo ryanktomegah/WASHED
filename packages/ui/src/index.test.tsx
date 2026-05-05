@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+import { getActiveLocale, setActiveLocale } from '@washed/i18n';
 
 import {
   Alert,
@@ -13,7 +14,9 @@ import {
   Skeleton,
   Tabs,
   TextField,
+  LocaleProvider,
   WashedThemeProvider,
+  useLocale,
   useWashedTheme,
 } from './index.js';
 
@@ -102,8 +105,36 @@ describe('@washed/ui', () => {
     expect(onClick).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('tab', { name: 'Today' })).toHaveAttribute('aria-selected', 'true');
   });
+
+  it('can lock a product shell to a supported locale', () => {
+    setActiveLocale('en');
+    window.localStorage.setItem('test.locale', 'en');
+
+    render(
+      <LocaleProvider defaultLocale="fr" storageKey="test.locale" supportedLocales={['fr']}>
+        <LocaleProbe />
+      </LocaleProvider>,
+    );
+
+    expect(screen.getByRole('button', { name: 'fr' })).toBeInTheDocument();
+    expect(getActiveLocale()).toBe('fr');
+
+    screen.getByRole('button', { name: 'fr' }).click();
+
+    expect(screen.getByRole('button', { name: 'fr' })).toBeInTheDocument();
+    expect(window.localStorage.getItem('test.locale')).toBe('fr');
+  });
 });
 
 function ThemeName(): ReactElement {
   return <span>{useWashedTheme().name}</span>;
+}
+
+function LocaleProbe(): ReactElement {
+  const { locale, setLocale } = useLocale();
+  return (
+    <button onClick={() => setLocale('en')} type="button">
+      {locale}
+    </button>
+  );
 }

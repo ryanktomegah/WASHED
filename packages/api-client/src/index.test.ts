@@ -21,7 +21,7 @@ describe('createCoreApiClient', () => {
       getAccessToken: () => 'token-123',
     });
 
-    await client.request('getWorkerRoute', {
+    const route = await client.request('getWorkerRoute', {
       pathParams: { workerId: '22222222-2222-4222-8222-222222222222' },
       query: { date: '2026-05-05' },
     });
@@ -32,6 +32,18 @@ describe('createCoreApiClient', () => {
       'http://127.0.0.1:3000/v1/workers/22222222-2222-4222-8222-222222222222/route?date=2026-05-05',
     );
     expect(requests[0]?.headers.get('authorization')).toBe('Bearer token-123');
+    expect(route).toEqual({ ok: true });
+  });
+
+  it('keeps explicit response typing available for untyped operations', async () => {
+    const client = createCoreApiClient({
+      baseUrl: 'http://api.test',
+      fetch: async () => Response.json({ status: 'ok' }),
+    });
+
+    const health = await client.request<{ readonly status: string }>('getHealth');
+
+    expect(health.status).toBe('ok');
   });
 
   it('sends JSON bodies and idempotency keys', async () => {

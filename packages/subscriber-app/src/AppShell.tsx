@@ -66,9 +66,11 @@ import './screens/support/support.css';
 import './screens/worker-profile/workerProfile.css';
 import './screens/visits/visit.css';
 
+const SUBSCRIBER_LOCALES = ['fr'] as const;
+
 export function AppShell(): ReactElement {
   return (
-    <LocaleProvider>
+    <LocaleProvider defaultLocale="fr" supportedLocales={SUBSCRIBER_LOCALES}>
       <WashedThemeProvider theme="subscriber">
         <SignupProvider>
           <HashRouter>
@@ -120,10 +122,7 @@ function LocaleScopedRoutes(): ReactElement {
       <Route element={<UpdateRequiredX35 />} path="/update-required" />
       <Route element={<WorkerProfileX18 />} path="/worker/:workerId" />
       <Route element={<WorkerChangeX18C />} path="/worker/:workerId/change" />
-      <Route
-        element={<WorkerChangeSubmittedX18C />}
-        path="/worker/:workerId/change/submitted"
-      />
+      <Route element={<WorkerChangeSubmittedX18C />} path="/worker/:workerId/change/submitted" />
       <Route element={<VisitDetailX11 />} path="/visit/detail" />
       <Route element={<VisitRescheduleX11M />} path="/visit/reschedule" />
       <Route element={<VisitEnRouteX12 />} path="/visit/en-route" />

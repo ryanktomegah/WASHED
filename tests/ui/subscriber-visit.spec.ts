@@ -63,14 +63,13 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
       }
 
       if (screenId === 'X-10') {
+        await expect(page.getByText('bonjour Mariam')).toBeVisible();
         await expect(page.getByText('Prochaine visite')).toBeVisible();
-        await expect(page.getByText('Mardi')).toBeVisible();
-        await expect(page.getByText('9 h 00')).toBeVisible();
+        await expect(page.getByText('confirmée')).toBeVisible();
+        await expect(page.getByText('9:00')).toBeVisible();
+        await expect(page.getByText('mar 7 mai')).toBeVisible();
         await expect(page.getByText('Akouvi K.')).toBeVisible();
-        await expect(page.getByRole('button', { name: 'Accueil' })).toHaveAttribute(
-          'aria-current',
-          'page',
-        );
+        await expect(page.getByText('forfait actif')).toBeVisible();
       }
 
       if (screenId === 'X-16') {
@@ -232,9 +231,7 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
       }
 
       if (screenId === 'X-34') {
-        await expect(
-          page.getByRole('heading', { name: 'Maintenance en cours.' }),
-        ).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Maintenance en cours.' })).toBeVisible();
       }
 
       if (screenId === 'X-35') {
@@ -250,23 +247,17 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
     });
   }
 
-  test('X-10 routes visible history actions to X-16, then a visit card to X-17', async ({
-    page,
-  }) => {
+  test('X-10 routes visible actions to visit detail and reschedule', async ({ page }) => {
     await page.goto('/#/hub');
 
-    await page.getByRole('button', { name: 'Voir les visites' }).click();
-    await expect(page).toHaveURL(/#\/history/u);
-    await expect(page.locator('[data-screen-id="X-16"]')).toBeVisible();
+    await page.getByRole('button', { name: 'Détails' }).click();
+    await expect(page).toHaveURL(/#\/visit\/detail/u);
+    await expect(page.locator('[data-screen-id="X-11"]')).toBeVisible();
 
     await page.goto('/#/hub');
-    await page.getByRole('button', { exact: true, name: 'Visites' }).click();
-    await expect(page).toHaveURL(/#\/history/u);
-    await expect(page.locator('[data-screen-id="X-16"]')).toBeVisible();
-
-    await page.getByRole('button', { name: /28 avr · 9 h 02/u }).click();
-    await expect(page).toHaveURL(/#\/history\/visit-2026-04-28/u);
-    await expect(page.locator('[data-screen-id="X-17"]')).toBeVisible();
+    await page.getByRole('button', { name: 'Reporter' }).click();
+    await expect(page).toHaveURL(/#\/visit\/reschedule/u);
+    await expect(page.locator('[data-screen-id="X-11.M"]')).toBeVisible();
   });
 
   test('X-10 worker card routes to X-18 worker profile and back', async ({ page }) => {
@@ -321,25 +312,17 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
     await expect(page.locator('[data-screen-id="X-15.S"]')).toBeVisible();
   });
 
-  test('X-11 routes to tracking, reschedule, and issue branch', async ({ page }) => {
+  test('X-11 routes to reschedule', async ({ page }) => {
     await page.goto('/#/visit/detail');
 
-    await page.getByRole('button', { name: 'Suivre Akouvi' }).click();
-    await expect(page).toHaveURL(/#\/visit\/en-route/u);
-    await expect(page.locator('[data-screen-id="X-12"]')).toBeVisible();
-
-    await page.goto('/#/visit/detail');
-    await page.getByRole('button', { name: 'Reporter' }).click();
+    await expect(page.getByRole('heading', { name: 'Mardi 7 mai · 9:00' })).toBeVisible();
+    await expect(page.getByText("Vous pouvez reporter jusqu'à 18 h la veille.")).toBeVisible();
+    await page.getByRole('button', { name: 'Reporter la visite' }).click();
     await expect(page).toHaveURL(/#\/visit\/reschedule/u);
     await expect(page.locator('[data-screen-id="X-11.M"]')).toBeVisible();
     await page.locator('label.visit-choice', { hasText: 'Samedi 9 mai' }).click();
     await page.getByRole('button', { name: 'Confirmer le report' }).click();
     await expect(page).toHaveURL(/#\/visit\/detail/u);
-
-    await page.goto('/#/visit/detail');
-    await page.getByRole('button', { name: 'Signaler un souci' }).click();
-    await expect(page).toHaveURL(/#\/visit\/issue/u);
-    await expect(page.locator('[data-screen-id="X-15.S"]')).toBeVisible();
   });
 
   test('X-14 reveal routes to good feedback and issue reporting', async ({ page }) => {
@@ -497,22 +480,23 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
   });
 });
 
-// The X-09 first-session tour belongs to its own describe so it does NOT
-// inherit the parent suite's `localStorage.setItem('washed.x09.completed', '1')`
-// init script — that pre-set would suppress the tour we're trying to assert.
+// The X-09 first-session tour belongs to its own describe so it does not inherit
+// the parent suite's completed flag, which would suppress the screen.
 test.describe('Subscriber tour X-09 (first session)', () => {
-  test('mounts on a fresh hub, walks 3 steps, persists the completed flag', async ({
-    page,
-  }, testInfo) => {
+  test('mounts on a fresh hub and persists the completed flag', async ({ page }, testInfo) => {
     await page.goto('/#/hub');
 
     const dialog = page.locator('[data-screen-id="X-09"]');
     await expect(dialog).toBeVisible();
     await expect(dialog).toHaveAttribute('role', 'dialog');
-    await expect(page.getByText(/1 \/ 3 · DÉCOUVERTE/u)).toBeVisible();
+    await expect(page.getByText('Première session')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Votre accueil reste simple' })).toBeVisible();
     await expect(
-      page.getByRole('heading', { name: 'Votre prochaine visite est ici.' }),
+      page.getByText('Prochaine visite, laveuse, forfait et aide sont toujours à portée.'),
     ).toBeVisible();
+    await expect(page.getByText('1 / 3')).toBeVisible();
+    await expect(page.getByText('nouveau')).toBeVisible();
+    await expect(page.getByText('Touchez la carte de visite pour voir le détail.')).toBeVisible();
 
     const screenshotPath = testInfo.outputPath(`x-09-tour-step1-${testInfo.project.name}.png`);
     await page.screenshot({ fullPage: true, path: screenshotPath });
@@ -522,17 +506,8 @@ test.describe('Subscriber tour X-09 (first session)', () => {
     });
 
     await page.getByRole('button', { name: 'Suivant' }).click();
-    await expect(
-      page.getByRole('heading', { name: 'Votre laveuse, toujours la même.' }),
-    ).toBeVisible();
-
-    await page.getByRole('button', { name: 'Suivant' }).click();
-    await expect(page.getByRole('heading', { name: 'Une relation qui dure.' })).toBeVisible();
-
-    await page.getByRole('button', { name: 'Commencer' }).click();
     await expect(dialog).toBeHidden();
 
-    // Reload — the localStorage flag should keep the tour from re-mounting.
     await page.reload();
     await expect(dialog).toBeHidden();
     await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();

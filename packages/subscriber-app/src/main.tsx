@@ -14,8 +14,14 @@ if (root === null) {
 }
 
 document.body.setAttribute('data-theme', 'subscriber');
+document.body.setAttribute('data-runtime', Capacitor.isNativePlatform() ? 'native' : 'web');
 
 if (Capacitor.isNativePlatform()) {
+  const viewport = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
+  viewport?.setAttribute(
+    'content',
+    'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover',
+  );
   // Hide the iOS keyboard accessory toolbar (the prev/next/done arrows that
   // sit above the keyboard). It interferes with the design — the input is
   // already labeled and the CTA is reachable directly.

@@ -15,13 +15,16 @@ import { translate } from '@washed/i18n';
 import { useSignup } from './SignupContext.js';
 
 const OTP_LENGTH = 6;
-const RESEND_SECONDS = 30;
+const RESEND_SECONDS = 24;
 
 function maskPhone(phone: string): string {
-  // "+228 90 12 34 56" → "+228 90 ●● ●● 56" (mask middle pairs)
   const groups = phone.split(' ');
   if (groups.length < 5) return phone;
-  return [groups[0], groups[1], '●●', '●●', groups[4]].join(' ');
+  return [groups[0], groups[1], '••••', groups[4]].join(' ');
+}
+
+function formatTimer(seconds: number): string {
+  return `0:${seconds.toString().padStart(2, '0')} s`;
 }
 
 export function OtpX03(): ReactElement {
@@ -39,10 +42,6 @@ export function OtpX03(): ReactElement {
   const cellRefs = useRef<(HTMLInputElement | null)[]>(
     Array<HTMLInputElement | null>(OTP_LENGTH).fill(null),
   );
-
-  useEffect(() => {
-    cellRefs.current[0]?.focus();
-  }, []);
 
   useEffect(() => {
     if (secondsRemaining <= 0) return;
@@ -134,28 +133,25 @@ export function OtpX03(): ReactElement {
     focusCell(0);
   };
 
-  const onEditPhone = (): void => {
-    navigate('/signup/phone');
-  };
-
   if (signup.phone === '') return <></>;
 
   return (
     <main aria-labelledby="x03-headline" className="onboarding-screen" data-screen-id="X-03">
       <div className="body">
-        <div className="title-stack">
+        <div className="title-stack no-progress">
+          <div aria-hidden="true" className="steps">
+            <i className="on" />
+            <i className="on" />
+            <i />
+            <i />
+          </div>
           <span className="h-sm">
             {translate('subscriber.signup.step_indicator', { current: 2, total: 4 })}
           </span>
           <h1 className="h-md" id="x03-headline">
             {translate('subscriber.signup.otp.title')}
           </h1>
-          <p className="p">
-            {translate('subscriber.signup.otp.body', { phone: maskedPhone })}{' '}
-            <button className="link" onClick={onEditPhone} type="button">
-              {translate('subscriber.signup.otp.edit_phone.cta')}
-            </button>
-          </p>
+          <p className="p">{translate('subscriber.signup.otp.body', { phone: maskedPhone })}</p>
         </div>
 
         <div aria-label={translate('subscriber.signup.otp.title')} className="otp-row" role="group">
@@ -181,24 +177,23 @@ export function OtpX03(): ReactElement {
           ))}
         </div>
 
-        <p className="p-sm">
+        <p className="p-sm otp-resend-line">
           {secondsRemaining > 0 ? (
-            <>{translate('subscriber.signup.otp.resend', { seconds: secondsRemaining })}</>
+            <>
+              {translate('subscriber.signup.otp.resend', { timer: formatTimer(secondsRemaining) })}
+            </>
           ) : (
             <button className="link" onClick={onResend} type="button">
               {translate('subscriber.signup.otp.resend_now.cta')}
             </button>
-          )}
-        </p>
-
-        <div className="grow" />
-
-        <p className="p-sm footer-hint">
-          {translate('subscriber.signup.otp.help_prefix')}{' '}
+          )}{' '}
+          ·{' '}
           <a className="link" href="tel:+22890000000">
             {translate('subscriber.signup.otp.call_office.cta')}
           </a>
         </p>
+
+        <div className="grow" />
       </div>
     </main>
   );

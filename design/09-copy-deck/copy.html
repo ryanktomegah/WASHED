@@ -470,7 +470,7 @@
             </tr>
             <tr>
               <td><span class="key">subscriber.splash.tagline</span></td>
-              <td><span class="fr body">L'appli laveuse pour Lomé.</span></td>
+              <td><span class="fr body">L'app abonné · Lomé</span></td>
               <td>
                 <span class="ctx"
                   >Sous le wordmark sur splash. Pas de point ailleurs sur cet écran.</span
@@ -479,38 +479,34 @@
               <td><span class="lim">28 ch</span></td>
             </tr>
             <tr>
-              <td><span class="key">subscriber.splash.lang.fr</span></td>
-              <td><span class="fr body">Français</span></td>
-              <td><span class="ctx">Bouton sélection langue (par défaut)</span></td>
-              <td><span class="lim">10 ch</span></td>
+              <td><span class="key">subscriber.splash.cta_continue</span></td>
+              <td><span class="fr body">Continuer</span></td>
+              <td><span class="ctx">CTA principal X-01 vers téléphone</span></td>
+              <td><span class="lim">12 ch</span></td>
             </tr>
             <tr>
-              <td><span class="key">subscriber.splash.lang.en</span></td>
-              <td><span class="fr body">English</span></td>
-              <td><span class="ctx">Désactivé v1. Étiquette grise.</span></td>
-              <td><span class="lim">10 ch</span></td>
-            </tr>
-            <tr>
-              <td><span class="key">subscriber.splash.lang.en_disabled_note</span></td>
-              <td><span class="fr body">Bientôt disponible</span></td>
-              <td><span class="ctx">Sous le bouton EN désactivé</span></td>
-              <td><span class="lim">22 ch</span></td>
+              <td><span class="key">subscriber.splash.cta_existing</span></td>
+              <td><span class="fr body">J'ai déjà un compte</span></td>
+              <td><span class="ctx">CTA secondaire X-01 vers compte existant</span></td>
+              <td><span class="lim">24 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.signup.step_indicator</span></td>
-              <td><span class="fr body">Étape {current} sur {total}</span></td>
+              <td><span class="fr body">Étape {current} / {total}</span></td>
               <td><span class="ctx">Header de chaque écran d'inscription. ICU.</span></td>
               <td><span class="lim">22 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.signup.phone.title</span></td>
-              <td><span class="fr">Votre numéro de téléphone.</span></td>
-              <td><span class="ctx">X-02. Présent simple, point final.</span></td>
+              <td><span class="fr">Votre numéro de téléphone</span></td>
+              <td><span class="ctx">X-02. Présent simple, sans point final.</span></td>
               <td><span class="lim">32 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.signup.phone.body</span></td>
-              <td><span class="fr body">On vous envoie un code par SMS pour confirmer.</span></td>
+              <td>
+                <span class="fr body">On vous envoie un code à 6 chiffres pour confirmer.</span>
+              </td>
               <td><span class="ctx">Sous le titre. Explique pourquoi le numéro.</span></td>
               <td><span class="lim">60 ch</span></td>
             </tr>
@@ -528,9 +524,7 @@
             </tr>
             <tr>
               <td><span class="key">subscriber.signup.phone.privacy_note</span></td>
-              <td>
-                <span class="fr body">Le numéro reste privé. Jamais transmis à votre laveuse.</span>
-              </td>
+              <td><span class="fr body">Confidentiel — non transmis à la laveuse.</span></td>
               <td><span class="ctx">X-02 note confidentialité</span></td>
               <td><span class="lim">70 ch</span></td>
             </tr>
@@ -542,19 +536,19 @@
             </tr>
             <tr>
               <td><span class="key">subscriber.signup.otp.title</span></td>
-              <td><span class="fr">Le code reçu par SMS.</span></td>
+              <td><span class="fr">Le code reçu par SMS</span></td>
               <td><span class="ctx">X-03</span></td>
               <td><span class="lim">32 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.signup.otp.body</span></td>
               <td><span class="fr body">Six chiffres envoyés au {phone}.</span></td>
-              <td><span class="ctx">Variable affichée masquée : « +228 90 ●● ●● 56 »</span></td>
+              <td><span class="ctx">Variable affichée masquée : « +228 90 •••• 56 »</span></td>
               <td><span class="lim">48 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.signup.otp.resend</span></td>
-              <td><span class="fr body">Renvoyer dans {seconds} s</span></td>
+              <td><span class="fr body">Renvoyer dans {timer}</span></td>
               <td><span class="ctx">Compteur 30s puis bouton actif</span></td>
               <td><span class="lim">26 ch</span></td>
             </tr>
@@ -598,8 +592,7 @@
               <td><span class="key">subscriber.signup.address.body</span></td>
               <td>
                 <span class="fr body"
-                  >Quartier puis détail (rue, repère). Le bureau valide avec vous au
-                  téléphone.</span
+                  >Quartier puis détail. Le bureau valide avec vous au téléphone.</span
                 >
               </td>
               <td><span class="ctx">Explique le pourquoi du téléphone du bureau</span></td>
@@ -630,18 +623,6 @@
               <td><span class="lim">28 ch</span></td>
             </tr>
             <tr>
-              <td><span class="key">subscriber.signup.address.field.landmark</span></td>
-              <td><span class="fr body">Repère (facultatif)</span></td>
-              <td><span class="ctx">X-04 label repère</span></td>
-              <td><span class="lim">22 ch</span></td>
-            </tr>
-            <tr>
-              <td><span class="key">subscriber.signup.address.landmark.placeholder</span></td>
-              <td><span class="fr body">portail vert · sonnette à droite</span></td>
-              <td><span class="ctx">X-04 placeholder repère</span></td>
-              <td><span class="lim">36 ch</span></td>
-            </tr>
-            <tr>
               <td><span class="key">subscriber.signup.continue.cta</span></td>
               <td><span class="fr body">Continuer</span></td>
               <td><span class="ctx">CTA générique inscription</span></td>
@@ -649,63 +630,63 @@
             </tr>
             <tr>
               <td><span class="key">subscriber.signup.tier.title</span></td>
-              <td><span class="fr">Combien de visites par mois ?</span></td>
+              <td><span class="fr">Choisissez votre rythme</span></td>
               <td><span class="ctx">X-05. Choix tarif.</span></td>
-              <td><span class="lim">36 ch</span></td>
+              <td><span class="lim">28 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.signup.tier.body</span></td>
-              <td><span class="fr body">Vous pouvez changer plus tard, sans frais.</span></td>
+              <td>
+                <span class="fr body"
+                  >Un forfait simple, sans surprise. Vous pouvez changer plus tard.</span
+                >
+              </td>
               <td><span class="ctx">X-05 aide sous titre</span></td>
-              <td><span class="lim">52 ch</span></td>
+              <td><span class="lim">72 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.signup.tier.t1.label</span></td>
-              <td><span class="fr body">Une visite</span></td>
+              <td><span class="fr body">1 visite / mois</span></td>
               <td><span class="ctx">T1 · 2 500 XOF</span></td>
-              <td><span class="lim">14 ch</span></td>
-            </tr>
-            <tr>
-              <td><span class="key">subscriber.signup.tier.t1.subline</span></td>
-              <td><span class="fr body">par mois · ~1 h 30</span></td>
-              <td><span class="ctx">T1 sous-ligne carte</span></td>
-              <td><span class="lim">24 ch</span></td>
+              <td><span class="lim">18 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.signup.tier.t1.price</span></td>
-              <td><span class="fr body">2 500 XOF / mois</span></td>
-              <td><span class="ctx">Espace insécable entre nombre et XOF</span></td>
-              <td><span class="lim">22 ch</span></td>
+              <td><span class="fr body">2 500 XOF</span></td>
+              <td><span class="ctx">Valeur plan X-05</span></td>
+              <td><span class="lim">12 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.signup.tier.t2.label</span></td>
-              <td><span class="fr body">Deux visites</span></td>
+              <td><span class="fr body">2 visites / mois</span></td>
               <td><span class="ctx">T2 · 4 500 XOF</span></td>
-              <td><span class="lim">14 ch</span></td>
-            </tr>
-            <tr>
-              <td><span class="key">subscriber.signup.tier.t2.subline</span></td>
-              <td><span class="fr body">par mois · économie 500 XOF</span></td>
-              <td><span class="ctx">T2 sous-ligne carte</span></td>
-              <td><span class="lim">32 ch</span></td>
+              <td><span class="lim">18 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.signup.tier.t2.price</span></td>
-              <td><span class="fr body">4 500 XOF / mois</span></td>
-              <td><span class="ctx">Avec mention « économie 500 XOF » optionnelle</span></td>
-              <td><span class="lim">22 ch</span></td>
+              <td><span class="fr body">4 500 XOF</span></td>
+              <td><span class="ctx">Valeur plan X-05</span></td>
+              <td><span class="lim">12 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.signup.tier.selected_badge</span></td>
-              <td><span class="fr body">choisi</span></td>
-              <td><span class="ctx">X-05 badge option sélectionnée</span></td>
-              <td><span class="lim">10 ch</span></td>
+              <td><span class="fr body">sélectionné</span></td>
+              <td><span class="ctx">X-05 statut option sélectionnée</span></td>
+              <td><span class="lim">14 ch</span></td>
             </tr>
             <tr>
-              <td><span class="key">subscriber.signup.tier.price_suffix</span></td>
-              <td><span class="fr body">XOF / mois</span></td>
-              <td><span class="ctx">X-05 suffixe prix</span></td>
-              <td><span class="lim">14 ch</span></td>
+              <td><span class="key">subscriber.signup.tier.available_badge</span></td>
+              <td><span class="fr body">disponible</span></td>
+              <td><span class="ctx">X-05 statut option non sélectionnée</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.signup.tier.pricing_note</span></td>
+              <td>
+                <span class="fr body">Prix validé avant chaque prélèvement Mobile Money.</span>
+              </td>
+              <td><span class="ctx">X-05 note prix</span></td>
+              <td><span class="lim">62 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.signup.tier.cta_continue_amount</span></td>
@@ -721,35 +702,37 @@
             </tr>
             <tr>
               <td><span class="key">subscriber.signup.payment.title</span></td>
-              <td><span class="fr">Le moyen de paiement.</span></td>
+              <td><span class="fr">Ajoutez votre moyen de paiement</span></td>
               <td><span class="ctx">X-06. Mobile Money uniquement.</span></td>
-              <td><span class="lim">32 ch</span></td>
+              <td><span class="lim">36 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.signup.payment.body</span></td>
               <td>
-                <span class="fr body"
-                  >TMoney, Mixx by Yas ou Flooz. Pas de carte, pas d'espèces.</span
-                >
+                <span class="fr body">TMoney ou Flooz. Aucun paiement cash dans l'app.</span>
               </td>
               <td><span class="ctx">Explique le « no cash »</span></td>
-              <td><span class="lim">80 ch</span></td>
+              <td><span class="lim">60 ch</span></td>
             </tr>
             <tr>
-              <td><span class="key">subscriber.signup.payment.add_number</span></td>
-              <td><span class="fr body">ajouter un numéro</span></td>
-              <td><span class="ctx">X-06 sous-ligne provider non par défaut</span></td>
-              <td><span class="lim">22 ch</span></td>
+              <td><span class="key">subscriber.signup.payment.provider_label</span></td>
+              <td><span class="fr body">Fournisseur</span></td>
+              <td><span class="ctx">X-06 label champ fournisseur</span></td>
+              <td><span class="lim">14 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.signup.payment.phone_label</span></td>
+              <td><span class="fr body">Numéro Mobile Money</span></td>
+              <td><span class="ctx">X-06 label accessible téléphone</span></td>
+              <td><span class="lim">24 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.signup.payment.note</span></td>
               <td>
-                <span class="fr body"
-                  >Le 1er prélèvement a lieu après confirmation de l'adresse par le bureau.</span
-                >
+                <span class="fr body">Vous validez le prélèvement depuis votre téléphone.</span>
               </td>
               <td><span class="ctx">X-06 note prélèvement</span></td>
-              <td><span class="lim">90 ch</span></td>
+              <td><span class="lim">62 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.signup.review.eyebrow</span></td>
@@ -786,18 +769,6 @@
               <td><span class="fr body">Total mensuel</span></td>
               <td><span class="ctx">X-07 total</span></td>
               <td><span class="lim">18 ch</span></td>
-            </tr>
-            <tr>
-              <td><span class="key">subscriber.signup.review.month_suffix</span></td>
-              <td><span class="fr body">/ mois</span></td>
-              <td><span class="ctx">X-07 suffixe forfait</span></td>
-              <td><span class="lim">10 ch</span></td>
-            </tr>
-            <tr>
-              <td><span class="key">subscriber.signup.review.next_step.label</span></td>
-              <td><span class="fr body">Prochaine étape</span></td>
-              <td><span class="ctx">X-07 encart avertissement</span></td>
-              <td><span class="lim">22 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.signup.review.next_step.body</span></td>
@@ -845,20 +816,8 @@
             <tr>
               <td><span class="key">subscriber.signup.welcome.title</span></td>
               <td><span class="fr">Bienvenue chez Washed.</span></td>
-              <td><span class="ctx">X-08. Italique sur « Bienvenue »</span></td>
+              <td><span class="ctx">X-08 titre</span></td>
               <td><span class="lim">32 ch</span></td>
-            </tr>
-            <tr>
-              <td><span class="key">subscriber.signup.welcome.title_prefix</span></td>
-              <td><span class="fr body">Bienvenue</span></td>
-              <td><span class="ctx">X-08 mot italique</span></td>
-              <td><span class="lim">12 ch</span></td>
-            </tr>
-            <tr>
-              <td><span class="key">subscriber.signup.welcome.title_suffix</span></td>
-              <td><span class="fr body">chez Washed.</span></td>
-              <td><span class="ctx">X-08 seconde ligne titre</span></td>
-              <td><span class="lim">16 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.signup.welcome.body</span></td>
@@ -902,8 +861,8 @@
           <tbody>
             <tr>
               <td><span class="key">subscriber.dashboard.greeting.morning</span></td>
-              <td><span class="fr">Bonjour {name}.</span></td>
-              <td><span class="ctx">Salutation 5h-12h</span></td>
+              <td><span class="fr">bonjour {name}</span></td>
+              <td><span class="ctx">X-10 header</span></td>
               <td><span class="lim">22 ch</span></td>
             </tr>
             <tr>
@@ -956,8 +915,14 @@
             </tr>
             <tr>
               <td><span class="key">subscriber.dashboard.cta_detail</span></td>
-              <td><span class="fr body">Détail</span></td>
+              <td><span class="fr body">Détails</span></td>
               <td><span class="ctx">Bouton secondaire (alt) — ouvre X-11</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.dashboard.cta_report</span></td>
+              <td><span class="fr body">Reporter</span></td>
+              <td><span class="ctx">Bouton hub — ouvre X-11.M</span></td>
               <td><span class="lim">12 ch</span></td>
             </tr>
             <tr>
@@ -1016,9 +981,9 @@
             </tr>
             <tr>
               <td><span class="key">subscriber.tour.eyebrow</span></td>
-              <td><span class="fr body">Découverte</span></td>
-              <td><span class="ctx">X-09 mono — affiché en majuscules</span></td>
-              <td><span class="lim">14 ch</span></td>
+              <td><span class="fr body">Première session</span></td>
+              <td><span class="ctx">X-09 eyebrow mono</span></td>
+              <td><span class="lim">22 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.tour.step_indicator</span></td>
@@ -1028,77 +993,38 @@
             </tr>
             <tr>
               <td><span class="key">subscriber.tour.step1.title</span></td>
-              <td><span class="fr">Votre prochaine visite est ici.</span></td>
-              <td><span class="ctx">X-09 spotlight zone next-visit</span></td>
+              <td><span class="fr">Votre accueil reste simple</span></td>
+              <td><span class="ctx">X-09 titre</span></td>
               <td><span class="lim">42 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.tour.step1.body</span></td>
               <td>
                 <span class="fr body"
-                  >Toutes les semaines, votre laveuse vient le jour convenu. Vous saurez quand elle
-                  arrive — par SMS et dans l'app.</span
+                  >Prochaine visite, laveuse, forfait et aide sont toujours à portée.</span
                 >
               </td>
-              <td><span class="ctx">X-09 step 1 body</span></td>
-              <td><span class="lim">130 ch</span></td>
+              <td><span class="ctx">X-09 body</span></td>
+              <td><span class="lim">82 ch</span></td>
             </tr>
             <tr>
-              <td><span class="key">subscriber.tour.step2.title</span></td>
-              <td><span class="fr">Votre laveuse, toujours la même.</span></td>
-              <td><span class="ctx">X-09 spotlight worker card</span></td>
-              <td><span class="lim">42 ch</span></td>
-            </tr>
-            <tr>
-              <td><span class="key">subscriber.tour.step2.body</span></td>
+              <td><span class="key">subscriber.tour.step1.card_body</span></td>
               <td>
-                <span class="fr body"
-                  >C'est Akouvi qui vient chez vous. Au fil des semaines, vous apprenez à vous
-                  connaître — pas de roulement surprise.</span
-                >
+                <span class="fr body">Touchez la carte de visite pour voir le détail.</span>
               </td>
-              <td><span class="ctx">X-09 step 2 body</span></td>
-              <td><span class="lim">130 ch</span></td>
+              <td><span class="ctx">X-09 tour card body</span></td>
+              <td><span class="lim">62 ch</span></td>
             </tr>
             <tr>
-              <td><span class="key">subscriber.tour.step3.title</span></td>
-              <td><span class="fr">Une relation qui dure.</span></td>
-              <td><span class="ctx">X-09 spotlight streak card</span></td>
-              <td><span class="lim">36 ch</span></td>
-            </tr>
-            <tr>
-              <td><span class="key">subscriber.tour.step3.body</span></td>
-              <td>
-                <span class="fr body"
-                  >Chaque visite réussie compte. Plus vous restez, plus la confiance grandit — et la
-                  qualité aussi.</span
-                >
-              </td>
-              <td><span class="ctx">X-09 step 3 body</span></td>
-              <td><span class="lim">130 ch</span></td>
-            </tr>
-            <tr>
-              <td><span class="key">subscriber.tour.cta_skip</span></td>
-              <td><span class="fr body">Passer</span></td>
-              <td><span class="ctx">X-09 lien discret</span></td>
-              <td><span class="lim">12 ch</span></td>
-            </tr>
-            <tr>
-              <td><span class="key">subscriber.tour.cta_previous</span></td>
-              <td><span class="fr body">Précédent</span></td>
-              <td><span class="ctx">X-09 bouton secondaire</span></td>
+              <td><span class="key">subscriber.tour.new_chip</span></td>
+              <td><span class="fr body">nouveau</span></td>
+              <td><span class="ctx">X-09 chip tour card</span></td>
               <td><span class="lim">14 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.tour.cta_next</span></td>
               <td><span class="fr body">Suivant</span></td>
               <td><span class="ctx">X-09 bouton principal</span></td>
-              <td><span class="lim">14 ch</span></td>
-            </tr>
-            <tr>
-              <td><span class="key">subscriber.tour.cta_finish</span></td>
-              <td><span class="fr body">Commencer</span></td>
-              <td><span class="ctx">X-09 dernier step — remplace « Suivant »</span></td>
               <td><span class="lim">14 ch</span></td>
             </tr>
             <tr>
@@ -1444,6 +1370,18 @@
               <td><span class="key">subscriber.plan.active_card.eyebrow</span></td>
               <td><span class="fr body">Forfait actif</span></td>
               <td><span class="ctx">X-19 carte sombre</span></td>
+              <td><span class="lim">14 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.plan.tier.t1.label</span></td>
+              <td><span class="fr body">Une visite</span></td>
+              <td><span class="ctx">X-19 label forfait actif T1</span></td>
+              <td><span class="lim">14 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.plan.tier.t2.label</span></td>
+              <td><span class="fr body">Deux visites</span></td>
+              <td><span class="ctx">X-19 label forfait actif T2</span></td>
               <td><span class="lim">14 ch</span></td>
             </tr>
             <tr>
@@ -2232,74 +2170,54 @@
               <td><span class="lim">42 ch</span></td>
             </tr>
             <tr>
-              <td><span class="key">subscriber.visit.detail.header</span></td>
-              <td><span class="fr body">Visite · {date}</span></td>
-              <td><span class="ctx">X-11 header retour</span></td>
-              <td><span class="lim">28 ch</span></td>
+              <td><span class="key">subscriber.visit.detail.kicker</span></td>
+              <td><span class="fr body">Prochaine visite</span></td>
+              <td><span class="ctx">X-11 eyebrow</span></td>
+              <td><span class="lim">20 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.visit.detail.title</span></td>
-              <td><span class="fr">{name} arrive à {time}.</span></td>
-              <td><span class="ctx">X-11 titre, heure accentuée</span></td>
+              <td><span class="fr">Mardi 7 mai · 9:00</span></td>
+              <td><span class="ctx">X-11 titre</span></td>
               <td><span class="lim">36 ch</span></td>
             </tr>
             <tr>
-              <td><span class="key">subscriber.visit.detail.chips_label</span></td>
-              <td><span class="fr body">Détails de la visite</span></td>
-              <td><span class="ctx">X-11 aria-label chips</span></td>
-              <td><span class="lim">28 ch</span></td>
-            </tr>
-            <tr>
-              <td><span class="key">subscriber.visit.detail.brings.title</span></td>
-              <td><span class="fr body">Ce qu'elle apporte</span></td>
-              <td><span class="ctx">X-11 carte préparation</span></td>
-              <td><span class="lim">24 ch</span></td>
-            </tr>
-            <tr>
-              <td><span class="key">subscriber.visit.detail.brings.body</span></td>
+              <td><span class="key">subscriber.visit.detail.body</span></td>
               <td>
-                <span class="fr body"
-                  >Rien — vous fournissez l'eau, le savon et la bassine, comme d'habitude.</span
-                >
+                <span class="fr body">Akouvi K. vient pour votre visite mensuelle.</span>
               </td>
-              <td><span class="ctx">X-11 carte préparation</span></td>
-              <td><span class="lim">90 ch</span></td>
+              <td><span class="ctx">X-11 body</span></td>
+              <td><span class="lim">64 ch</span></td>
             </tr>
             <tr>
-              <td><span class="key">subscriber.visit.detail.reminders.title</span></td>
-              <td><span class="fr body">Rappels</span></td>
-              <td><span class="ctx">X-11 carte rappels</span></td>
+              <td><span class="key">subscriber.visit.detail.address.label</span></td>
+              <td><span class="fr body">Adresse</span></td>
+              <td><span class="ctx">X-11 ligne récap</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.visit.detail.duration.label</span></td>
+              <td><span class="fr body">Durée prévue</span></td>
+              <td><span class="ctx">X-11 ligne récap</span></td>
               <td><span class="lim">16 ch</span></td>
             </tr>
             <tr>
-              <td><span class="key">subscriber.visit.detail.reminder.sms</span></td>
-              <td><span class="fr body">SMS 7 h matin du jour J</span></td>
-              <td><span class="ctx">X-11 liste rappels</span></td>
-              <td><span class="lim">36 ch</span></td>
+              <td><span class="key">subscriber.visit.detail.tier.label</span></td>
+              <td><span class="fr body">Forfait</span></td>
+              <td><span class="ctx">X-11 ligne récap</span></td>
+              <td><span class="lim">12 ch</span></td>
             </tr>
             <tr>
-              <td><span class="key">subscriber.visit.detail.reminder.push</span></td>
-              <td><span class="fr body">Push quand elle est en route</span></td>
-              <td><span class="ctx">X-11 liste rappels</span></td>
-              <td><span class="lim">40 ch</span></td>
-            </tr>
-            <tr>
-              <td><span class="key">subscriber.visit.detail.reminder.photos</span></td>
-              <td><span class="fr body">Photos avant / après dans l'app</span></td>
-              <td><span class="ctx">X-11 liste rappels</span></td>
-              <td><span class="lim">42 ch</span></td>
-            </tr>
-            <tr>
-              <td><span class="key">subscriber.visit.detail.follow.cta</span></td>
-              <td><span class="fr body">Suivre Akouvi</span></td>
-              <td><span class="ctx">X-11 bouton principal</span></td>
-              <td><span class="lim">22 ch</span></td>
+              <td><span class="key">subscriber.visit.detail.report_note</span></td>
+              <td><span class="fr body">Vous pouvez reporter jusqu'à 18 h la veille.</span></td>
+              <td><span class="ctx">X-11 notice</span></td>
+              <td><span class="lim">62 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.visit.detail.report.cta</span></td>
-              <td><span class="fr body">Reporter</span></td>
-              <td><span class="ctx">X-11 bouton secondaire</span></td>
-              <td><span class="lim">16 ch</span></td>
+              <td><span class="fr body">Reporter la visite</span></td>
+              <td><span class="ctx">X-11 bouton principal</span></td>
+              <td><span class="lim">22 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.visit.reschedule.header</span></td>

@@ -39,7 +39,13 @@ export function PhoneX02(): ReactElement {
   return (
     <main aria-labelledby="x02-headline" className="onboarding-screen" data-screen-id="X-02">
       <form className="body" onSubmit={onSubmit}>
-        <div className="title-stack">
+        <div className="title-stack no-progress">
+          <div aria-hidden="true" className="steps">
+            <i className="on" />
+            <i />
+            <i />
+            <i />
+          </div>
           <span className="h-sm">
             {translate('subscriber.signup.step_indicator', { current: 1, total: 4 })}
           </span>
@@ -50,7 +56,7 @@ export function PhoneX02(): ReactElement {
         </div>
 
         <div className="field">
-          <label className="field-label" htmlFor="x02-phone">
+          <label className="visually-hidden" htmlFor="x02-phone">
             {translate('subscriber.signup.phone.input_label')}
           </label>
           <div className="input-shell">
@@ -59,17 +65,19 @@ export function PhoneX02(): ReactElement {
             </span>
             <input
               autoComplete="tel-national"
-              autoFocus
               id="x02-phone"
               inputMode="tel"
               name="phone"
               onChange={onChange}
+              aria-describedby="x02-privacy"
               placeholder={translate('subscriber.signup.phone.placeholder')}
               type="tel"
               value={phone}
             />
           </div>
-          <p className="p-sm">{translate('subscriber.signup.phone.privacy_note')}</p>
+          <p className="p-sm" id="x02-privacy">
+            {translate('subscriber.signup.phone.privacy_note')}
+          </p>
         </div>
 
         <div className="grow" />

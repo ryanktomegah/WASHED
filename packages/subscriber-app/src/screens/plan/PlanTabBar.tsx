@@ -1,10 +1,9 @@
 import { type ReactElement } from 'react';
+import { CalendarDays, Home, UserRound, WalletCards } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
 
-// Bottom-nav tab bar for plan-family screens; reuses the .hub-nav class so
-// the visual treatment is shared with the hub and history surfaces.
 export function PlanTabBar({
   activeItem = 'plan',
 }: {
@@ -19,11 +18,11 @@ export function PlanTabBar({
         type="button"
         onClick={() => navigate('/hub')}
       >
-        <span aria-hidden="true" className="hub-nav-glyph" />
+        <Home aria-hidden="true" className="hub-nav-glyph" />
         {translate('subscriber.dashboard.tab.home')}
       </button>
       <button className="hub-nav-item" type="button" onClick={() => navigate('/history')}>
-        <span aria-hidden="true" className="hub-nav-glyph" />
+        <CalendarDays aria-hidden="true" className="hub-nav-glyph" />
         {translate('subscriber.dashboard.tab.visits')}
       </button>
       <button
@@ -32,11 +31,11 @@ export function PlanTabBar({
         type="button"
         onClick={() => navigate('/plan')}
       >
-        <span aria-hidden="true" className="hub-nav-glyph" />
+        <WalletCards aria-hidden="true" className="hub-nav-glyph" />
         {translate('subscriber.dashboard.tab.plan')}
       </button>
       <button className="hub-nav-item" type="button" onClick={() => navigate('/profile')}>
-        <span aria-hidden="true" className="hub-nav-glyph" />
+        <UserRound aria-hidden="true" className="hub-nav-glyph" />
         {translate('subscriber.dashboard.tab.profile')}
       </button>
     </nav>
