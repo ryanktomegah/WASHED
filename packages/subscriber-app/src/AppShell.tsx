@@ -1,8 +1,18 @@
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { LocaleProvider, WashedThemeProvider, useActiveLocale } from '@washed/ui';
 
+import { AppearanceLaunchGate } from './appearance/AppearanceLaunchGate.js';
+import {
+  SubscriberAppearanceProvider,
+  useSubscriberAppearance,
+} from './appearance/AppearanceContext.js';
+import {
+  SUBSCRIBER_LANGUAGE_OPTIONS,
+  SUBSCRIBER_LANGUAGE_STORAGE_KEY,
+} from './language/languageOptions.js';
+import { BookingSubmittedX10C, BookingX10B } from './screens/hub/BookingScreens.js';
 import { SignupProvider } from './screens/onboarding/SignupContext.js';
 import { SplashX01 } from './screens/onboarding/SplashX01.js';
 import { PhoneX02 } from './screens/onboarding/PhoneX02.js';
@@ -26,7 +36,9 @@ import {
 } from './screens/plan/PlanScreens.js';
 import {
   AddressEditX25,
+  AppearanceX24A,
   DeleteAccountX28,
+  LanguageX24L,
   NotificationsX26,
   PrivacyX27,
   ProfileX24,
@@ -58,6 +70,7 @@ import {
 } from './screens/visits/VisitScreens.js';
 
 import './screens/onboarding/onboarding.css';
+import './appearance/appearance.css';
 import './screens/hub/hub.css';
 import './screens/history/history.css';
 import './screens/plan/plan.css';
@@ -66,19 +79,36 @@ import './screens/support/support.css';
 import './screens/worker-profile/workerProfile.css';
 import './screens/visits/visit.css';
 
-const SUBSCRIBER_LOCALES = ['fr'] as const;
-
 export function AppShell(): ReactElement {
   return (
-    <LocaleProvider defaultLocale="fr" supportedLocales={SUBSCRIBER_LOCALES}>
-      <WashedThemeProvider theme="subscriber">
+    <LocaleProvider
+      defaultLocale="fr"
+      storageKey={SUBSCRIBER_LANGUAGE_STORAGE_KEY}
+      supportedLocales={SUBSCRIBER_LANGUAGE_OPTIONS}
+    >
+      <SubscriberAppearanceProvider>
+        <SubscriberThemedShell />
+      </SubscriberAppearanceProvider>
+    </LocaleProvider>
+  );
+}
+
+function SubscriberThemedShell(): ReactElement {
+  const { effectiveMode } = useSubscriberAppearance();
+  const [hasEnteredApp, setHasEnteredApp] = useState(false);
+
+  return (
+    <WashedThemeProvider colorMode={effectiveMode} theme="subscriber">
+      {hasEnteredApp ? (
         <SignupProvider>
           <HashRouter>
             <LocaleScopedRoutes />
           </HashRouter>
         </SignupProvider>
-      </WashedThemeProvider>
-    </LocaleProvider>
+      ) : (
+        <AppearanceLaunchGate onContinue={() => setHasEnteredApp(true)} />
+      )}
+    </WashedThemeProvider>
   );
 }
 
@@ -97,6 +127,8 @@ function LocaleScopedRoutes(): ReactElement {
       <Route element={<ReviewX07 />} path="/signup/review" />
       <Route element={<WelcomeX08 />} path="/signup/welcome" />
       <Route element={<HubX10 />} path="/hub" />
+      <Route element={<BookingX10B />} path="/booking" />
+      <Route element={<BookingSubmittedX10C />} path="/booking/submitted" />
       <Route element={<HistoryX16 />} path="/history" />
       <Route element={<HistoryDetailX17 />} path="/history/:visitId" />
       <Route element={<PlanX19 />} path="/plan" />
@@ -109,6 +141,8 @@ function LocaleScopedRoutes(): ReactElement {
       <Route element={<PlanPausedX19R />} path="/plan/paused" />
       <Route element={<ProfileX24 />} path="/profile" />
       <Route element={<AddressEditX25 />} path="/profile/address" />
+      <Route element={<LanguageX24L />} path="/profile/language" />
+      <Route element={<AppearanceX24A />} path="/profile/appearance" />
       <Route element={<NotificationsX26 />} path="/profile/notifications" />
       <Route element={<PrivacyX27 />} path="/profile/privacy" />
       <Route element={<DeleteAccountX28 />} path="/profile/delete" />

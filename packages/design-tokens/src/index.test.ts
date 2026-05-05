@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { getWashedTheme, sharedTokens, subscriberTheme, washedThemes } from './index.js';
+import {
+  getWashedTheme,
+  sharedTokens,
+  subscriberDarkTheme,
+  subscriberTheme,
+  washedThemes,
+} from './index.js';
 
 describe('Washed design tokens', () => {
   it('preserves one audience theme per frontend surface', () => {
@@ -16,6 +22,21 @@ describe('Washed design tokens', () => {
       accent: '#A66B00',
       success: '#0A3D1F',
     });
+  });
+
+  it('keeps the subscriber dark palette aligned with the screen contract', () => {
+    expect(getWashedTheme('subscriber', 'dark')).toBe(subscriberDarkTheme);
+    expect(getWashedTheme('subscriber', 'dark').colors).toMatchObject({
+      bg: '#111111',
+      surface2: '#1A1A1A',
+      ink: '#FAFAFA',
+      line: '#262626',
+      primaryTint: '#0F1F15',
+      success: '#48C078',
+      danger: '#F05959',
+      warn: '#E0A030',
+    });
+    expect(getWashedTheme('worker', 'dark')).toBe(getWashedTheme('worker'));
   });
 
   it('keeps the worker Forest palette distinct from subscriber', () => {

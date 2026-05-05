@@ -155,7 +155,7 @@ describe('Subscriber visit · X-15 Feedback', () => {
 });
 
 describe('Subscriber visit · X-15.S Issue', () => {
-  it('selects an issue and submits to the confirmation route', () => {
+  it('selects an issue, requires a photo, then submits to the confirmation route', () => {
     const { locationRef } = renderAt('/visit/issue', <VisitIssueX15S />);
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-15.S');
@@ -164,12 +164,26 @@ describe('Subscriber visit · X-15.S Issue', () => {
         'Le bureau vous rappelle dans la journée. Akouvi ne voit pas ce signalement.',
       ),
     ).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Suivant · ajouter photos' })).toBeDisabled();
 
     const option = screen.getByLabelText('Linge mal lavé') as HTMLInputElement;
     fireEvent.click(option);
     expect(option.checked).toBe(true);
 
     fireEvent.click(screen.getByRole('button', { name: 'Suivant · ajouter photos' }));
+    expect(locationRef.current).toBe('/visit/issue');
+    expect(screen.getByRole('heading', { name: 'Ajoutez des photos du souci.' })).toBeVisible();
+    expect(screen.getByText('Aucune photo ajoutée')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Envoyer le signalement' })).toBeDisabled();
+
+    const photoInput = screen.getByLabelText(/Ajouter des photos/u) as HTMLInputElement;
+    const photo = new File(['photo'], 'linge-endommage.jpg', { type: 'image/jpeg' });
+    fireEvent.change(photoInput, { target: { files: [photo] } });
+
+    expect(screen.getByText('1 photo ajoutée')).toBeVisible();
+    expect(screen.getByText('linge-endommage.jpg')).toBeVisible();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Envoyer le signalement' }));
     expect(locationRef.current).toBe('/visit/issue/submitted');
   });
 

@@ -1,4 +1,5 @@
 export type WashedThemeName = 'operator' | 'subscriber' | 'worker';
+export type WashedColorMode = 'dark' | 'light';
 
 export interface WashedColorTokens {
   readonly bg: string;
@@ -180,6 +181,37 @@ export const subscriberTheme = {
   shared: sharedTokens,
 } as const satisfies WashedTheme;
 
+export const subscriberDarkTheme = {
+  name: 'subscriber',
+  colors: {
+    bg: '#111111',
+    bgDeep: '#0A0A0A',
+    surface: '#111111',
+    surface2: '#1A1A1A',
+    ink: '#FAFAFA',
+    ink2: '#C7C7C7',
+    ink3: '#A3A3A3',
+    ink4: '#737373',
+    line: '#262626',
+    line2: '#333333',
+    primary: '#0A3D1F',
+    primaryDeep: '#062B16',
+    primaryOn: '#FFFFFF',
+    primarySoft: '#0C1610',
+    primaryTint: '#0F1F15',
+    accent: '#E0A030',
+    accentSoft: '#241A08',
+    success: '#48C078',
+    successSoft: '#0F1F15',
+    danger: '#F05959',
+    dangerSoft: '#2A1111',
+    warn: '#E0A030',
+    warnSoft: '#241A08',
+    focusRing: '0 0 0 3px rgba(72, 192, 120, 0.34)',
+  },
+  shared: sharedTokens,
+} as const satisfies WashedTheme;
+
 export const workerTheme = {
   name: 'worker',
   colors: {
@@ -248,6 +280,13 @@ export const washedThemes = {
   worker: workerTheme,
 } as const satisfies Record<WashedThemeName, WashedTheme>;
 
-export function getWashedTheme(name: WashedThemeName): WashedTheme {
+export function getWashedTheme(
+  name: WashedThemeName,
+  colorMode: WashedColorMode = 'light',
+): WashedTheme {
+  if (name === 'subscriber' && colorMode === 'dark') {
+    return subscriberDarkTheme;
+  }
+
   return washedThemes[name];
 }

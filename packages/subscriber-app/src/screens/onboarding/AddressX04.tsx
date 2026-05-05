@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
 
+import { OnboardingBackButton } from './OnboardingBackButton.js';
 import { useSignup } from './SignupContext.js';
 
 const LOME_NEIGHBORHOODS = [
@@ -47,6 +48,7 @@ export function AddressX04(): ReactElement {
   return (
     <main aria-labelledby="x04-headline" className="onboarding-screen" data-screen-id="X-04">
       <form className="body tight" onSubmit={onSubmit}>
+        <OnboardingBackButton to="/signup/otp" />
         <div className="title-stack no-progress">
           <div aria-hidden="true" className="steps">
             <i className="on" />

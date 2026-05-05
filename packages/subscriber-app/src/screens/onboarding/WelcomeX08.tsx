@@ -22,7 +22,7 @@ export function WelcomeX08(): ReactElement {
         <p className="p welcome-body">{translate('subscriber.signup.welcome.body')}</p>
       </div>
       <div className="welcome-actions">
-        <button className="btn full primary" onClick={() => navigate('/hub')} type="button">
+        <button className="btn full primary" onClick={() => navigate('/booking')} type="button">
           {translate('subscriber.signup.welcome.cta')}
         </button>
       </div>

@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
 
+import { OnboardingBackButton } from './OnboardingBackButton.js';
 import { useSignup } from './SignupContext.js';
 
 const OTP_LENGTH = 6;
@@ -138,6 +139,7 @@ export function OtpX03(): ReactElement {
   return (
     <main aria-labelledby="x03-headline" className="onboarding-screen" data-screen-id="X-03">
       <div className="body">
+        <OnboardingBackButton to="/signup/phone" />
         <div className="title-stack no-progress">
           <div aria-hidden="true" className="steps">
             <i className="on" />

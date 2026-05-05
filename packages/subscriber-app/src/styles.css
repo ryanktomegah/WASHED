@@ -28,6 +28,7 @@ body[data-theme='subscriber'] {
 body[data-theme='subscriber']
   :is(
     .onboarding-screen,
+    .appearance-gate-screen,
     .hub-screen,
     .history-screen,
     .plan-screen,
@@ -42,6 +43,7 @@ body[data-theme='subscriber']
 body[data-runtime='native']
   :is(
     .onboarding-screen:not(.splash),
+    .appearance-gate-screen,
     .hub-screen,
     .history-screen,
     .plan-screen,
@@ -61,6 +63,7 @@ body[data-runtime='native'] :is(input, select, textarea) {
 body[data-runtime='web']
   :is(
     .onboarding-screen:not(.splash),
+    .appearance-gate-screen,
     .hub-screen,
     .history-screen,
     .plan-screen,
@@ -79,6 +82,7 @@ body[data-runtime='web'] .onboarding-screen.tour-screen {
 body[data-runtime='web']
   :is(
     .onboarding-screen:not(.splash),
+    .appearance-gate-screen,
     .hub-screen,
     .history-screen,
     .plan-screen,
@@ -107,6 +111,7 @@ body[data-runtime='web'] .onboarding-screen[data-screen-id='X-08']::before {
 body[data-runtime='web']
   :is(
     .onboarding-screen:not(.splash),
+    .appearance-gate-screen,
     .hub-screen,
     .history-screen,
     .plan-screen,

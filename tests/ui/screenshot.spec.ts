@@ -1,11 +1,48 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+const SUBSCRIBER_APPEARANCE_STORAGE_KEY = 'washed.subscriber.appearance';
+const SUBSCRIBER_LANGUAGE_STORAGE_KEY = 'washed.locale';
+
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(
+    ([appearanceKey, languageKey]) => {
+      window.localStorage.setItem(appearanceKey, 'light');
+      window.localStorage.removeItem(languageKey);
+    },
+    [SUBSCRIBER_APPEARANCE_STORAGE_KEY, SUBSCRIBER_LANGUAGE_STORAGE_KEY],
+  );
+});
+
+async function continueThroughAppearance(page: Page): Promise<void> {
+  const languageGate = page.locator('[data-screen-id="X-00L"]');
+  const languageGateAppeared = await languageGate
+    .waitFor({ state: 'visible', timeout: 1000 })
+    .then(() => true)
+    .catch(() => false);
+  if (languageGateAppeared) {
+    await page.getByRole('radio', { name: /Français/u }).click();
+    await page.getByRole('button', { name: 'Continuer' }).click();
+  }
+
+  const gate = page.locator('[data-screen-id="X-00A"]');
+  const gateAppeared = await gate
+    .waitFor({ state: 'visible', timeout: 1000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!gateAppeared) return;
+
+  await page.getByRole('radio', { name: /Clair/u }).click();
+  await page.getByRole('button', { name: 'Continuer' }).click();
+}
 
 test('capture all 8 onboarding screens at iPhone SE', async ({ page }) => {
   await page.goto('/#/welcome');
+  await continueThroughAppearance(page);
   await expect(page.locator('[data-screen-id="X-01"]')).toBeVisible();
   await page.screenshot({ path: 'screenshots/x01-splash-iphone-se.png', fullPage: true });
 
   await page.goto('/#/signup/phone');
+  await continueThroughAppearance(page);
   await expect(page.locator('[data-screen-id="X-02"]')).toBeVisible();
   await page.screenshot({ path: 'screenshots/x02-phone-iphone-se.png', fullPage: true });
 
@@ -34,6 +71,7 @@ test('capture all 8 onboarding screens at iPhone SE', async ({ page }) => {
   await expect(page.locator('[data-screen-id="X-07"]')).toBeVisible();
   await page.screenshot({ path: 'screenshots/x07-review-iphone-se.png', fullPage: true });
 
+  await page.locator('.consent-row').click();
   await page.getByRole('button', { name: "Confirmer l'abonnement" }).click();
   await expect(page.locator('[data-screen-id="X-08"]')).toBeVisible();
   await page.screenshot({ path: 'screenshots/x08-welcome-iphone-se.png', fullPage: true });

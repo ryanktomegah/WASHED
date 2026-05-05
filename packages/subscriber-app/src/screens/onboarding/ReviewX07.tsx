@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { formatXof, translate } from '@washed/i18n';
 
+import { OnboardingBackButton } from './OnboardingBackButton.js';
 import { PAYMENT_PROVIDER_LABEL, TIER_PRICE_XOF, useSignup } from './SignupContext.js';
 
 function shortPhone(phone: string): string {
@@ -65,6 +66,7 @@ export function ReviewX07(): ReactElement {
   return (
     <main aria-labelledby="x07-headline" className="onboarding-screen" data-screen-id="X-07">
       <div className="body">
+        <OnboardingBackButton to="/signup/payment" />
         <div className="title-stack">
           <span className="h-sm">{translate('subscriber.signup.review.eyebrow')}</span>
           <h1 className="h-md" id="x07-headline">

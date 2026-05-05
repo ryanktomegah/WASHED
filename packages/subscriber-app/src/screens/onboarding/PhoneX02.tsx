@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
 
+import { OnboardingBackButton } from './OnboardingBackButton.js';
 import { useSignup } from './SignupContext.js';
 
 const TOGO_PHONE_LENGTH = 8;
@@ -39,6 +40,7 @@ export function PhoneX02(): ReactElement {
   return (
     <main aria-labelledby="x02-headline" className="onboarding-screen" data-screen-id="X-02">
       <form className="body" onSubmit={onSubmit}>
+        <OnboardingBackButton to="/welcome" />
         <div className="title-stack no-progress">
           <div aria-hidden="true" className="steps">
             <i className="on" />

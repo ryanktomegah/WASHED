@@ -3,8 +3,19 @@ import { ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { translate, type WashedLocale } from '@washed/i18n';
-import { useActiveLocale } from '@washed/ui';
+import { useActiveLocale, useLocale } from '@washed/ui';
 
+import { useSubscriberAppearance } from '../../appearance/AppearanceContext.js';
+import {
+  APPEARANCE_OPTIONS,
+  appearanceOptionBodyKey,
+  appearanceOptionLabelKey,
+} from '../../appearance/appearanceOptions.js';
+import {
+  SUBSCRIBER_LANGUAGE_OPTIONS,
+  languageOptionBodyKey,
+  languageOptionLabelKey,
+} from '../../language/languageOptions.js';
 import { useSafeBack } from '../../navigation/useSafeBack.js';
 import { ProfileTabBar } from './ProfileTabBar.js';
 import {
@@ -63,6 +74,7 @@ function formatClockHour(time24h: string, locale: WashedLocale): string {
 export function ProfileX24(): ReactElement {
   const navigate = useNavigate();
   const locale = useActiveLocale();
+  const { preference } = useSubscriberAppearance();
   const profile = SUBSCRIBER_PROFILE_DEMO;
 
   return (
@@ -101,7 +113,13 @@ export function ProfileX24(): ReactElement {
           />
           <ProfileMenuItem
             label={translate('subscriber.profile.menu.language')}
-            badge={locale.toUpperCase()}
+            badge={translate(languageOptionLabelKey(locale))}
+            onClick={() => navigate('/profile/language')}
+          />
+          <ProfileMenuItem
+            label={translate('subscriber.profile.menu.appearance')}
+            badge={translate(appearanceOptionLabelKey(preference))}
+            onClick={() => navigate('/profile/appearance')}
           />
           <ProfileMenuItem
             label={translate('subscriber.profile.menu.privacy')}
@@ -162,6 +180,94 @@ function ProfileMenuItem({
         ) : null}
       </Tag>
     </li>
+  );
+}
+
+export function AppearanceX24A(): ReactElement {
+  const goBack = useSafeBack('/profile');
+  const { preference, setPreference } = useSubscriberAppearance();
+
+  return (
+    <main aria-labelledby="x24a-headline" className="profile-screen" data-screen-id="X-24A">
+      <div className="profile-body profile-body-flow">
+        <BackHeader label={translate('subscriber.appearance.header')} onBack={goBack} />
+
+        <h1 className="profile-title" id="x24a-headline">
+          {translate('subscriber.appearance.title')}
+        </h1>
+
+        <p className="profile-copy">{translate('subscriber.appearance.body')}</p>
+
+        <div
+          aria-label={translate('subscriber.appearance.title')}
+          className="profile-appearance-list"
+          role="radiogroup"
+        >
+          {APPEARANCE_OPTIONS.map((option) => (
+            <button
+              aria-checked={preference === option}
+              className={`profile-appearance-option${preference === option ? ' selected' : ''}`}
+              key={option}
+              onClick={() => setPreference(option)}
+              role="radio"
+              type="button"
+            >
+              <span>
+                <strong>{translate(appearanceOptionLabelKey(option))}</strong>
+                <small>{translate(appearanceOptionBodyKey(option))}</small>
+              </span>
+              <i aria-hidden="true">{preference === option ? '✓' : ''}</i>
+            </button>
+          ))}
+        </div>
+
+        <div className="profile-grow" />
+      </div>
+    </main>
+  );
+}
+
+export function LanguageX24L(): ReactElement {
+  const goBack = useSafeBack('/profile');
+  const { locale, setLocale } = useLocale();
+
+  return (
+    <main aria-labelledby="x24l-headline" className="profile-screen" data-screen-id="X-24L">
+      <div className="profile-body profile-body-flow">
+        <BackHeader label={translate('subscriber.language.header')} onBack={goBack} />
+
+        <h1 className="profile-title" id="x24l-headline">
+          {translate('subscriber.language.title')}
+        </h1>
+
+        <p className="profile-copy">{translate('subscriber.language.body')}</p>
+
+        <div
+          aria-label={translate('subscriber.language.title')}
+          className="profile-appearance-list"
+          role="radiogroup"
+        >
+          {SUBSCRIBER_LANGUAGE_OPTIONS.map((option) => (
+            <button
+              aria-checked={locale === option}
+              className={`profile-appearance-option${locale === option ? ' selected' : ''}`}
+              key={option}
+              onClick={() => setLocale(option)}
+              role="radio"
+              type="button"
+            >
+              <span>
+                <strong>{translate(languageOptionLabelKey(option))}</strong>
+                <small>{translate(languageOptionBodyKey(option))}</small>
+              </span>
+              <i aria-hidden="true">{locale === option ? '✓' : ''}</i>
+            </button>
+          ))}
+        </div>
+
+        <div className="profile-grow" />
+      </div>
+    </main>
   );
 }
 

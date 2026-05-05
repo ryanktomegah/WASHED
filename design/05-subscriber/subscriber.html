@@ -808,8 +808,43 @@
         {
           eyebrow: '01 · Onboarding',
           title: 'X-01 → X-08 · les 90 secondes décisives',
-          note: 'Le tunnel reste court, lisible et strictement français. Les champs sont calmes, les CTA bas de page sont fermes.',
+          note: "Le tunnel reste court, lisible et démarre par les préférences de langue et d'apparence. Les champs sont calmes, les CTA bas de page sont fermes.",
           screens: [
+            {
+              id: 'X-00L',
+              name: 'Choix langue',
+              kicker: 'avant de commencer',
+              title: 'Choisir la langue',
+              copy: "Choisissez la langue de l'application. Vous pourrez la changer dans Profil.",
+              blocks: [
+                {
+                  type: 'list',
+                  rows: [
+                    ['Français', 'Interface et messages en français'],
+                    ['English', 'Interface et messages en anglais'],
+                  ],
+                },
+              ],
+              actions: ['Continuer'],
+            },
+            {
+              id: 'X-00A',
+              name: 'Choix apparence',
+              kicker: 'avant de commencer',
+              title: "Choisir l'apparence",
+              copy: 'Choisissez un affichage clair, sombre ou aligné sur votre téléphone.',
+              blocks: [
+                {
+                  type: 'list',
+                  rows: [
+                    ['Système', 'Suit le réglage de votre téléphone'],
+                    ['Clair', 'Garde les écrans en fond clair'],
+                    ['Sombre', 'Garde les écrans en fond sombre'],
+                  ],
+                },
+              ],
+              actions: ['Continuer'],
+            },
             {
               id: 'X-01',
               name: 'Splash',
@@ -919,48 +954,94 @@
               name: 'Bienvenue',
               kind: 'welcome',
               title: 'Bienvenue chez Washed.',
-              copy: "Votre première visite est planifiée. On vous appelle d'abord pour finaliser l'adresse.",
-              actions: ['Voir mon accueil'],
+              copy: 'Votre abonnement est prêt. Choisissez maintenant le jour et le moment de votre première visite.',
+              actions: ['Planifier ma première visite'],
             },
           ],
         },
         {
           eyebrow: '02 · Hub + visite',
           title: 'X-09 → X-15 · 90% des sessions',
-          note: 'Le hub est plus utilitaire : prochaine visite, état clair, laveuse assignée et actions immédiates.',
+          note: "Le hub est plus utilitaire : si aucune visite n'est encore planifiée, l'action principale est de choisir le premier créneau.",
           screens: [
             {
               id: 'X-09',
               name: 'Tour première session',
               kicker: 'première session',
-              title: 'Votre accueil reste simple',
-              copy: 'Prochaine visite, laveuse, forfait et aide sont toujours à portée.',
+              title: 'Votre accueil commence ici',
+              copy: 'Planification, forfait et aide sont toujours à portée avant la première visite.',
               blocks: [
                 {
                   type: 'tour',
                   title: '1 / 3',
-                  text: 'Touchez la carte de visite pour voir le détail.',
+                  text: 'Touchez Planifier pour choisir votre premier créneau.',
                 },
               ],
               actions: ['Suivant'],
             },
             {
               id: 'X-10',
-              name: 'Hub · prochaine visite',
+              name: 'Hub · première visite à planifier',
               header: 'bonjour Mariam',
               title: 'Accueil',
               blocks: [
                 {
-                  type: 'visit',
-                  status: 'confirmée',
-                  time: '9:00',
-                  date: 'mar 7 mai',
-                  worker: 'Akouvi K.',
-                  detail: 'votre laveuse · 8 mois',
+                  type: 'notice',
+                  text: "Première visite · Choisissez le jour et le moment souhaités. Le bureau confirme avant d'assigner votre laveuse.",
                 },
-                { type: 'actions', values: ['Reporter', 'Détails'] },
-                { type: 'progress', label: 'forfait actif', value: '31 mai', pct: 64 },
+                { type: 'actions', values: ['Planifier ma première visite'] },
+                {
+                  type: 'progress',
+                  label: 'forfait',
+                  value: 'visite à planifier',
+                  pct: 0,
+                },
               ],
+            },
+            {
+              id: 'X-10B',
+              name: 'Réserver une visite',
+              kicker: 'réserver',
+              title: 'Quel jour vous convient ?',
+              copy: 'Choisissez une journée, puis le moment souhaité.',
+              blocks: [
+                {
+                  type: 'list',
+                  rows: [
+                    ['Lundi'],
+                    ['Mardi'],
+                    ['Mercredi'],
+                    ['Jeudi'],
+                    ['Vendredi'],
+                    ['Samedi'],
+                    ['Dimanche'],
+                  ],
+                },
+                {
+                  type: 'muted',
+                  text: 'Après le choix du jour, le panneau glisse vers le choix du moment.',
+                },
+                {
+                  type: 'list',
+                  rows: [
+                    ['Matin', '8 h - 11 h'],
+                    ['Après-midi', '14 h - 17 h'],
+                  ],
+                },
+                {
+                  type: 'notice',
+                  text: "Ce choix est une préférence, pas encore une confirmation. On vous appelle si la laveuse n'est pas disponible.",
+                },
+              ],
+              actions: ['Envoyer la demande'],
+            },
+            {
+              id: 'X-10C',
+              name: 'Réservation envoyée',
+              kicker: 'réservation',
+              title: 'Demande envoyée.',
+              copy: 'Le bureau confirme votre créneau par appel ou SMS avant la visite.',
+              actions: ["Retour à l'accueil"],
             },
             {
               id: 'X-11',
@@ -1056,11 +1137,23 @@
               kicker: 'signalement',
               title: 'Dites-nous ce qui ne va pas',
               blocks: [
-                { type: 'field', label: 'sujet', value: 'Linge manquant' },
-                { type: 'textarea', value: 'Décrivez le problème en quelques mots.' },
-                { type: 'notice', text: 'Le bureau répond sous 4 h ouvrées.' },
+                {
+                  type: 'list',
+                  rows: [
+                    ['Linge endommagé'],
+                    ['Linge mal lavé'],
+                    ["Akouvi n'est pas venue"],
+                    ['Comportement inapproprié'],
+                    ['Autre · décrire'],
+                  ],
+                },
+                { type: 'field', label: 'photos', value: 'Ajouter au moins une photo' },
+                {
+                  type: 'notice',
+                  text: 'Le ticket est envoyé seulement après ajout de photos.',
+                },
               ],
-              actions: ['Créer le ticket'],
+              actions: ['Suivant · ajouter photos', 'Envoyer le signalement'],
             },
           ],
         },
@@ -1275,7 +1368,25 @@
                     ['Téléphone', '+228 90 •••• 56'],
                     ['Adresse', 'Tokoin Casablanca'],
                     ['Notifications', 'activées'],
+                    ['Langue', 'Français'],
+                    ['Apparence', 'Système'],
                     ['Vie privée', 'voir'],
+                  ],
+                },
+              ],
+            },
+            {
+              id: 'X-24L',
+              name: 'Langue',
+              kicker: 'langue',
+              title: 'Choisir la langue',
+              copy: "Choisissez la langue de l'application. Vous pourrez la changer ici à tout moment.",
+              blocks: [
+                {
+                  type: 'list',
+                  rows: [
+                    ['Français', 'Interface et messages en français'],
+                    ['English', 'Interface et messages en anglais'],
                   ],
                 },
               ],
@@ -1413,6 +1524,7 @@
                   type: 'timeline',
                   rows: ['Message reçu', 'Assigné au bureau', 'Réponse en attente'],
                 },
+                { type: 'field', label: 'répondre', value: 'Envoyer un message au bureau' },
               ],
             },
             {

@@ -22,13 +22,17 @@ import {
 export type { WashedLocale } from '@washed/i18n';
 
 export type WashedThemeInput = WashedTheme | WashedThemeName;
+export type WashedThemeColorMode = 'dark' | 'light' | 'system';
 export type ComponentSize = 'lg' | 'md' | 'sm';
 export type Tone = 'accent' | 'danger' | 'muted' | 'primary' | 'success';
 
 export interface WashedThemeProviderProps extends HTMLAttributes<HTMLDivElement> {
   readonly children: ReactNode;
+  readonly colorMode?: WashedThemeColorMode;
   readonly theme?: WashedThemeInput;
 }
+
+const DARK_COLOR_SCHEME_QUERY = '(prefers-color-scheme: dark)';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   readonly fullWidth?: boolean;
@@ -112,29 +116,53 @@ const ThemeContext = createContext<WashedTheme>(getWashedTheme('subscriber'));
 
 export function WashedThemeProvider({
   children,
+  colorMode = 'system',
   theme = 'subscriber',
   ...props
 }: WashedThemeProviderProps): ReactElement {
-  const resolvedTheme = resolveTheme(theme);
+  const [prefersDark, setPrefersDark] = useState(getPrefersDarkColorScheme);
+  const effectiveColorMode = colorMode === 'system' ? (prefersDark ? 'dark' : 'light') : colorMode;
+  const resolvedTheme = resolveTheme(theme, effectiveColorMode === 'dark');
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+
+    const mediaQuery = window.matchMedia(DARK_COLOR_SCHEME_QUERY);
+    const onChange = (event: MediaQueryListEvent): void => setPrefersDark(event.matches);
+
+    setPrefersDark(mediaQuery.matches);
+    mediaQuery.addEventListener('change', onChange);
+
+    return () => mediaQuery.removeEventListener('change', onChange);
+  }, []);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
 
-    const previous = document.body.getAttribute('data-theme');
+    const previousTheme = document.body.getAttribute('data-theme');
+    const previousColorMode = document.body.getAttribute('data-color-mode');
+
     document.body.setAttribute('data-theme', resolvedTheme.name);
+    document.body.setAttribute('data-color-mode', effectiveColorMode);
 
     return () => {
-      if (previous === null) {
+      if (previousTheme === null) {
         document.body.removeAttribute('data-theme');
       } else {
-        document.body.setAttribute('data-theme', previous);
+        document.body.setAttribute('data-theme', previousTheme);
+      }
+
+      if (previousColorMode === null) {
+        document.body.removeAttribute('data-color-mode');
+      } else {
+        document.body.setAttribute('data-color-mode', previousColorMode);
       }
     };
-  }, [resolvedTheme.name]);
+  }, [effectiveColorMode, resolvedTheme.name]);
 
   return (
     <ThemeContext.Provider value={resolvedTheme}>
-      <div {...props} data-theme={resolvedTheme.name}>
+      <div {...props} data-color-mode={effectiveColorMode} data-theme={resolvedTheme.name}>
         {children}
       </div>
     </ThemeContext.Provider>
@@ -704,8 +732,16 @@ function buttonPalette(
   };
 }
 
-function resolveTheme(theme: WashedThemeInput): WashedTheme {
-  return typeof theme === 'string' ? getWashedTheme(theme) : theme;
+function resolveTheme(theme: WashedThemeInput, prefersDark: boolean): WashedTheme {
+  return typeof theme === 'string' ? getWashedTheme(theme, prefersDark ? 'dark' : 'light') : theme;
+}
+
+function getPrefersDarkColorScheme(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return false;
+  }
+
+  return window.matchMedia(DARK_COLOR_SCHEME_QUERY).matches;
 }
 
 function toneColors(

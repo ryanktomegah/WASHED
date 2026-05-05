@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import type { ReactElement } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getActiveLocale, setActiveLocale } from '@washed/i18n';
 
 import {
@@ -21,6 +21,10 @@ import {
 } from './index.js';
 
 describe('@washed/ui', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it('applies app-specific theme tokens through the provider', () => {
     render(
       <WashedThemeProvider data-testid="theme" theme="worker">
@@ -31,6 +35,39 @@ describe('@washed/ui', () => {
     expect(screen.getByTestId('theme')).toHaveAttribute('data-theme', 'worker');
     expect(screen.getByText('worker')).toBeInTheDocument();
     expect(document.body).toHaveAttribute('data-theme', 'worker');
+  });
+
+  it('uses subscriber dark tokens when the system prefers dark mode', () => {
+    stubDarkMode(true);
+
+    render(
+      <WashedThemeProvider theme="subscriber">
+        <ThemeColors />
+      </WashedThemeProvider>,
+    );
+
+    expect(screen.getByTestId('theme-colors')).toHaveStyle({
+      background: '#111111',
+      color: '#48C078',
+    });
+    expect(document.body).toHaveAttribute('data-theme', 'subscriber');
+    expect(document.body).toHaveAttribute('data-color-mode', 'dark');
+  });
+
+  it('can force subscriber dark tokens independent of the system mode', () => {
+    stubDarkMode(false);
+
+    render(
+      <WashedThemeProvider colorMode="dark" theme="subscriber">
+        <ThemeColors />
+      </WashedThemeProvider>,
+    );
+
+    expect(screen.getByTestId('theme-colors')).toHaveStyle({
+      background: '#111111',
+      color: '#48C078',
+    });
+    expect(document.body).toHaveAttribute('data-color-mode', 'dark');
   });
 
   it('renders accessible controls with mobile tap targets', () => {
@@ -128,6 +165,37 @@ describe('@washed/ui', () => {
 
 function ThemeName(): ReactElement {
   return <span>{useWashedTheme().name}</span>;
+}
+
+function ThemeColors(): ReactElement {
+  const theme = useWashedTheme();
+
+  return (
+    <span
+      data-testid="theme-colors"
+      style={{ background: theme.colors.bg, color: theme.colors.success }}
+    />
+  );
+}
+
+function stubDarkMode(matches: boolean): void {
+  const matchMedia = vi.fn().mockImplementation((media: string) => ({
+    addEventListener: vi.fn(),
+    addListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+    matches,
+    media,
+    onchange: null,
+    removeEventListener: vi.fn(),
+    removeListener: vi.fn(),
+  }));
+
+  vi.stubGlobal('matchMedia', matchMedia);
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    value: matchMedia,
+    writable: true,
+  });
 }
 
 function LocaleProbe(): ReactElement {

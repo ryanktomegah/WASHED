@@ -265,7 +265,18 @@ export function TicketDetailX32(): ReactElement {
   const goBack = useSafeBack('/support/tickets');
   const locale = useActiveLocale();
   const [reply, setReply] = useState('');
+  const [sentReplies, setSentReplies] = useState<readonly string[]>([]);
   const ticket = findSupportTicket(params.ticketId);
+  const canSendReply = reply.trim().length > 0;
+
+  const onReplySubmit = (event: FormEvent<HTMLFormElement>): void => {
+    event.preventDefault();
+    const trimmedReply = reply.trim();
+    if (trimmedReply.length === 0) return;
+
+    setSentReplies((currentReplies) => [...currentReplies, trimmedReply]);
+    setReply('');
+  };
 
   if (ticket === undefined) {
     return (
@@ -342,10 +353,24 @@ export function TicketDetailX32(): ReactElement {
               ) : null}
             </article>
           ))}
+          {sentReplies.map((sentReply, index) => (
+            <article
+              aria-label={translate('subscriber.support.ticket.detail.message_subscriber_label')}
+              className="support-message subscriber"
+              key={`sent-reply-${index}`}
+            >
+              <span className="support-eyebrow">
+                {translate('subscriber.support.ticket.detail.user_label', {
+                  timeAgo: translate('subscriber.support.ticket.detail.reply.just_now'),
+                })}
+              </span>
+              <p>{sentReply}</p>
+            </article>
+          ))}
         </div>
 
         <div className="support-grow" />
-        <div className="support-reply-row">
+        <form className="support-reply-row" onSubmit={onReplySubmit}>
           <label className="support-sr" htmlFor="x32-reply">
             {translate('subscriber.support.ticket.detail.reply.label')}
           </label>
@@ -356,14 +381,10 @@ export function TicketDetailX32(): ReactElement {
             placeholder={translate('subscriber.support.ticket.detail.reply.placeholder')}
             value={reply}
           />
-          <button
-            className="support-button dark"
-            disabled={reply.trim().length === 0}
-            type="button"
-          >
+          <button className="support-button dark" disabled={!canSendReply} type="submit">
             {translate('subscriber.support.ticket.detail.reply.cta')}
           </button>
-        </div>
+        </form>
       </div>
     </main>
   );

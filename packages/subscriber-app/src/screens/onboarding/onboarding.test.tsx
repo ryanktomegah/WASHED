@@ -66,11 +66,11 @@ describe('Onboarding · X-01 Splash', () => {
     expect(locationRef.current).toBe('/signup/phone');
   });
 
-  it('routes to /hub when the user already has an account', () => {
+  it('routes existing accounts to phone verification before the hub', () => {
     const { locationRef } = renderAt('/welcome', <SplashX01 />);
 
     fireEvent.click(screen.getByRole('button', { name: "J'ai déjà un compte" }));
-    expect(locationRef.current).toBe('/hub');
+    expect(locationRef.current).toBe('/signup/phone');
   });
 });
 
@@ -106,6 +106,14 @@ describe('Onboarding · X-02 Phone', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Recevoir le code' }));
 
     expect(locationRef.current).toBe('/signup/otp');
+  });
+
+  it('returns to the splash screen from phone entry', () => {
+    const { locationRef } = renderAt('/signup/phone', <PhoneX02 />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
+
+    expect(locationRef.current).toBe('/welcome');
   });
 });
 
@@ -158,6 +166,16 @@ describe('Onboarding · X-03 OTP', () => {
     expect(locationRef.current).toBe('/signup/phone');
     expect(screen.queryByText(/\+228 90/u)).not.toBeInTheDocument();
   });
+
+  it('returns to phone entry from OTP', () => {
+    const { locationRef } = renderAt('/signup/otp', <OtpX03 />, {
+      phone: '+228 90 12 34 56',
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
+
+    expect(locationRef.current).toBe('/signup/phone');
+  });
 });
 
 describe('Onboarding · X-04 Address', () => {
@@ -185,6 +203,16 @@ describe('Onboarding · X-04 Address', () => {
     const { locationRef } = renderAt('/signup/address', <AddressX04 />);
 
     expect(locationRef.current).toBe('/signup/phone');
+  });
+
+  it('returns to OTP from address entry', () => {
+    const { locationRef } = renderAt('/signup/address', <AddressX04 />, {
+      phone: '+228 90 12 34 56',
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
+
+    expect(locationRef.current).toBe('/signup/otp');
   });
 });
 
@@ -220,6 +248,17 @@ describe('Onboarding · X-05 Tier', () => {
     const { locationRef } = renderAt('/signup/tier', <TierX05 />, {
       phone: '+228 90 12 34 56',
     });
+
+    expect(locationRef.current).toBe('/signup/address');
+  });
+
+  it('returns to address entry from tier choice', () => {
+    const { locationRef } = renderAt('/signup/tier', <TierX05 />, {
+      phone: '+228 90 12 34 56',
+      address: { neighborhood: 'Tokoin Casablanca', street: 'rue 254' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
 
     expect(locationRef.current).toBe('/signup/address');
   });
@@ -271,6 +310,18 @@ describe('Onboarding · X-06 Payment', () => {
 
     expect(locationRef.current).toBe('/signup/address');
   });
+
+  it('returns to tier choice from payment', () => {
+    const { locationRef } = renderAt('/signup/payment', <PaymentX06 />, {
+      phone: '+228 90 12 34 56',
+      address: { neighborhood: 'Tokoin Casablanca', street: 'rue 254' },
+      tier: 'T1',
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
+
+    expect(locationRef.current).toBe('/signup/tier');
+  });
 });
 
 describe('Onboarding · X-07 Review', () => {
@@ -320,16 +371,29 @@ describe('Onboarding · X-07 Review', () => {
 
     expect(locationRef.current).toBe('/signup/payment');
   });
+
+  it('returns to payment from review', () => {
+    const { locationRef } = renderAt('/signup/review', <ReviewX07 />, completeSignup);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
+
+    expect(locationRef.current).toBe('/signup/payment');
+  });
 });
 
 describe('Onboarding · X-08 Welcome', () => {
-  it('renders the welcome screen and routes to the hub', () => {
+  it('renders the welcome screen and routes to first visit scheduling', () => {
     const { locationRef } = renderAt('/signup/welcome', <WelcomeX08 />);
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-08');
     expect(screen.getByRole('heading', { name: 'Bienvenue chez Washed.' })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Votre abonnement est prêt. Choisissez maintenant le jour et le moment de votre première visite.',
+      ),
+    ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Voir mon accueil' }));
-    expect(locationRef.current).toBe('/hub');
+    fireEvent.click(screen.getByRole('button', { name: 'Planifier ma première visite' }));
+    expect(locationRef.current).toBe('/booking');
   });
 });

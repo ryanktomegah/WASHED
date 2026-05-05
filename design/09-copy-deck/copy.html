@@ -442,8 +442,8 @@
         <div class="num">02 · ABONNÉ · ONBOARDING <span class="app-tag sub">SUBSCRIBER</span></div>
         <h2>X-01 → X-08 · Les 90 secondes décisives</h2>
         <p class="note">
-          L'objectif : que la première visite soit confirmée avant que l'abonné ne ferme l'app.
-          Chaque écran a une seule action principale.
+          L'objectif : que l'abonné arrive au choix du premier créneau sans croire qu'une visite est
+          déjà confirmée. Chaque écran a une seule action principale.
         </p>
 
         <table class="deck">
@@ -823,18 +823,18 @@
               <td><span class="key">subscriber.signup.welcome.body</span></td>
               <td>
                 <span class="fr body"
-                  >Votre première visite est planifiée. On vous appelle d'abord pour finaliser
-                  l'adresse.</span
+                  >Votre abonnement est prêt. Choisissez maintenant le jour et le moment de votre
+                  première visite.</span
                 >
               </td>
-              <td><span class="ctx">Pose le contact téléphonique opérateur</span></td>
+              <td><span class="ctx">X-08 invite à planifier la première visite</span></td>
               <td><span class="lim">110 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.signup.welcome.cta</span></td>
-              <td><span class="fr body">Voir mon accueil</span></td>
-              <td><span class="ctx">X-08 CTA vers hub</span></td>
-              <td><span class="lim">22 ch</span></td>
+              <td><span class="fr body">Planifier ma première visite</span></td>
+              <td><span class="ctx">X-08 CTA vers réservation X-10B</span></td>
+              <td><span class="lim">32 ch</span></td>
             </tr>
           </tbody>
         </table>
@@ -902,6 +902,84 @@
               <td><span class="lim">28 ch</span></td>
             </tr>
             <tr>
+              <td><span class="key">subscriber.dashboard.empty_visit.eyebrow</span></td>
+              <td><span class="fr body">Première visite</span></td>
+              <td><span class="ctx">X-10 état nouvel abonné sans visite</span></td>
+              <td><span class="lim">20 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.dashboard.empty_visit.title</span></td>
+              <td><span class="fr body">Planifiez votre première visite</span></td>
+              <td><span class="ctx">X-10 titre carte premier créneau</span></td>
+              <td><span class="lim">34 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.dashboard.empty_visit.body</span></td>
+              <td>
+                <span class="fr body"
+                  >Choisissez le jour et le moment souhaités. Le bureau confirme avant d'assigner
+                  votre laveuse.</span
+                >
+              </td>
+              <td><span class="ctx">X-10 aide premier créneau</span></td>
+              <td><span class="lim">112 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.dashboard.empty_visit.cta</span></td>
+              <td><span class="fr body">Planifier ma première visite</span></td>
+              <td><span class="ctx">X-10 CTA premier créneau</span></td>
+              <td><span class="lim">32 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.dashboard.pending_visit.eyebrow</span></td>
+              <td><span class="fr body">Demande envoyée</span></td>
+              <td><span class="ctx">X-10 état demande premier créneau</span></td>
+              <td><span class="lim">22 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.dashboard.pending_visit.title</span></td>
+              <td><span class="fr body">Première visite en confirmation</span></td>
+              <td><span class="ctx">X-10 titre demande premier créneau</span></td>
+              <td><span class="lim">38 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.dashboard.pending_visit.body</span></td>
+              <td>
+                <span class="fr body"
+                  >Le bureau confirme votre créneau par appel ou SMS avant d'assigner votre
+                  laveuse.</span
+                >
+              </td>
+              <td><span class="ctx">X-10 aide demande premier créneau</span></td>
+              <td><span class="lim">104 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.dashboard.pending_visit.cta</span></td>
+              <td><span class="fr body">Modifier ma demande</span></td>
+              <td><span class="ctx">X-10 CTA modification demande</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.dashboard.plan.ready_label</span></td>
+              <td><span class="fr body">Forfait</span></td>
+              <td><span class="ctx">X-10 état forfait avant première visite</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.dashboard.plan.first_visit_status</span></td>
+              <td><span class="fr body">Visite à planifier</span></td>
+              <td><span class="ctx">X-10 statut forfait nouvel abonné</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td>
+                <span class="key">subscriber.dashboard.plan.first_visit_pending_status</span>
+              </td>
+              <td><span class="fr body">Demande en confirmation</span></td>
+              <td><span class="ctx">X-10 statut forfait après demande</span></td>
+              <td><span class="lim">28 ch</span></td>
+            </tr>
+            <tr>
               <td><span class="key">subscriber.dashboard.worker.tenure</span></td>
               <td><span class="fr body">{neighborhood} · {months} mois chez vous</span></td>
               <td><span class="ctx">Sous nom laveuse. ICU pluriel mois.</span></td>
@@ -930,6 +1008,210 @@
               <td><span class="fr body">Voir les visites</span></td>
               <td><span class="ctx">Bouton primaire — ouvre l'historique X-16</span></td>
               <td><span class="lim">22 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.home.eyebrow</span></td>
+              <td><span class="fr body">Besoin d'un lavage ?</span></td>
+              <td><span class="ctx">X-10 carte réservation</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.home.title</span></td>
+              <td><span class="fr body">Réservez une visite</span></td>
+              <td><span class="ctx">X-10 titre carte réservation</span></td>
+              <td><span class="lim">28 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.home.body</span></td>
+              <td>
+                <span class="fr body"
+                  >Indiquez votre préférence en semaine ou le week-end. Le bureau confirme avec
+                  votre laveuse.</span
+                >
+              </td>
+              <td><span class="ctx">X-10 aide réservation</span></td>
+              <td><span class="lim">104 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.home.cta</span></td>
+              <td><span class="fr body">Réserver une visite</span></td>
+              <td><span class="ctx">X-10 CTA réservation</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.header</span></td>
+              <td><span class="fr body">Réserver</span></td>
+              <td><span class="ctx">X-10B header</span></td>
+              <td><span class="lim">16 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.progress.day</span></td>
+              <td><span class="fr body">1 / 2</span></td>
+              <td><span class="ctx">X-10B progression jour</span></td>
+              <td><span class="lim">8 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.progress.time</span></td>
+              <td><span class="fr body">2 / 2</span></td>
+              <td><span class="ctx">X-10B progression moment</span></td>
+              <td><span class="lim">8 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.day.title</span></td>
+              <td><span class="fr body">Quel jour vous convient ?</span></td>
+              <td><span class="ctx">X-10B titre étape jour</span></td>
+              <td><span class="lim">34 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.day.body</span></td>
+              <td>
+                <span class="fr body">Choisissez une journée en semaine ou le week-end.</span>
+              </td>
+              <td><span class="ctx">X-10B intro étape jour</span></td>
+              <td><span class="lim">72 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.time.title</span></td>
+              <td><span class="fr body">Quel moment ce {day} ?</span></td>
+              <td><span class="ctx">X-10B titre étape moment</span></td>
+              <td><span class="lim">40 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.time.body</span></td>
+              <td>
+                <span class="fr body">{day} est noté. Choisissez le moment qui vous arrange.</span>
+              </td>
+              <td><span class="ctx">X-10B intro étape moment</span></td>
+              <td><span class="lim">78 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.day_group.label</span></td>
+              <td><span class="fr body">Jour souhaité</span></td>
+              <td><span class="ctx">X-10B legend jours</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.day.monday</span></td>
+              <td><span class="fr body">Lundi</span></td>
+              <td><span class="ctx">X-10B jour</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.day.tuesday</span></td>
+              <td><span class="fr body">Mardi</span></td>
+              <td><span class="ctx">X-10B jour</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.day.wednesday</span></td>
+              <td><span class="fr body">Mercredi</span></td>
+              <td><span class="ctx">X-10B jour</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.day.thursday</span></td>
+              <td><span class="fr body">Jeudi</span></td>
+              <td><span class="ctx">X-10B jour</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.day.friday</span></td>
+              <td><span class="fr body">Vendredi</span></td>
+              <td><span class="ctx">X-10B jour</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.day.saturday</span></td>
+              <td><span class="fr body">Samedi</span></td>
+              <td><span class="ctx">X-10B jour</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.day.sunday</span></td>
+              <td><span class="fr body">Dimanche</span></td>
+              <td><span class="ctx">X-10B jour</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.selected_day.label</span></td>
+              <td><span class="fr body">Jour choisi</span></td>
+              <td><span class="ctx">X-10B récap jour</span></td>
+              <td><span class="lim">18 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.time_group.label</span></td>
+              <td><span class="fr body">Moment souhaité</span></td>
+              <td><span class="ctx">X-10B legend moment</span></td>
+              <td><span class="lim">22 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.time.morning.label</span></td>
+              <td><span class="fr body">Matin</span></td>
+              <td><span class="ctx">X-10B moment</span></td>
+              <td><span class="lim">28 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.time.morning.detail</span></td>
+              <td><span class="fr body">8 h - 11 h</span></td>
+              <td><span class="ctx">X-10B horaire</span></td>
+              <td><span class="lim">16 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.time.afternoon.label</span></td>
+              <td><span class="fr body">Après-midi</span></td>
+              <td><span class="ctx">X-10B moment</span></td>
+              <td><span class="lim">28 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.time.afternoon.detail</span></td>
+              <td><span class="fr body">14 h - 17 h</span></td>
+              <td><span class="ctx">X-10B horaire</span></td>
+              <td><span class="lim">16 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.notice</span></td>
+              <td>
+                <span class="fr body"
+                  >Ce choix est une préférence, pas encore une confirmation. On vous appelle si la
+                  laveuse n'est pas disponible.</span
+                >
+              </td>
+              <td><span class="ctx">X-10B notice</span></td>
+              <td><span class="lim">120 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.submit.cta</span></td>
+              <td><span class="fr body">Envoyer la demande</span></td>
+              <td><span class="ctx">X-10B CTA</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.submitted.header</span></td>
+              <td><span class="fr body">Réservation</span></td>
+              <td><span class="ctx">X-10C header</span></td>
+              <td><span class="lim">18 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.submitted.title</span></td>
+              <td><span class="fr body">Demande envoyée.</span></td>
+              <td><span class="ctx">X-10C titre</span></td>
+              <td><span class="lim">28 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.submitted.body</span></td>
+              <td>
+                <span class="fr body"
+                  >Le bureau confirme votre créneau par appel ou SMS avant la visite.</span
+                >
+              </td>
+              <td><span class="ctx">X-10C body</span></td>
+              <td><span class="lim">86 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.booking.submitted.home_cta</span></td>
+              <td><span class="fr body">Retour à l'accueil</span></td>
+              <td><span class="ctx">X-10C CTA</span></td>
+              <td><span class="lim">24 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.dashboard.worker.ready_chip</span></td>
@@ -993,7 +1275,7 @@
             </tr>
             <tr>
               <td><span class="key">subscriber.tour.step1.title</span></td>
-              <td><span class="fr">Votre accueil reste simple</span></td>
+              <td><span class="fr">Votre accueil commence ici</span></td>
               <td><span class="ctx">X-09 titre</span></td>
               <td><span class="lim">42 ch</span></td>
             </tr>
@@ -1001,7 +1283,8 @@
               <td><span class="key">subscriber.tour.step1.body</span></td>
               <td>
                 <span class="fr body"
-                  >Prochaine visite, laveuse, forfait et aide sont toujours à portée.</span
+                  >Planification, forfait et aide sont toujours à portée avant la première
+                  visite.</span
                 >
               </td>
               <td><span class="ctx">X-09 body</span></td>
@@ -1010,7 +1293,7 @@
             <tr>
               <td><span class="key">subscriber.tour.step1.card_body</span></td>
               <td>
-                <span class="fr body">Touchez la carte de visite pour voir le détail.</span>
+                <span class="fr body">Touchez Planifier pour choisir votre premier créneau.</span>
               </td>
               <td><span class="ctx">X-09 tour card body</span></td>
               <td><span class="lim">62 ch</span></td>
@@ -1777,6 +2060,70 @@
               <td><span class="lim">10 ch</span></td>
             </tr>
             <tr>
+              <td><span class="key">subscriber.language.launch.header</span></td>
+              <td><span class="fr body">Avant de commencer</span></td>
+              <td><span class="ctx">X-00L header mono — affiché en majuscules</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.language.header</span></td>
+              <td><span class="fr body">Langue</span></td>
+              <td><span class="ctx">X-24L header mono — affiché en majuscules</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.language.title</span></td>
+              <td><span class="fr body">Choisir la langue</span></td>
+              <td><span class="ctx">X-00L/X-24L titre</span></td>
+              <td><span class="lim">28 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.language.body</span></td>
+              <td>
+                <span class="fr body"
+                  >Choisissez la langue de l'application. Vous pourrez la changer dans Profil.</span
+                >
+              </td>
+              <td><span class="ctx">X-00L/X-24L body</span></td>
+              <td><span class="lim">96 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.language.option.fr</span></td>
+              <td><span class="fr body">Français</span></td>
+              <td><span class="ctx">X-00L/X-24L option</span></td>
+              <td><span class="lim">14 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.language.option.fr.body</span></td>
+              <td><span class="fr body">Interface et messages en français.</span></td>
+              <td><span class="ctx">X-00L/X-24L option body</span></td>
+              <td><span class="lim">48 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.language.option.en</span></td>
+              <td><span class="fr body">English</span></td>
+              <td><span class="ctx">X-00L/X-24L option</span></td>
+              <td><span class="lim">14 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.language.option.en.body</span></td>
+              <td><span class="fr body">Interface et messages en anglais.</span></td>
+              <td><span class="ctx">X-00L/X-24L option body</span></td>
+              <td><span class="lim">48 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.language.launch.cta</span></td>
+              <td><span class="fr body">Continuer</span></td>
+              <td><span class="ctx">X-00L bouton principal</span></td>
+              <td><span class="lim">14 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.menu.appearance</span></td>
+              <td><span class="fr body">Apparence</span></td>
+              <td><span class="ctx">X-24 ligne menu</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
               <td><span class="key">subscriber.profile.menu.privacy</span></td>
               <td><span class="fr body">Vie privée &amp; données</span></td>
               <td><span class="ctx">X-24 ligne menu</span></td>
@@ -1793,6 +2140,76 @@
               <td><span class="fr body">Se déconnecter</span></td>
               <td><span class="ctx">X-24 bouton danger ghost</span></td>
               <td><span class="lim">22 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.appearance.launch.header</span></td>
+              <td><span class="fr body">Avant de commencer</span></td>
+              <td><span class="ctx">X-00A header mono — affiché en majuscules</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.appearance.header</span></td>
+              <td><span class="fr body">Apparence</span></td>
+              <td><span class="ctx">X-24A header mono — affiché en majuscules</span></td>
+              <td><span class="lim">14 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.appearance.title</span></td>
+              <td><span class="fr body">Choisir l'apparence</span></td>
+              <td><span class="ctx">X-24A titre</span></td>
+              <td><span class="lim">28 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.appearance.body</span></td>
+              <td>
+                <span class="fr body"
+                  >Choisissez un affichage clair, sombre ou aligné sur votre téléphone.</span
+                >
+              </td>
+              <td><span class="ctx">X-24A body</span></td>
+              <td><span class="lim">90 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.appearance.option.system</span></td>
+              <td><span class="fr body">Système</span></td>
+              <td><span class="ctx">X-24A option</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.appearance.option.system.body</span></td>
+              <td><span class="fr body">Suit le réglage de votre téléphone.</span></td>
+              <td><span class="ctx">X-24A option body</span></td>
+              <td><span class="lim">52 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.appearance.option.light</span></td>
+              <td><span class="fr body">Clair</span></td>
+              <td><span class="ctx">X-24A option</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.appearance.option.light.body</span></td>
+              <td><span class="fr body">Garde les écrans en fond clair.</span></td>
+              <td><span class="ctx">X-24A option body</span></td>
+              <td><span class="lim">52 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.appearance.option.dark</span></td>
+              <td><span class="fr body">Sombre</span></td>
+              <td><span class="ctx">X-24A option</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.appearance.option.dark.body</span></td>
+              <td><span class="fr body">Garde les écrans en fond sombre.</span></td>
+              <td><span class="ctx">X-24A option body</span></td>
+              <td><span class="lim">52 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.appearance.launch.cta</span></td>
+              <td><span class="fr body">Continuer</span></td>
+              <td><span class="ctx">X-00A bouton principal</span></td>
+              <td><span class="lim">14 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.address_edit.header</span></td>
@@ -2334,6 +2751,61 @@
               <td><span class="fr body">Suivant · ajouter photos</span></td>
               <td><span class="ctx">X-15.S bouton principal</span></td>
               <td><span class="lim">30 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.visit.issue.photo.title</span></td>
+              <td><span class="fr">Ajoutez des photos du souci.</span></td>
+              <td><span class="ctx">X-15.S étape photos</span></td>
+              <td><span class="lim">38 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.visit.issue.photo.body</span></td>
+              <td>
+                <span class="fr body"
+                  >Montrez le linge ou le détail concerné. Le bureau les vérifie avant de vous
+                  rappeler.</span
+                >
+              </td>
+              <td><span class="ctx">X-15.S aide photos</span></td>
+              <td><span class="lim">104 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.visit.issue.photo.add.cta</span></td>
+              <td><span class="fr body">Ajouter des photos</span></td>
+              <td><span class="ctx">X-15.S bouton ajout photos</span></td>
+              <td><span class="lim">26 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.visit.issue.photo.empty</span></td>
+              <td><span class="fr body">Aucune photo ajoutée</span></td>
+              <td><span class="ctx">X-15.S état vide photos</span></td>
+              <td><span class="lim">28 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.visit.issue.photo.count_one</span></td>
+              <td><span class="fr body">1 photo ajoutée</span></td>
+              <td><span class="ctx">X-15.S compteur photos</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.visit.issue.photo.count_many</span></td>
+              <td><span class="fr body">{count} photos ajoutées</span></td>
+              <td><span class="ctx">X-15.S compteur photos</span></td>
+              <td><span class="lim">28 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.visit.issue.photo.required</span></td>
+              <td>
+                <span class="fr body">Ajoutez au moins une photo pour envoyer le signalement.</span>
+              </td>
+              <td><span class="ctx">X-15.S exigence photos</span></td>
+              <td><span class="lim">68 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.visit.issue.photo.submit.cta</span></td>
+              <td><span class="fr body">Envoyer le signalement</span></td>
+              <td><span class="ctx">X-15.S envoi final</span></td>
+              <td><span class="lim">28 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.visit.support.submitted.title</span></td>
@@ -3129,6 +3601,12 @@
               <td><span class="fr body">Envoyer</span></td>
               <td><span class="ctx">X-32 bouton réponse</span></td>
               <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.support.ticket.detail.reply.just_now</span></td>
+              <td><span class="fr body">à l'instant</span></td>
+              <td><span class="ctx">X-32 horodatage réponse locale</span></td>
+              <td><span class="lim">16 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.support.ticket.detail.photo.pull</span></td>

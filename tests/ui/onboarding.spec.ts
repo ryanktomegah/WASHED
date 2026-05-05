@@ -1,7 +1,43 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
-test('X-01 splash · FR-only subscriber entry', async ({ page }) => {
+const SUBSCRIBER_APPEARANCE_STORAGE_KEY = 'washed.subscriber.appearance';
+const SUBSCRIBER_LANGUAGE_STORAGE_KEY = 'washed.locale';
+
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(
+    ([appearanceKey, languageKey]) => {
+      window.localStorage.setItem(appearanceKey, 'light');
+      window.localStorage.removeItem(languageKey);
+    },
+    [SUBSCRIBER_APPEARANCE_STORAGE_KEY, SUBSCRIBER_LANGUAGE_STORAGE_KEY],
+  );
+});
+
+async function continueThroughLaunchPreferences(page: Page): Promise<void> {
+  const languageGate = page.locator('[data-screen-id="X-00L"]');
+  const languageGateAppeared = await languageGate
+    .waitFor({ state: 'visible', timeout: 1000 })
+    .then(() => true)
+    .catch(() => false);
+  if (languageGateAppeared) {
+    await page.getByRole('radio', { name: /Français/u }).click();
+    await page.getByRole('button', { name: 'Continuer' }).click();
+  }
+
+  const gate = page.locator('[data-screen-id="X-00A"]');
+  const gateAppeared = await gate
+    .waitFor({ state: 'visible', timeout: 1000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!gateAppeared) return;
+
+  await page.getByRole('radio', { name: /Clair/u }).click();
+  await page.getByRole('button', { name: 'Continuer' }).click();
+}
+
+test('X-01 splash · French subscriber entry', async ({ page }) => {
   await page.goto('/#/welcome');
+  await continueThroughLaunchPreferences(page);
 
   await expect(page.locator('[data-screen-id="X-01"]')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Washed' })).toBeVisible();
@@ -13,24 +49,30 @@ test('X-01 splash · FR-only subscriber entry', async ({ page }) => {
   await page.screenshot({ path: 'playwright-report/x-01-splash.png', fullPage: true });
 });
 
-test('X-01 ignores stale English locale and keeps the subscriber app in FR', async ({ page }) => {
-  await page.addInitScript(() => {
-    window.localStorage.setItem('washed.locale', 'en');
-  });
+test('X-00L language choice can launch the subscriber app in English', async ({ page }) => {
   await page.goto('/#/welcome');
 
-  await page.getByRole('button', { name: 'Continuer' }).click();
+  await expect(page.locator('[data-screen-id="X-00L"]')).toBeVisible();
+  await page.getByRole('radio', { name: /English/u }).click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+
+  await expect(page.locator('[data-screen-id="X-00A"]')).toBeVisible();
+  await page.getByRole('radio', { name: /Light/u }).click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+
+  await page.getByRole('button', { name: 'Continue' }).click();
 
   await expect(page).toHaveURL(/#\/signup\/phone/u);
   await expect(page.locator('[data-screen-id="X-02"]')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Votre numéro de téléphone' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Recevoir le code' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your phone number.' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Send the code' })).toBeVisible();
   const storedLocale = await page.evaluate(() => window.localStorage.getItem('washed.locale'));
-  expect(storedLocale).toBe('fr');
+  expect(storedLocale).toBe('en');
 });
 
 test('X-02 phone · ÉTAPE 1 / 4, +228 prefix, CTA disabled until 8 digits', async ({ page }) => {
   await page.goto('/#/signup/phone');
+  await continueThroughLaunchPreferences(page);
 
   await expect(page.locator('[data-screen-id="X-02"]')).toBeVisible();
   await expect(page.getByText('Étape 1 / 4')).toBeVisible();
@@ -49,6 +91,7 @@ test('X-02 phone · ÉTAPE 1 / 4, +228 prefix, CTA disabled until 8 digits', asy
 
 test('X-03 OTP · ÉTAPE 2 / 4, 6 cells, resend timer ticking, call link', async ({ page }) => {
   await page.goto('/#/signup/phone');
+  await continueThroughLaunchPreferences(page);
   await page.getByRole('textbox', { name: 'Numéro' }).fill('90123456');
   await page.getByRole('button', { name: 'Recevoir le code' }).click();
 
@@ -65,6 +108,7 @@ test('X-03 OTP · ÉTAPE 2 / 4, 6 cells, resend timer ticking, call link', async
 
 test('X-02 → X-03 navigation forwards the +228 phone in signup state', async ({ page }) => {
   await page.goto('/#/signup/phone');
+  await continueThroughLaunchPreferences(page);
 
   await page.getByRole('textbox', { name: 'Numéro' }).fill('90123456');
   await page.getByRole('button', { name: 'Recevoir le code' }).click();
@@ -76,6 +120,7 @@ test('X-02 → X-03 navigation forwards the +228 phone in signup state', async (
 
 test('X-04 → X-08 complete signup flow', async ({ page }) => {
   await page.goto('/#/signup/phone');
+  await continueThroughLaunchPreferences(page);
   await page.getByRole('textbox', { name: 'Numéro' }).fill('90123456');
   await page.getByRole('button', { name: 'Recevoir le code' }).click();
 
@@ -97,7 +142,7 @@ test('X-04 → X-08 complete signup flow', async ({ page }) => {
   await expect(
     page.getByRole('heading', { name: 'Ajoutez votre moyen de paiement' }),
   ).toBeVisible();
-  await expect(page.getByText('TMoney', { exact: true })).toBeVisible();
+  await expect(page.getByText('Mixx by Yas', { exact: true })).toBeVisible();
   await expect(page.getByRole('textbox', { name: 'Numéro Mobile Money' })).toHaveValue(
     '90 12 34 56',
   );
@@ -107,19 +152,22 @@ test('X-04 → X-08 complete signup flow', async ({ page }) => {
   await expect(page.getByText('Récap')).toBeVisible();
   await expect(page.getByText('1 visite / mois')).toBeVisible();
   await expect(page.getByText('2 500 XOF')).toBeVisible();
-  await expect(page.getByText('TMoney · 90 12…')).toBeVisible();
+  await expect(page.getByText('Mixx by Yas · 90 12…')).toBeVisible();
+  await page.locator('.consent-row').click();
   await page.getByRole('button', { name: "Confirmer l'abonnement" }).click();
 
   await expect(page.locator('[data-screen-id="X-08"]')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Bienvenue chez Washed.' })).toBeVisible();
+  await expect(page.getByText(/Choisissez maintenant le jour et le moment/u)).toBeVisible();
 
-  await page.getByRole('button', { name: 'Voir mon accueil' }).click();
-  await expect(page).toHaveURL(/#\/hub/u);
-  await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
+  await page.getByRole('button', { name: 'Planifier ma première visite' }).click();
+  await expect(page).toHaveURL(/#\/booking/u);
+  await expect(page.locator('[data-screen-id="X-10B"]')).toBeVisible();
 });
 
 test('X-01 continue button routes to X-02 phone', async ({ page }) => {
   await page.goto('/#/welcome');
+  await continueThroughLaunchPreferences(page);
 
   await page.getByRole('button', { name: 'Continuer' }).click();
 
@@ -129,6 +177,7 @@ test('X-01 continue button routes to X-02 phone', async ({ page }) => {
 
 test('X-01 visual contract · white background, green Geist wordmark', async ({ page }) => {
   await page.goto('/#/welcome');
+  await continueThroughLaunchPreferences(page);
 
   const main = page.locator('[data-screen-id="X-01"]');
   await expect(main).toBeVisible();
@@ -149,6 +198,7 @@ test('X-01 visual contract · white background, green Geist wordmark', async ({ 
 
 test('X-02 visual contract · light background, forest primary CTA', async ({ page }) => {
   await page.goto('/#/signup/phone');
+  await continueThroughLaunchPreferences(page);
   await page.getByRole('textbox', { name: 'Numéro' }).fill('90123456');
 
   const main = page.locator('[data-screen-id="X-02"]');

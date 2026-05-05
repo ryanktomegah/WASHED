@@ -1,11 +1,24 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+
+import { setActiveLocale } from '@washed/i18n';
+import { LocaleProvider } from '@washed/ui';
 
 import {
+  SUBSCRIBER_APPEARANCE_STORAGE_KEY,
+  SubscriberAppearanceProvider,
+} from '../../appearance/AppearanceContext.js';
+import {
+  SUBSCRIBER_LANGUAGE_OPTIONS,
+  SUBSCRIBER_LANGUAGE_STORAGE_KEY,
+} from '../../language/languageOptions.js';
+import {
   AddressEditX25,
+  AppearanceX24A,
   DeleteAccountX28,
+  LanguageX24L,
   NotificationsX26,
   PrivacyX27,
   ProfileX24,
@@ -29,10 +42,16 @@ function renderAt(
       <Routes>
         <Route
           element={
-            <>
-              {element}
-              <Spy />
-            </>
+            <LocaleProvider
+              defaultLocale="fr"
+              storageKey={SUBSCRIBER_LANGUAGE_STORAGE_KEY}
+              supportedLocales={SUBSCRIBER_LANGUAGE_OPTIONS}
+            >
+              <SubscriberAppearanceProvider>
+                {element}
+                <Spy />
+              </SubscriberAppearanceProvider>
+            </LocaleProvider>
           }
           path={path}
         />
@@ -44,8 +63,15 @@ function renderAt(
   return { locationRef };
 }
 
+beforeEach(() => {
+  setActiveLocale('fr');
+  window.localStorage.removeItem(SUBSCRIBER_APPEARANCE_STORAGE_KEY);
+  window.localStorage.removeItem(SUBSCRIBER_LANGUAGE_STORAGE_KEY);
+});
+
 describe('Subscriber profile · X-24', () => {
   it('renders identity, settings list, action buttons, and Profil-active nav', () => {
+    window.localStorage.setItem(SUBSCRIBER_APPEARANCE_STORAGE_KEY, 'dark');
     renderAt('/profile', <ProfileX24 />);
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-24');
@@ -56,13 +82,17 @@ describe('Subscriber profile · X-24', () => {
     // Menu rows.
     expect(screen.getByRole('button', { name: /Adresse/u })).toBeVisible();
     expect(screen.getByRole('button', { name: /Notifications/u })).toBeVisible();
+    expect(screen.getByRole('button', { name: /Langue/u })).toBeVisible();
+    expect(screen.getByText('Français')).toBeVisible();
+    expect(screen.getByRole('button', { name: /Apparence/u })).toBeVisible();
+    expect(screen.getByText('Sombre')).toBeVisible();
     expect(screen.getByRole('button', { name: /Vie privée/u })).toBeVisible();
 
     // Profil tab is active in the bottom nav.
     expect(screen.getByRole('button', { name: 'Profil' })).toHaveAttribute('aria-current', 'page');
   });
 
-  it('routes Adresse, Notifications, Vie privée, and Aide to their screens', () => {
+  it('routes Adresse, Notifications, Apparence, Vie privée, and Aide to their screens', () => {
     const a = renderAt('/profile', <ProfileX24 />);
     fireEvent.click(screen.getByRole('button', { name: /Adresse/u }));
     expect(a.locationRef.current).toBe('/profile/address');
@@ -71,6 +101,14 @@ describe('Subscriber profile · X-24', () => {
     fireEvent.click(screen.getByRole('button', { name: /Notifications/u }));
     expect(n.locationRef.current).toBe('/profile/notifications');
 
+    const language = renderAt('/profile', <ProfileX24 />);
+    fireEvent.click(screen.getByRole('button', { name: /Langue/u }));
+    expect(language.locationRef.current).toBe('/profile/language');
+
+    const appearance = renderAt('/profile', <ProfileX24 />);
+    fireEvent.click(screen.getByRole('button', { name: /Apparence/u }));
+    expect(appearance.locationRef.current).toBe('/profile/appearance');
+
     const p = renderAt('/profile', <ProfileX24 />);
     fireEvent.click(screen.getByRole('button', { name: /Vie privée/u }));
     expect(p.locationRef.current).toBe('/profile/privacy');
@@ -78,6 +116,41 @@ describe('Subscriber profile · X-24', () => {
     const s = renderAt('/profile', <ProfileX24 />);
     fireEvent.click(screen.getByRole('button', { name: 'Aide & support' }));
     expect(s.locationRef.current).toBe('/support');
+  });
+});
+
+describe('Subscriber profile · X-24L Language', () => {
+  it('renders both language options and persists an English choice', () => {
+    renderAt('/profile/language', <LanguageX24L />);
+
+    expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-24L');
+    expect(screen.getByRole('heading', { name: 'Choisir la langue' })).toBeVisible();
+    expect(screen.getByRole('radio', { name: /Français/u })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+
+    fireEvent.click(screen.getByRole('radio', { name: /English/u }));
+
+    expect(screen.getByRole('heading', { name: 'Choose language' })).toBeVisible();
+    expect(screen.getByRole('radio', { name: /English/u })).toHaveAttribute('aria-checked', 'true');
+    expect(window.localStorage.getItem(SUBSCRIBER_LANGUAGE_STORAGE_KEY)).toBe('en');
+  });
+});
+
+describe('Subscriber profile · X-24A Appearance', () => {
+  it('renders the saved appearance choice and persists a manual light choice', () => {
+    window.localStorage.setItem(SUBSCRIBER_APPEARANCE_STORAGE_KEY, 'dark');
+    renderAt('/profile/appearance', <AppearanceX24A />);
+
+    expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-24A');
+    expect(screen.getByRole('heading', { name: "Choisir l'apparence" })).toBeVisible();
+    expect(screen.getByRole('radio', { name: /Sombre/u })).toHaveAttribute('aria-checked', 'true');
+
+    fireEvent.click(screen.getByRole('radio', { name: /Clair/u }));
+
+    expect(screen.getByRole('radio', { name: /Clair/u })).toHaveAttribute('aria-checked', 'true');
+    expect(window.localStorage.getItem(SUBSCRIBER_APPEARANCE_STORAGE_KEY)).toBe('light');
   });
 });
 

@@ -2,20 +2,16 @@ import { useNavigate } from 'react-router-dom';
 import type { ReactElement } from 'react';
 
 import { translate } from '@washed/i18n';
-import { useLocale } from '@washed/ui';
 
 export function SplashX01(): ReactElement {
   const navigate = useNavigate();
-  const { setLocale } = useLocale();
 
   const continueSignup = (): void => {
-    setLocale('fr');
     navigate('/signup/phone');
   };
 
   const continueExistingAccount = (): void => {
-    setLocale('fr');
-    navigate('/hub');
+    navigate('/signup/phone');
   };
 
   return (

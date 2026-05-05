@@ -21,7 +21,9 @@
   flex-direction: column;
   gap: 14px;
   min-height: 0;
-  padding: 24px 20px;
+  overflow-y: auto;
+  padding: 20px 22px 24px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .visit-body.tight {
@@ -78,7 +80,7 @@
 
 .visit-back:focus-visible,
 .visit-button:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--success);
   outline-offset: 2px;
 }
 
@@ -115,7 +117,7 @@
 }
 
 .visit-title em {
-  color: var(--primary);
+  color: var(--success);
   font-style: normal;
 }
 
@@ -210,7 +212,7 @@
 }
 
 .visit-eyebrow.accent {
-  color: var(--primary);
+  color: var(--success);
 }
 
 .visit-chip-row {
@@ -314,31 +316,15 @@
   width: 100%;
 }
 
+.visit-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.54;
+}
+
 .visit-row2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
-}
-
-@media (prefers-color-scheme: dark) {
-  .visit-screen {
-    --bg: #111111;
-    --surface: #111111;
-    --surface-2: #1a1a1a;
-    --ink: #fafafa;
-    --ink-2: #c7c7c7;
-    --ink-3: #a3a3a3;
-    --ink-4: #737373;
-    --line: #262626;
-    --line-2: #333333;
-    --primary: #0a3d1f;
-    --primary-on: #ffffff;
-    --primary-tint: #0f1f15;
-    --primary-soft: #0c1610;
-    --success: #48c078;
-    --warn: #e0a030;
-    --danger: #f05959;
-  }
 }
 
 .visit-choice-list {
@@ -366,7 +352,7 @@
 }
 
 .visit-choice.selected {
-  border-color: var(--primary);
+  border-color: var(--success);
   background: var(--primary-soft);
 }
 
@@ -390,7 +376,7 @@
 }
 
 .visit-choice:focus-within {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--success);
   outline-offset: 2px;
 }
 
@@ -404,7 +390,7 @@
 }
 
 .visit-choice.selected .visit-radio {
-  border-color: var(--primary);
+  border-color: var(--success);
 }
 
 .visit-choice.selected .visit-radio::after {
@@ -427,6 +413,87 @@
   white-space: nowrap;
 }
 
+.visit-photo-upload {
+  display: grid;
+  gap: 10px;
+}
+
+.visit-photo-upload-target {
+  display: flex;
+  min-height: 108px;
+  align-items: center;
+  gap: 14px;
+  border: 1px dashed var(--line-2);
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--ink);
+  cursor: pointer;
+  padding: 16px;
+}
+
+.visit-photo-upload-target:focus-within {
+  outline: 2px solid var(--success);
+  outline-offset: 2px;
+}
+
+.visit-photo-upload-target svg {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  color: var(--success);
+  stroke-width: 1.8;
+}
+
+.visit-photo-upload-target span {
+  display: grid;
+  gap: 4px;
+}
+
+.visit-photo-upload-target strong {
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.visit-photo-upload-target small {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+
+.visit-photo-attachment-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.visit-photo-attachment-list li {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.35;
+  padding: 9px 10px;
+}
+
+.visit-photo-attachment-list span {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--success);
+}
+
 .visit-map {
   position: relative;
   min-height: 274px;
@@ -434,8 +501,8 @@
   border: 1px solid var(--line);
   border-radius: 10px;
   background:
-    linear-gradient(90deg, color-mix(in srgb, var(--primary) 9%, transparent) 1px, transparent 1px),
-    linear-gradient(color-mix(in srgb, var(--primary) 9%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--success) 9%, transparent) 1px, transparent 1px),
+    linear-gradient(color-mix(in srgb, var(--success) 9%, transparent) 1px, transparent 1px),
     var(--surface-2);
   background-size: 36px 36px;
 }
@@ -537,7 +604,7 @@
 }
 
 .visit-metric-card .accent {
-  color: var(--primary);
+  color: var(--success);
   font-style: normal;
 }
 
@@ -571,7 +638,7 @@
   background:
     radial-gradient(circle at 26% 26%, var(--accent-soft), transparent 30%),
     linear-gradient(135deg, var(--primary-tint), var(--primary-soft));
-  color: var(--primary);
+  color: var(--success);
 }
 
 .visit-recap {
@@ -622,7 +689,7 @@
 }
 
 .visit-counter {
-  color: var(--primary);
+  color: var(--success);
   font-family: var(--font-mono);
   font-size: 28px;
   font-weight: 550;

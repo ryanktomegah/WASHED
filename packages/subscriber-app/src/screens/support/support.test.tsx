@@ -156,6 +156,12 @@ describe('Subscriber support · X-32 Ticket detail', () => {
     fireEvent.change(reply, { target: { value: 'Merci Ama.' } });
     expect(screen.getByRole('button', { name: 'Envoyer' })).toBeEnabled();
 
+    fireEvent.click(screen.getByRole('button', { name: 'Envoyer' }));
+    expect(screen.getByText("Vous · à l'instant")).toBeVisible();
+    expect(screen.getByText('Merci Ama.')).toBeVisible();
+    expect(reply.value).toBe('');
+    expect(screen.getByRole('button', { name: 'Envoyer' })).toBeDisabled();
+
     fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
     expect(locationRef.current).toBe('/support/tickets');
   });

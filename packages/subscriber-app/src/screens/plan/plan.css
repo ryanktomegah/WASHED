@@ -27,8 +27,11 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 12px;
-  padding: 24px 20px 8px;
+  gap: 14px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 22px 24px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .plan-body-flow {
@@ -84,7 +87,7 @@
 }
 
 .plan-eyebrow.accent {
-  color: var(--primary);
+  color: var(--success);
 }
 
 .plan-eyebrow.accent-warn {
@@ -106,7 +109,7 @@
 }
 
 .plan-title-accent {
-  color: var(--primary);
+  color: var(--success);
   font-style: normal;
 }
 
@@ -207,7 +210,7 @@
   place-items: center;
   border-radius: 999px;
   background: var(--primary-soft);
-  color: var(--primary);
+  color: var(--success);
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 600;
@@ -251,7 +254,7 @@
 
 .plan-button.primary {
   background: var(--primary);
-  color: var(--surface);
+  color: var(--primary-on);
 }
 
 .plan-button.ghost {
@@ -309,7 +312,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line));
+  border: 1px solid color-mix(in srgb, var(--success) 18%, var(--line));
   border-radius: 14px;
   background: var(--primary-soft);
   padding: 12px 14px;
@@ -421,7 +424,7 @@
 }
 
 .plan-compare-new {
-  color: var(--primary);
+  color: var(--success);
   font-family: var(--font-display);
   font-size: 18px;
   font-style: normal;
@@ -431,7 +434,7 @@
 
 .plan-compare-divider {
   height: 1px;
-  background: color-mix(in srgb, var(--primary) 22%, transparent);
+  background: color-mix(in srgb, var(--success) 22%, transparent);
   margin: 6px 0;
 }
 
@@ -540,7 +543,7 @@
 }
 
 .plan-method-card.active {
-  border-color: var(--primary);
+  border-color: var(--success);
   border-width: 2px;
 }
 
@@ -559,7 +562,7 @@
 }
 
 .plan-radio.active {
-  border-color: var(--primary);
+  border-color: var(--success);
 }
 
 .plan-radio.active span {
@@ -603,7 +606,7 @@
 
 .plan-method-badge.active {
   background: var(--primary-soft);
-  color: var(--primary);
+  color: var(--success);
 }
 
 /* Payment overdue degraded hub — X-23. */
@@ -731,7 +734,7 @@
 .plan-back:focus-visible,
 .plan-button:focus-visible,
 .plan-method-card:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--success);
   outline-offset: 2px;
   box-shadow: none;
 }
@@ -788,7 +791,7 @@
 .plan-button.primary,
 .plan-button.ink {
   background: var(--primary);
-  color: var(--surface);
+  color: var(--primary-on);
 }
 
 .plan-button.ghost,
@@ -825,7 +828,7 @@
 
 .plan-method-card.active {
   border-width: 1px;
-  border-color: var(--primary);
+  border-color: var(--success);
   background: var(--primary-soft);
 }
 
@@ -835,33 +838,12 @@
 
 .plan-pause-glyph {
   background: var(--primary-soft);
-  color: var(--primary);
+  color: var(--success);
 }
 
 @media (max-height: 700px) {
   .plan-body {
     gap: 10px;
     padding-top: 18px;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  .plan-screen {
-    --bg: #111111;
-    --surface: #111111;
-    --surface-2: #1a1a1a;
-    --ink: #fafafa;
-    --ink-2: #c7c7c7;
-    --ink-3: #a3a3a3;
-    --ink-4: #737373;
-    --line: #262626;
-    --line-2: #333333;
-    --primary: #0a3d1f;
-    --primary-on: #ffffff;
-    --primary-tint: #0f1f15;
-    --primary-soft: #0c1610;
-    --success: #48c078;
-    --warn: #e0a030;
-    --danger: #f05959;
   }
 }

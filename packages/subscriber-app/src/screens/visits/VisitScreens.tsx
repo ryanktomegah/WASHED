@@ -1,5 +1,5 @@
-import { useState, type ReactElement } from 'react';
-import { Check, ChevronLeft } from 'lucide-react';
+import { useState, type ChangeEvent, type ReactElement } from 'react';
+import { Check, ChevronLeft, ImagePlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { translate, type WashedLocale } from '@washed/i18n';
@@ -10,6 +10,7 @@ import { ISSUE_OPTIONS, RESCHEDULE_OPTIONS, SUBSCRIBER_VISIT_DEMO } from './visi
 
 type RescheduleOptionId = (typeof RESCHEDULE_OPTIONS)[number]['id'];
 type IssueOptionId = (typeof ISSUE_OPTIONS)[number]['id'];
+type IssueReportStep = 'issue' | 'photos';
 
 function dateFromIso(dateIso: string): Date {
   return new Date(`${dateIso}T12:00:00.000Z`);
@@ -411,10 +412,41 @@ export function VisitFeedbackX15(): ReactElement {
 
 export function VisitIssueX15S(): ReactElement {
   const navigate = useNavigate();
-  const goBack = useSafeBack('/visit/detail');
-  const [selectedIssue, setSelectedIssue] = useState<IssueOptionId>(
-    ISSUE_OPTIONS[0]?.id ?? 'damaged',
-  );
+  const returnToVisit = useSafeBack('/visit/detail');
+  const [issueStep, setIssueStep] = useState<IssueReportStep>('issue');
+  const [selectedIssue, setSelectedIssue] = useState<IssueOptionId | ''>('');
+  const [photoNames, setPhotoNames] = useState<readonly string[]>([]);
+
+  const canChoosePhotos = selectedIssue !== '';
+  const canSubmitIssue = photoNames.length > 0;
+  const photoCountLabel =
+    photoNames.length === 1
+      ? translate('subscriber.visit.issue.photo.count_one')
+      : translate('subscriber.visit.issue.photo.count_many', { count: photoNames.length });
+
+  const goBack = (): void => {
+    if (issueStep === 'photos') {
+      setIssueStep('issue');
+      return;
+    }
+
+    returnToVisit();
+  };
+
+  const goToPhotos = (): void => {
+    if (!canChoosePhotos) return;
+    setIssueStep('photos');
+  };
+
+  const handlePhotoChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    const files = Array.from(event.currentTarget.files ?? []);
+    setPhotoNames(files.slice(0, 4).map((file) => file.name));
+  };
+
+  const submitIssue = (): void => {
+    if (!canSubmitIssue) return;
+    navigate('/visit/issue/submitted');
+  };
 
   return (
     <main aria-labelledby="x15s-headline" className="visit-screen" data-screen-id="X-15.S">
@@ -422,42 +454,97 @@ export function VisitIssueX15S(): ReactElement {
         <VisitBackHeader label={translate('subscriber.visit.issue.header')} onBack={goBack} />
 
         <h1 className="visit-title" id="x15s-headline">
-          {translate('subscriber.visit.issue.title')}
+          {issueStep === 'issue'
+            ? translate('subscriber.visit.issue.title')
+            : translate('subscriber.visit.issue.photo.title')}
         </h1>
-        <p className="visit-copy">{translate('subscriber.visit.support.body')}</p>
+        <p className="visit-copy">
+          {issueStep === 'issue'
+            ? translate('subscriber.visit.support.body')
+            : translate('subscriber.visit.issue.photo.body')}
+        </p>
 
-        <fieldset className="visit-choice-list compact" aria-labelledby="x15s-headline">
-          <legend className="visit-sr">{translate('subscriber.visit.feedback.issue')}</legend>
-          {ISSUE_OPTIONS.map((issue) => (
-            <label
-              className={`visit-choice${issue.id === selectedIssue ? ' selected' : ''}`}
-              key={issue.id}
-            >
+        {issueStep === 'issue' ? (
+          <fieldset className="visit-choice-list compact" aria-labelledby="x15s-headline">
+            <legend className="visit-sr">{translate('subscriber.visit.feedback.issue')}</legend>
+            {ISSUE_OPTIONS.map((issue) => (
+              <label
+                className={`visit-choice${issue.id === selectedIssue ? ' selected' : ''}`}
+                key={issue.id}
+              >
+                <input
+                  checked={issue.id === selectedIssue}
+                  className="visit-sr"
+                  name="issue"
+                  onChange={() => setSelectedIssue(issue.id)}
+                  type="radio"
+                  value={issue.id}
+                />
+                <span aria-hidden="true" className="visit-radio" />
+                <span>
+                  <strong>{translate(issue.labelKey)}</strong>
+                </span>
+              </label>
+            ))}
+          </fieldset>
+        ) : (
+          <section className="visit-photo-upload" aria-labelledby="x15s-headline">
+            <label className="visit-photo-upload-target" htmlFor="x15s-photo-input">
               <input
-                checked={issue.id === selectedIssue}
+                accept="image/*"
                 className="visit-sr"
-                name="issue"
-                onChange={() => setSelectedIssue(issue.id)}
-                type="radio"
-                value={issue.id}
+                id="x15s-photo-input"
+                multiple
+                onChange={handlePhotoChange}
+                type="file"
               />
-              <span aria-hidden="true" className="visit-radio" />
+              <ImagePlus aria-hidden="true" />
               <span>
-                <strong>{translate(issue.labelKey)}</strong>
+                <strong>{translate('subscriber.visit.issue.photo.add.cta')}</strong>
+                <small>
+                  {photoNames.length === 0
+                    ? translate('subscriber.visit.issue.photo.empty')
+                    : photoCountLabel}
+                </small>
               </span>
             </label>
-          ))}
-        </fieldset>
+
+            {photoNames.length > 0 ? (
+              <ul className="visit-photo-attachment-list">
+                {photoNames.map((photoName, index) => (
+                  <li key={`${photoName}-${index}`}>
+                    <span aria-hidden="true" />
+                    {photoName}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
+            <p className="visit-note">{translate('subscriber.visit.issue.photo.required')}</p>
+          </section>
+        )}
 
         <div className="visit-grow" />
 
-        <button
-          className="visit-button primary full"
-          onClick={() => navigate('/visit/issue/submitted')}
-          type="button"
-        >
-          {translate('subscriber.visit.support.submit.cta')}
-        </button>
+        {issueStep === 'issue' ? (
+          <button
+            className="visit-button primary full"
+            disabled={!canChoosePhotos}
+            onClick={goToPhotos}
+            type="button"
+          >
+            {translate('subscriber.visit.support.submit.cta')}
+          </button>
+        ) : (
+          <button
+            className="visit-button primary full"
+            disabled={!canSubmitIssue}
+            onClick={submitIssue}
+            type="button"
+          >
+            {translate('subscriber.visit.issue.photo.submit.cta')}
+          </button>
+        )}
       </div>
     </main>
   );

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
 
+import { OnboardingBackButton } from './OnboardingBackButton.js';
 import { PAYMENT_PROVIDER_LABEL, useSignup, type SignupPaymentProvider } from './SignupContext.js';
 
 const PROVIDERS: readonly SignupPaymentProvider[] = ['mixx', 'flooz'];
@@ -49,6 +50,7 @@ export function PaymentX06(): ReactElement {
   return (
     <main aria-labelledby="x06-headline" className="onboarding-screen" data-screen-id="X-06">
       <div className="body tight">
+        <OnboardingBackButton to="/signup/tier" />
         <div className="title-stack">
           <span className="h-sm">{translate('subscriber.signup.payment.eyebrow')}</span>
           <h1 className="h-md" id="x06-headline">

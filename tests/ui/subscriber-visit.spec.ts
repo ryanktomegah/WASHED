@@ -1,7 +1,13 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+const SUBSCRIBER_APPEARANCE_STORAGE_KEY = 'washed.subscriber.appearance';
+const SUBSCRIBER_LANGUAGE_STORAGE_KEY = 'washed.locale';
+const SUBSCRIBER_FIRST_VISIT_REQUEST_STORAGE_KEY = 'washed.subscriber.firstVisitRequested';
 
 const screenRoutes = [
   ['x-10-hub', '/#/hub', 'X-10'],
+  ['x-10b-booking', '/#/booking', 'X-10B'],
+  ['x-10c-booking-submitted', '/#/booking/submitted', 'X-10C'],
   ['x-11-detail', '/#/visit/detail', 'X-11'],
   ['x-11m-reschedule', '/#/visit/reschedule', 'X-11.M'],
   ['x-12-en-route', '/#/visit/en-route', 'X-12'],
@@ -20,6 +26,7 @@ const screenRoutes = [
   ['x-22-plan-pause', '/#/plan/pause', 'X-22'],
   ['x-22a-plan-pause-submitted', '/#/plan/pause/submitted', 'X-22.A'],
   ['x-24-profile', '/#/profile', 'X-24'],
+  ['x-24l-profile-language', '/#/profile/language', 'X-24L'],
   ['x-25-profile-address', '/#/profile/address', 'X-25'],
   ['x-26-profile-notifications', '/#/profile/notifications', 'X-26'],
   ['x-27-profile-privacy', '/#/profile/privacy', 'X-27'],
@@ -34,6 +41,43 @@ const screenRoutes = [
   ['x-35-update-required', '/#/update-required', 'X-35'],
 ] as const;
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(
+    ([appearanceKey, languageKey, firstVisitRequestKey]) => {
+      window.localStorage.setItem(appearanceKey, 'light');
+      window.localStorage.removeItem(languageKey);
+      window.localStorage.removeItem(firstVisitRequestKey);
+    },
+    [
+      SUBSCRIBER_APPEARANCE_STORAGE_KEY,
+      SUBSCRIBER_LANGUAGE_STORAGE_KEY,
+      SUBSCRIBER_FIRST_VISIT_REQUEST_STORAGE_KEY,
+    ],
+  );
+});
+
+async function continueThroughAppearance(page: Page): Promise<void> {
+  const languageGate = page.locator('[data-screen-id="X-00L"]');
+  const languageGateAppeared = await languageGate
+    .waitFor({ state: 'visible', timeout: 1000 })
+    .then(() => true)
+    .catch(() => false);
+  if (languageGateAppeared) {
+    await page.getByRole('radio', { name: /Français/u }).click();
+    await page.getByRole('button', { name: 'Continuer' }).click();
+  }
+
+  const gate = page.locator('[data-screen-id="X-00A"]');
+  const gateAppeared = await gate
+    .waitFor({ state: 'visible', timeout: 1000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!gateAppeared) return;
+
+  await page.getByRole('radio', { name: /Clair/u }).click();
+  await page.getByRole('button', { name: 'Continuer' }).click();
+}
+
 test.describe('Subscriber implemented hub, visit, relationship, forfait, and profile flows through X-28', () => {
   // Most tests target post-onboarding state — pre-mark the X-09 first-session
   // tour completed so the hub renders clean. The tour itself has its own spec
@@ -47,6 +91,7 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
   for (const [slug, route, screenId] of screenRoutes) {
     test(`${screenId} deep-link capture`, async ({ page }, testInfo) => {
       await page.goto(route);
+      await continueThroughAppearance(page);
 
       await expect(page.locator(`[data-screen-id="${screenId}"]`)).toBeVisible();
 
@@ -64,12 +109,43 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
 
       if (screenId === 'X-10') {
         await expect(page.getByText('bonjour Mariam')).toBeVisible();
-        await expect(page.getByText('Prochaine visite')).toBeVisible();
-        await expect(page.getByText('confirmée')).toBeVisible();
-        await expect(page.getByText('9:00')).toBeVisible();
-        await expect(page.getByText('mar 7 mai')).toBeVisible();
-        await expect(page.getByText('Akouvi K.')).toBeVisible();
-        await expect(page.getByText('forfait actif')).toBeVisible();
+        await expect(page.getByText('Prochaine visite')).not.toBeVisible();
+        await expect(page.getByText('confirmée')).not.toBeVisible();
+        await expect(page.getByText('9:00')).not.toBeVisible();
+        await expect(page.getByText('Akouvi K.')).not.toBeVisible();
+        await expect(page.getByText('Première visite', { exact: true })).toBeVisible();
+        await expect(
+          page.getByRole('heading', { name: 'Planifiez votre première visite' }),
+        ).toBeVisible();
+        await expect(page.getByText(/Le bureau confirme avant d'assigner/u)).toBeVisible();
+        await expect(
+          page.getByRole('button', { name: /Planifier ma première visite/u }),
+        ).toBeVisible();
+        const plan = page.getByRole('region', { name: 'Forfait' });
+        await expect(plan.getByText('Forfait')).toBeVisible();
+        await expect(plan.getByText('Visite à planifier')).toBeVisible();
+      }
+
+      if (screenId === 'X-10B') {
+        await expect(
+          page.getByRole('heading', { name: 'Quel jour vous convient ?' }),
+        ).toBeVisible();
+        await expect(page.getByText('1 / 2')).toBeVisible();
+        await expect(page.getByText('Lundi')).toBeVisible();
+        await expect(page.getByText('Mercredi')).toBeVisible();
+        await expect(page.getByText('Vendredi')).toBeVisible();
+        await expect(page.getByText('Samedi')).toBeVisible();
+        await expect(page.getByText('Dimanche')).toBeVisible();
+        await expect(page.getByText('Matin')).not.toBeVisible();
+        await expect(page.getByText('Après-midi')).not.toBeVisible();
+        await expect(page.getByRole('button', { name: /Envoyer la demande/u })).not.toBeVisible();
+      }
+
+      if (screenId === 'X-10C') {
+        await expect(page.getByRole('heading', { name: 'Demande envoyée.' })).toBeVisible();
+        await expect(
+          page.getByText('Le bureau confirme votre créneau par appel ou SMS avant la visite.'),
+        ).toBeVisible();
       }
 
       if (screenId === 'X-16') {
@@ -162,10 +238,21 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
         await expect(page.getByRole('heading', { name: 'Yawa Mensah' })).toBeVisible();
         await expect(page.getByText('+228 90 12 34 56')).toBeVisible();
         await expect(page.getByText('Abonnée depuis sept. 2025')).toBeVisible();
+        await expect(page.getByRole('button', { name: /Langue/u })).toBeVisible();
+        await expect(page.getByRole('button', { name: /Apparence/u })).toBeVisible();
         await expect(page.getByRole('button', { name: 'Profil' })).toHaveAttribute(
           'aria-current',
           'page',
         );
+      }
+
+      if (screenId === 'X-24L') {
+        await expect(page.getByRole('heading', { name: 'Choisir la langue' })).toBeVisible();
+        await expect(page.getByRole('radio', { name: /Français/u })).toHaveAttribute(
+          'aria-checked',
+          'true',
+        );
+        await expect(page.getByRole('radio', { name: /English/u })).toBeVisible();
       }
 
       if (screenId === 'X-25') {
@@ -247,35 +334,49 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
     });
   }
 
-  test('X-10 routes visible actions to visit detail and reschedule', async ({ page }) => {
+  test('X-10 first-time home does not expose visit detail or reschedule actions', async ({
+    page,
+  }) => {
     await page.goto('/#/hub');
+    await continueThroughAppearance(page);
 
-    await page.getByRole('button', { name: 'Détails' }).click();
-    await expect(page).toHaveURL(/#\/visit\/detail/u);
-    await expect(page.locator('[data-screen-id="X-11"]')).toBeVisible();
-
-    await page.goto('/#/hub');
-    await page.getByRole('button', { name: 'Reporter' }).click();
-    await expect(page).toHaveURL(/#\/visit\/reschedule/u);
-    await expect(page.locator('[data-screen-id="X-11.M"]')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Détails' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Reporter' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Akouvi K.' })).toHaveCount(0);
   });
 
-  test('X-10 worker card routes to X-18 worker profile and back', async ({ page }) => {
+  test('X-10 routes booking request through day and time confirmation', async ({ page }) => {
     await page.goto('/#/hub');
+    await continueThroughAppearance(page);
 
-    await page.getByRole('button', { name: 'Akouvi K.' }).click();
-    await expect(page).toHaveURL(/#\/worker\/akouvi/u);
-    await expect(page.locator('[data-screen-id="X-18"]')).toBeVisible();
+    await page.getByRole('button', { name: /Planifier ma première visite/u }).click();
+    await expect(page).toHaveURL(/#\/booking/u);
+    await expect(page.locator('[data-screen-id="X-10B"]')).toBeVisible();
 
-    // X-18 is a sub-screen with a Retour back header (post useSafeBack
-    // refactor) — not a tab with bottom nav.
-    await page.getByRole('button', { name: 'Retour' }).click();
+    await page.getByText('Samedi').click();
+    await expect(page.getByRole('heading', { name: 'Quel moment ce samedi ?' })).toBeVisible();
+    await expect(page.getByText('2 / 2')).toBeVisible();
+    await expect(page.getByText('Jour choisi')).toBeVisible();
+    await expect(page.getByText('Matin')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Envoyer la demande/u })).toBeDisabled();
+    await page.getByText('Matin').click();
+    await expect(page.getByLabel(/Matin/u)).toBeChecked();
+    await page.getByRole('button', { name: /Envoyer la demande/u }).click();
+
+    await expect(page).toHaveURL(/#\/booking\/submitted/u);
+    await expect(page.locator('[data-screen-id="X-10C"]')).toBeVisible();
+    await page.getByRole('button', { name: "Retour à l'accueil" }).click();
     await expect(page).toHaveURL(/#\/hub/u);
     await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Première visite en confirmation' }),
+    ).toBeVisible();
+    await expect(page.getByText('Demande en confirmation')).toBeVisible();
   });
 
   test('X-18 change request selects a reason and submits to confirmation', async ({ page }) => {
     await page.goto('/#/worker/akouvi');
+    await continueThroughAppearance(page);
 
     await page.getByRole('button', { name: 'Demander un changement' }).click();
     await expect(page).toHaveURL(/#\/worker\/akouvi\/change/u);
@@ -298,6 +399,7 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
     // falls back to /history when there's no in-app history). Reach it
     // through X-16 so the back stack includes the history list.
     await page.goto('/#/history');
+    await continueThroughAppearance(page);
     await page.getByRole('button', { name: /28 avr · 9 h 02/u }).click();
     await expect(page).toHaveURL(/#\/history\/visit-2026-04-28/u);
     await expect(page.locator('[data-screen-id="X-17"]')).toBeVisible();
@@ -307,6 +409,7 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
     await expect(page.locator('[data-screen-id="X-16"]')).toBeVisible();
 
     await page.goto('/#/history/visit-2026-04-28');
+    await continueThroughAppearance(page);
     await page.getByRole('button', { name: 'Signaler a posteriori' }).click();
     await expect(page).toHaveURL(/#\/visit\/issue/u);
     await expect(page.locator('[data-screen-id="X-15.S"]')).toBeVisible();
@@ -314,6 +417,7 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
 
   test('X-11 routes to reschedule', async ({ page }) => {
     await page.goto('/#/visit/detail');
+    await continueThroughAppearance(page);
 
     await expect(page.getByRole('heading', { name: 'Mardi 7 mai · 9:00' })).toBeVisible();
     await expect(page.getByText("Vous pouvez reporter jusqu'à 18 h la veille.")).toBeVisible();
@@ -327,6 +431,7 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
 
   test('X-14 reveal routes to good feedback and issue reporting', async ({ page }) => {
     await page.goto('/#/visit/reveal');
+    await continueThroughAppearance(page);
 
     await expect(page.getByLabel('Photos avant et après')).toBeVisible();
     await page.getByRole('button', { name: 'Tout va bien' }).click();
@@ -337,10 +442,22 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
     await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
 
     await page.goto('/#/visit/reveal');
+    await continueThroughAppearance(page);
     await page.getByRole('button', { name: 'Signaler un souci' }).click();
     await expect(page).toHaveURL(/#\/visit\/issue/u);
     await page.locator('label.visit-choice', { hasText: 'Linge mal lavé' }).click();
     await page.getByRole('button', { name: 'Suivant · ajouter photos' }).click();
+    await expect(page).toHaveURL(/#\/visit\/issue/u);
+    await expect(page.getByRole('heading', { name: 'Ajoutez des photos du souci.' })).toBeVisible();
+    await expect(page.getByText('Aucune photo ajoutée')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Envoyer le signalement' })).toBeDisabled();
+    await page
+      .locator('input[type="file"]')
+      .setInputFiles(
+        'packages/subscriber-app/ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png',
+      );
+    await expect(page.getByText('1 photo ajoutée')).toBeVisible();
+    await page.getByRole('button', { name: 'Envoyer le signalement' }).click();
     await expect(page).toHaveURL(/#\/visit\/issue\/submitted/u);
     await expect(page.getByRole('heading', { name: 'Signalement reçu.' })).toBeVisible();
     await page.getByRole('button', { name: "Retour à l'accueil" }).click();
@@ -350,6 +467,7 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
 
   test('X-13 close action lands on the X-10 hub', async ({ page }) => {
     await page.goto('/#/visit/in-progress');
+    await continueThroughAppearance(page);
 
     await page.getByRole('button', { name: "Fermer l'app sereinement" }).click();
     await expect(page).toHaveURL(/#\/hub/u);
@@ -360,10 +478,26 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
     page,
   }) => {
     await page.goto('/#/hub');
+    await continueThroughAppearance(page);
 
     await page.getByRole('button', { name: 'Profil' }).click();
     await expect(page).toHaveURL(/#\/profile$/u);
     await expect(page.locator('[data-screen-id="X-24"]')).toBeVisible();
+
+    // Language settings can switch in both directions.
+    await page.getByRole('button', { name: /Langue/u }).click();
+    await expect(page).toHaveURL(/#\/profile\/language/u);
+    await expect(page.locator('[data-screen-id="X-24L"]')).toBeVisible();
+    await page.getByRole('radio', { name: /English/u }).click();
+    await expect(page.getByRole('heading', { name: 'Choose language' })).toBeVisible();
+    await expect(page.getByRole('radio', { name: /English/u })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+    await page.getByRole('radio', { name: /Français/u }).click();
+    await expect(page.getByRole('heading', { name: 'Choisir la langue' })).toBeVisible();
+    await page.getByRole('button', { name: 'Retour' }).click();
+    await expect(page).toHaveURL(/#\/profile$/u);
 
     // Address edit round-trip.
     await page.getByRole('button', { name: /Adresse/u }).click();
@@ -401,6 +535,7 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
     page,
   }) => {
     await page.goto('/#/hub');
+    await continueThroughAppearance(page);
 
     // Open the plan tab from the hub bottom nav.
     await page.getByRole('button', { name: 'Forfait' }).click();
@@ -436,6 +571,7 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
     page,
   }) => {
     await page.goto('/#/profile');
+    await continueThroughAppearance(page);
     await page.getByRole('button', { name: 'Aide & support' }).click();
     await expect(page).toHaveURL(/#\/support$/u);
     await expect(page.locator('[data-screen-id="X-29"]')).toBeVisible();
@@ -463,19 +599,35 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
     await page.getByRole('button', { name: 'Voir mes tickets' }).click();
     await expect(page).toHaveURL(/#\/support\/tickets$/u);
     await expect(page.locator('[data-screen-id="X-31"]')).toBeVisible();
+
+    await page.getByRole('button', { name: /#0421/u }).click();
+    await expect(page).toHaveURL(/#\/support\/tickets\/0421/u);
+    await expect(page.locator('[data-screen-id="X-32"]')).toBeVisible();
+    const reply = page.getByLabel('Répondre');
+    const sendReply = page.getByRole('button', { name: 'Envoyer' });
+    await expect(sendReply).toBeDisabled();
+    await reply.fill('Merci Ama, je reste disponible.');
+    await expect(sendReply).toBeEnabled();
+    await sendReply.click();
+    await expect(page.getByText('Merci Ama, je reste disponible.')).toBeVisible();
+    await expect(reply).toHaveValue('');
+    await expect(sendReply).toBeDisabled();
   });
 
   test('System screens · X-33 offline, X-34 maintenance, X-35 update-required render via deep link', async ({
     page,
   }) => {
     await page.goto('/#/offline');
+    await continueThroughAppearance(page);
     await expect(page.locator('[data-screen-id="X-33"]')).toBeVisible();
 
     await page.goto('/#/maintenance');
+    await continueThroughAppearance(page);
     await expect(page.locator('[data-screen-id="X-34"]')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Maintenance en cours.' })).toBeVisible();
 
     await page.goto('/#/update-required');
+    await continueThroughAppearance(page);
     await expect(page.locator('[data-screen-id="X-35"]')).toBeVisible();
   });
 });
@@ -485,18 +637,23 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
 test.describe('Subscriber tour X-09 (first session)', () => {
   test('mounts on a fresh hub and persists the completed flag', async ({ page }, testInfo) => {
     await page.goto('/#/hub');
+    await continueThroughAppearance(page);
 
     const dialog = page.locator('[data-screen-id="X-09"]');
     await expect(dialog).toBeVisible();
     await expect(dialog).toHaveAttribute('role', 'dialog');
     await expect(page.getByText('Première session')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Votre accueil reste simple' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Votre accueil commence ici' })).toBeVisible();
     await expect(
-      page.getByText('Prochaine visite, laveuse, forfait et aide sont toujours à portée.'),
+      page.getByText(
+        'Planification, forfait et aide sont toujours à portée avant la première visite.',
+      ),
     ).toBeVisible();
     await expect(page.getByText('1 / 3')).toBeVisible();
     await expect(page.getByText('nouveau')).toBeVisible();
-    await expect(page.getByText('Touchez la carte de visite pour voir le détail.')).toBeVisible();
+    await expect(
+      page.getByText('Touchez Planifier pour choisir votre premier créneau.'),
+    ).toBeVisible();
 
     const screenshotPath = testInfo.outputPath(`x-09-tour-step1-${testInfo.project.name}.png`);
     await page.screenshot({ fullPage: true, path: screenshotPath });
@@ -509,6 +666,7 @@ test.describe('Subscriber tour X-09 (first session)', () => {
     await expect(dialog).toBeHidden();
 
     await page.reload();
+    await continueThroughAppearance(page);
     await expect(dialog).toBeHidden();
     await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
   });

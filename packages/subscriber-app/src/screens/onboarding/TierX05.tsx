@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
 
+import { OnboardingBackButton } from './OnboardingBackButton.js';
 import { useSignup, type SignupTier } from './SignupContext.js';
 
 interface TierOption {
@@ -64,6 +65,7 @@ export function TierX05(): ReactElement {
   return (
     <main aria-labelledby="x05-headline" className="onboarding-screen" data-screen-id="X-05">
       <div className="body tight">
+        <OnboardingBackButton to="/signup/address" />
         <div className="title-stack no-progress">
           <div aria-hidden="true" className="steps">
             <i className="on" />
