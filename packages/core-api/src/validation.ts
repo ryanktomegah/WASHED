@@ -18,6 +18,7 @@ import type {
   CreateWorkerAdvanceRequestInput,
   CreateSubscriptionInput,
   CreateDisputeInput,
+  CreateSupportContactInput,
   CreateWorkerSwapRequestInput,
   DeclineAssignmentCandidateInput,
   DeliverDueNotificationMessagesInput,
@@ -41,8 +42,12 @@ import type {
   ListPaymentAttemptsInput,
   ListSubscriberSupportMatchesInput,
   ListServiceCellsInput,
+  ListSupportContactsInput,
   ListWorkerSwapRequestsInput,
   ListWorkerIssuesInput,
+  GetSupportContactInput,
+  SupportContactCategory,
+  SupportContactStatus,
   NotificationChannel,
   NotificationStatus,
   OperatorVisitCloseoutStatus,
@@ -98,6 +103,14 @@ const DISPUTE_ISSUE_TYPE_VALUES = new Set<DisputeIssueType>([
   'other',
   'worker_no_show',
 ]);
+const SUPPORT_CONTACT_CATEGORY_VALUES = new Set<SupportContactCategory>([
+  'other',
+  'payment',
+  'plan',
+  'visit',
+  'worker',
+]);
+const SUPPORT_CONTACT_STATUS_VALUES = new Set<SupportContactStatus>(['open', 'resolved']);
 const DISPUTE_STATUS_VALUES = new Set<DisputeStatus>([
   'escalated',
   'open',
@@ -646,6 +659,77 @@ export function parseCreateDisputeBody(
     traceId,
     visitId,
   };
+}
+
+export function parseCreateSupportContactBody(
+  subscriptionId: string,
+  body: unknown,
+  traceId: string,
+): CreateSupportContactInput {
+  if (!isUuid(subscriptionId)) {
+    throw new Error('subscriptionId must be a UUID.');
+  }
+  if (!isRecord(body)) {
+    throw new Error('Request body must be an object.');
+  }
+
+  const subject = readString(body, 'subject').trim();
+  if (subject.length < 1 || subject.length > 120) {
+    throw new Error('subject must be between 1 and 120 characters.');
+  }
+
+  const text = readString(body, 'body').trim();
+  if (text.length < 1 || text.length > 4000) {
+    throw new Error('body must be between 1 and 4000 characters.');
+  }
+
+  return {
+    body: text,
+    category: readLiteral<SupportContactCategory>(
+      body,
+      'category',
+      SUPPORT_CONTACT_CATEGORY_VALUES,
+    ),
+    createdAt: readIsoDateTime(body, 'createdAt'),
+    subject,
+    subscriberUserId: readUuid(body, 'subscriberUserId'),
+    subscriptionId,
+    traceId,
+  };
+}
+
+export function parseListSupportContactsRequest(
+  subscriptionId: string,
+  query: unknown,
+): ListSupportContactsInput {
+  if (!isUuid(subscriptionId)) {
+    throw new Error('subscriptionId must be a UUID.');
+  }
+  const record = isRecord(query) ? query : {};
+  const status = readOptionalLiteral<SupportContactStatus>(
+    record,
+    'status',
+    SUPPORT_CONTACT_STATUS_VALUES,
+  );
+
+  const base: ListSupportContactsInput = {
+    limit: readOptionalLimit(record, 'limit') ?? 20,
+    subscriptionId,
+  };
+  return status === undefined ? base : { ...base, status };
+}
+
+export function parseGetSupportContactParams(
+  subscriptionId: string,
+  contactId: string,
+): GetSupportContactInput {
+  if (!isUuid(subscriptionId)) {
+    throw new Error('subscriptionId must be a UUID.');
+  }
+  if (!isUuid(contactId)) {
+    throw new Error('contactId must be a UUID.');
+  }
+  return { contactId, subscriptionId };
 }
 
 export function parseRateVisitBody(
