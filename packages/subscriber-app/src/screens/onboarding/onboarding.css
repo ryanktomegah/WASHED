@@ -44,9 +44,9 @@
 .onboarding-screen .field-label {
   color: var(--ink-3);
   font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 400;
-  letter-spacing: 0;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
   line-height: 1.35;
   text-transform: uppercase;
 }
@@ -56,43 +56,43 @@
   margin: 0;
   color: var(--ink);
   font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 500;
-  letter-spacing: 0;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   line-height: 1.12;
 }
 
 .onboarding-screen .h-lg {
-  font-size: 32px;
+  font-size: 38px;
   line-height: 1;
 }
 
 .onboarding-screen[data-screen-id='X-02'] .h-md,
 .onboarding-screen[data-screen-id='X-06'] .h-md {
-  font-size: 20px;
+  font-size: 24px;
 }
 
 .onboarding-screen .h-xl {
   margin: 0;
   color: var(--primary);
   font-family: var(--font-display);
-  font-size: 48px;
-  font-weight: 650;
-  letter-spacing: 0;
+  font-size: 56px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   line-height: 1;
 }
 
 .onboarding-screen .p {
   margin: 0;
   color: var(--ink-2);
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.48;
 }
 
 .onboarding-screen .p-sm {
   margin: 0;
   color: var(--ink-3);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.45;
 }
 
@@ -333,20 +333,20 @@
 
 .onboarding-screen .btn {
   display: inline-flex;
-  min-height: 46px;
+  min-height: 52px;
   align-items: center;
   justify-content: center;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--primary);
   color: var(--primary-on);
   cursor: pointer;
   font: inherit;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 600;
   letter-spacing: 0;
   line-height: normal;
-  padding: 0 16px;
+  padding: 0 18px;
   text-align: center;
   text-decoration: none;
   transition:
@@ -410,19 +410,19 @@
   margin: 0;
   color: var(--primary);
   font-family: var(--font-display);
-  font-size: 48px;
-  font-weight: 650;
-  letter-spacing: 0;
+  font-size: 72px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   line-height: 1;
 }
 
 .onboarding-screen .splash-tagline {
-  margin-top: 14px;
+  margin-top: 18px;
   color: var(--ink-3);
   font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 400;
-  letter-spacing: 0;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
@@ -636,8 +636,17 @@
 }
 
 .onboarding-screen[data-screen-id='X-05'] .tier-card.is-selected {
-  border-color: var(--line);
-  background: var(--surface-2);
+  border: 2px solid var(--primary);
+  background: var(--primary-tint);
+  padding: 13.5px 13px;
+}
+
+.onboarding-screen[data-screen-id='X-05'] .tier-card.is-selected .tier-card-head strong {
+  color: var(--primary);
+}
+
+.onboarding-screen[data-screen-id='X-05'] .tier-card.is-selected .tier-price-value {
+  color: var(--primary);
 }
 
 .onboarding-screen .tier-card-head {
@@ -660,7 +669,7 @@
 }
 
 .onboarding-screen[data-screen-id='X-05'] .tier-card-head strong {
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.25;
 }
 
@@ -672,10 +681,75 @@
   flex-shrink: 0;
   color: var(--ink);
   font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
   letter-spacing: 0;
   text-align: right;
+}
+
+.onboarding-screen .provider-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.onboarding-screen .provider-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+  cursor: pointer;
+  padding: 14px 14px;
+  transition:
+    border-color var(--d-fast) var(--ease-standard),
+    background-color var(--d-fast) var(--ease-standard);
+}
+
+.onboarding-screen .provider-card.is-selected {
+  border: 2px solid var(--primary);
+  background: var(--primary-tint);
+  padding: 13px 13px;
+}
+
+.onboarding-screen .provider-card-name {
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+
+.onboarding-screen .provider-card.is-selected .provider-card-name {
+  color: var(--primary);
+}
+
+.onboarding-screen .provider-card-radio {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--line-2, var(--line));
+  border-radius: 999px;
+  background: var(--surface);
+  transition:
+    border-color var(--d-fast) var(--ease-standard),
+    box-shadow var(--d-fast) var(--ease-standard);
+}
+
+.onboarding-screen .provider-card.is-selected .provider-card-radio {
+  border: 6px solid var(--primary);
+  background: var(--surface);
+}
+
+.onboarding-screen .provider-card:focus-within {
+  border-color: var(--primary);
+  box-shadow: var(--focus-ring);
 }
 
 .onboarding-screen .review-card {
@@ -717,6 +791,58 @@
   background: color-mix(in srgb, var(--line) 65%, var(--surface));
 }
 
+.onboarding-screen .consent-row {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 4px;
+  cursor: pointer;
+}
+
+.onboarding-screen .consent-box {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  place-items: center;
+  border: 1.5px solid var(--line-2, var(--line));
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--primary-on);
+  transition:
+    background-color var(--d-fast) var(--ease-standard),
+    border-color var(--d-fast) var(--ease-standard);
+}
+
+.onboarding-screen .consent-row.is-checked .consent-box {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+.onboarding-screen .consent-check {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.onboarding-screen .consent-text {
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.onboarding-screen .consent-text strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.onboarding-screen .consent-row:focus-within .consent-box {
+  border-color: var(--primary);
+  box-shadow: var(--focus-ring);
+}
+
 .onboarding-screen[data-screen-id='X-08'] .body.center {
   padding: 12px 22px 18px;
 }
@@ -745,4 +871,95 @@
 
 .onboarding-screen .welcome-actions {
   padding: 0 22px 28px;
+}
+
+.onboarding-screen[data-screen-id='X-08'] {
+  position: relative;
+  overflow: hidden;
+}
+
+.onboarding-screen[data-screen-id='X-08'] .welcome-ambient {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.onboarding-screen[data-screen-id='X-08'] .welcome-orb {
+  position: absolute;
+  display: block;
+  border-radius: 999px;
+  filter: blur(58px);
+  opacity: 0.55;
+  will-change: transform;
+}
+
+.onboarding-screen[data-screen-id='X-08'] .welcome-orb-a {
+  top: -120px;
+  left: -80px;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(72, 192, 120, 0.7), transparent 65%);
+  animation: welcome-drift-a 16s ease-in-out infinite;
+}
+
+.onboarding-screen[data-screen-id='X-08'] .welcome-orb-b {
+  right: -100px;
+  bottom: 18%;
+  width: 360px;
+  height: 360px;
+  background: radial-gradient(circle, rgba(10, 61, 31, 0.45), transparent 65%);
+  animation: welcome-drift-b 22s ease-in-out infinite;
+}
+
+.onboarding-screen[data-screen-id='X-08'] .welcome-orb-c {
+  bottom: -140px;
+  left: 30%;
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(166, 107, 0, 0.32), transparent 65%);
+  animation: welcome-drift-c 28s ease-in-out infinite;
+}
+
+.onboarding-screen[data-screen-id='X-08'] .body,
+.onboarding-screen[data-screen-id='X-08'] .welcome-actions {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes welcome-drift-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(40px, 28px, 0) scale(1.08);
+  }
+}
+
+@keyframes welcome-drift-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-30px, -36px, 0) scale(1.05);
+  }
+}
+
+@keyframes welcome-drift-c {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(20px, -30px, 0) scale(1.1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-screen[data-screen-id='X-08'] .welcome-orb {
+    animation: none;
+  }
 }

@@ -19,10 +19,11 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   min-height: 0;
-  overflow: hidden;
-  padding: 4px 22px 18px;
+  overflow-y: auto;
+  padding: 18px 22px 24px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .hub-header,
@@ -44,9 +45,9 @@
 .hub-eyebrow {
   color: var(--ink-3);
   font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 400;
-  letter-spacing: 0;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
   line-height: 1.35;
   text-transform: uppercase;
 }
@@ -55,10 +56,10 @@
   margin: 4px 0 0;
   color: var(--ink);
   font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 500;
-  letter-spacing: 0;
-  line-height: 1.12;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
 }
 
 .hub-avatar {
@@ -69,17 +70,21 @@
     linear-gradient(135deg, #0a3d1f, #183920);
 }
 
-.hub-avatar-lg,
 .hub-avatar-worker {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
+}
+
+.hub-avatar-lg {
+  width: 44px;
+  height: 44px;
 }
 
 .hub-visit-card {
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 16px;
   background: var(--surface-2);
-  padding: 14px;
+  padding: 18px;
 }
 
 .hub-card-head .hub-eyebrow {
@@ -90,14 +95,15 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border-radius: 7px;
+  border-radius: 999px;
   background: var(--primary-tint);
   color: var(--success);
   font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0;
-  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 6px 10px;
+  text-transform: uppercase;
 }
 
 .hub-chip-dot {
@@ -117,15 +123,15 @@
 .hub-time {
   color: var(--success);
   font-family: var(--font-mono);
-  font-size: 36px;
-  font-weight: 500;
-  letter-spacing: 0;
+  font-size: 44px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   line-height: 1;
 }
 
 .hub-date {
   color: var(--ink-3);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.45;
 }
 
@@ -157,17 +163,17 @@
 
 .hub-worker-copy strong {
   color: var(--ink);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
   line-height: 1.25;
 }
 
 .hub-worker-copy span {
   color: var(--ink-3);
   font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 400;
-  letter-spacing: 0;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
   line-height: 1.35;
   text-transform: uppercase;
 }
@@ -188,17 +194,17 @@
 
 .hub-action {
   display: flex;
-  min-height: 46px;
+  min-height: 52px;
   align-items: center;
   justify-content: center;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
   font: inherit;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
   letter-spacing: 0;
-  padding: 0 16px;
+  padding: 0 18px;
   text-align: center;
 }
 
@@ -222,8 +228,8 @@
 .hub-plan-date {
   color: var(--ink);
   font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   letter-spacing: 0;
 }
 
@@ -245,6 +251,92 @@
 .hub-action:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
+}
+
+/* ============================================================
+   Bottom navigation — shared across hub/history/plan/profile.
+   Single source of truth lives here; other slices reuse via
+   className "hub-nav".
+   ============================================================ */
+.hub-nav {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+}
+
+.hub-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 56px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0;
+  padding: 6px 4px;
+  text-decoration: none;
+  transition:
+    color var(--d-fast) var(--ease-standard),
+    background-color var(--d-fast) var(--ease-standard);
+}
+
+.hub-nav-item.active {
+  color: var(--primary);
+}
+
+.hub-nav-glyph {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2;
+}
+
+.hub-nav-item.active .hub-nav-glyph {
+  stroke-width: 2.4;
+}
+
+.hub-nav-item:hover {
+  color: var(--ink);
+}
+
+.hub-nav-item.active:hover {
+  color: var(--primary);
+}
+
+.hub-nav-item:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+.hub-nav-item:active {
+  background: var(--primary-tint);
+}
+
+@media (prefers-color-scheme: dark) {
+  .hub-screen .hub-nav,
+  .history-screen .hub-nav,
+  .plan-screen .hub-nav,
+  .profile-screen .hub-nav {
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+  }
+
+  .hub-nav-item.active {
+    color: var(--success);
+  }
 }
 
 @media (prefers-color-scheme: dark) {

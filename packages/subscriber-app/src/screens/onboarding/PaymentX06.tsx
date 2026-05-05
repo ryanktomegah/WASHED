@@ -3,11 +3,14 @@ import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
 
-import { useSignup } from './SignupContext.js';
+import { PAYMENT_PROVIDER_LABEL, useSignup, type SignupPaymentProvider } from './SignupContext.js';
+
+const PROVIDERS: readonly SignupPaymentProvider[] = ['mixx', 'flooz'];
 
 export function PaymentX06(): ReactElement {
   const navigate = useNavigate();
   const signup = useSignup();
+  const selected: SignupPaymentProvider = signup.paymentProvider ?? 'mixx';
 
   useEffect(() => {
     if (signup.phone === '') {
@@ -32,8 +35,12 @@ export function PaymentX06(): ReactElement {
     return <></>;
   }
 
+  const onSelect = (provider: SignupPaymentProvider): void => {
+    signup.setPaymentProvider(provider);
+  };
+
   const onSubmit = (): void => {
-    signup.setPaymentProvider('tmoney');
+    if (signup.paymentProvider === null) signup.setPaymentProvider(selected);
     navigate('/signup/review');
   };
 
@@ -50,12 +57,28 @@ export function PaymentX06(): ReactElement {
           <p className="p">{translate('subscriber.signup.payment.body')}</p>
         </div>
 
-        <div className="field">
-          <span className="field-label">
+        <fieldset className="provider-grid" aria-labelledby="x06-headline">
+          <legend className="visually-hidden">
             {translate('subscriber.signup.payment.provider_label')}
-          </span>
-          <div className="input-shell">TMoney</div>
-        </div>
+          </legend>
+          {PROVIDERS.map((provider) => (
+            <label
+              className={`provider-card${provider === selected ? ' is-selected' : ''}`}
+              key={provider}
+            >
+              <input
+                checked={provider === selected}
+                className="visually-hidden"
+                name="provider"
+                onChange={() => onSelect(provider)}
+                type="radio"
+                value={provider}
+              />
+              <span className="provider-card-name">{PAYMENT_PROVIDER_LABEL[provider]}</span>
+              <span aria-hidden="true" className="provider-card-radio" />
+            </label>
+          ))}
+        </fieldset>
 
         <div className="field">
           <label className="visually-hidden" htmlFor="x06-phone">

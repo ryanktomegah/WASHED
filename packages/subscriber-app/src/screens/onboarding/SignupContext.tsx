@@ -9,7 +9,7 @@ import {
 } from 'react';
 
 export type SignupTier = 'T1' | 'T2';
-export type SignupPaymentProvider = 'tmoney' | 'mixx' | 'flooz';
+export type SignupPaymentProvider = 'mixx' | 'flooz';
 
 export interface SignupAddress {
   readonly neighborhood: string;
@@ -110,7 +110,6 @@ export const TIER_PRICE_XOF: Record<SignupTier, number> = {
 };
 
 export const PAYMENT_PROVIDER_LABEL: Record<SignupPaymentProvider, string> = {
-  tmoney: 'TMoney',
   mixx: 'Mixx by Yas',
   flooz: 'Flooz',
 };

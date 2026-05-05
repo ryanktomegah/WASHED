@@ -1,4 +1,4 @@
-import { useEffect, type ReactElement } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { formatXof, translate } from '@washed/i18n';
@@ -14,6 +14,7 @@ function shortPhone(phone: string): string {
 export function ReviewX07(): ReactElement {
   const navigate = useNavigate();
   const signup = useSignup();
+  const [consented, setConsented] = useState(false);
 
   useEffect(() => {
     if (
@@ -52,6 +53,7 @@ export function ReviewX07(): ReactElement {
   const totalXof = TIER_PRICE_XOF[tier];
 
   const onSubmit = (): void => {
+    if (!consented) return;
     navigate('/signup/welcome');
   };
 
@@ -94,16 +96,27 @@ export function ReviewX07(): ReactElement {
 
         <p className="notice">{translate('subscriber.signup.review.next_step.body')}</p>
 
-        <p className="p-sm">
-          {translate('subscriber.signup.review.consent.prefix')}{' '}
-          {translate('subscriber.signup.review.consent.terms')}{' '}
-          {translate('subscriber.signup.review.consent.connector')}{' '}
-          {translate('subscriber.signup.review.consent.privacy')}
-        </p>
+        <label className={`consent-row${consented ? ' is-checked' : ''}`}>
+          <input
+            checked={consented}
+            className="visually-hidden"
+            onChange={(event) => setConsented(event.target.checked)}
+            type="checkbox"
+          />
+          <span aria-hidden="true" className="consent-box">
+            {consented ? <span className="consent-check">✓</span> : null}
+          </span>
+          <span className="consent-text">
+            {translate('subscriber.signup.review.consent.prefix')}{' '}
+            <strong>{translate('subscriber.signup.review.consent.terms')}</strong>{' '}
+            {translate('subscriber.signup.review.consent.connector')}{' '}
+            <strong>{translate('subscriber.signup.review.consent.privacy')}</strong>
+          </span>
+        </label>
 
         <div className="grow" />
 
-        <button className="btn full primary" onClick={onSubmit} type="button">
+        <button className="btn full primary" disabled={!consented} onClick={onSubmit} type="button">
           {translate('subscriber.signup.review.cta')}
         </button>
       </div>

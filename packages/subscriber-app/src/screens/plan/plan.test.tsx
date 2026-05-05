@@ -100,7 +100,7 @@ describe('Subscriber plan · X-20 Payment history', () => {
     expect(screen.getByText(/20\s000\s+XOF/u)).toBeVisible();
     expect(screen.getByText('8 prélèvements')).toBeVisible();
     expect(screen.getByText('1 mai 2026')).toBeVisible();
-    expect(screen.getByText('TMoney · MM-78423190')).toBeVisible();
+    expect(screen.getByText('Mixx by Yas · MM-78423190')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Télécharger les reçus' })).toBeVisible();
   });
 
@@ -120,10 +120,10 @@ describe('Subscriber plan · X-21 Payment method', () => {
     expect(
       screen.getByText("L'argent quitte votre Mobile Money le 1er de chaque mois."),
     ).toBeVisible();
-    expect(screen.getByText('TMoney')).toBeVisible();
+    expect(screen.getByText('Mixx by Yas')).toBeVisible();
     expect(screen.getByText('+228 90 12 34 56 · actuel')).toBeVisible();
     expect(screen.getByText('ACTIF')).toBeVisible();
-    expect(screen.getByText('Mixx by Yas')).toBeVisible();
+    expect(screen.getByText('Flooz')).toBeVisible();
     expect(screen.getByText('+ Ajouter un Flooz')).toBeVisible();
   });
 

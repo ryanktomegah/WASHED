@@ -7,6 +7,11 @@ export function WelcomeX08(): ReactElement {
   const navigate = useNavigate();
   return (
     <main aria-labelledby="x08-headline" className="onboarding-screen" data-screen-id="X-08">
+      <div aria-hidden="true" className="welcome-ambient">
+        <span className="welcome-orb welcome-orb-a" />
+        <span className="welcome-orb welcome-orb-b" />
+        <span className="welcome-orb welcome-orb-c" />
+      </div>
       <div className="body center">
         <div aria-hidden="true" className="welcome-avatar" />
 

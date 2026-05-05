@@ -238,7 +238,7 @@ describe('Onboarding · X-06 Payment', () => {
     expect(
       screen.getByRole('heading', { name: 'Ajoutez votre moyen de paiement' }),
     ).toBeInTheDocument();
-    expect(screen.getByText('TMoney')).toBeInTheDocument();
+    expect(screen.getByText('Mixx by Yas')).toBeInTheDocument();
     expect(screen.getByLabelText('Numéro Mobile Money')).toHaveValue('90 12 34 56');
     expect(
       screen.getByText('Vous validez le prélèvement depuis votre téléphone.'),
@@ -278,7 +278,7 @@ describe('Onboarding · X-07 Review', () => {
     phone: '+228 90 12 34 56',
     address: { neighborhood: 'Tokoin Casablanca', street: 'rue 254' },
     tier: 'T1',
-    paymentProvider: 'tmoney',
+    paymentProvider: 'mixx',
   };
 
   it('shows the locked recap and confirms the subscription', () => {
@@ -288,7 +288,7 @@ describe('Onboarding · X-07 Review', () => {
     expect(screen.getByText('Récap')).toBeInTheDocument();
     expect(screen.getByText('Tokoin Casablanca')).toBeInTheDocument();
     expect(screen.getByText('1 visite / mois')).toBeInTheDocument();
-    expect(screen.getByText('TMoney · 90 12…')).toBeInTheDocument();
+    expect(screen.getByText('Mixx by Yas · 90 12…')).toBeInTheDocument();
     expect(
       screen.getByText(
         "Le bureau vous appelle dans la journée pour confirmer l'adresse et planifier la première visite.",
@@ -296,6 +296,9 @@ describe('Onboarding · X-07 Review', () => {
     ).toBeInTheDocument();
 
     const cta = screen.getByRole('button', { name: "Confirmer l'abonnement" });
+    expect(cta).toBeDisabled();
+
+    fireEvent.click(screen.getByRole('checkbox'));
     expect(cta).toBeEnabled();
     fireEvent.click(cta);
 

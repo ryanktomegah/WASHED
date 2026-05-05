@@ -213,7 +213,7 @@
   "subscriber.signup.otp.resend_now.cta": "Resend code",
   "subscriber.signup.otp.title": "The code we just sent.",
   "subscriber.signup.payment.add_number": "add a number",
-  "subscriber.signup.payment.body": "TMoney, Mixx by Yas, or Flooz. No card, no cash.",
+  "subscriber.signup.payment.body": "Mixx by Yas or Flooz. No card, no cash.",
   "subscriber.signup.payment.eyebrow": "Payment",
   "subscriber.signup.payment.note": "The first charge happens after the office confirms your address.",
   "subscriber.signup.payment.title": "Payment method.",

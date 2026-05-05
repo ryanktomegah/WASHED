@@ -240,7 +240,7 @@
   "subscriber.signup.otp.resend": "Renvoyer dans {timer}",
   "subscriber.signup.otp.resend_now.cta": "Renvoyer le code",
   "subscriber.signup.otp.title": "Le code reçu par SMS",
-  "subscriber.signup.payment.body": "TMoney ou Flooz. Aucun paiement cash dans l'app.",
+  "subscriber.signup.payment.body": "Mixx by Yas ou Flooz. Aucun paiement cash dans l'app.",
   "subscriber.signup.payment.eyebrow": "Paiement",
   "subscriber.signup.payment.note": "Vous validez le prélèvement depuis votre téléphone.",
   "subscriber.signup.payment.phone_label": "Numéro Mobile Money",
