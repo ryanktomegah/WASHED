@@ -132,6 +132,14 @@ const REGISTERED_EVENT_CONTRACTS = new Map<
     },
   ],
   [
+    'SubscriberSupportContactOpened',
+    {
+      actorRole: 'subscriber',
+      aggregateType: 'support_contact',
+      requiredPayloadKeys: ['category', 'contactId', 'subject', 'subscriptionId'],
+    },
+  ],
+  [
     'DisputeResolved',
     {
       actorRole: 'operator',

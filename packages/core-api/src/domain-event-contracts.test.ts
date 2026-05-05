@@ -240,4 +240,43 @@ describe('assertCoreDomainEventContract', () => {
       'WorkerIssueReported payload.subscriptionId is required.',
     );
   });
+
+  it('accepts a well-formed SubscriberSupportContactOpened payload', () => {
+    const event = createDomainEvent({
+      actor: { role: 'subscriber', userId: '11111111-1111-4111-8111-111111111111' },
+      aggregateId: '22222222-2222-4222-8222-222222222222',
+      aggregateType: 'support_contact',
+      countryCode: 'TG',
+      eventType: 'SubscriberSupportContactOpened',
+      payload: {
+        category: 'visit',
+        contactId: '22222222-2222-4222-8222-222222222222',
+        subject: 'Damaged sweater',
+        subscriptionId: '33333333-3333-4333-8333-333333333333',
+      },
+      traceId: 'trace_support_contact_opened',
+    });
+
+    expect(() => assertCoreDomainEventContract(event)).not.toThrow();
+  });
+
+  it('rejects SubscriberSupportContactOpened with a missing payload key', () => {
+    const event = createDomainEvent({
+      actor: { role: 'subscriber', userId: '11111111-1111-4111-8111-111111111111' },
+      aggregateId: '22222222-2222-4222-8222-222222222222',
+      aggregateType: 'support_contact',
+      countryCode: 'TG',
+      eventType: 'SubscriberSupportContactOpened',
+      payload: {
+        contactId: '22222222-2222-4222-8222-222222222222',
+        subject: 'Damaged sweater',
+        subscriptionId: '33333333-3333-4333-8333-333333333333',
+      },
+      traceId: 'trace_support_contact_opened',
+    });
+
+    expect(() => assertCoreDomainEventContract(event)).toThrow(
+      'SubscriberSupportContactOpened payload.category is required.',
+    );
+  });
 });
