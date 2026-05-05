@@ -47,8 +47,14 @@ import type {
   CreateSubscriptionInput,
   CreateWorkerSwapRequestInput,
   CreateDisputeInput,
+  CreateSupportContactInput,
   DisputeRecord,
   DisputeStatus,
+  GetSupportContactInput,
+  ListSupportContactsInput,
+  SupportContactCategory,
+  SupportContactRecord,
+  SupportContactStatus,
   GetWorkerMonthlyEarningsInput,
   GetWorkerRouteInput,
   GetSubscriptionDetailInput,
@@ -130,6 +136,7 @@ import {
   buildChangedSubscriptionTierRecord,
   buildAdvancedWorkerOnboardingCaseRecord,
   buildCreatedDisputeRecord,
+  buildCreatedSupportContactRecord,
   buildCreatedWorkerOnboardingCaseRecord,
   buildCreatedWorkerAdvanceRequestRecord,
   buildCreatedWorkerSwapRequestRecord,
@@ -1444,6 +1451,53 @@ export class PostgresCoreRepository implements CoreRepository {
     } finally {
       client.release();
     }
+  }
+
+  public async createSupportContact(
+    input: CreateSupportContactInput,
+  ): Promise<SupportContactRecord> {
+    const client = await this.pool.connect();
+
+    try {
+      await client.query('BEGIN');
+      const subscription = await selectSubscriptionCountryCodeForUpdate(
+        client,
+        input.subscriptionId,
+      );
+
+      if (subscription === undefined) {
+        throw new Error('Subscription was not found.');
+      }
+
+      const record = buildCreatedSupportContactRecord({
+        countryCode: subscription.country_code,
+        input,
+      });
+
+      await insertSupportContact(client, record);
+      await insertOutboxEvents(client, record.events);
+      await client.query('COMMIT');
+      return record;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  public async listSupportContactsForSubscription(
+    input: ListSupportContactsInput,
+  ): Promise<readonly SupportContactRecord[]> {
+    const rows = await selectSupportContactsForSubscription(this.pool, input);
+    return rows.map(mapSupportContactRow);
+  }
+
+  public async getSupportContact(
+    input: GetSupportContactInput,
+  ): Promise<SupportContactRecord | null> {
+    const row = await selectSupportContactById(this.pool, input);
+    return row === undefined ? null : mapSupportContactRow(row);
   }
 
   public async rateVisit(input: RateVisitInput): Promise<VisitRatingRecord> {
@@ -5175,6 +5229,154 @@ function mapDisputeRow(row: DisputeRow): DisputeRecord {
   return row.subscriber_phone_number === undefined
     ? record
     : { ...record, subscriberPhoneNumber: row.subscriber_phone_number };
+}
+
+interface SupportContactRow {
+  readonly body: string;
+  readonly category: SupportContactCategory;
+  readonly country_code: 'TG';
+  readonly created_at: Date;
+  readonly id: string;
+  readonly opened_by_user_id: string;
+  readonly resolution_note: string | null;
+  readonly resolved_at: Date | null;
+  readonly resolved_by_operator_user_id: string | null;
+  readonly status: SupportContactStatus;
+  readonly subject: string;
+  readonly subscription_id: string;
+}
+
+async function selectSubscriptionCountryCodeForUpdate(
+  client: PgClient,
+  subscriptionId: string,
+): Promise<{ readonly country_code: 'TG' } | undefined> {
+  const result = await client.query<{ readonly country_code: 'TG' }>(
+    `
+      SELECT country_code
+      FROM subscriptions
+      WHERE id = $1
+      FOR UPDATE
+    `,
+    [subscriptionId],
+  );
+
+  return result.rows[0];
+}
+
+async function insertSupportContact(
+  client: PgClient,
+  record: SupportContactRecord,
+): Promise<void> {
+  await client.query(
+    `
+      INSERT INTO support_contacts (
+        id,
+        subscription_id,
+        country_code,
+        category,
+        status,
+        subject,
+        body,
+        opened_by_user_id,
+        resolved_by_operator_user_id,
+        resolution_note,
+        created_at,
+        resolved_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+    `,
+    [
+      record.contactId,
+      record.subscriptionId,
+      record.countryCode,
+      record.category,
+      record.status,
+      record.subject,
+      record.body,
+      record.openedByUserId,
+      record.resolvedByOperatorUserId,
+      record.resolutionNote,
+      record.createdAt,
+      record.resolvedAt,
+    ],
+  );
+}
+
+async function selectSupportContactsForSubscription(
+  pool: PgPoolLike,
+  input: ListSupportContactsInput,
+): Promise<readonly SupportContactRow[]> {
+  const result = await pool.query<SupportContactRow>(
+    `
+      SELECT
+        id,
+        subscription_id,
+        country_code,
+        category,
+        status,
+        subject,
+        body,
+        opened_by_user_id,
+        resolved_by_operator_user_id,
+        resolution_note,
+        created_at,
+        resolved_at
+      FROM support_contacts
+      WHERE subscription_id = $1
+        AND ($2::text IS NULL OR status = $2)
+      ORDER BY created_at DESC, id ASC
+      LIMIT $3
+    `,
+    [input.subscriptionId, input.status ?? null, input.limit],
+  );
+
+  return result.rows;
+}
+
+async function selectSupportContactById(
+  pool: PgPoolLike,
+  input: GetSupportContactInput,
+): Promise<SupportContactRow | undefined> {
+  const result = await pool.query<SupportContactRow>(
+    `
+      SELECT
+        id,
+        subscription_id,
+        country_code,
+        category,
+        status,
+        subject,
+        body,
+        opened_by_user_id,
+        resolved_by_operator_user_id,
+        resolution_note,
+        created_at,
+        resolved_at
+      FROM support_contacts
+      WHERE id = $1 AND subscription_id = $2
+    `,
+    [input.contactId, input.subscriptionId],
+  );
+
+  return result.rows[0];
+}
+
+function mapSupportContactRow(row: SupportContactRow): SupportContactRecord {
+  return {
+    body: row.body,
+    category: row.category,
+    contactId: row.id,
+    countryCode: row.country_code,
+    createdAt: row.created_at,
+    events: [],
+    openedByUserId: row.opened_by_user_id,
+    resolutionNote: row.resolution_note,
+    resolvedAt: row.resolved_at,
+    resolvedByOperatorUserId: row.resolved_by_operator_user_id,
+    status: row.status,
+    subject: row.subject,
+    subscriptionId: row.subscription_id,
+  };
 }
 
 function mapWorkerIssueRow(row: WorkerIssueRow): WorkerIssueReportRecord {

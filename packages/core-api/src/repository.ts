@@ -822,6 +822,46 @@ export interface DisputeRecord {
   readonly workerId: string | null;
 }
 
+export type SupportContactCategory = 'other' | 'payment' | 'plan' | 'visit' | 'worker';
+export type SupportContactStatus = 'open' | 'resolved';
+
+export interface SupportContactRecord {
+  readonly body: string;
+  readonly category: SupportContactCategory;
+  readonly contactId: string;
+  readonly countryCode: CountryCode;
+  readonly createdAt: Date;
+  readonly events: readonly DomainEvent[];
+  readonly openedByUserId: string;
+  readonly resolutionNote: string | null;
+  readonly resolvedAt: Date | null;
+  readonly resolvedByOperatorUserId: string | null;
+  readonly status: SupportContactStatus;
+  readonly subject: string;
+  readonly subscriptionId: string;
+}
+
+export interface CreateSupportContactInput {
+  readonly body: string;
+  readonly category: SupportContactCategory;
+  readonly createdAt: Date;
+  readonly subject: string;
+  readonly subscriberUserId: string;
+  readonly subscriptionId: string;
+  readonly traceId: string;
+}
+
+export interface ListSupportContactsInput {
+  readonly limit: number;
+  readonly status?: SupportContactStatus;
+  readonly subscriptionId: string;
+}
+
+export interface GetSupportContactInput {
+  readonly contactId: string;
+  readonly subscriptionId: string;
+}
+
 export interface SupportCreditRecord {
   readonly amount: Money;
   readonly createdAt: Date;
@@ -1160,6 +1200,11 @@ export interface CoreRepository {
   registerPushDevice(input: RegisterPushDeviceInput): Promise<PushDeviceRecord>;
   reportWorkerIssue(input: ReportWorkerIssueInput): Promise<WorkerIssueReportRecord>;
   resolveDispute(input: ResolveDisputeInput): Promise<DisputeRecord>;
+  createSupportContact(input: CreateSupportContactInput): Promise<SupportContactRecord>;
+  listSupportContactsForSubscription(
+    input: ListSupportContactsInput,
+  ): Promise<readonly SupportContactRecord[]>;
+  getSupportContact(input: GetSupportContactInput): Promise<SupportContactRecord | null>;
   rescheduleVisit(input: RescheduleVisitInput): Promise<RescheduledVisitRecord>;
   skipVisit(input: SkipVisitInput): Promise<SkippedVisitRecord>;
   updateOperatorVisitStatus(
@@ -1293,6 +1338,7 @@ export class InMemoryCoreRepository implements CoreRepository {
   public readonly paymentAttempts: PaymentAttemptRecord[] = [];
   public readonly paymentRefunds: PaymentRefundRecord[] = [];
   public readonly paymentReconciliationRuns: PaymentReconciliationRunRecord[] = [];
+  public readonly supportContacts: SupportContactRecord[] = [];
   public readonly supportCredits: SupportCreditRecord[] = [];
   public readonly supportDisputes: DisputeRecord[] = [];
   public readonly visitRatings: VisitRatingRecord[] = [];
@@ -2560,6 +2606,44 @@ export class InMemoryCoreRepository implements CoreRepository {
     return record;
   }
 
+  public async createSupportContact(
+    input: CreateSupportContactInput,
+  ): Promise<SupportContactRecord> {
+    const state = this.subscriptionState.get(input.subscriptionId);
+
+    if (state === undefined) {
+      throw new Error('Subscription was not found.');
+    }
+
+    const record = buildCreatedSupportContactRecord({
+      countryCode: state.record.countryCode,
+      input,
+    });
+    this.supportContacts.push(record);
+    return record;
+  }
+
+  public async listSupportContactsForSubscription(
+    input: ListSupportContactsInput,
+  ): Promise<readonly SupportContactRecord[]> {
+    return this.supportContacts
+      .filter((contact) => contact.subscriptionId === input.subscriptionId)
+      .filter((contact) => input.status === undefined || contact.status === input.status)
+      .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime())
+      .slice(0, input.limit);
+  }
+
+  public async getSupportContact(
+    input: GetSupportContactInput,
+  ): Promise<SupportContactRecord | null> {
+    const contact = this.supportContacts.find(
+      (candidate) =>
+        candidate.contactId === input.contactId &&
+        candidate.subscriptionId === input.subscriptionId,
+    );
+    return contact ?? null;
+  }
+
   public async rateVisit(input: RateVisitInput): Promise<VisitRatingRecord> {
     const visit = this.visitState.get(input.visitId);
 
@@ -3816,6 +3900,43 @@ export function buildWorkerIssueReportRecord(input: {
     ...(input.subscriberPhoneNumber === undefined
       ? {}
       : { subscriberPhoneNumber: input.subscriberPhoneNumber }),
+  };
+}
+
+export function buildCreatedSupportContactRecord(input: {
+  readonly countryCode: CountryCode;
+  readonly input: CreateSupportContactInput;
+}): SupportContactRecord {
+  const contactId = randomUUID();
+  const event = createDomainEvent({
+    actor: { role: 'subscriber', userId: input.input.subscriberUserId },
+    aggregateId: contactId,
+    aggregateType: 'support_contact',
+    countryCode: input.countryCode,
+    eventType: 'SubscriberSupportContactOpened',
+    payload: {
+      category: input.input.category,
+      contactId,
+      subject: input.input.subject,
+      subscriptionId: input.input.subscriptionId,
+    },
+    traceId: input.input.traceId,
+  });
+
+  return {
+    body: input.input.body,
+    category: input.input.category,
+    contactId,
+    countryCode: input.countryCode,
+    createdAt: input.input.createdAt,
+    events: [event],
+    openedByUserId: input.input.subscriberUserId,
+    resolutionNote: null,
+    resolvedAt: null,
+    resolvedByOperatorUserId: null,
+    status: 'open',
+    subject: input.input.subject,
+    subscriptionId: input.input.subscriptionId,
   };
 }
 
