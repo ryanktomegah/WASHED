@@ -16,7 +16,7 @@ import {
 import { getPaymentProviderReadiness } from './payment-provider-readiness.js';
 import { getPushProviderReadiness } from './push-provider-readiness.js';
 import { createRepositoryFromEnv } from './repository-factory.js';
-import { type CoreRepository } from './repository.js';
+import { type CoreRepository, type SupportContactRecord } from './repository.js';
 import { verifyAccessToken } from './auth-tokens.js';
 import type { AuthAccessTokenClaims, AuthRole } from './auth-tokens.js';
 import { buildBetaMetrics } from './beta-metrics.js';
@@ -35,6 +35,9 @@ import {
   parseCreateVisitPhotoUploadBody,
   parseCreateDisputeBody,
   parseCreateSubscriptionBody,
+  parseCreateSupportContactBody,
+  parseGetSupportContactParams,
+  parseListSupportContactsRequest,
   parseCreateSubscriberPrivacyRequestBody,
   parseCreateWorkerSwapRequestBody,
   parseDeclineAssignmentCandidateBody,
@@ -1341,6 +1344,85 @@ export function createCoreApiApp(options: CoreApiOptions = {}): FastifyInstance 
     }
   });
 
+  app.post('/v1/subscriptions/:subscriptionId/support-contacts', async (request, reply) => {
+    const traceId = request.headers['x-trace-id'];
+    const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
+    const params = request.params as { subscriptionId?: string };
+
+    try {
+      const input = parseCreateSupportContactBody(
+        params.subscriptionId ?? '',
+        request.body,
+        parsedTraceId,
+      );
+      const record = await repository.createSupportContact(input);
+      return reply.code(201).send(toSupportContactDto(record));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Invalid request.';
+      return reply.code(400).send({
+        code: 'core.support_contact_create.invalid_request',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+  });
+
+  app.get('/v1/subscriptions/:subscriptionId/support-contacts', async (request, reply) => {
+    const traceId = request.headers['x-trace-id'];
+    const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
+    const params = request.params as { subscriptionId?: string };
+
+    try {
+      const input = parseListSupportContactsRequest(params.subscriptionId ?? '', request.query);
+      const items = await repository.listSupportContactsForSubscription(input);
+      return reply.code(200).send({
+        items: items.map(toSupportContactDto),
+        limit: input.limit,
+        status: input.status ?? null,
+        subscriptionId: input.subscriptionId,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Invalid request.';
+      return reply.code(400).send({
+        code: 'core.support_contact_list.invalid_request',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+  });
+
+  app.get(
+    '/v1/subscriptions/:subscriptionId/support-contacts/:contactId',
+    async (request, reply) => {
+      const traceId = request.headers['x-trace-id'];
+      const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
+      const params = request.params as { subscriptionId?: string; contactId?: string };
+
+      try {
+        const input = parseGetSupportContactParams(
+          params.subscriptionId ?? '',
+          params.contactId ?? '',
+        );
+        const record = await repository.getSupportContact(input);
+        if (record === null) {
+          return reply.code(404).send({
+            code: 'core.support_contact_get.not_found',
+            message: 'Support contact was not found.',
+            traceId: parsedTraceId,
+          });
+        }
+        return reply.code(200).send(toSupportContactDto(record));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Invalid request.';
+        return reply.code(400).send({
+          code: 'core.support_contact_get.invalid_request',
+          message,
+          traceId: parsedTraceId,
+        });
+      }
+    },
+  );
+
   app.get('/v1/operator/disputes', async (request, reply) => {
     const traceId = request.headers['x-trace-id'];
     const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
@@ -2228,6 +2310,23 @@ function toDisputeDto(dispute: {
     subscriptionId: dispute.subscriptionId,
     visitId: dispute.visitId,
     workerId: dispute.workerId,
+  };
+}
+
+function toSupportContactDto(record: SupportContactRecord): Record<string, unknown> {
+  return {
+    body: record.body,
+    category: record.category,
+    contactId: record.contactId,
+    countryCode: record.countryCode,
+    createdAt: toIsoString(record.createdAt),
+    openedByUserId: record.openedByUserId,
+    resolutionNote: record.resolutionNote,
+    resolvedAt: record.resolvedAt === null ? null : toIsoString(record.resolvedAt),
+    resolvedByOperatorUserId: record.resolvedByOperatorUserId,
+    status: record.status,
+    subject: record.subject,
+    subscriptionId: record.subscriptionId,
   };
 }
 

@@ -3089,4 +3089,153 @@ describe('core api app', () => {
       message: 'phoneNumber must be an E.164 phone number.',
     });
   });
+
+  it('lets subscribers open, list, and read support contacts', async () => {
+    const repository = new InMemoryCoreRepository();
+    const app = createCoreApiApp({ repository });
+    apps.add(app);
+
+    const subscriptionResponse = await app.inject({
+      method: 'POST',
+      payload: validBody,
+      url: '/v1/subscriptions',
+    });
+    const subscription = subscriptionResponse.json() as {
+      subscriberId: string;
+      subscriptionId: string;
+    };
+
+    const createFirst = await app.inject({
+      method: 'POST',
+      payload: {
+        body: 'Mon pull rouge a deteint sur deux chemises blanches.',
+        category: 'visit',
+        createdAt: '2026-05-04T09:00:00.000Z',
+        subject: 'Linge endommage',
+        subscriberUserId: subscription.subscriberId,
+      },
+      url: `/v1/subscriptions/${subscription.subscriptionId}/support-contacts`,
+    });
+
+    expect(createFirst.statusCode).toBe(201);
+    const firstContact = createFirst.json() as {
+      contactId: string;
+      category: string;
+      status: string;
+    };
+    expect(firstContact).toMatchObject({
+      category: 'visit',
+      status: 'open',
+      subject: 'Linge endommage',
+      subscriptionId: subscription.subscriptionId,
+    });
+    expect(firstContact.contactId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(repository.supportContacts[0]?.events[0]?.eventType).toBe(
+      'SubscriberSupportContactOpened',
+    );
+
+    const createSecond = await app.inject({
+      method: 'POST',
+      payload: {
+        body: 'Mixx by Yas active. Premier prelevement le 1er mai.',
+        category: 'payment',
+        createdAt: '2026-05-05T08:00:00.000Z',
+        subject: 'Changer de Mobile Money',
+        subscriberUserId: subscription.subscriberId,
+      },
+      url: `/v1/subscriptions/${subscription.subscriptionId}/support-contacts`,
+    });
+    expect(createSecond.statusCode).toBe(201);
+
+    const listResponse = await app.inject({
+      method: 'GET',
+      url: `/v1/subscriptions/${subscription.subscriptionId}/support-contacts?limit=10`,
+    });
+    expect(listResponse.statusCode).toBe(200);
+    const list = listResponse.json() as {
+      items: ReadonlyArray<{ subject: string }>;
+      limit: number;
+      status: string | null;
+      subscriptionId: string;
+    };
+    expect(list.items.map((item) => item.subject)).toEqual([
+      'Changer de Mobile Money',
+      'Linge endommage',
+    ]);
+    expect(list.limit).toBe(10);
+    expect(list.status).toBeNull();
+
+    const filteredResponse = await app.inject({
+      method: 'GET',
+      url: `/v1/subscriptions/${subscription.subscriptionId}/support-contacts?status=resolved`,
+    });
+    expect(filteredResponse.statusCode).toBe(200);
+    expect((filteredResponse.json() as { items: unknown[] }).items).toEqual([]);
+
+    const detailResponse = await app.inject({
+      method: 'GET',
+      url: `/v1/subscriptions/${subscription.subscriptionId}/support-contacts/${firstContact.contactId}`,
+    });
+    expect(detailResponse.statusCode).toBe(200);
+    expect(detailResponse.json()).toMatchObject({
+      body: 'Mon pull rouge a deteint sur deux chemises blanches.',
+      contactId: firstContact.contactId,
+      subject: 'Linge endommage',
+      subscriptionId: subscription.subscriptionId,
+    });
+  });
+
+  it('rejects an unknown support-contact category with 400', async () => {
+    const repository = new InMemoryCoreRepository();
+    const app = createCoreApiApp({ repository });
+    apps.add(app);
+
+    const subscriptionResponse = await app.inject({
+      method: 'POST',
+      payload: validBody,
+      url: '/v1/subscriptions',
+    });
+    const subscription = subscriptionResponse.json() as {
+      subscriberId: string;
+      subscriptionId: string;
+    };
+
+    const response = await app.inject({
+      method: 'POST',
+      payload: {
+        body: 'whatever',
+        category: 'totally-not-real',
+        createdAt: '2026-05-05T09:00:00.000Z',
+        subject: 'x',
+        subscriberUserId: subscription.subscriberId,
+      },
+      url: `/v1/subscriptions/${subscription.subscriptionId}/support-contacts`,
+    });
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toMatchObject({
+      code: 'core.support_contact_create.invalid_request',
+    });
+  });
+
+  it('returns 404 when fetching a support contact that does not belong to the subscription', async () => {
+    const repository = new InMemoryCoreRepository();
+    const app = createCoreApiApp({ repository });
+    apps.add(app);
+
+    const subscriptionResponse = await app.inject({
+      method: 'POST',
+      payload: validBody,
+      url: '/v1/subscriptions',
+    });
+    const subscription = subscriptionResponse.json() as { subscriptionId: string };
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/v1/subscriptions/${subscription.subscriptionId}/support-contacts/99999999-9999-4999-8999-999999999999`,
+    });
+    expect(response.statusCode).toBe(404);
+    expect(response.json()).toMatchObject({
+      code: 'core.support_contact_get.not_found',
+    });
+  });
 });
