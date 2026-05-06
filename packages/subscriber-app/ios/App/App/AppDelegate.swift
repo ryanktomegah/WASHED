@@ -5,9 +5,13 @@ import Capacitor
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+    private var didInstallLaunchOverlay = false
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        DispatchQueue.main.async {
+            self.installLaunchOverlayIfNeeded()
+        }
         return true
     }
 
@@ -27,6 +31,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationDidBecomeActive(_ application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        installLaunchOverlayIfNeeded()
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
@@ -44,6 +49,40 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Feel free to add additional processing here, but if you want the App API to support
         // tracking app url opens, make sure to keep this call
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
+    }
+
+    private func installLaunchOverlayIfNeeded() {
+        guard !didInstallLaunchOverlay, let window else { return }
+
+        didInstallLaunchOverlay = true
+
+        let overlay = UIView(frame: window.bounds)
+        overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        overlay.backgroundColor = UIColor(red: 0.039, green: 0.239, blue: 0.122, alpha: 1)
+        overlay.isUserInteractionEnabled = false
+
+        let mark = UILabel()
+        mark.text = "washed."
+        mark.textColor = .white
+        mark.font = .systemFont(ofSize: 76, weight: .medium)
+        mark.textAlignment = .center
+        mark.translatesAutoresizingMaskIntoConstraints = false
+
+        overlay.addSubview(mark)
+        window.addSubview(overlay)
+
+        NSLayoutConstraint.activate([
+            mark.centerXAnchor.constraint(equalTo: overlay.centerXAnchor),
+            mark.centerYAnchor.constraint(equalTo: overlay.centerYAnchor)
+        ])
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) {
+            UIView.animate(withDuration: 0.48, delay: 0, options: [.curveEaseOut, .allowUserInteraction]) {
+                overlay.alpha = 0
+            } completion: { _ in
+                overlay.removeFromSuperview()
+            }
+        }
     }
 
 }

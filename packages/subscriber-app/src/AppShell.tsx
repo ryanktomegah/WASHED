@@ -96,7 +96,8 @@ import './screens/visits/visit.css';
 
 export const SUBSCRIBER_RESTORE_MIN_MS = 1500;
 export const SUBSCRIBER_RESTORE_FALLBACK_MS = 2000;
-export const SUBSCRIBER_LAUNCH_SPLASH_MS = 700;
+export const SUBSCRIBER_LAUNCH_SPLASH_MS = 1200;
+export const SUBSCRIBER_HOME_REVEAL_MS = 480;
 
 export function AppShell(): ReactElement {
   return (
@@ -154,6 +155,8 @@ function SubscriberStartupGate({ children }: { readonly children: ReactNode }): 
   const [minimumElapsed, setMinimumElapsed] = useState(false);
   const [bootstrapComplete, setBootstrapComplete] = useState(!subscriberApi.isConfigured);
   const [fallbackElapsed, setFallbackElapsed] = useState(false);
+  const [contentVisible, setContentVisible] = useState(false);
+  const [transitionComplete, setTransitionComplete] = useState(false);
 
   useEffect(() => {
     const splashTimer = window.setTimeout(
@@ -206,11 +209,46 @@ function SubscriberStartupGate({ children }: { readonly children: ReactNode }): 
     };
   }, [subscriberApi, syncFromApi]);
 
+  const startupReady = minimumElapsed && (bootstrapComplete || fallbackElapsed);
+
+  useEffect(() => {
+    if (!startupReady || contentVisible) return;
+
+    setContentVisible(true);
+  }, [contentVisible, startupReady]);
+
+  useEffect(() => {
+    if (!contentVisible || transitionComplete) return;
+
+    const transitionTimer = window.setTimeout(
+      () => setTransitionComplete(true),
+      SUBSCRIBER_HOME_REVEAL_MS,
+    );
+
+    return () => window.clearTimeout(transitionTimer);
+  }, [contentVisible, transitionComplete]);
+
   if (!launchSplashElapsed) {
     return <SubscriberLaunchSplash />;
   }
 
-  if (!minimumElapsed || (!bootstrapComplete && !fallbackElapsed)) {
+  if (contentVisible) {
+    return (
+      <div
+        className="subscriber-startup-stack"
+        data-startup-phase={transitionComplete ? 'ready' : 'revealing'}
+      >
+        <div className="subscriber-startup-content">{children}</div>
+        {transitionComplete ? null : (
+          <div className="subscriber-startup-overlay">
+            <SubscriberRestoreSkeleton isExiting />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (!startupReady) {
     return <SubscriberRestoreSkeleton />;
   }
 
@@ -238,11 +276,18 @@ function SubscriberLaunchSplash(): ReactElement {
   );
 }
 
-function SubscriberRestoreSkeleton(): ReactElement {
+function SubscriberRestoreSkeleton({
+  isExiting = false,
+}: {
+  readonly isExiting?: boolean;
+}): ReactElement {
   return (
     <main
+      aria-hidden={isExiting ? true : undefined}
       aria-busy="true"
-      className="hub-screen subscriber-tab-screen subscriber-restore-screen"
+      className={`hub-screen subscriber-tab-screen subscriber-restore-screen${
+        isExiting ? ' exiting' : ''
+      }`}
       data-screen-id="X-00R"
     >
       <span

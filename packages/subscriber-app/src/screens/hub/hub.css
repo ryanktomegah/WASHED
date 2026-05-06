@@ -28,6 +28,7 @@ body[data-theme='subscriber'][data-runtime='native'] {
   display: grid;
   min-height: 100vh;
   min-height: 100dvh;
+  animation: subscriber-launch-enter 360ms var(--ease-decelerate) both;
   place-items: center;
   overflow: hidden;
   background: var(--bg);
@@ -39,7 +40,7 @@ body[data-theme='subscriber'][data-runtime='native'] {
   margin: 0;
   color: var(--ink);
   font-family: var(--font-display);
-  font-size: 64px;
+  font-size: 76px;
   font-weight: 500;
   letter-spacing: 0;
   line-height: 1;
@@ -56,6 +57,33 @@ body[data-color-mode='dark'] .subscriber-launch-screen {
 body[data-color-mode='dark'] .subscriber-launch-mark,
 body[data-color-mode='dark'] .subscriber-launch-mark-dot {
   color: var(--primary-on);
+}
+
+.subscriber-startup-stack {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.subscriber-startup-content {
+  min-height: 100vh;
+  min-height: 100dvh;
+  animation: subscriber-home-reveal 480ms var(--ease-decelerate) both;
+}
+
+.subscriber-startup-overlay {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  animation: subscriber-restore-exit 480ms var(--ease-decelerate) both;
+  pointer-events: none;
+}
+
+.subscriber-startup-overlay .subscriber-restore-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .subscriber-tab-screen {
@@ -97,6 +125,10 @@ body[data-runtime='native'] .subscriber-tab-screen {
   clip: rect(0 0 0 0);
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+.subscriber-restore-screen:not(.exiting) {
+  animation: subscriber-restore-enter 320ms var(--ease-decelerate) both;
 }
 
 .subscriber-restore-body {
@@ -249,7 +281,39 @@ body[data-runtime='native'] .subscriber-tab-screen {
   }
 }
 
+@keyframes subscriber-launch-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+@keyframes subscriber-restore-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes subscriber-home-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes subscriber-restore-exit {
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .subscriber-launch-screen,
+  .subscriber-restore-screen:not(.exiting),
+  .subscriber-startup-content,
+  .subscriber-startup-overlay,
   .subscriber-restore-line::after,
   .subscriber-restore-pill::after,
   .subscriber-restore-avatar::after,

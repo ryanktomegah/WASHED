@@ -6,9 +6,80 @@
     <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)" />
     <title>Washed</title>
+    <script>
+      try {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const storedAppearance = window.localStorage.getItem('washed.subscriber.appearance');
+        const shouldLaunchDark =
+          storedAppearance === 'dark' ||
+          ((storedAppearance === null || storedAppearance === 'system') && prefersDark);
+        document.documentElement.dataset.washedLaunchMode = shouldLaunchDark ? 'dark' : 'light';
+      } catch {
+        document.documentElement.dataset.washedLaunchMode = window.matchMedia(
+          '(prefers-color-scheme: dark)',
+        ).matches
+          ? 'dark'
+          : 'light';
+      }
+    </script>
+    <style>
+      html,
+      body,
+      #root {
+        min-height: 100%;
+        margin: 0;
+      }
+
+      body {
+        background: #ffffff;
+      }
+
+      html[data-washed-launch-mode='dark'] body {
+        background: #0a3d1f;
+      }
+
+      .launch-fallback {
+        display: grid;
+        min-height: 100vh;
+        min-height: 100dvh;
+        place-items: center;
+        box-sizing: border-box;
+        background: #ffffff;
+        color: #0a0a0a;
+        font-family:
+          Geist,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+        font-size: 76px;
+        font-weight: 500;
+        letter-spacing: 0;
+        line-height: 1;
+        padding: env(safe-area-inset-top) 22px env(safe-area-inset-bottom);
+      }
+
+      .launch-fallback-dot {
+        color: #0a3d1f;
+      }
+
+      html[data-washed-launch-mode='dark'] .launch-fallback {
+        background: #0a3d1f;
+        color: #ffffff;
+      }
+
+      html[data-washed-launch-mode='dark'] .launch-fallback-dot {
+        color: #ffffff;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <main aria-label="washed." class="launch-fallback">
+        <span aria-hidden="true">washed<span class="launch-fallback-dot">.</span></span>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
