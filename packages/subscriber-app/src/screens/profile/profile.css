@@ -593,6 +593,24 @@
   color: var(--ink-3);
 }
 
+.profile-static-field {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: var(--tap-min);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 82%, var(--bg));
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 16px;
+  padding: 12px 14px;
+}
+
+.profile-static-field.is-missing {
+  color: var(--ink-3);
+}
+
 .profile-input-mono {
   font-family: var(--font-mono);
   font-size: 16px;
@@ -835,6 +853,7 @@
 .profile-warn-card,
 .profile-info-card,
 .profile-input,
+.profile-static-field,
 .profile-select-shell select,
 .profile-mini-map {
   border: 1px solid var(--line);

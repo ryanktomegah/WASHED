@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -10,7 +10,10 @@ import {
   SUBSCRIBER_APPEARANCE_STORAGE_KEY,
   SubscriberAppearanceProvider,
 } from '../../appearance/AppearanceContext.js';
-import { SubscriberApiProvider } from '../../api/SubscriberApiContext.js';
+import {
+  SUBSCRIBER_AUTH_STORAGE_KEY,
+  SubscriberApiProvider,
+} from '../../api/SubscriberApiContext.js';
 import {
   SUBSCRIBER_LANGUAGE_OPTIONS,
   SUBSCRIBER_LANGUAGE_STORAGE_KEY,
@@ -136,9 +139,52 @@ function renderProfileRoutes(initialSignupState: SignupInitialState): {
   return { locationRef };
 }
 
+function renderConfiguredProfileEdit(fetchImpl: typeof fetch): void {
+  render(
+    <MemoryRouter initialEntries={['/profile/edit']}>
+      <LocaleProvider
+        defaultLocale="fr"
+        storageKey={SUBSCRIBER_LANGUAGE_STORAGE_KEY}
+        supportedLocales={SUBSCRIBER_LANGUAGE_OPTIONS}
+      >
+        <SubscriberAppearanceProvider>
+          <SubscriberApiProvider baseUrl="https://core.test" fetch={fetchImpl}>
+            <SubscriberSubscriptionProvider
+              initialState={DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE}
+              storageKey={null}
+            >
+              <SignupProvider>
+                <Routes>
+                  <Route element={<ProfileEditX24E />} path="/profile/edit" />
+                </Routes>
+              </SignupProvider>
+            </SubscriberSubscriptionProvider>
+          </SubscriberApiProvider>
+        </SubscriberAppearanceProvider>
+      </LocaleProvider>
+    </MemoryRouter>,
+  );
+}
+
+function storeFreshSubscriberAuthSession(): void {
+  window.localStorage.setItem(
+    SUBSCRIBER_AUTH_STORAGE_KEY,
+    JSON.stringify({
+      accessToken: 'subscriber-access-token',
+      accessTokenExpiresAt: '2027-05-05T10:00:00.000Z',
+      refreshToken: 'subscriber-refresh-token',
+      refreshTokenExpiresAt: '2027-06-05T10:00:00.000Z',
+      role: 'subscriber',
+      sessionId: '22222222-2222-4222-8222-222222222222',
+      userId: '99999999-9999-4999-8999-999999999999',
+    }),
+  );
+}
+
 beforeEach(() => {
   setActiveLocale('fr');
   window.localStorage.removeItem(SUBSCRIBER_APPEARANCE_STORAGE_KEY);
+  window.localStorage.removeItem(SUBSCRIBER_AUTH_STORAGE_KEY);
   window.localStorage.removeItem(SUBSCRIBER_LANGUAGE_STORAGE_KEY);
 });
 
@@ -215,6 +261,10 @@ describe('Subscriber profile · X-24', () => {
     expect(locationRef.current).toBe('/profile/edit');
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-24E');
     expect(screen.getByRole('heading', { name: 'Modifier vos informations' })).toBeVisible();
+    expect(screen.getByText('+228 90 12 34 56')).toHaveClass('profile-static-field');
+    expect(screen.queryByDisplayValue('+228 90 12 34 56')).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'TÉLÉPHONE' })).not.toBeInTheDocument();
+    expect(screen.getByText('Le téléphone se modifie par vérification SMS.')).toBeVisible();
 
     fireEvent.change(screen.getByLabelText('PRÉNOM'), { target: { value: 'Ama' } });
     fireEvent.change(screen.getByLabelText('NOM'), { target: { value: 'Koffi' } });
@@ -226,6 +276,41 @@ describe('Subscriber profile · X-24', () => {
     expect(locationRef.current).toBe('/profile');
     expect(screen.getByRole('heading', { name: 'Ama Koffi' })).toBeVisible();
     expect(screen.getByText('ama@email.com')).toBeVisible();
+  });
+
+  it('hydrates a restored-session edit screen before showing the fixed phone value', async () => {
+    storeFreshSubscriberAuthSession();
+    const fetchImpl: typeof fetch = async () =>
+      new Response(
+        JSON.stringify({
+          avatarObjectKey: null,
+          countryCode: 'TG',
+          createdAt: '2026-05-01T10:00:00.000Z',
+          email: 'live@email.com',
+          firstName: 'Afi',
+          isAdultConfirmed: true,
+          lastName: 'Mensah',
+          phoneNumber: '+228 91 11 22 33',
+          subscriberId: 'sub_live',
+          updatedAt: '2026-05-05T10:00:00.000Z',
+        }),
+        { headers: { 'content-type': 'application/json' }, status: 200 },
+      );
+
+    renderConfiguredProfileEdit(fetchImpl);
+
+    expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-24E');
+    expect(screen.queryByRole('heading', { name: 'Modifier vos informations' })).toBeNull();
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: 'Modifier vos informations' })).toBeVisible(),
+    );
+
+    expect(screen.getByLabelText('PRÉNOM')).toHaveValue('Afi');
+    expect(screen.getByLabelText('NOM')).toHaveValue('Mensah');
+    expect(screen.getByLabelText('EMAIL (FACULTATIF)')).toHaveValue('live@email.com');
+    expect(screen.getByText('+228 91 11 22 33')).toHaveClass('profile-static-field');
+    expect(screen.queryByDisplayValue('+228 91 11 22 33')).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'TÉLÉPHONE' })).not.toBeInTheDocument();
   });
 });
 

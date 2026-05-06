@@ -339,18 +339,58 @@ export function ProfileEditX24E(): ReactElement {
   const goBack = useSafeBack('/profile');
   const subscriberApi = useSubscriberApi();
   const signup = useSignup();
+  const hasLocalProfile = signup.phone.trim() !== '' && hasSignupIdentity(signup.identity);
   const [firstName, setFirstName] = useState(signup.identity.firstName);
   const [lastName, setLastName] = useState(signup.identity.lastName);
   const [email, setEmail] = useState(signup.identity.email);
   const [isAdult, setIsAdult] = useState(signup.identity.isAdult);
+  const [liveProfileLoaded, setLiveProfileLoaded] = useState(
+    !subscriberApi.isConfigured || hasLocalProfile,
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmissionError, setHasSubmissionError] = useState(false);
+  const phoneValue = signup.phone.trim();
+  const phoneDisplay =
+    phoneValue === '' ? translate('subscriber.profile.detail.missing') : signup.phone;
 
   const normalizedEmail = email.trim();
   const isEmailValid =
     normalizedEmail === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(normalizedEmail);
   const isValid =
     firstName.trim().length >= 2 && lastName.trim().length >= 2 && isEmailValid && isAdult;
+
+  useEffect(() => {
+    if (!subscriberApi.isConfigured || hasLocalProfile) return;
+
+    let cancelled = false;
+    setLiveProfileLoaded(false);
+
+    void subscriberApi
+      .getProfile()
+      .then((profile) => {
+        if (cancelled) return;
+
+        const nextIdentity = {
+          firstName: profile.firstName ?? '',
+          lastName: profile.lastName ?? '',
+          email: profile.email ?? '',
+          isAdult: profile.isAdultConfirmed,
+        };
+
+        signup.setPhone(profile.phoneNumber);
+        signup.setIdentity(nextIdentity);
+        setFirstName(nextIdentity.firstName);
+        setLastName(nextIdentity.lastName);
+        setEmail(nextIdentity.email);
+        setIsAdult(nextIdentity.isAdult);
+        setLiveProfileLoaded(true);
+      })
+      .catch(() => setLiveProfileLoaded(true));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hasLocalProfile, signup, subscriberApi]);
 
   const onSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
@@ -388,6 +428,10 @@ export function ProfileEditX24E(): ReactElement {
 
     signup.setIdentity(identity);
     navigate('/profile');
+  }
+
+  if (!liveProfileLoaded) {
+    return <main className="profile-screen" data-screen-id="X-24E" />;
   }
 
   return (
@@ -451,16 +495,16 @@ export function ProfileEditX24E(): ReactElement {
         </div>
 
         <div className="profile-field">
-          <label className="profile-field-label" htmlFor="x24e-phone">
+          <span className="profile-field-label" id="x24e-phone-label">
             {translate('subscriber.profile.detail.phone').toUpperCase()}
-          </label>
-          <input
-            className="profile-input"
+          </span>
+          <div
+            aria-labelledby="x24e-phone-label"
+            className={`profile-static-field${phoneValue === '' ? ' is-missing' : ''}`}
             id="x24e-phone"
-            readOnly
-            type="tel"
-            value={signup.phone}
-          />
+          >
+            {phoneDisplay}
+          </div>
           <p className="profile-field-note">{translate('subscriber.profile.edit.phone_note')}</p>
         </div>
 
