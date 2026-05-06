@@ -130,6 +130,7 @@ describe('Subscriber plan · X-19', () => {
     expect(screen.queryByText('Mardi 5 mai · 9 h 00')).not.toBeInTheDocument();
     expect(screen.queryByText('avec Akouvi K.')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Planifier ma première visite/u })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Modifier le forfait' })).toBeVisible();
   });
 
   it('renders active subscription details when the subscription is active', () => {
@@ -156,6 +157,8 @@ describe('Subscriber plan · X-19', () => {
       screen.getByText('Le bureau planifie le 2e créneau avec vous selon les disponibilités.'),
     ).toBeVisible();
     expect(screen.getByText(/Vous économisez 500\s+XOF par mois/u)).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Modifier le forfait' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Passer à 2 visites' })).not.toBeInTheDocument();
   });
 
   it('routes first-visit planning to booking while pending activation', () => {
@@ -164,9 +167,15 @@ describe('Subscriber plan · X-19', () => {
     expect(locationRef.current).toBe('/booking');
   });
 
+  it('routes first-time plan modification to the plan change screen', () => {
+    const { locationRef } = renderAt('/plan', <PlanX19 />);
+    fireEvent.click(screen.getByRole('button', { name: 'Modifier le forfait' }));
+    expect(locationRef.current).toBe('/plan/upgrade');
+  });
+
   it('routes active plan actions to upgrade and pause', () => {
     const { locationRef } = renderAt('/plan', <PlanX19 />, ['/plan'], ACTIVE_SUBSCRIPTION_STATE);
-    fireEvent.click(screen.getByRole('button', { name: 'Passer à 2 visites' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Modifier le forfait' }));
     expect(locationRef.current).toBe('/plan/upgrade');
 
     const pause = renderAt('/plan', <PlanX19 />, ['/plan'], ACTIVE_SUBSCRIPTION_STATE);
@@ -383,6 +392,21 @@ describe('Subscriber plan · X-19.U Upgrade', () => {
     expect(screen.getByRole('button', { name: /Confirmer · 4\s500\s+XOF \/ mois/u })).toBeVisible();
   });
 
+  it('renders a one-visit target when the subscriber already has two visits', () => {
+    renderAt('/plan/upgrade', <PlanUpgradeX19U />, ['/plan/upgrade'], {
+      ...ACTIVE_SUBSCRIPTION_STATE,
+      tier: 'T2',
+      visitsPerCycle: 2,
+    });
+
+    expect(screen.getByRole('heading', { name: 'Une visite par mois.' })).toBeVisible();
+    expect(screen.getByText(/^4\s500\s+XOF$/u)).toBeVisible(); // current
+    expect(screen.getByText(/^2\s500\s+XOF$/u)).toBeVisible(); // new
+    expect(screen.getByText(/—\s2\s000\s+XOF/u)).toBeVisible();
+    expect(screen.getByText('Prochain cycle · 1 visite par mois')).toBeVisible();
+    expect(screen.getByRole('button', { name: /Confirmer · 2\s500\s+XOF \/ mois/u })).toBeVisible();
+  });
+
   it('routes confirm and cancel back to /plan', () => {
     const confirm = renderAt('/plan/upgrade', <PlanUpgradeX19U />);
     fireEvent.click(screen.getByRole('button', { name: /Confirmer · 4\s500\s+XOF \/ mois/u }));
@@ -415,6 +439,34 @@ describe('Subscriber plan · X-19.U Upgrade', () => {
     expect(requests[0]?.method).toBe('POST');
     expect(requests[0]?.url).toBe('http://api.test/v1/subscriber/subscription/tier');
     await expect(requests[0]?.json()).resolves.toMatchObject({ tierCode: 'T2' });
+  });
+
+  it('sends downgrades to the backend when the current tier is T2', async () => {
+    const requests: Request[] = [];
+    const apiFetch: typeof fetch = async (input, init) => {
+      const request = new Request(input, init);
+      requests.push(request);
+      return Response.json(subscriptionDetail({ tierCode: 'T1' }));
+    };
+    const { locationRef } = renderAt(
+      '/plan/upgrade',
+      <PlanUpgradeX19U />,
+      ['/plan/upgrade'],
+      {
+        ...ACTIVE_SUBSCRIPTION_STATE,
+        tier: 'T2',
+        visitsPerCycle: 2,
+      },
+      {},
+      { baseUrl: 'http://api.test', fetch: apiFetch },
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Confirmer · 2\s500\s+XOF \/ mois/u }));
+
+    await waitFor(() => expect(locationRef.current).toBe('/plan'));
+    expect(requests[0]?.method).toBe('POST');
+    expect(requests[0]?.url).toBe('http://api.test/v1/subscriber/subscription/tier');
+    await expect(requests[0]?.json()).resolves.toMatchObject({ tierCode: 'T1' });
   });
 });
 

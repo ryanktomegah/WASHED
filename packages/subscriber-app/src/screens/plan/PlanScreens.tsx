@@ -18,6 +18,7 @@ import {
   TIER_PRICE_XOF,
   useOptionalSignup,
   type SignupPaymentProvider,
+  type SignupTier,
 } from '../onboarding/SignupContext.js';
 import { formatTogoDisplayPhone, toTogoE164Phone } from '../onboarding/phoneNumber.js';
 import { SUBSCRIBER_PLAN_DEMO } from './subscriberPlanDemoData.js';
@@ -122,6 +123,10 @@ function activePlanLabel(tier: 'T1' | 'T2'): string {
   return translate(
     tier === 'T1' ? 'subscriber.plan.tier.t1.label' : 'subscriber.plan.tier.t2.label',
   );
+}
+
+function alternatePlanTier(tier: SignupTier): SignupTier {
+  return tier === 'T1' ? 'T2' : 'T1';
 }
 
 function PlanTierDetails({ tier }: { readonly tier: 'T1' | 'T2' }): ReactElement {
@@ -297,7 +302,7 @@ export function PlanX19(): ReactElement {
             onClick={() => navigate('/plan/upgrade')}
             type="button"
           >
-            {translate('subscriber.plan.cta_upgrade')}
+            {translate('subscriber.plan.cta_modify')}
           </button>
           <button
             className="plan-button ghost"
@@ -408,6 +413,13 @@ function PlanPendingX19(): ReactElement {
           type="button"
         >
           {translate(actionKey)}
+        </button>
+        <button
+          className="plan-button ghost full"
+          onClick={() => navigate('/plan/upgrade')}
+          type="button"
+        >
+          {translate('subscriber.plan.cta_modify')}
         </button>
         <button
           className="plan-button ghost full"
@@ -757,13 +769,13 @@ export function PlanUpgradeX19U(): ReactElement {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmissionError, setHasSubmissionError] = useState(false);
   const upgrade = SUBSCRIBER_PLAN_DEMO.upgrade;
-  const currentAmountXof = subscriberApi.isConfigured
-    ? TIER_PRICE_XOF[subscription.state.tier]
-    : upgrade.currentAmountXof;
-  const newAmountXof = subscriberApi.isConfigured ? TIER_PRICE_XOF.T2 : upgrade.newAmountXof;
-  const savingsXof = subscriberApi.isConfigured
-    ? Math.max(0, TIER_PRICE_XOF.T1 * 2 - TIER_PRICE_XOF.T2)
-    : upgrade.savingsXof;
+  const currentTier = subscription.state.tier;
+  const newTier = alternatePlanTier(currentTier);
+  const currentAmountXof = TIER_PRICE_XOF[currentTier];
+  const newAmountXof = TIER_PRICE_XOF[newTier];
+  const amountDeltaXof = Math.abs(newAmountXof - currentAmountXof);
+  const t2SavingsXof = Math.max(0, TIER_PRICE_XOF.T1 * 2 - TIER_PRICE_XOF.T2);
+  const savingsXof = newTier === 'T2' ? t2SavingsXof : amountDeltaXof;
   const effectiveDate = formatDayMonth(
     subscriberApi.isConfigured
       ? (subscription.state.billingStatus?.nextChargeAt?.slice(0, 10) ??
@@ -774,12 +786,45 @@ export function PlanUpgradeX19U(): ReactElement {
   const workerFirstName = subscriberApi.isConfigured
     ? (subscription.state.assignedWorker?.displayName.split(/\s+/u)[0] ?? '')
     : upgrade.workerFirstName;
+  const planChangeBody =
+    newTier === 'T2'
+      ? translate('subscriber.plan.change.body.t2', {
+          date: effectiveDate,
+          savings: formatXof(t2SavingsXof),
+        })
+      : translate('subscriber.plan.change.body.t1', {
+          amount: formatXof(amountDeltaXof),
+          date: effectiveDate,
+        });
+  const effectItems = [
+    translate(
+      newTier === 'T2'
+        ? 'subscriber.plan.change.effect.t2.visits'
+        : 'subscriber.plan.change.effect.t1.visits',
+    ),
+    translate('subscriber.plan.upgrade.effect.charge', {
+      date: effectiveDate,
+      amount: formatXof(newAmountXof),
+    }),
+    translate(
+      newTier === 'T2'
+        ? 'subscriber.plan.change.effect.t2.bureau'
+        : 'subscriber.plan.change.effect.t1.bureau',
+    ),
+    ...(workerFirstName === ''
+      ? []
+      : [
+          translate('subscriber.plan.upgrade.effect.same_worker', {
+            name: workerFirstName,
+          }),
+        ]),
+  ];
 
   async function confirmTierChange(): Promise<void> {
     setHasSubmissionError(false);
 
     if (!subscriberApi.isConfigured) {
-      subscription.changeTier('T2');
+      subscription.changeTier(newTier);
       navigate('/plan');
       return;
     }
@@ -788,7 +833,7 @@ export function PlanUpgradeX19U(): ReactElement {
     try {
       const detail = await subscriberApi.changeSubscriptionTier({
         effectiveAt: new Date().toISOString(),
-        tierCode: 'T2',
+        tierCode: newTier,
       });
       subscription.syncFromApi(detail);
       navigate('/plan');
@@ -802,18 +847,17 @@ export function PlanUpgradeX19U(): ReactElement {
   return (
     <main aria-labelledby="x19u-headline" className="plan-screen" data-screen-id="X-19.U">
       <div className="plan-body plan-body-flow">
-        <BackHeader label={translate('subscriber.plan.upgrade.header')} onBack={goBack} />
+        <BackHeader label={translate('subscriber.plan.change.header')} onBack={goBack} />
 
         <h1 className="plan-title" id="x19u-headline">
-          {translate('subscriber.plan.upgrade.title')}
+          {translate(
+            newTier === 'T2'
+              ? 'subscriber.plan.change.title.t2'
+              : 'subscriber.plan.change.title.t1',
+          )}
         </h1>
 
-        <p className="plan-copy">
-          {translate('subscriber.plan.upgrade.body', {
-            date: effectiveDate,
-            savings: formatXof(savingsXof),
-          })}
-        </p>
+        <p className="plan-copy">{planChangeBody}</p>
 
         <section className="plan-cream-card" aria-labelledby="x19u-changes-eyebrow">
           <span className="plan-eyebrow accent" id="x19u-changes-eyebrow">
@@ -829,7 +873,13 @@ export function PlanUpgradeX19U(): ReactElement {
           </div>
           <div className="plan-compare-divider" aria-hidden="true" />
           <div className="plan-compare-row plan-compare-row-savings">
-            <span>{translate('subscriber.plan.upgrade.savings_label')}</span>
+            <span>
+              {translate(
+                newTier === 'T2'
+                  ? 'subscriber.plan.upgrade.savings_label'
+                  : 'subscriber.plan.change.reduction_label',
+              )}
+            </span>
             <span className="plan-compare-savings">— {formatXof(savingsXof)}</span>
           </div>
         </section>
@@ -839,19 +889,9 @@ export function PlanUpgradeX19U(): ReactElement {
             {translate('subscriber.plan.upgrade.effect_eyebrow')}
           </span>
           <ul className="plan-list">
-            <li>{translate('subscriber.plan.upgrade.effect.remaining')}</li>
-            <li>
-              {translate('subscriber.plan.upgrade.effect.charge', {
-                date: effectiveDate,
-                amount: formatXof(newAmountXof),
-              })}
-            </li>
-            <li>{translate('subscriber.plan.upgrade.effect.bureau')}</li>
-            <li>
-              {translate('subscriber.plan.upgrade.effect.same_worker', {
-                name: workerFirstName,
-              })}
-            </li>
+            {effectItems.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
           </ul>
         </section>
 

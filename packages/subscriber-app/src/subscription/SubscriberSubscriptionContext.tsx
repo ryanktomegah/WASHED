@@ -204,7 +204,7 @@ export function SubscriberSubscriptionProvider({
   }, []);
 
   const changeTier = useCallback((tier: SignupTier) => {
-    setState((current) => ({ ...current, tier }));
+    setState((current) => ({ ...current, tier, visitsPerCycle: tier === 'T2' ? 2 : 1 }));
   }, []);
 
   const changePaymentProvider = useCallback((paymentProvider: SignupPaymentProvider) => {
