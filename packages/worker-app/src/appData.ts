@@ -9,6 +9,7 @@ export type WorkerRoute =
   | 'daySummary'
   | 'inbox'
   | 'photoRetry'
+  | 'visitDetail'
   | 'visit';
 
 export interface WorkerCopy {
@@ -133,6 +134,18 @@ export interface WorkerCopy {
     readonly title: string;
     readonly visitCount: string;
   };
+  readonly tourDetail: {
+    readonly back: (index: number, count: number) => string;
+    readonly callOffice: string;
+    readonly clientNote: string;
+    readonly itinerary: string;
+    readonly noteLabel: string;
+    readonly startCta: string;
+    readonly tenure: (months: number) => string;
+    readonly tierLabel: (tier: number) => string;
+    readonly whenLabel: string;
+    readonly whereLabel: string;
+  };
   readonly visitStep: Record<VisitStep, string>;
 }
 
@@ -203,6 +216,7 @@ export const workerCopy = {
     profile: 'Profil',
     today: "Aujourd'hui",
     visit: 'Visite',
+    visitDetail: 'Visite',
   },
   inbox: {
     advance: "Demande d'avance reçue par l'opérateur",
@@ -287,6 +301,18 @@ export const workerCopy = {
     title: "Route d'aujourd'hui",
     visitCount: '5 visites',
   },
+  tourDetail: {
+    back: (index: number, count: number) => translate('worker.tour.detail.back', { count, index }),
+    callOffice: translate('worker.tour.detail.call_office'),
+    clientNote: translate('worker.tour.detail.client_note'),
+    itinerary: translate('worker.tour.detail.itinerary'),
+    noteLabel: translate('worker.tour.detail.note_label'),
+    startCta: translate('worker.tour.detail.cta_start'),
+    tenure: (months: number) => translate('worker.tour.detail.tenure', { months }),
+    tierLabel: (tier: number) => translate('worker.tour.detail.tier_label', { n: tier }),
+    whenLabel: translate('worker.tour.detail.when_label'),
+    whereLabel: translate('worker.tour.detail.where_label'),
+  },
   visitStep: {
     afterPhoto: 'Photo après',
     beforePhoto: 'Photo avant',
@@ -338,6 +364,16 @@ export const routeCards = [
     title: 'Esi Amouzou',
   },
 ] as const;
+
+export const activeVisitDetail = {
+  address: 'Adidogomé, rue 42',
+  distance: '800 m',
+  scheduledAt: 'Mardi 5 mai · 11h30',
+  officePhoneHref: 'tel:+22890000000',
+  tenureMonths: 8,
+  tier: 1,
+  visitIndex: 2,
+} as const;
 
 export const workerSurfaces = [
   "Aujourd'hui",

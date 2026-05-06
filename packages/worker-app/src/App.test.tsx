@@ -13,6 +13,18 @@ async function unlockWorkerApp() {
   await screen.findByRole('heading', { name: 'Bonjour Akouvi.' });
 }
 
+function openVisitDetail() {
+  fireEvent.click(screen.getByRole('button', { name: /Démarrer la route/u }));
+  expect(screen.getByRole('heading', { name: 'Ama Dossou' })).toBeInTheDocument();
+  expect(screen.getByText('Tournée · visite 2 / 5')).toBeInTheDocument();
+}
+
+function startActiveVisit() {
+  openVisitDetail();
+  fireEvent.click(screen.getByRole('button', { name: /Démarrer la route/u }));
+  expect(screen.getByLabelText('Guided visit workflow')).toBeInTheDocument();
+}
+
 describe('worker app', () => {
   it('shows splash and requires a PIN before route surfaces', async () => {
     render(<App />);
@@ -46,6 +58,14 @@ describe('worker app', () => {
     expect(screen.queryByLabelText('Offline action ledger')).not.toBeInTheDocument();
     expect(screen.queryByText(/actions en attente de synchronisation/u)).not.toBeInTheDocument();
 
+    openVisitDetail();
+
+    expect(screen.getByText('Tarif T1')).toBeInTheDocument();
+    expect(screen.getByText('8e mois')).toBeInTheDocument();
+    expect(screen.getByText('Mardi 5 mai · 11h30')).toBeInTheDocument();
+    expect(screen.getByText('Note de la cliente')).toBeInTheDocument();
+    expect(screen.getByText('Appeler bureau')).toHaveAttribute('href', 'tel:+22890000000');
+
     fireEvent.click(screen.getByRole('button', { name: /Démarrer la route/u }));
 
     expect(screen.getByRole('button', { name: 'SOS' })).toBeInTheDocument();
@@ -59,7 +79,7 @@ describe('worker app', () => {
 
     await unlockWorkerApp();
 
-    fireEvent.click(screen.getByRole('button', { name: /Démarrer la route/u }));
+    startActiveVisit();
     fireEvent.click(screen.getByRole('button', { name: 'SOS' }));
 
     expect(screen.getByRole('dialog', { name: 'Que se passe-t-il ?' })).toBeInTheDocument();
@@ -76,7 +96,7 @@ describe('worker app', () => {
 
     await unlockWorkerApp();
 
-    fireEvent.click(screen.getByRole('button', { name: /Démarrer la route/u }));
+    startActiveVisit();
     fireEvent.click(screen.getByRole('button', { name: 'SOS' }));
     fireEvent.click(screen.getByRole('button', { name: /Je suis en danger/u }));
 
@@ -94,7 +114,7 @@ describe('worker app', () => {
 
     await unlockWorkerApp();
 
-    fireEvent.click(screen.getByRole('button', { name: /Démarrer la route/u }));
+    startActiveVisit();
 
     fireEvent.click(screen.getByRole('button', { name: "J'arrive" }));
 
@@ -199,7 +219,7 @@ describe('worker app', () => {
     expect(screen.getByText('Route de demain confirmée')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: "Aujourd'hui" }));
-    fireEvent.click(screen.getByRole('button', { name: /Démarrer la route/u }));
+    startActiveVisit();
     fireEvent.click(screen.getByRole('button', { name: 'Photos' }));
     expect(screen.getByRole('heading', { name: 'Contrôle photo' })).toBeInTheDocument();
     expect(screen.getByLabelText('Photo quality preview')).toBeInTheDocument();
@@ -221,7 +241,7 @@ describe('worker app', () => {
 
     await unlockWorkerApp();
 
-    fireEvent.click(screen.getByRole('button', { name: /Démarrer la route/u }));
+    startActiveVisit();
     fireEvent.click(screen.getByRole('button', { name: "J'arrive" }));
     await screen.findByText("Pointage d'arrivée ajouté à la file hors ligne.");
     fireEvent.click(screen.getByRole('button', { name: 'Prendre photo avant' }));
@@ -235,7 +255,7 @@ describe('worker app', () => {
     render(<App />);
 
     expect(await screen.findByText('2 actions en attente de synchronisation')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Démarrer la route/u }));
+    startActiveVisit();
     expect(await screen.findByText('Photo « avant » capturée')).toBeInTheDocument();
     expect(screen.queryByRole('dialog', { name: 'Aide immédiate' })).not.toBeInTheDocument();
   });

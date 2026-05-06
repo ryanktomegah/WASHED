@@ -14,6 +14,7 @@ import {
   Banknote,
   CalendarDays,
   Check,
+  ChevronLeft,
   Clock3,
   House,
   MapPinned,
@@ -23,6 +24,7 @@ import {
 import type { Dispatch, FormEvent, ReactElement, ReactNode } from 'react';
 
 import {
+  activeVisitDetail,
   routeCards,
   visitSteps,
   workerCopy,
@@ -230,6 +232,7 @@ export function App(): ReactElement {
             t={t}
           />
         ) : null}
+        {route === 'visitDetail' ? <VisitPreviewScreen onRouteChange={setRoute} t={t} /> : null}
         {route === 'visit' ? (
           <VisitDetailScreen
             dispatch={dispatch}
@@ -457,7 +460,7 @@ function TodayScreen({
         <div className="field-command-actions">
           <button
             className="primary-field-action"
-            onClick={() => onRouteChange('visit')}
+            onClick={() => onRouteChange('visitDetail')}
             type="button"
           >
             <MapPinned aria-hidden="true" size={17} strokeWidth={2.4} />
@@ -549,6 +552,61 @@ function TodayScreen({
         </div>
       </section>
     </>
+  );
+}
+
+function VisitPreviewScreen({
+  onRouteChange,
+  t,
+}: {
+  readonly onRouteChange: (route: WorkerRoute) => void;
+  readonly t: typeof workerCopy;
+}): ReactElement {
+  const activeVisit = routeCards[1];
+  const mapsUrl = `https://maps.apple.com/?q=${encodeURIComponent(activeVisitDetail.address)}`;
+
+  return (
+    <section className="visit-preview-screen" aria-labelledby="worker-visit-preview-title">
+      <button className="visit-preview-back" onClick={() => onRouteChange('today')} type="button">
+        <ChevronLeft aria-hidden="true" size={14} strokeWidth={2.6} />
+        {t.tourDetail.back(activeVisitDetail.visitIndex, routeCards.length)}
+      </button>
+      <h1 id="worker-visit-preview-title">{activeVisit.title}</h1>
+      <div className="visit-preview-chips" aria-label="Détails visite">
+        <Badge tone="success">{t.tourDetail.tenure(activeVisitDetail.tenureMonths)}</Badge>
+        <Badge>{t.tourDetail.tierLabel(activeVisitDetail.tier)}</Badge>
+        <Badge>{activeVisitDetail.distance}</Badge>
+      </div>
+
+      <section className="visit-preview-card">
+        <span className="eyebrow">{t.tourDetail.whenLabel}</span>
+        <strong>{activeVisitDetail.scheduledAt}</strong>
+      </section>
+
+      <section className="visit-preview-card">
+        <span className="eyebrow">{t.tourDetail.whereLabel}</span>
+        <strong>{activeVisitDetail.address}</strong>
+        <p>{t.today.addressHint}</p>
+      </section>
+
+      <section className="visit-preview-card visit-preview-note">
+        <span className="eyebrow">{t.tourDetail.noteLabel}</span>
+        <p>{t.tourDetail.clientNote}</p>
+      </section>
+
+      <div className="visit-preview-spacer" />
+      <Button fullWidth onClick={() => onRouteChange('visit')} size="lg">
+        {t.tourDetail.startCta}
+      </Button>
+      <div className="visit-preview-actions">
+        <a className="worker-secondary-action" href={mapsUrl}>
+          {t.tourDetail.itinerary}
+        </a>
+        <a className="worker-secondary-action" href={activeVisitDetail.officePhoneHref}>
+          {t.tourDetail.callOffice}
+        </a>
+      </div>
+    </section>
   );
 }
 

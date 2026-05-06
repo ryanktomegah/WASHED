@@ -14,8 +14,7 @@ test('worker mobile covers activation, offline visit actions, SOS, and daily sum
   await expect(page.getByText(/7\s*500\s*XOF/u)).toBeVisible();
   await expect(page.getByText(/actions en attente de synchronisation/u)).toHaveCount(0);
 
-  await page.getByRole('button', { name: /Démarrer la route/u }).click();
-  await expect(page.getByLabel('Guided visit workflow')).toBeVisible();
+  await openActiveVisit(page);
   await page.getByRole('button', { name: "Aujourd'hui" }).click();
 
   await page.getByRole('button', { name: 'Profil' }).click();
@@ -25,7 +24,7 @@ test('worker mobile covers activation, offline visit actions, SOS, and daily sum
   await expect(page.getByText('Profil activé pour les routes terrain.')).toBeVisible();
 
   await page.getByRole('button', { name: "Aujourd'hui" }).click();
-  await page.getByRole('button', { name: /Démarrer la route/u }).click();
+  await openActiveVisit(page);
   await page.getByRole('button', { name: "J'arrive" }).click();
   await expect(page.getByText("Pointage d'arrivée ajouté à la file hors ligne.")).toBeVisible();
   await expect(page.getByText('Vous êtes arrivée')).toBeVisible();
@@ -33,7 +32,7 @@ test('worker mobile covers activation, offline visit actions, SOS, and daily sum
   await page.getByRole('button', { name: "Aujourd'hui" }).click();
   await expect(page.getByLabel('Offline action ledger')).toContainText('Arrivée GPS');
   await expect(page.getByLabel('Offline action ledger')).not.toContainText('checkInVisit');
-  await page.getByRole('button', { name: /Démarrer la route/u }).click();
+  await openActiveVisit(page);
   await page.getByRole('button', { name: 'Prendre photo avant' }).click();
   await expect(page.getByText('Photo avant ajoutée à la file hors ligne.')).toBeVisible();
   await page.getByRole('button', { name: 'Démarrer la visite' }).click();
@@ -46,7 +45,7 @@ test('worker mobile covers activation, offline visit actions, SOS, and daily sum
 
   await page.getByRole('button', { name: "Aujourd'hui" }).click();
   await expect(page.getByText(/4 actions en attente de synchronisation/u)).toBeVisible();
-  await page.getByRole('button', { name: /Démarrer la route/u }).click();
+  await openActiveVisit(page);
   await page.getByRole('button', { name: 'Photos' }).click();
   await expect(page.getByRole('heading', { name: 'Contrôle photo' })).toBeVisible();
   await expect(page.getByLabel('Photo quality preview')).toBeVisible();
@@ -54,14 +53,14 @@ test('worker mobile covers activation, offline visit actions, SOS, and daily sum
   await expect(page.getByText('Photo avant ajoutée à la file hors ligne.')).toBeVisible();
 
   await page.getByRole('button', { name: "Aujourd'hui" }).click();
-  await page.getByRole('button', { name: /Démarrer la route/u }).click();
+  await openActiveVisit(page);
   await page.getByRole('button', { name: 'Déclarer absence foyer' }).click();
   await expect(
     page.getByText('Absence foyer déclarée et ajoutée à la file hors ligne.'),
   ).toBeVisible();
 
   await page.getByRole('button', { name: "Aujourd'hui" }).click();
-  await page.getByRole('button', { name: /Démarrer la route/u }).click();
+  await openActiveVisit(page);
   await page.getByRole('button', { name: 'SOS' }).click();
   await expect(page.getByRole('dialog', { name: 'Que se passe-t-il ?' })).toBeVisible();
   await page.getByRole('button', { name: /Je suis en danger/u }).click();
@@ -96,4 +95,14 @@ async function unlockWorkerApp(page: import('@playwright/test').Page) {
   await page.getByLabel('Code PIN — 4 chiffres').fill('2468');
   await page.getByRole('button', { name: 'Entrer' }).click();
   await expect(page.getByRole('heading', { name: 'Bonjour Akouvi.' })).toBeVisible();
+}
+
+async function openActiveVisit(page: import('@playwright/test').Page) {
+  await page.getByRole('button', { name: /Démarrer la route/u }).click();
+  await expect(page.getByRole('heading', { name: 'Ama Dossou' })).toBeVisible();
+  await expect(page.getByText('Tournée · visite 2 / 5')).toBeVisible();
+  await expect(page.getByText('Tarif T1')).toBeVisible();
+  await expect(page.getByText('Note de la cliente')).toBeVisible();
+  await page.getByRole('button', { name: /Démarrer la route/u }).click();
+  await expect(page.getByLabel('Guided visit workflow')).toBeVisible();
 }
