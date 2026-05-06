@@ -205,12 +205,13 @@ describe('Subscriber plan · X-20 Payment history', () => {
     renderAt('/plan/payments', <PlanPaymentHistoryX20 />);
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-20');
-    expect(screen.getByRole('heading', { name: /0 mois de prélèvements/u })).toBeVisible();
+    expect(screen.getByRole('heading', { name: /0 mois couverts/u })).toBeVisible();
     expect(screen.getByText('Aucun paiement encore.')).toBeVisible();
+    expect(screen.queryByText('Total payé')).not.toBeInTheDocument();
     expect(screen.queryByText('Mixx by Yas · MM-78423190')).not.toBeInTheDocument();
   });
 
-  it('renders payment totals and receipt rows from the deck for active subscriptions', () => {
+  it('renders payment coverage and receipt rows from the deck for active subscriptions', () => {
     renderAt(
       '/plan/payments',
       <PlanPaymentHistoryX20 />,
@@ -219,10 +220,13 @@ describe('Subscriber plan · X-20 Payment history', () => {
     );
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-20');
-    expect(screen.getByRole('heading', { name: /8 mois de prélèvements/u })).toBeVisible();
-    expect(screen.getByText('Total payé')).toBeVisible();
-    expect(screen.getByText(/20\s000\s+XOF/u)).toBeVisible();
-    expect(screen.getByText('8 prélèvements')).toBeVisible();
+    expect(screen.getByRole('heading', { name: /3 mois couverts/u })).toBeVisible();
+    expect(screen.getByText('Mois couverts')).toBeVisible();
+    expect(screen.getByText('3 mois')).toBeVisible();
+    expect(screen.getByText('À jour')).toBeVisible();
+    expect(screen.getByText('3 prélèvements')).toBeVisible();
+    expect(screen.queryByText('Total payé')).not.toBeInTheDocument();
+    expect(screen.queryByText(/20\s000\s+XOF/u)).not.toBeInTheDocument();
     expect(screen.getByText('1 mai 2026')).toBeVisible();
     expect(screen.getByText('Mixx by Yas · MM-78423190')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Télécharger les reçus' })).toBeVisible();
@@ -264,6 +268,8 @@ describe('Subscriber plan · X-20 Payment history', () => {
     );
 
     await waitFor(() => expect(screen.getByText('Mobile Money · MM-REAL-001')).toBeVisible());
+    expect(screen.getByText('À jour')).toBeVisible();
+    expect(screen.queryByText('Total payé')).not.toBeInTheDocument();
     expect(requests[0]?.url).toBe(
       'http://api.test/v1/subscriber/subscription/billing-history?limit=25',
     );

@@ -13,7 +13,7 @@ export default defineConfig({
     {
       name: 'subscriber-mobile',
       testMatch:
-        /(subscriber|subscriber-visit|onboarding|screenshot|screenshot-iphone17)\.spec\.ts/u,
+        /(subscriber|subscriber-visit|subscriber-returning|onboarding|screenshot|screenshot-iphone17)\.spec\.ts/u,
       use: {
         ...devices['iPhone 15 Pro'],
         baseURL: 'http://127.0.0.1:6173',

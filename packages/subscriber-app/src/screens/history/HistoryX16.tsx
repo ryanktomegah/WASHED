@@ -79,13 +79,12 @@ function billingAmountXof(item: SubscriptionBillingItemDto): number {
   return item.itemType === 'refund' ? -amount : amount;
 }
 
-function sumPaidBillingXof(items: readonly SubscriptionBillingItemDto[]): number {
-  return items
-    .filter(
-      (item) =>
-        (item.itemType === 'charge' && item.status === 'succeeded') || item.itemType === 'refund',
-    )
-    .reduce((sum, item) => sum + billingAmountXof(item), 0);
+function countBillingMonths(items: readonly SubscriptionBillingItemDto[]): number {
+  return new Set(
+    items
+      .filter((item) => item.itemType === 'charge' && item.status === 'succeeded')
+      .map((item) => item.occurredAt.slice(0, 7)),
+  ).size;
 }
 
 function firstDisplayNameToken(displayName: string): string {
@@ -119,38 +118,53 @@ export function HistoryX16(): ReactElement {
   const liveRecentVisits: readonly HistoryVisitEntry[] =
     subscription.state.recentVisits.map(toLivePastVisit);
   const isLiveDataReady = subscriberApi.isConfigured && subscription.state.isHydratedFromApi;
-  const recentVisits: readonly HistoryVisitEntry[] = isLiveDataReady
+  const shouldUseSubscriptionHistory =
+    isLiveDataReady ||
+    subscription.state.status === 'ready_no_visit' ||
+    subscription.state.status === 'visit_request_pending' ||
+    liveRecentVisits.length > 0;
+  const recentVisits: readonly HistoryVisitEntry[] = shouldUseSubscriptionHistory
     ? liveRecentVisits
     : SUBSCRIBER_HISTORY_DEMO.recentVisits;
   const liveWorkerFirstName =
     subscription.state.assignedWorker === null
       ? null
       : firstDisplayNameToken(subscription.state.assignedWorker.displayName);
-  const counter = isLiveDataReady
+  const counter = shouldUseSubscriptionHistory
     ? (subscription.state.assignedWorker?.completedVisitCount ?? liveRecentVisits.length)
     : aggregates.counter;
-  const totalPaidXof = isLiveDataReady
+  const coveredMonths = isLiveDataReady
     ? billingItems === null
       ? null
-      : sumPaidBillingXof(billingItems)
-    : aggregates.totalPaidXof;
-  const totalPaid =
-    totalPaidXof === null
-      ? null
-      : formatXof(totalPaidXof)
-          .replace(/\s*XOF$/u, '')
-          .trim();
+      : countBillingMonths(billingItems)
+    : shouldUseSubscriptionHistory
+      ? Math.min(liveRecentVisits.length, counter)
+      : aggregates.coveredMonths;
 
+  const displayWorkerFirstName = shouldUseSubscriptionHistory
+    ? liveWorkerFirstName
+    : aggregates.workerFirstName;
+  const displayTenureMonths = shouldUseSubscriptionHistory
+    ? (coveredMonths ?? liveRecentVisits.length)
+    : aggregates.tenureMonths;
   const titleKey =
-    aggregates.tenureMonths === 0 ? 'subscriber.history.title_first' : 'subscriber.history.title';
+    displayTenureMonths <= 1 ? 'subscriber.history.title_first' : 'subscriber.history.title';
 
-  const titleText = isLiveDataReady
-    ? translate('subscriber.history.eyebrow')
-    : translate(titleKey, {
-        name: aggregates.workerFirstName,
-        months: aggregates.tenureMonths,
-      });
-  const titleAccent = isLiveDataReady ? liveWorkerFirstName : aggregates.workerFirstName;
+  const titleText =
+    recentVisits.length === 0
+      ? translate('subscriber.history.empty.title')
+      : displayWorkerFirstName === null
+        ? translate('subscriber.history.eyebrow')
+        : translate(titleKey, {
+            name: displayWorkerFirstName,
+            months: displayTenureMonths,
+          });
+  const titleAccent =
+    recentVisits.length === 0
+      ? null
+      : shouldUseSubscriptionHistory
+        ? liveWorkerFirstName
+        : aggregates.workerFirstName;
 
   useEffect(() => {
     if (!subscriberApi.isConfigured) return;
@@ -202,10 +216,10 @@ export function HistoryX16(): ReactElement {
           </div>
           <div className="history-stat align-right">
             <span className="history-stat-label">
-              {translate('subscriber.history.stats.total')}
+              {translate('subscriber.history.stats.coverage')}
             </span>
             <span className="history-stat-value">
-              {totalPaid ?? '—'} <small>XOF</small>
+              {coveredMonths ?? '—'} <small>{translate('subscriber.history.stats.months')}</small>
             </span>
           </div>
         </section>
@@ -269,10 +283,15 @@ export function HistoryDetailX17(): ReactElement {
   const { aggregates } = SUBSCRIBER_HISTORY_DEMO;
   const liveRecentVisits: readonly HistoryVisitEntry[] =
     subscription.state.recentVisits.map(toLivePastVisit);
-  const recentVisits: readonly HistoryVisitEntry[] =
-    subscriberApi.isConfigured && subscription.state.isHydratedFromApi
-      ? liveRecentVisits
-      : SUBSCRIBER_HISTORY_DEMO.recentVisits;
+  const isLiveDataReady = subscriberApi.isConfigured && subscription.state.isHydratedFromApi;
+  const shouldUseSubscriptionHistory =
+    isLiveDataReady ||
+    subscription.state.status === 'ready_no_visit' ||
+    subscription.state.status === 'visit_request_pending' ||
+    liveRecentVisits.length > 0;
+  const recentVisits: readonly HistoryVisitEntry[] = shouldUseSubscriptionHistory
+    ? liveRecentVisits
+    : SUBSCRIBER_HISTORY_DEMO.recentVisits;
   const visit = recentVisits.find((entry) => entry.id === params.visitId);
 
   useEffect(() => {

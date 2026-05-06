@@ -1076,6 +1076,12 @@
               <td><span class="lim">28 ch</span></td>
             </tr>
             <tr>
+              <td><span class="key">subscriber.dashboard.plan.current_status</span></td>
+              <td><span class="fr body">À jour</span></td>
+              <td><span class="ctx">X-10 statut forfait abonné actif sans date prélèvement</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
               <td><span class="key">subscriber.dashboard.worker.tenure</span></td>
               <td><span class="fr body">{neighborhood} · {months} mois chez vous</span></td>
               <td><span class="ctx">Sous nom laveuse. ICU pluriel mois.</span></td>
@@ -1437,10 +1443,16 @@
               <td><span class="lim">14 ch</span></td>
             </tr>
             <tr>
-              <td><span class="key">subscriber.history.stats.total</span></td>
-              <td><span class="fr body">Total payé</span></td>
+              <td><span class="key">subscriber.history.stats.coverage</span></td>
+              <td><span class="fr body">Mois couverts</span></td>
               <td><span class="ctx">X-16 carte stats — droite</span></td>
-              <td><span class="lim">14 ch</span></td>
+              <td><span class="lim">18 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.history.stats.months</span></td>
+              <td><span class="fr body">mois</span></td>
+              <td><span class="ctx">X-16 valeur stat droite</span></td>
+              <td><span class="lim">8 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.history.recent</span></td>
@@ -3580,15 +3592,21 @@
             </tr>
             <tr>
               <td><span class="key">subscriber.payment.history.title</span></td>
-              <td><span class="fr">{months} mois de prélèvements.</span></td>
+              <td><span class="fr">{months} mois couverts.</span></td>
               <td><span class="ctx">X-20 title</span></td>
               <td><span class="lim">36 ch</span></td>
             </tr>
             <tr>
-              <td><span class="key">subscriber.payment.history.total_label</span></td>
-              <td><span class="fr body">Total payé</span></td>
+              <td><span class="key">subscriber.payment.history.covered_label</span></td>
+              <td><span class="fr body">Mois couverts</span></td>
               <td><span class="ctx">X-20 carte résumé</span></td>
-              <td><span class="lim">16 ch</span></td>
+              <td><span class="lim">18 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.payment.history.months_value</span></td>
+              <td><span class="fr body">{months} mois</span></td>
+              <td><span class="ctx">X-20 carte résumé gauche</span></td>
+              <td><span class="lim">12 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.payment.history.count_label</span></td>
@@ -3597,10 +3615,22 @@
               <td><span class="lim">22 ch</span></td>
             </tr>
             <tr>
-              <td><span class="key">subscriber.payment.history.success_rate</span></td>
-              <td><span class="fr body">100 %</span></td>
+              <td><span class="key">subscriber.payment.history.status_label</span></td>
+              <td><span class="fr body">Statut</span></td>
               <td><span class="ctx">X-20 carte résumé droite</span></td>
               <td><span class="lim">10 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.payment.history.current_status</span></td>
+              <td><span class="fr body">À jour</span></td>
+              <td><span class="ctx">X-20 carte résumé droite</span></td>
+              <td><span class="lim">10 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.payment.history.review_status</span></td>
+              <td><span class="fr body">À vérifier</span></td>
+              <td><span class="ctx">X-20 carte résumé droite</span></td>
+              <td><span class="lim">14 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.payment.history.detail_eyebrow</span></td>

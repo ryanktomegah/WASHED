@@ -18,8 +18,8 @@ export interface PastVisitEntry {
 }
 
 export interface HistoryAggregates {
+  readonly coveredMonths: number;
   readonly counter: number;
-  readonly totalPaidXof: number;
   readonly tenureMonths: number;
   readonly workerFirstName: string;
 }
@@ -31,9 +31,9 @@ export interface SubscriberHistoryDemo {
 
 export const SUBSCRIBER_HISTORY_DEMO: SubscriberHistoryDemo = {
   aggregates: {
-    counter: 32,
-    totalPaidXof: 80_000,
-    tenureMonths: 8,
+    coveredMonths: 3,
+    counter: 3,
+    tenureMonths: 3,
     workerFirstName: 'Akouvi',
   },
   recentVisits: [
@@ -69,18 +69,6 @@ export const SUBSCRIBER_HISTORY_DEMO: SubscriberHistoryDemo = {
       afterPhotoTime24h: '10:00',
       completedTime24h: '10:02',
       durationMinutes: 58,
-      paymentAmountXof: 0,
-      status: 'clean',
-      mostRecent: false,
-    },
-    {
-      id: 'visit-2026-04-07',
-      dateIso: '2026-04-07',
-      arrivalTime24h: '09:00',
-      beforePhotoTime24h: '09:01',
-      afterPhotoTime24h: '10:19',
-      completedTime24h: '10:22',
-      durationMinutes: 82,
       paymentAmountXof: 0,
       status: 'clean',
       mostRecent: false,

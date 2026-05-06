@@ -146,6 +146,11 @@ describe('Subscriber hub · X-10', () => {
           disputeCount: 0,
           workerId: '22222222-2222-4222-8222-222222222222',
         },
+        billingStatus: {
+          nextChargeAt: '2026-06-01T08:00:00.000Z',
+          overdueSince: null,
+          paymentAuthorizationStatus: 'ready',
+        },
         isHydratedFromApi: true,
         status: 'active',
         subscriptionId: '33333333-3333-4333-8333-333333333333',
@@ -164,6 +169,10 @@ describe('Subscriber hub · X-10', () => {
     expect(screen.getByText('Mardi 12 mai')).toBeVisible();
     expect(screen.getByText('Matin')).toBeVisible();
     expect(screen.getByText('prévue')).toBeVisible();
+    expect(
+      within(screen.getByRole('region', { name: 'Forfait' })).getByText('1 juin · auto'),
+    ).toBeVisible();
+    expect(screen.queryByText('Visite à planifier')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Reporter' }));
     expect(locationRef.current).toBe(`/visit/reschedule/${visitId}`);

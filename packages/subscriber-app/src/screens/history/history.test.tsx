@@ -81,6 +81,12 @@ function renderHistoryAt(
 
 const LIVE_RECENT_VISIT_ID = '44444444-4444-4444-8444-444444444444';
 
+const ACTIVE_DEMO_HISTORY_STATE: SubscriberSubscriptionState = {
+  ...DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE,
+  status: 'active',
+  subscriptionId: '33333333-3333-4333-8333-333333333333',
+};
+
 const LIVE_HISTORY_STATE: SubscriberSubscriptionState = {
   ...DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE,
   assignedWorker: {
@@ -115,24 +121,50 @@ const liveHistoryApi = {
 } satisfies { readonly baseUrl: string; readonly fetch: typeof fetch };
 
 describe('Subscriber history · X-16', () => {
-  it('renders the locked deck copy, stats, and recent visit list', () => {
+  it('renders first-time history without mature demo relationship data', () => {
     renderHistoryAt('/history');
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-16');
     expect(screen.getByText('Vos visites')).toBeVisible();
+    expect(
+      screen.getAllByRole('heading', { name: 'Pas encore de visite.' }).length,
+    ).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Mois couverts')).toBeVisible();
+    expect(screen.getAllByText('0').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText('mois')).toBeVisible();
+    expect(
+      screen.getByText("Votre première visite apparaîtra ici dès qu'elle est terminée."),
+    ).toBeVisible();
+    expect(screen.queryByText('Akouvi')).not.toBeInTheDocument();
+    expect(screen.queryByText(/depuis 8 mois/u)).not.toBeInTheDocument();
+    expect(screen.queryByText('Total payé')).not.toBeInTheDocument();
+    expect(screen.queryByText(/80\s000/u)).not.toBeInTheDocument();
+  });
+
+  it('renders the returning three-month simulation without lifetime spend totals', () => {
+    renderHistoryAt('/history', ['/history'], {
+      subscriptionState: ACTIVE_DEMO_HISTORY_STATE,
+    });
+
+    expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-16');
+    expect(screen.getByText('Vos visites')).toBeVisible();
     expect(screen.getByText('Akouvi')).toBeVisible();
-    expect(screen.getByText(/depuis 8 mois/u)).toBeVisible();
+    expect(screen.getByText(/depuis 3 mois/u)).toBeVisible();
     expect(screen.getByText('Compteur')).toBeVisible();
-    expect(screen.getByText('32')).toBeVisible();
-    expect(screen.getByText('Total payé')).toBeVisible();
-    expect(screen.getByText(/80\s000/u)).toBeVisible();
+    expect(screen.getAllByText('3').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Mois couverts')).toBeVisible();
+    expect(screen.getByText('mois')).toBeVisible();
+    expect(screen.queryByText('Total payé')).not.toBeInTheDocument();
+    expect(screen.queryByText(/80\s000/u)).not.toBeInTheDocument();
     expect(screen.getByText('Récentes')).toBeVisible();
     expect(screen.getByRole('button', { name: /28 avr · 9 h 02/u })).toBeVisible();
     expect(screen.getByText('1 h 06 · pas de souci')).toBeVisible();
   });
 
   it('routes a recent visit card to X-17 detail', () => {
-    const { locationRef } = renderHistoryAt('/history');
+    const { locationRef } = renderHistoryAt('/history', ['/history'], {
+      subscriptionState: ACTIVE_DEMO_HISTORY_STATE,
+    });
 
     fireEvent.click(screen.getByRole('button', { name: /28 avr · 9 h 02/u }));
 
@@ -161,7 +193,9 @@ describe('Subscriber history · X-16', () => {
 
 describe('Subscriber history detail · X-17', () => {
   it('renders the past visit detail, before/after panels, timeline, and payment recap', () => {
-    renderHistoryAt('/history/visit-2026-04-28');
+    renderHistoryAt('/history/visit-2026-04-28', ['/history/visit-2026-04-28'], {
+      subscriptionState: ACTIVE_DEMO_HISTORY_STATE,
+    });
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-17');
     expect(screen.getByText('Visite · 28 avril')).toBeVisible();
@@ -186,7 +220,13 @@ describe('Subscriber history detail · X-17', () => {
   });
 
   it('routes the back control to X-16 history when opened directly', () => {
-    const { locationRef } = renderHistoryAt('/history/visit-2026-04-28');
+    const { locationRef } = renderHistoryAt(
+      '/history/visit-2026-04-28',
+      ['/history/visit-2026-04-28'],
+      {
+        subscriptionState: ACTIVE_DEMO_HISTORY_STATE,
+      },
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
 
@@ -194,7 +234,13 @@ describe('Subscriber history detail · X-17', () => {
   });
 
   it('replaces direct-open fallback entries so browser back does not loop to detail', () => {
-    const { locationRef } = renderHistoryAt('/history/visit-2026-04-28');
+    const { locationRef } = renderHistoryAt(
+      '/history/visit-2026-04-28',
+      ['/history/visit-2026-04-28'],
+      {
+        subscriptionState: ACTIVE_DEMO_HISTORY_STATE,
+      },
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
     expect(locationRef.current).toBe('/history');
@@ -205,10 +251,13 @@ describe('Subscriber history detail · X-17', () => {
   });
 
   it('routes the back control to the actual previous in-app page when history exists', () => {
-    const { locationRef } = renderHistoryAt('/history/visit-2026-04-28', [
-      '/plan',
+    const { locationRef } = renderHistoryAt(
       '/history/visit-2026-04-28',
-    ]);
+      ['/plan', '/history/visit-2026-04-28'],
+      {
+        subscriptionState: ACTIVE_DEMO_HISTORY_STATE,
+      },
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
 
@@ -216,7 +265,13 @@ describe('Subscriber history detail · X-17', () => {
   });
 
   it('routes posteriori report action to the issue branch', () => {
-    const { locationRef } = renderHistoryAt('/history/visit-2026-04-28');
+    const { locationRef } = renderHistoryAt(
+      '/history/visit-2026-04-28',
+      ['/history/visit-2026-04-28'],
+      {
+        subscriptionState: ACTIVE_DEMO_HISTORY_STATE,
+      },
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Signaler a posteriori' }));
 
@@ -239,7 +294,9 @@ describe('Subscriber history detail · X-17', () => {
   });
 
   it('redirects an unknown past visit id back to history', async () => {
-    const { locationRef } = renderHistoryAt('/history/unknown');
+    const { locationRef } = renderHistoryAt('/history/unknown', ['/history/unknown'], {
+      subscriptionState: ACTIVE_DEMO_HISTORY_STATE,
+    });
 
     await waitFor(() => {
       expect(locationRef.current).toBe('/history');

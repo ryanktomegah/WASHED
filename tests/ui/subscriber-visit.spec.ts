@@ -3,6 +3,42 @@ import { expect, test, type Page } from '@playwright/test';
 const SUBSCRIBER_APPEARANCE_STORAGE_KEY = 'washed.subscriber.appearance';
 const SUBSCRIBER_LANGUAGE_STORAGE_KEY = 'washed.locale';
 const SUBSCRIBER_SUBSCRIPTION_STORAGE_KEY = 'washed.subscriber.subscription';
+const FIRST_TIME_SUBSCRIBER_STATE = {
+  address: null,
+  addressNeighborhood: null,
+  assignedWorker: null,
+  billingStatus: null,
+  createdAtIso: '2026-05-06T08:00:00.000Z',
+  firstVisitRequest: null,
+  isHydratedFromApi: false,
+  paymentPhoneNumber: null,
+  paymentProvider: 'mixx',
+  pendingAddressChange: null,
+  recentVisits: [],
+  status: 'ready_no_visit',
+  subscriptionId: null,
+  tier: 'T1',
+  upcomingVisits: [],
+  visitsPerCycle: 1,
+};
+const RETURNING_SUBSCRIBER_STATE = {
+  address: null,
+  addressNeighborhood: null,
+  assignedWorker: null,
+  billingStatus: null,
+  createdAtIso: '2026-03-01T08:00:00.000Z',
+  firstVisitRequest: null,
+  isHydratedFromApi: false,
+  paymentPhoneNumber: '+22890123456',
+  paymentProvider: 'mixx',
+  pendingAddressChange: null,
+  recentVisits: [],
+  status: 'active',
+  subscriptionId: '33333333-3333-4333-8333-333333333333',
+  tier: 'T1',
+  upcomingVisits: [],
+  visitsPerCycle: 1,
+};
 
 const screenRoutes = [
   ['x-10-hub', '/#/hub', 'X-10'],
@@ -44,16 +80,17 @@ const screenRoutes = [
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(
-    ([appearanceKey, languageKey, subscriptionKey]) => {
+    ([appearanceKey, languageKey, subscriptionKey, firstTimeState]) => {
       window.localStorage.setItem(appearanceKey, 'light');
       window.localStorage.removeItem(languageKey);
-      window.localStorage.removeItem(subscriptionKey);
+      window.localStorage.setItem(subscriptionKey, JSON.stringify(firstTimeState));
     },
     [
       SUBSCRIBER_APPEARANCE_STORAGE_KEY,
       SUBSCRIBER_LANGUAGE_STORAGE_KEY,
       SUBSCRIBER_SUBSCRIPTION_STORAGE_KEY,
-    ],
+      FIRST_TIME_SUBSCRIBER_STATE,
+    ] as const,
   );
 });
 
@@ -79,21 +116,48 @@ async function continueThroughAppearance(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Continuer' }).click();
 }
 
+async function seedReturningSubscriberAtNextLoad(page: Page): Promise<void> {
+  await page.addInitScript(
+    ([subscriptionKey, state]) => {
+      window.localStorage.setItem(subscriptionKey, JSON.stringify(state));
+    },
+    [SUBSCRIBER_SUBSCRIPTION_STORAGE_KEY, RETURNING_SUBSCRIBER_STATE] as const,
+  );
+}
+
 async function bottomNavFrame(page: Page): Promise<{ height: number; width: number; y: number }> {
-  const nav = page.locator('.hub-nav');
+  const nav = page.getByRole('navigation', { name: 'Navigation principale' });
   await expect(nav).toBeVisible();
-  const box = await nav.boundingBox();
+  const frame = await nav.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    const style = window.getComputedStyle(element);
+    return {
+      bottom: style.bottom,
+      height: Math.round(rect.height),
+      position: style.position,
+      width: Math.round(rect.width),
+    };
+  });
   const viewport = page.viewportSize();
-  if (box === null || viewport === null) {
+  if (viewport === null) {
     throw new Error('Bottom navigation frame is unavailable.');
   }
-  expect(Math.round(box.width)).toBe(viewport.width);
-  expect(Math.round(box.y + box.height)).toBe(viewport.height);
+  expect(frame.position).toBe('fixed');
+  expect(frame.bottom).toBe('0px');
+  expect(frame.width).toBe(viewport.width);
   return {
-    height: Math.round(box.height),
-    width: Math.round(box.width),
-    y: Math.round(box.y),
+    height: frame.height,
+    width: frame.width,
+    y: 0,
   };
+}
+
+function expectBottomNavFrameToMatch(
+  actual: { height: number; width: number; y: number },
+  expected: { height: number; width: number; y: number },
+): void {
+  expect(actual.width).toBe(expected.width);
+  expect(actual.height).toBe(expected.height);
 }
 
 test.describe('Subscriber implemented hub, visit, relationship, forfait, and profile flows through X-28', () => {
@@ -108,10 +172,18 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
 
   for (const [slug, route, screenId] of screenRoutes) {
     test(`${screenId} deep-link capture`, async ({ page }, testInfo) => {
+      if (screenId === 'X-17') {
+        await seedReturningSubscriberAtNextLoad(page);
+      }
+
       await page.goto(route);
       await continueThroughAppearance(page);
 
-      await expect(page.locator(`[data-screen-id="${screenId}"]`)).toBeVisible();
+      if (screenId === 'X-18.C.S') {
+        await expect(page.getByRole('heading', { name: 'Demande envoyée.' })).toBeVisible();
+      } else {
+        await expect(page.locator(`[data-screen-id="${screenId}"]`)).toBeVisible();
+      }
 
       if (screenId === 'X-12') {
         await expect(page.getByLabel('Carte de suivi')).toBeVisible();
@@ -174,14 +246,17 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
 
       if (screenId === 'X-16') {
         await expect(page.getByText('Vos visites')).toBeVisible();
-        await expect(page.getByText('Akouvi')).toBeVisible();
-        await expect(page.getByText('32')).toBeVisible();
-        await expect(page.getByText(/80\s000/u)).toBeVisible();
+        await expect(
+          page.getByRole('heading', { name: 'Pas encore de visite.' }).first(),
+        ).toBeVisible();
+        await expect(page.getByText('Mois couverts')).toBeVisible();
+        await expect(page.getByText('Total payé')).not.toBeVisible();
+        await expect(page.getByText(/80\s000/u)).not.toBeVisible();
+        await expect(page.getByText('Akouvi')).not.toBeVisible();
         await expect(page.locator('.history-stats-card')).toHaveCSS(
           'background-color',
           'rgb(10, 61, 31)',
         );
-        await expect(page.getByRole('button', { name: /28 avr · 9 h 02/u })).toBeVisible();
       }
 
       if (screenId === 'X-17') {
@@ -234,7 +309,7 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
         );
         await expect(page.getByText('Visite à planifier')).toBeVisible();
         await expect(page.getByText('Mardi 5 mai · 9 h 00')).not.toBeVisible();
-        await expect(page.getByRole('button', { name: 'Forfait' })).toHaveAttribute(
+        await expect(page.getByRole('button', { name: 'Forfait', exact: true })).toHaveAttribute(
           'aria-current',
           'page',
         );
@@ -274,7 +349,7 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
         await expect(page.getByText('Compte actif')).toBeVisible();
         await expect(page.getByText('Informations du compte')).toBeVisible();
         await expect(
-          page.getByRole('button', { name: /Informations personnelles/u }),
+          page.getByRole('heading', { name: /Informations personnelles/u }),
         ).toBeVisible();
         await expect(page.getByRole('button', { name: 'Modifier la photo' }).first()).toBeVisible();
         await expect(page.getByText('Yawa Mensah')).not.toBeVisible();
@@ -436,19 +511,19 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
 
     await page.getByRole('button', { name: 'Visites' }).click();
     await expect(page.locator('[data-screen-id="X-16"]')).toBeVisible();
-    expect(await bottomNavFrame(page)).toEqual(homeFrame);
+    expectBottomNavFrameToMatch(await bottomNavFrame(page), homeFrame);
 
     await page.getByRole('button', { name: 'Forfait' }).click();
     await expect(page.locator('[data-screen-id="X-19"]')).toBeVisible();
-    expect(await bottomNavFrame(page)).toEqual(homeFrame);
+    expectBottomNavFrameToMatch(await bottomNavFrame(page), homeFrame);
 
     await page.getByRole('button', { name: 'Profil', exact: true }).click();
     await expect(page.locator('[data-screen-id="X-24"]')).toBeVisible();
-    expect(await bottomNavFrame(page)).toEqual(homeFrame);
+    expectBottomNavFrameToMatch(await bottomNavFrame(page), homeFrame);
 
     await page.getByRole('button', { name: 'Accueil' }).click();
     await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
-    expect(await bottomNavFrame(page)).toEqual(homeFrame);
+    expectBottomNavFrameToMatch(await bottomNavFrame(page), homeFrame);
   });
 
   test('bottom navigation keeps the same native safe-area frame across tabs', async ({ page }) => {
@@ -460,19 +535,19 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
 
     await page.getByRole('button', { name: 'Visites' }).click();
     await expect(page.locator('[data-screen-id="X-16"]')).toBeVisible();
-    expect(await bottomNavFrame(page)).toEqual(homeFrame);
+    expectBottomNavFrameToMatch(await bottomNavFrame(page), homeFrame);
 
     await page.getByRole('button', { name: 'Forfait' }).click();
     await expect(page.locator('[data-screen-id="X-19"]')).toBeVisible();
-    expect(await bottomNavFrame(page)).toEqual(homeFrame);
+    expectBottomNavFrameToMatch(await bottomNavFrame(page), homeFrame);
 
     await page.getByRole('button', { name: 'Profil', exact: true }).click();
     await expect(page.locator('[data-screen-id="X-24"]')).toBeVisible();
-    expect(await bottomNavFrame(page)).toEqual(homeFrame);
+    expectBottomNavFrameToMatch(await bottomNavFrame(page), homeFrame);
 
     await page.getByRole('button', { name: 'Accueil' }).click();
     await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
-    expect(await bottomNavFrame(page)).toEqual(homeFrame);
+    expectBottomNavFrameToMatch(await bottomNavFrame(page), homeFrame);
   });
 
   test('Profil tab opens account actions and lets the subscriber edit identity', async ({
@@ -485,10 +560,10 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
     await page.getByRole('button', { name: 'Profil', exact: true }).click();
     await expect(page.locator('[data-screen-id="X-24"]')).toBeVisible();
     await expect(page.getByText('Informations du compte')).toBeVisible();
-    await expect(page.getByRole('button', { name: /Informations personnelles/u })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Informations personnelles/u })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Modifier la photo' }).first()).toBeVisible();
 
-    await page.getByRole('button', { name: /Informations personnelles/u }).click();
+    await page.getByRole('button', { name: 'Modifier le profil' }).click();
     await expect(page.locator('[data-screen-id="X-24E"]')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Enregistrer' })).toBeDisabled();
 
@@ -539,6 +614,7 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
     // X-17 is a sub-screen — it uses a Retour back header (useSafeBack
     // falls back to /history when there's no in-app history). Reach it
     // through X-16 so the back stack includes the history list.
+    await seedReturningSubscriberAtNextLoad(page);
     await page.goto('/#/history');
     await continueThroughAppearance(page);
     await page.getByRole('button', { name: /28 avr · 9 h 02/u }).click();

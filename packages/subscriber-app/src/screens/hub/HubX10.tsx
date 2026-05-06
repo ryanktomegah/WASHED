@@ -45,6 +45,21 @@ export function HubX10(): ReactElement {
     liveVisitCard !== null ||
     (subscription.state.status === 'active' && hub.visit !== null && hub.worker !== null);
   const hasRequestedFirstVisit = subscription.state.status === 'visit_request_pending';
+  const activeNextChargeDate =
+    subscription.state.status === 'active' && subscription.state.billingStatus?.nextChargeAt
+      ? formatDayMonth(subscription.state.billingStatus.nextChargeAt.slice(0, 10), locale)
+      : null;
+  const planStatus =
+    hasRequestedFirstVisit
+      ? translate('subscriber.dashboard.plan.first_visit_pending_status')
+      : subscription.state.status === 'active'
+        ? activeNextChargeDate === null
+          ? translate('subscriber.dashboard.plan.current_status')
+          : translate('subscriber.plan.active_card.next_charge_value', {
+              date: activeNextChargeDate,
+            })
+        : translate(hub.plan.renewsOnKey);
+  const planProgressPct = subscription.state.status === 'active' ? 100 : hub.plan.progressPct;
   const requestedDay = SUBSCRIBER_BOOKING_DAYS.find(
     (day) => day.id === subscription.state.firstVisitRequest?.dayId,
   );
@@ -229,15 +244,11 @@ export function HubX10(): ReactElement {
               {translate(hub.plan.labelKey)}
             </span>
             <span className="hub-plan-date">
-              {translate(
-                hasRequestedFirstVisit
-                  ? 'subscriber.dashboard.plan.first_visit_pending_status'
-                  : hub.plan.renewsOnKey,
-              )}
+              {planStatus}
             </span>
           </div>
           <div className="hub-bar" aria-hidden="true">
-            <span style={{ width: `${hub.plan.progressPct}%` }} />
+            <span style={{ width: `${planProgressPct}%` }} />
           </div>
         </section>
       </div>
@@ -267,6 +278,13 @@ function formatVisitDate(dateIso: string, locale: WashedLocale): string {
       weekday: 'long',
     }).format(dateFromIso(dateIso)),
   );
+}
+
+function formatDayMonth(dateIso: string, locale: WashedLocale): string {
+  return new Intl.DateTimeFormat(localeTag(locale), {
+    day: 'numeric',
+    month: 'long',
+  }).format(dateFromIso(dateIso));
 }
 
 function formatVisitStatus(visit: VisitSummaryDto): string {

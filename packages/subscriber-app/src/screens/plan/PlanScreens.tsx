@@ -112,13 +112,6 @@ function countBillingMonths(items: readonly SubscriptionBillingItemDto[]): numbe
   ).size;
 }
 
-function billingSuccessRate(items: readonly SubscriptionBillingItemDto[]): string {
-  const charges = items.filter((item) => item.itemType === 'charge');
-  if (charges.length === 0) return '0 %';
-  const succeeded = charges.filter((item) => item.status === 'succeeded').length;
-  return `${Math.round((succeeded / charges.length) * 100)} %`;
-}
-
 function activePlanLabel(tier: 'T1' | 'T2'): string {
   return translate(
     tier === 'T1' ? 'subscriber.plan.tier.t1.label' : 'subscriber.plan.tier.t2.label',
@@ -497,18 +490,11 @@ export function PlanPaymentHistoryX20(): ReactElement {
   const chargeCount = subscriberApi.isConfigured
     ? apiItems.filter((item) => item.itemType === 'charge').length
     : historyMonths;
-  const successRate = subscriberApi.isConfigured
-    ? billingSuccessRate(apiItems)
-    : translate('subscriber.payment.history.success_rate');
-  const totalXof = subscriberApi.isConfigured
-    ? apiItems
-        .filter(
-          (item) =>
-            (item.itemType === 'charge' && item.status === 'succeeded') ||
-            item.itemType === 'refund',
-        )
-        .reduce((sum, item) => sum + billingAmountXof(item), 0)
-    : rows.reduce((sum, receipt) => sum + receipt.amountXof, 0);
+  const paymentStatus = subscriberApi.isConfigured
+    ? apiItems.some((item) => item.itemType === 'charge' && item.status !== 'succeeded')
+      ? translate('subscriber.payment.history.review_status')
+      : translate('subscriber.payment.history.current_status')
+    : translate('subscriber.payment.history.current_status');
 
   return (
     <main aria-labelledby="x20-headline" className="plan-screen" data-screen-id="X-20">
@@ -527,17 +513,24 @@ export function PlanPaymentHistoryX20(): ReactElement {
         >
           <div>
             <span className="plan-cream-body">
-              {translate('subscriber.payment.history.total_label')}
+              {translate('subscriber.payment.history.covered_label')}
             </span>
-            <strong className="plan-payment-total">{formatXof(totalXof)}</strong>
+            <strong className="plan-payment-total">
+              {translate('subscriber.payment.history.months_value', {
+                months: historyMonths,
+              })}
+            </strong>
           </div>
           <div className="plan-payment-summary-right">
+            <span className="plan-cream-body">
+              {translate('subscriber.payment.history.status_label')}
+            </span>
+            <strong className="plan-payment-total">{paymentStatus}</strong>
             <span className="plan-cream-body">
               {translate('subscriber.payment.history.count_label', {
                 count: chargeCount,
               })}
             </span>
-            <strong className="plan-payment-total">{successRate}</strong>
           </div>
         </section>
 

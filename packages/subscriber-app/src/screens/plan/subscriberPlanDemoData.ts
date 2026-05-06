@@ -99,7 +99,7 @@ export const SUBSCRIBER_PLAN_DEMO: {
   payment: {
     subscriberFirstName: 'Yawa',
     subscriberInitials: 'YM',
-    historyMonths: 8,
+    historyMonths: 3,
     receipts: [
       {
         dateIso: '2026-05-01',
@@ -117,36 +117,6 @@ export const SUBSCRIBER_PLAN_DEMO: {
         dateIso: '2026-03-01',
         provider: 'Mixx by Yas',
         reference: 'MM-78420993',
-        amountXof: 2_500,
-      },
-      {
-        dateIso: '2026-02-01',
-        provider: 'Mixx by Yas',
-        reference: 'MM-78420122',
-        amountXof: 2_500,
-      },
-      {
-        dateIso: '2026-01-01',
-        provider: 'Mixx by Yas',
-        reference: 'MM-78419881',
-        amountXof: 2_500,
-      },
-      {
-        dateIso: '2025-12-01',
-        provider: 'Mixx by Yas',
-        reference: 'MM-78418640',
-        amountXof: 2_500,
-      },
-      {
-        dateIso: '2025-11-01',
-        provider: 'Mixx by Yas',
-        reference: 'MM-78417309',
-        amountXof: 2_500,
-      },
-      {
-        dateIso: '2025-10-01',
-        provider: 'Mixx by Yas',
-        reference: 'MM-78416277',
         amountXof: 2_500,
       },
     ],
