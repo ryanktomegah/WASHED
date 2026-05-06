@@ -353,6 +353,33 @@ export interface DisputeDto {
   readonly workerId: string | null;
 }
 
+export interface RescheduledSubscriberVisitDto {
+  readonly scheduledDate: string;
+  readonly scheduledTimeWindow: TimeWindow;
+  readonly status: 'scheduled';
+  readonly subscriptionId: string;
+  readonly visitId: string;
+  readonly workerId: string;
+}
+
+export interface SkippedSubscriberVisitDto {
+  readonly status: 'cancelled';
+  readonly subscriptionId: string;
+  readonly visitId: string;
+  readonly workerId: string;
+}
+
+export interface VisitRatingDto {
+  readonly comment: string | null;
+  readonly createdAt: string;
+  readonly ratedByUserId: string;
+  readonly rating: 1 | 2 | 3 | 4 | 5;
+  readonly ratingId: string;
+  readonly subscriptionId: string;
+  readonly visitId: string;
+  readonly workerId: string | null;
+}
+
 export interface SupportContactDto {
   readonly body: string;
   readonly category: SupportContactCategory;
@@ -466,6 +493,15 @@ export interface CoreApiLiveOperationMap {
       readonly subject: string;
     };
     readonly response: SupportContactDto;
+  };
+  readonly createCurrentSubscriberVisitDispute: {
+    readonly body: {
+      readonly createdAt: string;
+      readonly description: string;
+      readonly issueType: DisputeDto['issueType'];
+    };
+    readonly pathParams: { readonly visitId: string };
+    readonly response: DisputeDto;
   };
   readonly createCurrentSubscriberWorkerSwapRequest: {
     readonly body: {
@@ -660,6 +696,15 @@ export interface CoreApiLiveOperationMap {
     readonly pathParams: { readonly visitId: string };
     readonly response: VisitPhotoDto;
   };
+  readonly rateCurrentSubscriberVisit: {
+    readonly body: {
+      readonly comment?: string;
+      readonly createdAt: string;
+      readonly rating: 1 | 2 | 3 | 4 | 5;
+    };
+    readonly pathParams: { readonly visitId: string };
+    readonly response: VisitRatingDto;
+  };
   readonly refreshAuthSession: {
     readonly body: { readonly refreshToken: string };
     readonly response: AuthSessionDto;
@@ -684,6 +729,19 @@ export interface CoreApiLiveOperationMap {
     };
     readonly pathParams: { readonly visitId: string };
     readonly response: WorkerIssueDto;
+  };
+  readonly rescheduleCurrentSubscriberVisit: {
+    readonly body: {
+      readonly scheduledDate: string;
+      readonly scheduledTimeWindow: TimeWindow;
+    };
+    readonly pathParams: { readonly visitId: string };
+    readonly response: RescheduledSubscriberVisitDto;
+  };
+  readonly skipCurrentSubscriberVisit: {
+    readonly body: Record<string, never>;
+    readonly pathParams: { readonly visitId: string };
+    readonly response: SkippedSubscriberVisitDto;
   };
   readonly startOtpChallenge: {
     readonly body: { readonly countryCode: CountryCode; readonly phoneNumber: string };

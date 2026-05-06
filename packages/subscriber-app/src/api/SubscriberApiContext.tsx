@@ -6,7 +6,10 @@ import {
   type CoreApiClient,
   type CreatedSubscriptionDto,
   type CurrentSubscriberSubscriptionDto,
+  type DisputeDto,
+  type RescheduledSubscriberVisitDto,
   type SchedulePreferenceDto,
+  type SkippedSubscriberVisitDto,
   type SubscriberProfileDto,
   type SupportContactCategory,
   type SupportContactDto,
@@ -68,13 +71,25 @@ export interface SubscriberApiContextValue {
     readonly requestedAt: string;
     readonly schedulePreference: SchedulePreferenceDto;
   }) => Promise<SubscriptionDetailDto>;
+  readonly reportVisitIssue: (input: {
+    readonly createdAt: string;
+    readonly description: string;
+    readonly issueType: DisputeDto['issueType'];
+    readonly visitId: string;
+  }) => Promise<DisputeDto>;
   readonly requestWorkerSwap: (input: {
     readonly reason: string;
     readonly requestedAt: string;
   }) => Promise<WorkerSwapRequestDto>;
+  readonly rescheduleVisit: (input: {
+    readonly scheduledDate: string;
+    readonly scheduledTimeWindow: SchedulePreferenceDto['timeWindow'];
+    readonly visitId: string;
+  }) => Promise<RescheduledSubscriberVisitDto>;
   readonly resumeSubscription: (input: {
     readonly resumedAt: string;
   }) => Promise<SubscriptionDetailDto>;
+  readonly skipVisit: (visitId: string) => Promise<SkippedSubscriberVisitDto>;
   readonly updatePaymentMethod: (input: {
     readonly paymentMethod: SubscriptionPaymentMethodDto;
     readonly updatedAt: string;
@@ -201,14 +216,34 @@ function createConfiguredSubscriberApi(
         body: input,
       });
     },
+    reportVisitIssue(input) {
+      const { visitId, ...body } = input;
+      return api.request('createCurrentSubscriberVisitDispute', {
+        body,
+        pathParams: { visitId },
+      });
+    },
     requestWorkerSwap(input) {
       return api.request('createCurrentSubscriberWorkerSwapRequest', {
         body: input,
       });
     },
+    rescheduleVisit(input) {
+      const { visitId, ...body } = input;
+      return api.request('rescheduleCurrentSubscriberVisit', {
+        body,
+        pathParams: { visitId },
+      });
+    },
     resumeSubscription(input) {
       return api.request('resumeCurrentSubscriberSubscription', {
         body: input,
+      });
+    },
+    skipVisit(visitId) {
+      return api.request('skipCurrentSubscriberVisit', {
+        body: {},
+        pathParams: { visitId },
       });
     },
     updatePaymentMethod(input) {
@@ -247,8 +282,11 @@ function createUnconfiguredSubscriberApi(): SubscriberApiContextValue {
     listSupportContacts: unavailable,
     pauseSubscription: unavailable,
     requestFirstVisit: unavailable,
+    reportVisitIssue: unavailable,
     requestWorkerSwap: unavailable,
+    rescheduleVisit: unavailable,
     resumeSubscription: unavailable,
+    skipVisit: unavailable,
     updatePaymentMethod: unavailable,
     startOtp: unavailable,
     upsertProfile: unavailable,

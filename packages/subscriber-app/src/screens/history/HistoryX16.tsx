@@ -1,4 +1,4 @@
-import { useEffect, type ReactElement } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import {
   CalendarDays,
   Check,
@@ -13,8 +13,24 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { formatXof, translate, type WashedLocale } from '@washed/i18n';
 import { useActiveLocale } from '@washed/ui';
 
+import type { SubscriptionBillingItemDto, VisitSummaryDto } from '@washed/api-client';
+import { useSubscriberApi } from '../../api/SubscriberApiContext.js';
 import { useSafeBack } from '../../navigation/useSafeBack.js';
+import { useSubscriberSubscription } from '../../subscription/SubscriberSubscriptionContext.js';
 import { SUBSCRIBER_HISTORY_DEMO, type PastVisitEntry } from './historyDemoData.js';
+
+type HistoryVisitEntry = LivePastVisitEntry | PastVisitEntry;
+
+interface LivePastVisitEntry {
+  readonly dateIso: string;
+  readonly id: string;
+  readonly live: true;
+  readonly mostRecent: boolean;
+  readonly scheduledTimeWindow: VisitSummaryDto['scheduledTimeWindow'];
+  readonly status: VisitStatus;
+}
+
+type VisitStatus = 'clean' | 'issue';
 
 function dateFromIso(dateIso: string): Date {
   return new Date(`${dateIso}T12:00:00.000Z`);
@@ -42,6 +58,14 @@ function formatClockTime(time24h: string, locale: WashedLocale): string {
   return `${hour12}:${minute.padStart(2, '0')} ${period}`;
 }
 
+function formatTimeWindow(timeWindow: VisitSummaryDto['scheduledTimeWindow']): string {
+  return translate(
+    timeWindow === 'morning'
+      ? 'subscriber.booking.time.morning.label'
+      : 'subscriber.booking.time.afternoon.label',
+  );
+}
+
 function formatDuration(minutes: number, locale: WashedLocale): string {
   if (minutes < 60) return `${minutes} min`;
 
@@ -50,20 +74,106 @@ function formatDuration(minutes: number, locale: WashedLocale): string {
   return locale === 'fr' ? `${hours} h ${remainder}` : `${hours} hr ${remainder}`;
 }
 
+function billingAmountXof(item: SubscriptionBillingItemDto): number {
+  const amount = Number(item.amount.amountMinor);
+  return item.itemType === 'refund' ? -amount : amount;
+}
+
+function sumPaidBillingXof(items: readonly SubscriptionBillingItemDto[]): number {
+  return items
+    .filter(
+      (item) =>
+        (item.itemType === 'charge' && item.status === 'succeeded') || item.itemType === 'refund',
+    )
+    .reduce((sum, item) => sum + billingAmountXof(item), 0);
+}
+
+function firstDisplayNameToken(displayName: string): string {
+  return displayName.trim().split(/\s+/u)[0] ?? displayName;
+}
+
+function isLiveVisit(entry: HistoryVisitEntry): entry is LivePastVisitEntry {
+  return 'live' in entry;
+}
+
+function toLivePastVisit(visit: VisitSummaryDto, index: number): LivePastVisitEntry {
+  return {
+    dateIso: visit.scheduledDate,
+    id: visit.visitId,
+    live: true,
+    mostRecent: index === 0,
+    scheduledTimeWindow: visit.scheduledTimeWindow,
+    status: visit.status === 'completed' ? 'clean' : 'issue',
+  };
+}
+
 export function HistoryX16(): ReactElement {
   const navigate = useNavigate();
   const locale = useActiveLocale();
-  const { aggregates, recentVisits } = SUBSCRIBER_HISTORY_DEMO;
-  const totalPaid = formatXof(aggregates.totalPaidXof);
-  const totalPaidAmount = totalPaid.replace(/\s*XOF$/u, '').trim();
+  const subscriberApi = useSubscriberApi();
+  const subscription = useSubscriberSubscription();
+  const { aggregates } = SUBSCRIBER_HISTORY_DEMO;
+  const [billingItems, setBillingItems] = useState<readonly SubscriptionBillingItemDto[] | null>(
+    null,
+  );
+  const liveRecentVisits: readonly HistoryVisitEntry[] =
+    subscription.state.recentVisits.map(toLivePastVisit);
+  const isLiveDataReady = subscriberApi.isConfigured && subscription.state.isHydratedFromApi;
+  const recentVisits: readonly HistoryVisitEntry[] = isLiveDataReady
+    ? liveRecentVisits
+    : SUBSCRIBER_HISTORY_DEMO.recentVisits;
+  const liveWorkerFirstName =
+    subscription.state.assignedWorker === null
+      ? null
+      : firstDisplayNameToken(subscription.state.assignedWorker.displayName);
+  const counter = isLiveDataReady
+    ? (subscription.state.assignedWorker?.completedVisitCount ?? liveRecentVisits.length)
+    : aggregates.counter;
+  const totalPaidXof = isLiveDataReady
+    ? billingItems === null
+      ? null
+      : sumPaidBillingXof(billingItems)
+    : aggregates.totalPaidXof;
+  const totalPaid =
+    totalPaidXof === null
+      ? null
+      : formatXof(totalPaidXof)
+          .replace(/\s*XOF$/u, '')
+          .trim();
 
   const titleKey =
     aggregates.tenureMonths === 0 ? 'subscriber.history.title_first' : 'subscriber.history.title';
 
-  const titleText = translate(titleKey, {
-    name: aggregates.workerFirstName,
-    months: aggregates.tenureMonths,
-  });
+  const titleText = isLiveDataReady
+    ? translate('subscriber.history.eyebrow')
+    : translate(titleKey, {
+        name: aggregates.workerFirstName,
+        months: aggregates.tenureMonths,
+      });
+  const titleAccent = isLiveDataReady ? liveWorkerFirstName : aggregates.workerFirstName;
+
+  useEffect(() => {
+    if (!subscriberApi.isConfigured) return;
+
+    if (subscription.state.subscriptionId === null) {
+      setBillingItems([]);
+      return;
+    }
+
+    let cancelled = false;
+    void subscriberApi
+      .listBillingHistory({ limit: 100 })
+      .then((response) => {
+        if (!cancelled) setBillingItems(response.items);
+      })
+      .catch(() => {
+        if (!cancelled) setBillingItems([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [subscriberApi, subscription.state.subscriptionId]);
 
   return (
     <main
@@ -77,7 +187,7 @@ export function HistoryX16(): ReactElement {
         </header>
 
         <h1 className="history-title" id="x16-headline">
-          <HistoryTitle text={titleText} accentName={aggregates.workerFirstName} />
+          <HistoryTitle text={titleText} accentName={titleAccent} />
         </h1>
 
         <section
@@ -88,14 +198,14 @@ export function HistoryX16(): ReactElement {
             <span className="history-stat-label">
               {translate('subscriber.history.stats.counter')}
             </span>
-            <span className="history-stat-value">{aggregates.counter}</span>
+            <span className="history-stat-value">{counter}</span>
           </div>
           <div className="history-stat align-right">
             <span className="history-stat-label">
               {translate('subscriber.history.stats.total')}
             </span>
             <span className="history-stat-value">
-              {totalPaidAmount} <small>XOF</small>
+              {totalPaid ?? '—'} <small>XOF</small>
             </span>
           </div>
         </section>
@@ -104,17 +214,26 @@ export function HistoryX16(): ReactElement {
           {translate('subscriber.history.recent')}
         </h2>
 
-        <ul className="history-list">
-          {recentVisits.map((visit) => (
-            <li key={visit.id}>
-              <PastVisitCard
-                entry={visit}
-                locale={locale}
-                onClick={() => navigate(`/history/${visit.id}`)}
-              />
-            </li>
-          ))}
-        </ul>
+        {recentVisits.length === 0 ? (
+          <section className="history-empty-card" aria-labelledby="x16-empty-title">
+            <h2 className="history-eyebrow" id="x16-empty-title">
+              {translate('subscriber.history.empty.title')}
+            </h2>
+            <p>{translate('subscriber.history.empty.body')}</p>
+          </section>
+        ) : (
+          <ul className="history-list">
+            {recentVisits.map((visit) => (
+              <li key={visit.id}>
+                <PastVisitCard
+                  entry={visit}
+                  locale={locale}
+                  onClick={() => navigate(`/history/${visit.id}`)}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
 
         <div className="history-grow" />
       </div>
@@ -145,14 +264,77 @@ export function HistoryDetailX17(): ReactElement {
   const goBack = useSafeBack('/history');
   const params = useParams();
   const locale = useActiveLocale();
-  const { aggregates, recentVisits } = SUBSCRIBER_HISTORY_DEMO;
+  const subscriberApi = useSubscriberApi();
+  const subscription = useSubscriberSubscription();
+  const { aggregates } = SUBSCRIBER_HISTORY_DEMO;
+  const liveRecentVisits: readonly HistoryVisitEntry[] =
+    subscription.state.recentVisits.map(toLivePastVisit);
+  const recentVisits: readonly HistoryVisitEntry[] =
+    subscriberApi.isConfigured && subscription.state.isHydratedFromApi
+      ? liveRecentVisits
+      : SUBSCRIBER_HISTORY_DEMO.recentVisits;
   const visit = recentVisits.find((entry) => entry.id === params.visitId);
 
   useEffect(() => {
+    if (subscriberApi.isConfigured && !subscription.state.isHydratedFromApi) return;
     if (visit === undefined) navigate('/history', { replace: true });
-  }, [navigate, visit]);
+  }, [navigate, subscriberApi.isConfigured, subscription.state.isHydratedFromApi, visit]);
+
+  if (subscriberApi.isConfigured && !subscription.state.isHydratedFromApi) return <></>;
 
   if (visit === undefined) return <></>;
+
+  if (isLiveVisit(visit)) {
+    return (
+      <main aria-labelledby="x17-headline" className="history-screen" data-screen-id="X-17">
+        <div className="history-body">
+          <header className="history-detail-header">
+            <button
+              aria-label={translate('common.action.back')}
+              className="history-back"
+              onClick={goBack}
+              type="button"
+            >
+              <ChevronLeft aria-hidden="true" />
+            </button>
+            <span className="history-eyebrow">
+              {translate('subscriber.history.detail.header', {
+                date: formatDayMonth(visit.dateIso, locale, 'long'),
+              })}
+            </span>
+          </header>
+
+          <h1 className="history-title history-detail-title" id="x17-headline">
+            {translate('subscriber.history.detail.header', {
+              date: formatDayMonth(visit.dateIso, locale, 'long'),
+            })}
+          </h1>
+
+          <section className="history-detail-card" aria-labelledby="x17-timeline-label">
+            <h2 className="history-eyebrow" id="x17-timeline-label">
+              {translate('subscriber.history.detail.timeline')}
+            </h2>
+            <dl className="history-timeline">
+              <DetailRow
+                label={translate('subscriber.dashboard.next_visit.label')}
+                value={formatTimeWindow(visit.scheduledTimeWindow)}
+              />
+            </dl>
+          </section>
+
+          <div className="history-grow" />
+
+          <button
+            className="history-report-button"
+            onClick={() => navigate(`/visit/issue/${visit.id}`)}
+            type="button"
+          >
+            {translate('subscriber.history.detail.report.cta')}
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   const detailTitle = translate('subscriber.history.detail.good_title');
   const duration = formatDuration(visit.durationMinutes, locale);
@@ -241,7 +423,7 @@ export function HistoryDetailX17(): ReactElement {
 
         <button
           className="history-report-button"
-          onClick={() => navigate('/visit/issue')}
+          onClick={() => navigate(`/visit/issue/${visit.id}`)}
           type="button"
         >
           {translate('subscriber.history.detail.report.cta')}
@@ -256,8 +438,10 @@ function HistoryTitle({
   accentName,
 }: {
   readonly text: string;
-  readonly accentName: string;
+  readonly accentName: string | null;
 }): ReactElement {
+  if (accentName === null || accentName.length === 0) return <>{text}</>;
+
   const splitAt = text.indexOf(accentName);
   if (splitAt === -1) return <>{text}</>;
   const before = text.slice(0, splitAt);
@@ -291,7 +475,7 @@ function PastVisitCard({
   locale,
   onClick,
 }: {
-  readonly entry: PastVisitEntry;
+  readonly entry: HistoryVisitEntry;
   readonly locale: WashedLocale;
   readonly onClick: () => void;
 }): ReactElement {
@@ -311,10 +495,14 @@ function PastVisitCard({
       <span className="history-card-meta">
         <strong>
           {formatDayMonth(entry.dateIso, locale, 'short')} ·{' '}
-          {formatClockTime(entry.arrivalTime24h, locale)}
+          {isLiveVisit(entry)
+            ? formatTimeWindow(entry.scheduledTimeWindow)
+            : formatClockTime(entry.arrivalTime24h, locale)}
         </strong>
         <span>
-          {translate(subtitleKey, { duration: formatDuration(entry.durationMinutes, locale) })}
+          {isLiveVisit(entry)
+            ? translate(statusLabelKey)
+            : translate(subtitleKey, { duration: formatDuration(entry.durationMinutes, locale) })}
         </span>
       </span>
       <span

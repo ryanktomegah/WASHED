@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 
-import type { SubscriptionDetailDto } from '@washed/api-client';
+import type { SubscriptionDetailDto, VisitSummaryDto } from '@washed/api-client';
 
 import type { SignupPaymentProvider, SignupTier } from '../screens/onboarding/SignupContext.js';
 
@@ -39,13 +39,19 @@ export interface FirstVisitRequest {
 }
 
 export interface SubscriberSubscriptionState {
+  readonly addressNeighborhood: string | null;
+  readonly assignedWorker: SubscriptionDetailDto['assignedWorker'];
   readonly createdAtIso: string | null;
   readonly firstVisitRequest: FirstVisitRequest | null;
+  readonly isHydratedFromApi: boolean;
   readonly paymentPhoneNumber: string | null;
   readonly paymentProvider: SignupPaymentProvider;
+  readonly recentVisits: readonly VisitSummaryDto[];
   readonly status: SubscriberSubscriptionStatus;
   readonly subscriptionId: string | null;
   readonly tier: SignupTier;
+  readonly upcomingVisits: readonly VisitSummaryDto[];
+  readonly visitsPerCycle: 1 | 2;
 }
 
 export interface SubscriberSubscriptionContextValue {
@@ -71,13 +77,19 @@ export interface SubscriberSubscriptionContextValue {
 export const SUBSCRIBER_SUBSCRIPTION_STORAGE_KEY = 'washed.subscriber.subscription';
 
 export const DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE: SubscriberSubscriptionState = {
+  addressNeighborhood: null,
+  assignedWorker: null,
   createdAtIso: null,
   firstVisitRequest: null,
+  isHydratedFromApi: false,
   paymentPhoneNumber: null,
   paymentProvider: 'mixx',
+  recentVisits: [],
   status: 'ready_no_visit',
   subscriptionId: null,
   tier: 'T1',
+  upcomingVisits: [],
+  visitsPerCycle: 1,
 };
 
 const SubscriberSubscriptionContext = createContext<SubscriberSubscriptionContextValue | null>(
@@ -112,13 +124,19 @@ export function SubscriberSubscriptionProvider({
       readonly tier: SignupTier;
     }) => {
       setState({
+        addressNeighborhood: null,
+        assignedWorker: null,
         createdAtIso: new Date().toISOString(),
         firstVisitRequest: null,
+        isHydratedFromApi: false,
         paymentPhoneNumber: input.paymentPhoneNumber ?? null,
         paymentProvider: input.paymentProvider,
+        recentVisits: [],
         status: 'ready_no_visit',
         subscriptionId: input.subscriptionId ?? null,
         tier: input.tier,
+        upcomingVisits: [],
+        visitsPerCycle: input.tier === 'T2' ? 2 : 1,
       });
     },
     [],
@@ -145,11 +163,13 @@ export function SubscriberSubscriptionProvider({
 
   const syncFromApi = useCallback((subscription: SubscriptionDetailDto | null) => {
     if (subscription === null) {
-      setState(DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE);
+      setState({ ...DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE, isHydratedFromApi: true });
       return;
     }
 
     setState((current) => ({
+      addressNeighborhood: subscription.address.neighborhood,
+      assignedWorker: subscription.assignedWorker,
       createdAtIso: current.createdAtIso,
       firstVisitRequest:
         subscription.status === 'pending_match' && subscription.schedulePreference !== null
@@ -159,11 +179,15 @@ export function SubscriberSubscriptionProvider({
               timeWindowId: subscription.schedulePreference.timeWindow,
             }
           : null,
+      isHydratedFromApi: true,
       paymentPhoneNumber: subscription.paymentMethod?.phoneNumber ?? current.paymentPhoneNumber,
       paymentProvider: subscription.paymentMethod?.provider ?? current.paymentProvider,
+      recentVisits: subscription.recentVisits,
       status: toSubscriberSubscriptionStatus(subscription.status),
       subscriptionId: subscription.subscriptionId,
       tier: subscription.tierCode,
+      upcomingVisits: subscription.upcomingVisits,
+      visitsPerCycle: subscription.visitsPerCycle,
     }));
   }, []);
 
@@ -242,13 +266,19 @@ function readStoredSubscription(storageKey: string): SubscriberSubscriptionState
   }
 
   return {
+    addressNeighborhood: parsed.addressNeighborhood ?? null,
+    assignedWorker: parsed.assignedWorker ?? null,
     createdAtIso: parsed.createdAtIso ?? null,
     firstVisitRequest: parsed.firstVisitRequest ?? null,
+    isHydratedFromApi: parsed.isHydratedFromApi ?? false,
     paymentPhoneNumber: parsed.paymentPhoneNumber ?? null,
     paymentProvider: parsed.paymentProvider,
+    recentVisits: parsed.recentVisits ?? [],
     status: parsed.status,
     subscriptionId: parsed.subscriptionId ?? null,
     tier: parsed.tier,
+    upcomingVisits: parsed.upcomingVisits ?? [],
+    visitsPerCycle: parsed.visitsPerCycle ?? (parsed.tier === 'T2' ? 2 : 1),
   };
 }
 

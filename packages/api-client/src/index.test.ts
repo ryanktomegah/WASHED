@@ -114,6 +114,9 @@ describe('createCoreApiClient', () => {
     );
 
     expect(frontendOperationIds.every((operationId) => operationIds.has(operationId))).toBe(true);
+    expect(FRONTEND_OPERATION_IDS.subscriber.reportVisitIssue).toBe(
+      'createCurrentSubscriberVisitDispute',
+    );
     expect(FRONTEND_OPERATION_IDS.subscriber.skipVisit).toBe('skipCurrentSubscriberVisit');
     expect(FRONTEND_OPERATION_IDS.worker.checkIn).toBe('checkInVisit');
     expect(FRONTEND_OPERATION_IDS.operator.issueRefund).toBe('issueOperatorPaymentRefund');

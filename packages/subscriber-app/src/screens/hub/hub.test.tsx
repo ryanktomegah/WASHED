@@ -105,15 +105,20 @@ describe('Subscriber hub · X-10', () => {
   });
 
   it('renders the pending first-visit request state after a booking request', () => {
-    renderAt('/hub', <HubX10 />, {}, {
-      ...DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE,
-      firstVisitRequest: {
-        dayId: 'saturday',
-        requestedAtIso: '2026-05-05T10:00:00.000Z',
-        timeWindowId: 'morning',
+    renderAt(
+      '/hub',
+      <HubX10 />,
+      {},
+      {
+        ...DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE,
+        firstVisitRequest: {
+          dayId: 'saturday',
+          requestedAtIso: '2026-05-05T10:00:00.000Z',
+          timeWindowId: 'morning',
+        },
+        status: 'visit_request_pending',
       },
-      status: 'visit_request_pending',
-    });
+    );
 
     expect(screen.getByRole('heading', { name: 'Première visite en confirmation' })).toBeVisible();
     expect(screen.getByText(/Le bureau confirme votre créneau/u)).toBeVisible();
@@ -123,6 +128,79 @@ describe('Subscriber hub · X-10', () => {
     expect(
       within(screen.getByRole('region', { name: 'Forfait' })).getByText('Demande en confirmation'),
     ).toBeVisible();
+  });
+
+  it('routes scheduled visit actions with the real upcoming visit id', () => {
+    const visitId = '44444444-4444-4444-8444-444444444444';
+    const { locationRef } = renderAt(
+      '/hub',
+      <HubX10 />,
+      {},
+      {
+        ...DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE,
+        addressNeighborhood: 'Tokoin',
+        assignedWorker: {
+          averageRating: null,
+          completedVisitCount: 1,
+          displayName: 'Akouvi K.',
+          disputeCount: 0,
+          workerId: '22222222-2222-4222-8222-222222222222',
+        },
+        isHydratedFromApi: true,
+        status: 'active',
+        subscriptionId: '33333333-3333-4333-8333-333333333333',
+        upcomingVisits: [
+          {
+            scheduledDate: '2026-05-12',
+            scheduledTimeWindow: 'morning',
+            status: 'scheduled',
+            visitId,
+            workerId: '22222222-2222-4222-8222-222222222222',
+          },
+        ],
+      },
+    );
+
+    expect(screen.getByText('Mardi 12 mai')).toBeVisible();
+    expect(screen.getByText('Matin')).toBeVisible();
+    expect(screen.getByText('prévue')).toBeVisible();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reporter' }));
+    expect(locationRef.current).toBe(`/visit/reschedule/${visitId}`);
+  });
+
+  it('routes scheduled visit details with the real upcoming visit id', () => {
+    const visitId = '44444444-4444-4444-8444-444444444444';
+    const { locationRef } = renderAt(
+      '/hub',
+      <HubX10 />,
+      {},
+      {
+        ...DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE,
+        addressNeighborhood: 'Tokoin',
+        assignedWorker: {
+          averageRating: null,
+          completedVisitCount: 1,
+          displayName: 'Akouvi K.',
+          disputeCount: 0,
+          workerId: '22222222-2222-4222-8222-222222222222',
+        },
+        isHydratedFromApi: true,
+        status: 'active',
+        subscriptionId: '33333333-3333-4333-8333-333333333333',
+        upcomingVisits: [
+          {
+            scheduledDate: '2026-05-12',
+            scheduledTimeWindow: 'morning',
+            status: 'scheduled',
+            visitId,
+            workerId: '22222222-2222-4222-8222-222222222222',
+          },
+        ],
+      },
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Détails' }));
+    expect(locationRef.current).toBe(`/visit/detail/${visitId}`);
   });
 
   it('routes Planifier ma première visite to the booking request screen', () => {
@@ -218,9 +296,7 @@ describe('Subscriber booking · X-10B and X-10C', () => {
     fireEvent.click(screen.getByRole('button', { name: /Envoyer la demande/u }));
 
     await waitFor(() => expect(locationRef.current).toBe('/booking/submitted'));
-    expect(requests[0]?.url).toBe(
-      'http://api.test/v1/subscriber/subscription/first-visit-request',
-    );
+    expect(requests[0]?.url).toBe('http://api.test/v1/subscriber/subscription/first-visit-request');
     await expect(requests[0]?.json()).resolves.toMatchObject({
       schedulePreference: {
         dayOfWeek: 'saturday',

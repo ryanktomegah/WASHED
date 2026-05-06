@@ -1,8 +1,14 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 
+import { SubscriberApiProvider } from '../../api/SubscriberApiContext.js';
+import {
+  DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE,
+  SubscriberSubscriptionProvider,
+  type SubscriberSubscriptionState,
+} from '../../subscription/SubscriberSubscriptionContext.js';
 import {
   VisitDetailX11,
   VisitEnRouteX12,
@@ -18,8 +24,14 @@ function renderAt(
   path: string,
   element: ReactElement,
   initialEntries: readonly string[] = [path],
+  options: {
+    readonly api?: { readonly baseUrl?: string | null; readonly fetch?: typeof fetch };
+    readonly routePath?: string;
+    readonly subscriptionState?: SubscriberSubscriptionState;
+  } = {},
 ): { locationRef: { current: string } } {
   const locationRef = { current: initialEntries.at(-1) ?? path };
+  const api = options.api ?? { baseUrl: null };
 
   function Spy(): ReactElement {
     const location = useLocation();
@@ -28,23 +40,108 @@ function renderAt(
   }
 
   render(
-    <MemoryRouter initialEntries={[...initialEntries]} initialIndex={initialEntries.length - 1}>
-      <Routes>
-        <Route
-          element={
-            <>
-              {element}
-              <Spy />
-            </>
-          }
-          path={path}
-        />
-        <Route element={<Spy />} path="*" />
-      </Routes>
-    </MemoryRouter>,
+    <SubscriberApiProvider
+      {...(api.baseUrl === undefined ? {} : { baseUrl: api.baseUrl })}
+      {...(api.fetch === undefined ? {} : { fetch: api.fetch })}
+    >
+      <SubscriberSubscriptionProvider
+        initialState={options.subscriptionState ?? DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE}
+        storageKey={null}
+      >
+        <MemoryRouter initialEntries={[...initialEntries]} initialIndex={initialEntries.length - 1}>
+          <Routes>
+            <Route
+              element={
+                <>
+                  {element}
+                  <Spy />
+                </>
+              }
+              path={options.routePath ?? path}
+            />
+            <Route element={<Spy />} path="*" />
+          </Routes>
+        </MemoryRouter>
+      </SubscriberSubscriptionProvider>
+    </SubscriberApiProvider>,
   );
 
   return { locationRef };
+}
+
+const LIVE_VISIT_ID = '44444444-4444-4444-8444-444444444444';
+const LIVE_DISPUTE_ID = '55555555-5555-4555-8555-555555555555';
+
+const LIVE_SUBSCRIPTION_STATE: SubscriberSubscriptionState = {
+  ...DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE,
+  addressNeighborhood: 'Tokoin',
+  assignedWorker: {
+    averageRating: null,
+    completedVisitCount: 1,
+    displayName: 'Akouvi K.',
+    disputeCount: 0,
+    workerId: '22222222-2222-4222-8222-222222222222',
+  },
+  isHydratedFromApi: true,
+  recentVisits: [
+    {
+      scheduledDate: '2026-05-05',
+      scheduledTimeWindow: 'morning',
+      status: 'completed',
+      visitId: LIVE_VISIT_ID,
+      workerId: '22222222-2222-4222-8222-222222222222',
+    },
+  ],
+  status: 'active',
+  subscriptionId: '33333333-3333-4333-8333-333333333333',
+  upcomingVisits: [
+    {
+      scheduledDate: '2026-05-12',
+      scheduledTimeWindow: 'morning',
+      status: 'scheduled',
+      visitId: LIVE_VISIT_ID,
+      workerId: '22222222-2222-4222-8222-222222222222',
+    },
+  ],
+};
+
+function liveSubscriptionDetail(upcomingDate = '2026-05-12'): unknown {
+  return {
+    address: {
+      gpsLatitude: 6.1319,
+      gpsLongitude: 1.2228,
+      landmark: 'rue 254',
+      neighborhood: 'Tokoin',
+    },
+    assignedWorker: {
+      averageRating: null,
+      completedVisitCount: 0,
+      displayName: 'Akouvi K.',
+      disputeCount: 0,
+      workerId: '22222222-2222-4222-8222-222222222222',
+    },
+    countryCode: 'TG',
+    monthlyPriceMinor: '2500',
+    paymentMethod: null,
+    phoneNumber: '+22890123456',
+    recentVisits: LIVE_SUBSCRIPTION_STATE.recentVisits,
+    schedulePreference: null,
+    status: 'active',
+    subscriberId: '99999999-9999-4999-8999-999999999999',
+    subscriptionId: '33333333-3333-4333-8333-333333333333',
+    supportCredits: [],
+    tierCode: 'T1',
+    upcomingVisits: [
+      {
+        scheduledDate: upcomingDate,
+        scheduledTimeWindow: 'morning',
+        status: 'scheduled',
+        visitId: LIVE_VISIT_ID,
+        workerId: '22222222-2222-4222-8222-222222222222',
+      },
+    ],
+    visitsPerCycle: 1,
+  };
 }
 
 describe('Subscriber visit · X-11 Detail', () => {
@@ -62,6 +159,26 @@ describe('Subscriber visit · X-11 Detail', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Reporter la visite' }));
     expect(locationRef.current).toBe('/visit/reschedule');
+  });
+
+  it('uses the real upcoming visit id when routing to reschedule', () => {
+    const { locationRef } = renderAt(
+      `/visit/detail/${LIVE_VISIT_ID}`,
+      <VisitDetailX11 />,
+      [`/visit/detail/${LIVE_VISIT_ID}`],
+      {
+        api: { baseUrl: 'http://api.test', fetch: async () => Response.json({}) },
+        routePath: '/visit/detail/:visitId',
+        subscriptionState: LIVE_SUBSCRIPTION_STATE,
+      },
+    );
+
+    expect(screen.getByRole('heading', { name: 'Mardi 12 mai · Matin' })).toBeVisible();
+    expect(screen.getByText('Tokoin')).toBeVisible();
+    expect(screen.queryByText('1 h 15')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reporter la visite' }));
+    expect(locationRef.current).toBe(`/visit/reschedule/${LIVE_VISIT_ID}`);
   });
 });
 
@@ -88,6 +205,49 @@ describe('Subscriber visit · X-11.M Reschedule', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
     expect(locationRef.current).toBe('/visit/detail');
+  });
+
+  it('posts reschedule requests with the real upcoming visit id', async () => {
+    const requests: Request[] = [];
+    const fetchStub = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      const request = new Request(input, init);
+      requests.push(request);
+
+      if (request.url.endsWith(`/visits/${LIVE_VISIT_ID}/reschedule`)) {
+        return Response.json({
+          scheduledDate: '2026-05-09',
+          scheduledTimeWindow: 'morning',
+          status: 'scheduled',
+          subscriptionId: '33333333-3333-4333-8333-333333333333',
+          visitId: LIVE_VISIT_ID,
+          workerId: '22222222-2222-4222-8222-222222222222',
+        });
+      }
+
+      return Response.json({ subscription: liveSubscriptionDetail('2026-05-09') });
+    };
+    const { locationRef } = renderAt(
+      `/visit/reschedule/${LIVE_VISIT_ID}`,
+      <VisitRescheduleX11M />,
+      [`/visit/reschedule/${LIVE_VISIT_ID}`],
+      {
+        api: { baseUrl: 'http://api.test', fetch: fetchStub as typeof fetch },
+        routePath: '/visit/reschedule/:visitId',
+        subscriptionState: LIVE_SUBSCRIPTION_STATE,
+      },
+    );
+
+    fireEvent.click(screen.getByLabelText(/Samedi 9 mai/u));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmer le report' }));
+
+    await waitFor(() => expect(locationRef.current).toBe(`/visit/detail/${LIVE_VISIT_ID}`));
+    expect(requests[0]?.url).toBe(
+      `http://api.test/v1/subscriber/subscription/visits/${LIVE_VISIT_ID}/reschedule`,
+    );
+    await expect(requests[0]?.json()).resolves.toEqual({
+      scheduledDate: '2026-05-09',
+      scheduledTimeWindow: 'morning',
+    });
   });
 });
 
@@ -187,6 +347,64 @@ describe('Subscriber visit · X-15.S Issue', () => {
     expect(locationRef.current).toBe('/visit/issue/submitted');
   });
 
+  it('posts issue reports against the real recent visit id', async () => {
+    const requests: Request[] = [];
+    const fetchStub = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      const request = new Request(input, init);
+      requests.push(request);
+
+      return Response.json(
+        {
+          createdAt: '2026-05-05T10:05:00.000Z',
+          description: 'Linge mal lavé. Photos : linge-endommage.jpg',
+          disputeId: LIVE_DISPUTE_ID,
+          issueType: 'other',
+          openedByUserId: '99999999-9999-4999-8999-999999999999',
+          resolvedAt: null,
+          resolvedByOperatorUserId: null,
+          resolutionNote: null,
+          status: 'open',
+          subscriberCredit: null,
+          subscriberCreditId: null,
+          subscriptionId: '33333333-3333-4333-8333-333333333333',
+          visitId: LIVE_VISIT_ID,
+          workerId: '22222222-2222-4222-8222-222222222222',
+        },
+        { status: 201 },
+      );
+    };
+    const { locationRef } = renderAt(
+      `/visit/issue/${LIVE_VISIT_ID}`,
+      <VisitIssueX15S />,
+      [`/visit/issue/${LIVE_VISIT_ID}`],
+      {
+        api: { baseUrl: 'http://api.test', fetch: fetchStub as typeof fetch },
+        routePath: '/visit/issue/:visitId',
+        subscriptionState: LIVE_SUBSCRIPTION_STATE,
+      },
+    );
+
+    fireEvent.click(screen.getByLabelText('Linge mal lavé'));
+    fireEvent.click(screen.getByRole('button', { name: 'Suivant · ajouter photos' }));
+    const photoInput = screen.getByLabelText(/Ajouter des photos/u) as HTMLInputElement;
+    const photo = new File(['photo'], 'linge-endommage.jpg', { type: 'image/jpeg' });
+    fireEvent.change(photoInput, { target: { files: [photo] } });
+    fireEvent.click(screen.getByRole('button', { name: 'Envoyer le signalement' }));
+
+    await waitFor(() =>
+      expect(locationRef.current).toBe(
+        `/visit/issue/${LIVE_VISIT_ID}/submitted/${LIVE_DISPUTE_ID}`,
+      ),
+    );
+    expect(requests[0]?.url).toBe(
+      `http://api.test/v1/subscriber/subscription/visits/${LIVE_VISIT_ID}/disputes`,
+    );
+    await expect(requests[0]?.json()).resolves.toMatchObject({
+      description: 'Linge mal lavé. Photos : linge-endommage.jpg',
+      issueType: 'other',
+    });
+  });
+
   it('renders submitted confirmation and routes to the created ticket or home', () => {
     const { locationRef } = renderAt('/visit/issue/submitted', <VisitIssueSubmittedX15S />);
 
@@ -200,5 +418,19 @@ describe('Subscriber visit · X-15.S Issue', () => {
     const h = renderAt('/visit/issue/submitted', <VisitIssueSubmittedX15S />);
     fireEvent.click(screen.getByRole('button', { name: "Retour à l'accueil" }));
     expect(h.locationRef.current).toBe('/hub');
+  });
+
+  it('renders live submitted confirmation without a fake support ticket link', () => {
+    renderAt(
+      `/visit/issue/${LIVE_VISIT_ID}/submitted/${LIVE_DISPUTE_ID}`,
+      <VisitIssueSubmittedX15S />,
+      [`/visit/issue/${LIVE_VISIT_ID}/submitted/${LIVE_DISPUTE_ID}`],
+      { routePath: '/visit/issue/:visitId/submitted/:disputeId' },
+    );
+
+    expect(
+      screen.getByText('Signalement #55555555 créé. Le bureau vous répond sous 4 h.'),
+    ).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Voir mon ticket' })).not.toBeInTheDocument();
   });
 });

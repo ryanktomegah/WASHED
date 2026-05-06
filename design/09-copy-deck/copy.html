@@ -962,6 +962,18 @@
               <td><span class="lim">20 ch</span></td>
             </tr>
             <tr>
+              <td><span class="key">subscriber.dashboard.next_visit.status.scheduled</span></td>
+              <td><span class="fr body">prévue</span></td>
+              <td><span class="ctx">Chip statut visite planifiée</span></td>
+              <td><span class="lim">10 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.dashboard.next_visit.status.in_progress</span></td>
+              <td><span class="fr body">en cours</span></td>
+              <td><span class="ctx">Chip statut visite en cours</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
               <td><span class="key">subscriber.dashboard.next_visit.day</span></td>
               <td><span class="fr">{weekday}</span></td>
               <td><span class="ctx">« Mardi », « Mercredi »… italique</span></td>
@@ -2862,6 +2874,14 @@
               <td><span class="lim">64 ch</span></td>
             </tr>
             <tr>
+              <td><span class="key">subscriber.visit.detail.body_with_worker</span></td>
+              <td>
+                <span class="fr body">{name} vient pour votre visite mensuelle.</span>
+              </td>
+              <td><span class="ctx">X-11 body API</span></td>
+              <td><span class="lim">64 ch</span></td>
+            </tr>
+            <tr>
               <td><span class="key">subscriber.visit.detail.address.label</span></td>
               <td><span class="fr body">Adresse</span></td>
               <td><span class="ctx">X-11 ligne récap</span></td>
@@ -3075,6 +3095,14 @@
               </td>
               <td><span class="ctx">X-15.S confirmation</span></td>
               <td><span class="lim">70 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.visit.support.submitted.body_live</span></td>
+              <td>
+                <span class="fr body">Signalement #{id} créé. Le bureau vous répond sous 4 h.</span>
+              </td>
+              <td><span class="ctx">X-15.S confirmation API</span></td>
+              <td><span class="lim">72 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.visit.support.submitted.ticket_cta</span></td>

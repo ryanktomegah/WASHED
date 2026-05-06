@@ -144,6 +144,7 @@ export const FRONTEND_OPERATION_IDS = {
     listSupportContacts: 'listCurrentSubscriberSupportContacts',
     rateVisit: 'rateCurrentSubscriberVisit',
     registerPushDevice: 'registerPushDevice',
+    reportVisitIssue: 'createCurrentSubscriberVisitDispute',
     requestWorkerSwap: 'createCurrentSubscriberWorkerSwapRequest',
     rescheduleVisit: 'rescheduleCurrentSubscriberVisit',
     skipVisit: 'skipCurrentSubscriberVisit',

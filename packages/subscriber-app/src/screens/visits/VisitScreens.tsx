@@ -1,11 +1,14 @@
-import { useState, type ChangeEvent, type ReactElement } from 'react';
+import { useEffect, useState, type ChangeEvent, type ReactElement } from 'react';
 import { Check, ChevronLeft, ImagePlus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
+import type { DisputeDto, VisitSummaryDto } from '@washed/api-client';
 import { translate, type WashedLocale } from '@washed/i18n';
 import { useActiveLocale } from '@washed/ui';
 
+import { useSubscriberApi } from '../../api/SubscriberApiContext.js';
 import { useSafeBack } from '../../navigation/useSafeBack.js';
+import { useSubscriberSubscription } from '../../subscription/SubscriberSubscriptionContext.js';
 import { ISSUE_OPTIONS, RESCHEDULE_OPTIONS, SUBSCRIBER_VISIT_DEMO } from './visitDemoData.js';
 
 type RescheduleOptionId = (typeof RESCHEDULE_OPTIONS)[number]['id'];
@@ -88,8 +91,72 @@ function formatVisitCounter(count: number, locale: WashedLocale): string {
   return locale === 'fr' ? `${count} visites` : `${count} visits`;
 }
 
+function formatTimeWindow(timeWindow: VisitSummaryDto['scheduledTimeWindow']): string {
+  return translate(
+    timeWindow === 'morning'
+      ? 'subscriber.booking.time.morning.label'
+      : 'subscriber.booking.time.afternoon.label',
+  );
+}
+
+function selectVisit(
+  visits: readonly VisitSummaryDto[],
+  visitId: string | undefined,
+): VisitSummaryDto | null {
+  if (visitId === undefined) return visits[0] ?? null;
+  return visits.find((visit) => visit.visitId === visitId) ?? null;
+}
+
+function rescheduleTimeWindow(time24h: string): VisitSummaryDto['scheduledTimeWindow'] {
+  return Number(time24h.split(':')[0] ?? '0') < 12 ? 'morning' : 'afternoon';
+}
+
+function issueTypeForOption(issue: IssueOptionId): DisputeDto['issueType'] {
+  if (issue === 'damaged') return 'damaged_item';
+  if (issue === 'no-show') return 'worker_no_show';
+  return 'other';
+}
+
+function issueDescription(issue: IssueOptionId, photoNames: readonly string[]): string {
+  const option = ISSUE_OPTIONS.find((candidate) => candidate.id === issue);
+  const issueLabel = option === undefined ? issue : translate(option.labelKey);
+  const photos = photoNames.length === 0 ? '' : ` Photos : ${photoNames.join(', ')}`;
+  return `${issueLabel}.${photos}`.trim();
+}
+
 export function VisitDetailX11(): ReactElement {
   const navigate = useNavigate();
+  const params = useParams();
+  const subscriberApi = useSubscriberApi();
+  const subscription = useSubscriberSubscription();
+  const locale = useActiveLocale();
+  const liveVisit = selectVisit(subscription.state.upcomingVisits, params.visitId);
+  const shouldUseLiveVisit = subscriberApi.isConfigured;
+
+  useEffect(() => {
+    if (shouldUseLiveVisit && subscription.state.isHydratedFromApi && liveVisit === null) {
+      navigate('/hub', { replace: true });
+    }
+  }, [liveVisit, navigate, shouldUseLiveVisit, subscription.state.isHydratedFromApi]);
+
+  if (shouldUseLiveVisit && (!subscription.state.isHydratedFromApi || liveVisit === null)) {
+    return <></>;
+  }
+
+  const liveTitle =
+    liveVisit === null
+      ? null
+      : `${formatVisitDateLabel(liveVisit.scheduledDate, locale)} · ${formatTimeWindow(
+          liveVisit.scheduledTimeWindow,
+        )}`;
+  const detailBody =
+    liveVisit !== null && subscription.state.assignedWorker !== null
+      ? translate('subscriber.visit.detail.body_with_worker', {
+          name: subscription.state.assignedWorker.displayName,
+        })
+      : translate('subscriber.visit.detail.body');
+  const visitDetailPath =
+    liveVisit === null ? '/visit/reschedule' : `/visit/reschedule/${liveVisit.visitId}`;
 
   return (
     <main aria-labelledby="x11-headline" className="visit-screen" data-screen-id="X-11">
@@ -97,26 +164,40 @@ export function VisitDetailX11(): ReactElement {
         <div className="visit-title-stack">
           <span className="visit-kicker">{translate('subscriber.visit.detail.kicker')}</span>
           <h1 className="visit-title" id="x11-headline">
-            {translate('subscriber.visit.detail.title')}
+            {liveTitle ?? translate('subscriber.visit.detail.title')}
           </h1>
         </div>
 
-        <p className="visit-copy">{translate('subscriber.visit.detail.body')}</p>
+        <p className="visit-copy">{detailBody}</p>
 
         <dl className="visit-card">
-          <div className="visit-row">
-            <dt>{translate('subscriber.visit.detail.address.label')}</dt>
-            <dd>Tokoin Casablanca</dd>
-          </div>
-          <div className="visit-rule" aria-hidden="true" />
-          <div className="visit-row">
-            <dt>{translate('subscriber.visit.detail.duration.label')}</dt>
-            <dd>1 h 15</dd>
-          </div>
-          <div className="visit-rule" aria-hidden="true" />
+          {liveVisit === null || subscription.state.addressNeighborhood !== null ? (
+            <>
+              <div className="visit-row">
+                <dt>{translate('subscriber.visit.detail.address.label')}</dt>
+                <dd>{subscription.state.addressNeighborhood ?? 'Tokoin Casablanca'}</dd>
+              </div>
+              <div className="visit-rule" aria-hidden="true" />
+            </>
+          ) : null}
+          {liveVisit === null ? (
+            <>
+              <div className="visit-row">
+                <dt>{translate('subscriber.visit.detail.duration.label')}</dt>
+                <dd>1 h 15</dd>
+              </div>
+              <div className="visit-rule" aria-hidden="true" />
+            </>
+          ) : null}
           <div className="visit-row">
             <dt>{translate('subscriber.visit.detail.tier.label')}</dt>
-            <dd>1 visite / mois</dd>
+            <dd>
+              {translate(
+                subscription.state.visitsPerCycle === 2
+                  ? 'subscriber.signup.tier.t2.label'
+                  : 'subscriber.signup.tier.t1.label',
+              )}
+            </dd>
           </div>
         </dl>
 
@@ -126,7 +207,7 @@ export function VisitDetailX11(): ReactElement {
 
         <button
           className="visit-button primary full"
-          onClick={() => navigate('/visit/reschedule')}
+          onClick={() => navigate(visitDetailPath)}
           type="button"
         >
           {translate('subscriber.visit.detail.report.cta')}
@@ -138,11 +219,53 @@ export function VisitDetailX11(): ReactElement {
 
 export function VisitRescheduleX11M(): ReactElement {
   const navigate = useNavigate();
+  const params = useParams();
+  const subscriberApi = useSubscriberApi();
+  const subscription = useSubscriberSubscription();
   const goBack = useSafeBack('/visit/detail');
   const locale = useActiveLocale();
   const [selectedId, setSelectedId] = useState<RescheduleOptionId>(
     RESCHEDULE_OPTIONS[0]?.id ?? 'thu-07',
   );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const liveVisit = selectVisit(subscription.state.upcomingVisits, params.visitId);
+  const shouldUseLiveVisit = subscriberApi.isConfigured;
+
+  useEffect(() => {
+    if (shouldUseLiveVisit && subscription.state.isHydratedFromApi && liveVisit === null) {
+      navigate('/hub', { replace: true });
+    }
+  }, [liveVisit, navigate, shouldUseLiveVisit, subscription.state.isHydratedFromApi]);
+
+  if (shouldUseLiveVisit && (!subscription.state.isHydratedFromApi || liveVisit === null)) {
+    return <></>;
+  }
+
+  async function submitReschedule(): Promise<void> {
+    if (isSubmitting) return;
+
+    const selected = RESCHEDULE_OPTIONS.find((option) => option.id === selectedId);
+    if (selected === undefined) return;
+
+    if (!subscriberApi.isConfigured || liveVisit === null) {
+      navigate('/visit/detail');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await subscriberApi.rescheduleVisit({
+        scheduledDate: selected.dateIso,
+        scheduledTimeWindow: rescheduleTimeWindow(selected.time24h),
+        visitId: liveVisit.visitId,
+      });
+      const current = await subscriberApi.getCurrentSubscription();
+      subscription.syncFromApi(current.subscription);
+      navigate(`/visit/detail/${liveVisit.visitId}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <main aria-labelledby="x11m-headline" className="visit-screen" data-screen-id="X-11.M">
@@ -191,7 +314,8 @@ export function VisitRescheduleX11M(): ReactElement {
 
         <button
           className="visit-button primary full"
-          onClick={() => navigate('/visit/detail')}
+          disabled={isSubmitting}
+          onClick={() => void submitReschedule()}
           type="button"
         >
           {translate('subscriber.visit.reschedule.confirm.cta')}
@@ -412,17 +536,35 @@ export function VisitFeedbackX15(): ReactElement {
 
 export function VisitIssueX15S(): ReactElement {
   const navigate = useNavigate();
+  const params = useParams();
+  const subscriberApi = useSubscriberApi();
+  const subscription = useSubscriberSubscription();
   const returnToVisit = useSafeBack('/visit/detail');
   const [issueStep, setIssueStep] = useState<IssueReportStep>('issue');
   const [selectedIssue, setSelectedIssue] = useState<IssueOptionId | ''>('');
   const [photoNames, setPhotoNames] = useState<readonly string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const issueVisit =
+    selectVisit(subscription.state.recentVisits, params.visitId) ??
+    selectVisit(subscription.state.upcomingVisits, params.visitId);
+  const shouldUseLiveVisit = subscriberApi.isConfigured;
 
   const canChoosePhotos = selectedIssue !== '';
-  const canSubmitIssue = photoNames.length > 0;
+  const canSubmitIssue = photoNames.length > 0 && !isSubmitting;
   const photoCountLabel =
     photoNames.length === 1
       ? translate('subscriber.visit.issue.photo.count_one')
       : translate('subscriber.visit.issue.photo.count_many', { count: photoNames.length });
+
+  useEffect(() => {
+    if (shouldUseLiveVisit && subscription.state.isHydratedFromApi && issueVisit === null) {
+      navigate('/history', { replace: true });
+    }
+  }, [issueVisit, navigate, shouldUseLiveVisit, subscription.state.isHydratedFromApi]);
+
+  if (shouldUseLiveVisit && (!subscription.state.isHydratedFromApi || issueVisit === null)) {
+    return <></>;
+  }
 
   const goBack = (): void => {
     if (issueStep === 'photos') {
@@ -443,9 +585,26 @@ export function VisitIssueX15S(): ReactElement {
     setPhotoNames(files.slice(0, 4).map((file) => file.name));
   };
 
-  const submitIssue = (): void => {
-    if (!canSubmitIssue) return;
-    navigate('/visit/issue/submitted');
+  const submitIssue = async (): Promise<void> => {
+    if (!canSubmitIssue || selectedIssue === '') return;
+
+    if (!subscriberApi.isConfigured || issueVisit === null) {
+      navigate('/visit/issue/submitted');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const dispute = await subscriberApi.reportVisitIssue({
+        createdAt: new Date().toISOString(),
+        description: issueDescription(selectedIssue, photoNames),
+        issueType: issueTypeForOption(selectedIssue),
+        visitId: issueVisit.visitId,
+      });
+      navigate(`/visit/issue/${issueVisit.visitId}/submitted/${dispute.disputeId}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -539,7 +698,7 @@ export function VisitIssueX15S(): ReactElement {
           <button
             className="visit-button primary full"
             disabled={!canSubmitIssue}
-            onClick={submitIssue}
+            onClick={() => void submitIssue()}
             type="button"
           >
             {translate('subscriber.visit.issue.photo.submit.cta')}
@@ -552,6 +711,8 @@ export function VisitIssueX15S(): ReactElement {
 
 export function VisitIssueSubmittedX15S(): ReactElement {
   const navigate = useNavigate();
+  const params = useParams();
+  const disputeShortId = params.disputeId?.slice(0, 8);
 
   return (
     <main
@@ -568,16 +729,20 @@ export function VisitIssueSubmittedX15S(): ReactElement {
           {translate('subscriber.visit.support.submitted.title')}
         </h1>
         <p className="visit-copy centered">
-          {translate('subscriber.visit.support.submitted.body')}
+          {disputeShortId === undefined
+            ? translate('subscriber.visit.support.submitted.body')
+            : translate('subscriber.visit.support.submitted.body_live', { id: disputeShortId })}
         </p>
         <div className="visit-grow" />
-        <button
-          className="visit-button primary full"
-          onClick={() => navigate('/support/tickets/0421')}
-          type="button"
-        >
-          {translate('subscriber.visit.support.submitted.ticket_cta')}
-        </button>
+        {disputeShortId === undefined ? (
+          <button
+            className="visit-button primary full"
+            onClick={() => navigate('/support/tickets/0421')}
+            type="button"
+          >
+            {translate('subscriber.visit.support.submitted.ticket_cta')}
+          </button>
+        ) : null}
         <button className="visit-button ghost full" onClick={() => navigate('/hub')} type="button">
           {translate('subscriber.visit.return_home.cta')}
         </button>

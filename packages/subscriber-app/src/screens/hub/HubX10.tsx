@@ -2,8 +2,10 @@ import { CalendarPlus } from 'lucide-react';
 import { type ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { translate } from '@washed/i18n';
+import { translate, type WashedLocale } from '@washed/i18n';
+import { useActiveLocale } from '@washed/ui';
 
+import type { VisitSummaryDto } from '@washed/api-client';
 import { useSubscriberSubscription } from '../../subscription/SubscriberSubscriptionContext.js';
 import { HubTabBar } from './HubTabBar.js';
 import { TourX09 } from './TourX09.js';
@@ -17,12 +19,30 @@ import { useTourState } from './useTourState.js';
 
 export function HubX10(): ReactElement {
   const navigate = useNavigate();
+  const locale = useActiveLocale();
   const signup = useSignup();
   const subscription = useSubscriberSubscription();
   const hub = SUBSCRIBER_HUB_DEMO;
   const tour = useTourState();
+  const liveVisit = subscription.state.upcomingVisits[0] ?? null;
+  const liveWorker = liveVisit === null ? null : subscription.state.assignedWorker;
+  const liveVisitCard =
+    liveVisit === null || liveWorker === null
+      ? null
+      : {
+          date: formatVisitDate(liveVisit.scheduledDate, locale),
+          detail:
+            subscription.state.addressNeighborhood === null
+              ? translate('subscriber.dashboard.worker.tenure_first')
+              : subscription.state.addressNeighborhood,
+          status: formatVisitStatus(liveVisit),
+          time: formatVisitTimeWindow(liveVisit.scheduledTimeWindow),
+          visitId: liveVisit.visitId,
+          workerName: liveWorker.displayName,
+        };
   const hasScheduledVisit =
-    subscription.state.status === 'active' && hub.visit !== null && hub.worker !== null;
+    liveVisitCard !== null ||
+    (subscription.state.status === 'active' && hub.visit !== null && hub.worker !== null);
   const hasRequestedFirstVisit = subscription.state.status === 'visit_request_pending';
   const requestedDay = SUBSCRIBER_BOOKING_DAYS.find(
     (day) => day.id === subscription.state.firstVisitRequest?.dayId,
@@ -76,45 +96,67 @@ export function HubX10(): ReactElement {
                 </span>
                 <span className="hub-chip">
                   <span aria-hidden="true" className="hub-chip-dot" />
-                  {hub.visit.status}
+                  {liveVisitCard?.status ?? hub.visit?.status}
                 </span>
               </div>
 
               <div className="hub-visit-time">
-                <span className="hub-time">{hub.visit.time}</span>
-                <span className="hub-date">{hub.visit.date}</span>
+                <span className="hub-time">{liveVisitCard?.time ?? hub.visit?.time}</span>
+                <span className="hub-date">{liveVisitCard?.date ?? hub.visit?.date}</span>
               </div>
 
               <div className="hub-rule" />
 
-              <button
-                aria-label={hub.worker.name}
-                className="hub-worker-row"
-                onClick={() => navigate('/worker/akouvi')}
-                type="button"
-              >
-                <span aria-hidden="true" className="hub-avatar hub-avatar-worker" />
-                <span className="hub-worker-copy">
-                  <strong>{hub.worker.name}</strong>
-                  <span>{hub.worker.detail}</span>
-                </span>
-                <span aria-hidden="true" className="hub-arrow">
-                  →
-                </span>
-              </button>
+              {liveVisitCard === null ? (
+                <button
+                  aria-label={hub.worker?.name}
+                  className="hub-worker-row"
+                  onClick={() => navigate('/worker/akouvi')}
+                  type="button"
+                >
+                  <span aria-hidden="true" className="hub-avatar hub-avatar-worker" />
+                  <span className="hub-worker-copy">
+                    <strong>{hub.worker?.name}</strong>
+                    <span>{hub.worker?.detail}</span>
+                  </span>
+                  <span aria-hidden="true" className="hub-arrow">
+                    →
+                  </span>
+                </button>
+              ) : (
+                <div aria-label={liveVisitCard.workerName} className="hub-worker-row">
+                  <span aria-hidden="true" className="hub-avatar hub-avatar-worker" />
+                  <span className="hub-worker-copy">
+                    <strong>{liveVisitCard.workerName}</strong>
+                    <span>{liveVisitCard.detail}</span>
+                  </span>
+                </div>
+              )}
             </section>
 
             <div className="hub-actions">
               <button
                 className="hub-action secondary"
-                onClick={() => navigate('/visit/reschedule')}
+                onClick={() =>
+                  navigate(
+                    liveVisitCard === null
+                      ? '/visit/reschedule'
+                      : `/visit/reschedule/${liveVisitCard.visitId}`,
+                  )
+                }
                 type="button"
               >
                 {translate('subscriber.dashboard.cta_report')}
               </button>
               <button
                 className="hub-action primary"
-                onClick={() => navigate('/visit/detail')}
+                onClick={() =>
+                  navigate(
+                    liveVisitCard === null
+                      ? '/visit/detail'
+                      : `/visit/detail/${liveVisitCard.visitId}`,
+                  )
+                }
                 type="button"
               >
                 {translate('subscriber.dashboard.cta_detail')}
@@ -193,5 +235,43 @@ export function HubX10(): ReactElement {
       <HubTabBar />
       {tour.isOpen ? <TourX09 onDismiss={tour.dismiss} /> : null}
     </main>
+  );
+}
+
+function dateFromIso(dateIso: string): Date {
+  return new Date(`${dateIso}T12:00:00.000Z`);
+}
+
+function localeTag(locale: WashedLocale): string {
+  return locale === 'fr' ? 'fr-TG' : 'en-US';
+}
+
+function capitalizeFirst(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function formatVisitDate(dateIso: string, locale: WashedLocale): string {
+  return capitalizeFirst(
+    new Intl.DateTimeFormat(localeTag(locale), {
+      day: 'numeric',
+      month: 'long',
+      weekday: 'long',
+    }).format(dateFromIso(dateIso)),
+  );
+}
+
+function formatVisitStatus(visit: VisitSummaryDto): string {
+  return translate(
+    visit.status === 'in_progress'
+      ? 'subscriber.dashboard.next_visit.status.in_progress'
+      : 'subscriber.dashboard.next_visit.status.scheduled',
+  );
+}
+
+function formatVisitTimeWindow(timeWindow: VisitSummaryDto['scheduledTimeWindow']): string {
+  return translate(
+    timeWindow === 'morning'
+      ? 'subscriber.booking.time.morning.label'
+      : 'subscriber.booking.time.afternoon.label',
   );
 }

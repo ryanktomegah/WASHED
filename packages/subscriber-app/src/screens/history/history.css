@@ -68,6 +68,7 @@
 
 .history-stats-card,
 .history-card,
+.history-empty-card,
 .history-detail-card,
 .history-report-button {
   border: 1px solid var(--line);
@@ -130,6 +131,20 @@
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+.history-empty-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.history-empty-card p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.45;
 }
 
 .history-card {

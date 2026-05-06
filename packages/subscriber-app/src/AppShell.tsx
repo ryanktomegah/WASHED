@@ -195,13 +195,20 @@ function LocaleScopedRoutes(): ReactElement {
       <Route element={<WorkerChangeX18C />} path="/worker/:workerId/change" />
       <Route element={<WorkerChangeSubmittedX18C />} path="/worker/:workerId/change/submitted" />
       <Route element={<VisitDetailX11 />} path="/visit/detail" />
+      <Route element={<VisitDetailX11 />} path="/visit/detail/:visitId" />
       <Route element={<VisitRescheduleX11M />} path="/visit/reschedule" />
+      <Route element={<VisitRescheduleX11M />} path="/visit/reschedule/:visitId" />
       <Route element={<VisitEnRouteX12 />} path="/visit/en-route" />
       <Route element={<VisitInProgressX13 />} path="/visit/in-progress" />
       <Route element={<VisitRevealX14 />} path="/visit/reveal" />
       <Route element={<VisitFeedbackX15 />} path="/visit/feedback" />
       <Route element={<VisitIssueX15S />} path="/visit/issue" />
+      <Route element={<VisitIssueX15S />} path="/visit/issue/:visitId" />
       <Route element={<VisitIssueSubmittedX15S />} path="/visit/issue/submitted" />
+      <Route
+        element={<VisitIssueSubmittedX15S />}
+        path="/visit/issue/:visitId/submitted/:disputeId"
+      />
       <Route element={<Navigate replace to="/welcome" />} path="*" />
     </Routes>
   );
