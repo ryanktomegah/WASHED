@@ -1,10 +1,12 @@
-import { useState, type ChangeEvent, type FormEvent, type ReactElement } from 'react';
+import { useEffect, useState, type ChangeEvent, type FormEvent, type ReactElement } from 'react';
 import { Check, ChevronLeft, ChevronRight, Phone, Settings } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import type { SupportContactDto, SupportContactStatus } from '@washed/api-client';
 import { translate, type WashedLocale } from '@washed/i18n';
 import { useActiveLocale } from '@washed/ui';
 
+import { useSubscriberApi } from '../../api/SubscriberApiContext.js';
 import { useSafeBack } from '../../navigation/useSafeBack.js';
 import {
   findSupportTicket,
@@ -22,14 +24,129 @@ import {
   type SupportTicketDemo,
 } from './supportDemoData.js';
 
+type SupportTicketViewStatus = SupportContactStatus;
+
+interface SupportTicketMessageView {
+  readonly author: 'office' | 'subscriber';
+  readonly body: string;
+  readonly id: string;
+  readonly timeAgo: string;
+}
+
+interface SupportTicketView {
+  readonly agentName?: string;
+  readonly attachments?: SupportTicketDemo['attachments'];
+  readonly createdAgo: string;
+  readonly displayId: string;
+  readonly id: string;
+  readonly messages: readonly SupportTicketMessageView[];
+  readonly status: SupportTicketViewStatus;
+  readonly summary: string;
+  readonly title: string;
+}
+
 function localized(value: LocalizedTextDemo, locale: WashedLocale): string {
   return value[locale];
 }
 
+function localeTag(locale: WashedLocale): string {
+  return locale === 'fr' ? 'fr-TG' : 'en-US';
+}
+
+function displayTicketId(contactId: string): string {
+  return contactId.replace(/-/gu, '').slice(0, 6).toUpperCase();
+}
+
+function formatRelativeCreatedAt(createdAt: string, locale: WashedLocale): string {
+  const createdAtMs = Date.parse(createdAt);
+  if (!Number.isFinite(createdAtMs)) return '';
+
+  const diffSeconds = Math.round((createdAtMs - Date.now()) / 1000);
+  const absSeconds = Math.abs(diffSeconds);
+  const formatter = new Intl.RelativeTimeFormat(localeTag(locale), { numeric: 'auto' });
+
+  if (absSeconds < 60) return formatter.format(diffSeconds, 'second');
+  if (absSeconds < 3600) return formatter.format(Math.round(diffSeconds / 60), 'minute');
+  if (absSeconds < 86_400) return formatter.format(Math.round(diffSeconds / 3600), 'hour');
+  return formatter.format(Math.round(diffSeconds / 86_400), 'day');
+}
+
+function demoTicketView(ticket: SupportTicketDemo, locale: WashedLocale): SupportTicketView {
+  return {
+    ...(ticket.agentName === undefined ? {} : { agentName: ticket.agentName }),
+    ...(ticket.attachments === undefined ? {} : { attachments: ticket.attachments }),
+    createdAgo: localized(ticket.createdAgo, locale),
+    displayId: ticket.id,
+    id: ticket.id,
+    messages: ticket.messages.map((message) => ({
+      author: message.author,
+      body: localized(message.body, locale),
+      id: message.id,
+      timeAgo: localized(message.timeAgo, locale),
+    })),
+    status: ticket.status,
+    summary: localized(ticket.summary, locale),
+    title: localized(ticket.title, locale),
+  };
+}
+
+function supportContactView(contact: SupportContactDto, locale: WashedLocale): SupportTicketView {
+  return {
+    createdAgo: formatRelativeCreatedAt(contact.createdAt, locale),
+    displayId: displayTicketId(contact.contactId),
+    id: contact.contactId,
+    messages: [
+      {
+        author: 'subscriber',
+        body: contact.body,
+        id: `${contact.contactId}-subscriber`,
+        timeAgo: formatRelativeCreatedAt(contact.createdAt, locale),
+      },
+      ...(contact.resolutionNote === null
+        ? []
+        : [
+            {
+              author: 'office' as const,
+              body: contact.resolutionNote,
+              id: `${contact.contactId}-resolution`,
+              timeAgo:
+                contact.resolvedAt === null
+                  ? ''
+                  : formatRelativeCreatedAt(contact.resolvedAt, locale),
+            },
+          ]),
+    ],
+    status: contact.status,
+    summary: contact.body,
+    title: contact.subject,
+  };
+}
+
 export function HelpCenterX29(): ReactElement {
   const navigate = useNavigate();
+  const subscriberApi = useSubscriberApi();
   const [openFaqId, setOpenFaqId] = useState<SupportFaqId | null>(null);
-  const openCount = openSupportTicketCount();
+  const [openCount, setOpenCount] = useState(
+    subscriberApi.isConfigured ? 0 : openSupportTicketCount(),
+  );
+
+  useEffect(() => {
+    if (!subscriberApi.isConfigured) return;
+
+    let cancelled = false;
+    void subscriberApi
+      .listSupportContacts({ limit: 20, status: 'open' })
+      .then((response) => {
+        if (!cancelled) setOpenCount(response.items.length);
+      })
+      .catch(() => {
+        if (!cancelled) setOpenCount(0);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [subscriberApi]);
 
   return (
     <main aria-labelledby="x29-headline" className="support-screen" data-screen-id="X-29">
@@ -109,15 +226,45 @@ export function HelpCenterX29(): ReactElement {
 export function ContactBureauX30(): ReactElement {
   const navigate = useNavigate();
   const goBack = useSafeBack('/support');
+  const subscriberApi = useSubscriberApi();
   const [selectedCategory, setSelectedCategory] = useState<SupportCategoryId>('visit');
   const [message, setMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSubmissionError, setHasSubmissionError] = useState(false);
   const isValid = message.trim().length >= 3;
 
   const onSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
-    if (!isValid) return;
-    navigate('/support/contact/submitted');
+    void submitContact();
   };
+
+  async function submitContact(): Promise<void> {
+    if (!isValid || isSubmitting) return;
+
+    if (!subscriberApi.isConfigured) {
+      navigate('/support/contact/submitted');
+      return;
+    }
+
+    setHasSubmissionError(false);
+    setIsSubmitting(true);
+    try {
+      const category = SUPPORT_CONTACT_CATEGORIES.find((item) => item.id === selectedCategory);
+      const contact = await subscriberApi.createSupportContact({
+        body: message.trim(),
+        category: selectedCategory,
+        createdAt: new Date().toISOString(),
+        subject: translate(category?.labelKey ?? 'subscriber.support.contact.category.other'),
+      });
+      navigate('/support/contact/submitted', {
+        state: { ticketId: displayTicketId(contact.contactId) },
+      });
+    } catch {
+      setHasSubmissionError(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <main aria-labelledby="x30-headline" className="support-screen" data-screen-id="X-30">
@@ -161,8 +308,21 @@ export function ContactBureauX30(): ReactElement {
           />
         </div>
 
+        {hasSubmissionError ? (
+          <section className="support-card" aria-labelledby="x30-error-title">
+            <h2 className="support-card-title" id="x30-error-title">
+              {translate('error.server.title')}
+            </h2>
+            <p>{translate('error.server.body')}</p>
+          </section>
+        ) : null}
+
         <div className="support-grow" />
-        <button className="support-button primary full lg" disabled={!isValid} type="submit">
+        <button
+          className="support-button primary full lg"
+          disabled={!isValid || isSubmitting}
+          type="submit"
+        >
           {translate('subscriber.support.contact.submit.cta')}
         </button>
       </form>
@@ -171,8 +331,11 @@ export function ContactBureauX30(): ReactElement {
 }
 
 export function ContactSubmittedX30S(): ReactElement {
+  const location = useLocation();
   const navigate = useNavigate();
-  const ticketId = SUPPORT_DEMO.submittedTicketId;
+  const state = location.state as { readonly ticketId?: unknown } | null;
+  const ticketId =
+    typeof state?.ticketId === 'string' ? state.ticketId : SUPPORT_DEMO.submittedTicketId;
 
   return (
     <main aria-labelledby="x30s-headline" className="support-screen" data-screen-id="X-30.S">
@@ -219,6 +382,36 @@ export function ContactSubmittedX30S(): ReactElement {
 export function TicketsX31(): ReactElement {
   const navigate = useNavigate();
   const goBack = useSafeBack('/support');
+  const subscriberApi = useSubscriberApi();
+  const locale = useActiveLocale();
+  const [contacts, setContacts] = useState<readonly SupportContactDto[] | null>(null);
+  const [hasLoadError, setHasLoadError] = useState(false);
+
+  useEffect(() => {
+    if (!subscriberApi.isConfigured) return;
+
+    let cancelled = false;
+    setHasLoadError(false);
+    void subscriberApi
+      .listSupportContacts({ limit: 20 })
+      .then((response) => {
+        if (!cancelled) setContacts(response.items);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setContacts([]);
+          setHasLoadError(true);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [subscriberApi]);
+
+  const tickets = subscriberApi.isConfigured
+    ? (contacts ?? []).map((contact) => supportContactView(contact, locale))
+    : SUPPORT_TICKETS.map((ticket) => demoTicketView(ticket, locale));
 
   return (
     <main aria-labelledby="x31-headline" className="support-screen" data-screen-id="X-31">
@@ -228,9 +421,16 @@ export function TicketsX31(): ReactElement {
           {translate('subscriber.support.tickets.title')}
         </h1>
 
-        {SUPPORT_TICKETS.length > 0 ? (
+        {hasLoadError ? (
+          <section className="support-card" aria-labelledby="x31-error-title">
+            <h2 className="support-card-title" id="x31-error-title">
+              {translate('error.server.title')}
+            </h2>
+            <p>{translate('error.server.body')}</p>
+          </section>
+        ) : tickets.length > 0 ? (
           <div className="support-ticket-list">
-            {SUPPORT_TICKETS.map((ticket) => (
+            {tickets.map((ticket) => (
               <TicketListItem
                 key={ticket.id}
                 onOpen={() => navigate(`/support/tickets/${ticket.id}`)}
@@ -264,10 +464,56 @@ export function TicketDetailX32(): ReactElement {
   const params = useParams();
   const goBack = useSafeBack('/support/tickets');
   const locale = useActiveLocale();
+  const subscriberApi = useSubscriberApi();
   const [reply, setReply] = useState('');
   const [sentReplies, setSentReplies] = useState<readonly string[]>([]);
-  const ticket = findSupportTicket(params.ticketId);
+  const [contact, setContact] = useState<SupportContactDto | null>(null);
+  const [hasLoadedContact, setHasLoadedContact] = useState(false);
   const canSendReply = reply.trim().length > 0;
+
+  useEffect(() => {
+    if (!subscriberApi.isConfigured) return;
+
+    const ticketId = params.ticketId;
+    if (ticketId === undefined) {
+      setContact(null);
+      setHasLoadedContact(true);
+      return;
+    }
+
+    let cancelled = false;
+    setHasLoadedContact(false);
+    void subscriberApi
+      .getSupportContact(ticketId)
+      .then((response) => {
+        if (!cancelled) {
+          setContact(response);
+          setHasLoadedContact(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setContact(null);
+          setHasLoadedContact(true);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [params.ticketId, subscriberApi]);
+
+  const ticket = subscriberApi.isConfigured
+    ? contact === null
+      ? undefined
+      : supportContactView(contact, locale)
+    : (() => {
+        const demoTicket = findSupportTicket(params.ticketId);
+        return demoTicket === undefined ? undefined : demoTicketView(demoTicket, locale);
+      })();
+  const isMissing = subscriberApi.isConfigured
+    ? hasLoadedContact && ticket === undefined
+    : ticket === undefined;
 
   const onReplySubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
@@ -278,7 +524,7 @@ export function TicketDetailX32(): ReactElement {
     setReply('');
   };
 
-  if (ticket === undefined) {
+  if (isMissing) {
     return (
       <main aria-labelledby="x32-missing-headline" className="support-screen" data-screen-id="X-32">
         <div className="support-body center">
@@ -302,6 +548,10 @@ export function TicketDetailX32(): ReactElement {
     );
   }
 
+  if (ticket === undefined) {
+    return <main className="support-screen" data-screen-id="X-32" />;
+  }
+
   const statusText =
     ticket.status === 'open'
       ? translate('subscriber.support.ticket.detail.status.open').toUpperCase()
@@ -312,13 +562,13 @@ export function TicketDetailX32(): ReactElement {
       <div className="support-body">
         <SupportBackHeader
           label={translate('subscriber.support.ticket.detail.header', {
-            ticketId: ticket.id,
+            ticketId: ticket.displayId,
           })}
           onBack={goBack}
         />
         <span className={`support-status ${ticket.status}`}>{statusText}</span>
         <h1 className="support-title ticket" id="x32-headline">
-          {localized(ticket.title, locale)}
+          {ticket.title}
         </h1>
 
         <div className="support-thread">
@@ -335,13 +585,13 @@ export function TicketDetailX32(): ReactElement {
               <span className="support-eyebrow">
                 {message.author === 'subscriber'
                   ? translate('subscriber.support.ticket.detail.user_label', {
-                      timeAgo: localized(message.timeAgo, locale),
+                      timeAgo: message.timeAgo,
                     })
                   : translate('subscriber.support.ticket.detail.office_label', {
-                      timeAgo: localized(message.timeAgo, locale),
+                      timeAgo: message.timeAgo,
                     })}
               </span>
-              <p>{localized(message.body, locale)}</p>
+              <p>{message.body}</p>
               {message.author === 'subscriber' && ticket.attachments !== undefined ? (
                 <div className="support-attachment-row">
                   {ticket.attachments.map((attachment) => (
@@ -535,22 +785,21 @@ function TicketListItem({
   ticket,
 }: {
   readonly onOpen: () => void;
-  readonly ticket: SupportTicketDemo;
+  readonly ticket: SupportTicketView;
 }): ReactElement {
-  const locale = useActiveLocale();
   const statusLabel =
     ticket.status === 'open'
-      ? translate('subscriber.support.tickets.status.open', { ticketId: ticket.id })
-      : translate('subscriber.support.tickets.status.resolved', { ticketId: ticket.id });
+      ? translate('subscriber.support.tickets.status.open', { ticketId: ticket.displayId })
+      : translate('subscriber.support.tickets.status.resolved', { ticketId: ticket.displayId });
 
   return (
     <button className={`support-ticket-card ${ticket.status}`} onClick={onOpen} type="button">
       <span className="support-ticket-row">
         <span className="support-eyebrow accent-status">{statusLabel}</span>
-        <small>{localized(ticket.createdAgo, locale)}</small>
+        <small>{ticket.createdAgo}</small>
       </span>
-      <strong>{localized(ticket.title, locale)}</strong>
-      <span>{localized(ticket.summary, locale)}</span>
+      <strong>{ticket.title}</strong>
+      <span>{ticket.summary}</span>
       {ticket.status === 'open' && ticket.agentName !== undefined ? (
         <em>
           {translate('subscriber.support.tickets.open.progress', {

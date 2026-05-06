@@ -35,7 +35,7 @@ async function continueThroughAppearance(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Continuer' }).click();
 }
 
-test('capture all 8 onboarding screens at iPhone SE', async ({ page }) => {
+test('capture all 9 onboarding screens at iPhone SE', async ({ page }) => {
   await page.goto('/#/welcome');
   await continueThroughAppearance(page);
   await expect(page.locator('[data-screen-id="X-01"]')).toBeVisible();
@@ -54,6 +54,14 @@ test('capture all 8 onboarding screens at iPhone SE', async ({ page }) => {
   await page.screenshot({ path: 'screenshots/x03-otp-iphone-se.png', fullPage: true });
 
   await page.getByLabel('Chiffre 1').fill('123456');
+  await expect(page.locator('[data-screen-id="X-03I"]')).toBeVisible();
+  await page.screenshot({ path: 'screenshots/x03i-identity-iphone-se.png', fullPage: true });
+
+  await page.getByRole('textbox', { name: 'Prénom' }).fill('Afi');
+  await page.getByRole('textbox', { name: 'Nom', exact: true }).fill('Mensah');
+  await page.getByRole('textbox', { name: 'Email (facultatif)' }).fill('afi@email.com');
+  await page.locator('[data-screen-id="X-03I"] .consent-row').click();
+  await page.getByRole('button', { name: 'Continuer' }).click();
   await expect(page.locator('[data-screen-id="X-04"]')).toBeVisible();
   await page.screenshot({ path: 'screenshots/x04-address-iphone-se.png', fullPage: true });
 

@@ -42,6 +42,8 @@ export type WorkerIssueType =
   | 'other'
   | 'safety_concern'
   | 'supplies_missing';
+export type SupportContactCategory = 'other' | 'payment' | 'plan' | 'visit' | 'worker';
+export type SupportContactStatus = 'open' | 'resolved';
 
 export interface MoneyDto {
   readonly amountMinor: string;
@@ -332,6 +334,21 @@ export interface DisputeDto {
   readonly workerId: string | null;
 }
 
+export interface SupportContactDto {
+  readonly body: string;
+  readonly category: SupportContactCategory;
+  readonly contactId: string;
+  readonly countryCode: CountryCode;
+  readonly createdAt: string;
+  readonly openedByUserId: string;
+  readonly resolutionNote: string | null;
+  readonly resolvedAt: string | null;
+  readonly resolvedByOperatorUserId: string | null;
+  readonly status: SupportContactStatus;
+  readonly subject: string;
+  readonly subscriptionId: string;
+}
+
 export interface BetaMetricsDto {
   readonly countryCode: CountryCode;
   readonly disputes: {
@@ -422,6 +439,15 @@ export interface CoreApiLiveOperationMap {
     };
     readonly response: CreatedSubscriptionDto;
   };
+  readonly createCurrentSubscriberSupportContact: {
+    readonly body: {
+      readonly body: string;
+      readonly category: SupportContactCategory;
+      readonly createdAt: string;
+      readonly subject: string;
+    };
+    readonly response: SupportContactDto;
+  };
   readonly cancelCurrentSubscriberSubscription: {
     readonly body: { readonly cancelledAt: string };
     readonly response: SubscriptionDetailDto;
@@ -442,6 +468,10 @@ export interface CoreApiLiveOperationMap {
   };
   readonly getCurrentSubscriberSubscription: {
     readonly response: CurrentSubscriberSubscriptionDto;
+  };
+  readonly getCurrentSubscriberSupportContact: {
+    readonly pathParams: { readonly contactId: string };
+    readonly response: SupportContactDto;
   };
   readonly getOperatorBetaMetrics: {
     readonly query?: { readonly countryCode?: CountryCode };
@@ -576,6 +606,15 @@ export interface CoreApiLiveOperationMap {
     readonly response: {
       readonly items: readonly SubscriptionBillingItemDto[];
       readonly limit: number;
+      readonly subscriptionId: string;
+    };
+  };
+  readonly listCurrentSubscriberSupportContacts: {
+    readonly query?: { readonly limit?: number; readonly status?: SupportContactStatus };
+    readonly response: {
+      readonly items: readonly SupportContactDto[];
+      readonly limit: number;
+      readonly status: SupportContactStatus | null;
       readonly subscriptionId: string;
     };
   };

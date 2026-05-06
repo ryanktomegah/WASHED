@@ -1,8 +1,9 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 
+import { SubscriberApiProvider } from '../../api/SubscriberApiContext.js';
 import {
   ContactBureauX30,
   ContactSubmittedX30S,
@@ -19,6 +20,9 @@ function renderAt(
   element: ReactElement,
   routePath = path,
   initialEntries: readonly string[] = [path],
+  apiOptions: { readonly baseUrl?: string | null; readonly fetch?: typeof fetch } = {
+    baseUrl: null,
+  },
 ): { locationRef: { current: string } } {
   const locationRef = { current: initialEntries.at(-1) ?? path };
 
@@ -29,23 +33,53 @@ function renderAt(
   }
 
   render(
-    <MemoryRouter initialEntries={[...initialEntries]} initialIndex={initialEntries.length - 1}>
-      <Routes>
-        <Route
-          element={
-            <>
-              {element}
-              <Spy />
-            </>
-          }
-          path={routePath}
-        />
-        <Route element={<Spy />} path="*" />
-      </Routes>
-    </MemoryRouter>,
+    <SubscriberApiProvider
+      {...(apiOptions.baseUrl === undefined ? {} : { baseUrl: apiOptions.baseUrl })}
+      {...(apiOptions.fetch === undefined ? {} : { fetch: apiOptions.fetch })}
+    >
+      <MemoryRouter initialEntries={[...initialEntries]} initialIndex={initialEntries.length - 1}>
+        <Routes>
+          <Route
+            element={
+              <>
+                {element}
+                <Spy />
+              </>
+            }
+            path={routePath}
+          />
+          <Route element={<Spy />} path="*" />
+        </Routes>
+      </MemoryRouter>
+    </SubscriberApiProvider>,
   );
 
   return { locationRef };
+}
+
+function supportContact(input: {
+  readonly body?: string;
+  readonly contactId: string;
+  readonly createdAt?: string;
+  readonly resolutionNote?: string | null;
+  readonly resolvedAt?: string | null;
+  readonly status?: 'open' | 'resolved';
+  readonly subject?: string;
+}): Record<string, unknown> {
+  return {
+    body: input.body ?? 'La visite de ce matin doit être vérifiée.',
+    category: 'visit',
+    contactId: input.contactId,
+    countryCode: 'TG',
+    createdAt: input.createdAt ?? '2026-05-05T09:00:00.000Z',
+    openedByUserId: '77777777-7777-4777-8777-777777777777',
+    resolutionNote: input.resolutionNote ?? null,
+    resolvedAt: input.resolvedAt ?? null,
+    resolvedByOperatorUserId: null,
+    status: input.status ?? 'open',
+    subject: input.subject ?? 'Une visite · annulation, report, problème',
+    subscriptionId: '33333333-3333-4333-8333-333333333333',
+  };
 }
 
 describe('Subscriber support · X-29 Help center', () => {
@@ -66,6 +100,28 @@ describe('Subscriber support · X-29 Help center', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Mes tickets/u }));
     expect(locationRef.current).toBe('/support/tickets');
+  });
+
+  it('uses live open ticket count when the subscriber API is configured', async () => {
+    const fetchStub: typeof fetch = async () =>
+      Response.json({
+        items: [
+          supportContact({ contactId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' }),
+          supportContact({ contactId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' }),
+        ],
+        limit: 20,
+        status: 'open',
+        subscriptionId: '33333333-3333-4333-8333-333333333333',
+      });
+
+    renderAt('/support', <HelpCenterX29 />, '/support', ['/support'], {
+      baseUrl: 'http://api.test',
+      fetch: fetchStub,
+    });
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Mes tickets · 2 ouvert' })).toBeVisible(),
+    );
   });
 
   it('routes écrire au bureau to X-30 contact', () => {
@@ -98,6 +154,44 @@ describe('Subscriber support · X-30 Contact bureau', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
     expect(locationRef.current).toBe('/support');
+  });
+
+  it('creates a live support contact without sending subscription identity in the body', async () => {
+    const requests: Request[] = [];
+    const fetchStub: typeof fetch = async (input, init) => {
+      const request = new Request(input, init);
+      requests.push(request);
+      return Response.json(
+        supportContact({
+          body: 'Je ne reconnais pas le montant prélevé.',
+          contactId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+          subject: 'Paiement Mobile Money',
+        }),
+        { status: 201 },
+      );
+    };
+    const { locationRef } = renderAt(
+      '/support/contact',
+      <ContactBureauX30 />,
+      '/support/contact',
+      ['/support/contact'],
+      { baseUrl: 'http://api.test', fetch: fetchStub },
+    );
+
+    fireEvent.click(screen.getByLabelText('Paiement Mobile Money'));
+    fireEvent.change(screen.getByLabelText('VOTRE MESSAGE'), {
+      target: { value: 'Je ne reconnais pas le montant prélevé.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Envoyer au bureau' }));
+
+    await waitFor(() => expect(locationRef.current).toBe('/support/contact/submitted'));
+    expect(requests[0]?.method).toBe('POST');
+    expect(requests[0]?.url).toBe('http://api.test/v1/subscriber/subscription/support-contacts');
+    await expect(requests[0]?.json()).resolves.toMatchObject({
+      body: 'Je ne reconnais pas le montant prélevé.',
+      category: 'payment',
+      subject: 'Paiement Mobile Money',
+    });
   });
 });
 
@@ -134,6 +228,41 @@ describe('Subscriber support · X-31 Tickets', () => {
     const c = renderAt('/support/tickets', <TicketsX31 />);
     fireEvent.click(screen.getByRole('button', { name: 'Ouvrir une demande' }));
     expect(c.locationRef.current).toBe('/support/contact');
+  });
+
+  it('renders live support contacts instead of demo tickets when configured', async () => {
+    const requests: Request[] = [];
+    const fetchStub: typeof fetch = async (input, init) => {
+      requests.push(new Request(input, init));
+      return Response.json({
+        items: [
+          supportContact({
+            body: 'Le bureau doit vérifier la visite de mardi.',
+            contactId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            subject: 'Question sur la visite',
+          }),
+        ],
+        limit: 20,
+        status: null,
+        subscriptionId: '33333333-3333-4333-8333-333333333333',
+      });
+    };
+    const { locationRef } = renderAt(
+      '/support/tickets',
+      <TicketsX31 />,
+      '/support/tickets',
+      ['/support/tickets'],
+      { baseUrl: 'http://api.test', fetch: fetchStub },
+    );
+
+    await waitFor(() => expect(screen.getByText('Question sur la visite')).toBeVisible());
+    expect(screen.queryByText('Linge endommagé — pull rouge décoloré')).not.toBeInTheDocument();
+    expect(requests[0]?.url).toBe(
+      'http://api.test/v1/subscriber/subscription/support-contacts?limit=20',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Question sur la visite/u }));
+    expect(locationRef.current).toBe('/support/tickets/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
   });
 });
 
@@ -172,6 +301,37 @@ describe('Subscriber support · X-32 Ticket detail', () => {
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-32');
     expect(screen.getByRole('heading', { name: 'Ticket introuvable.' })).toBeVisible();
     expect(screen.getByText(/Cette demande n.est pas liée à votre compte/u)).toBeVisible();
+  });
+
+  it('loads a live support contact detail and keeps reply sending usable', async () => {
+    const fetchStub: typeof fetch = async () =>
+      Response.json(
+        supportContact({
+          body: 'La laveuse est arrivée très en retard.',
+          contactId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+          subject: 'Retard sur la visite',
+        }),
+      );
+
+    renderAt(
+      '/support/tickets/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      <TicketDetailX32 />,
+      '/support/tickets/:ticketId',
+      ['/support/tickets/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'],
+      { baseUrl: 'http://api.test', fetch: fetchStub },
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: 'Retard sur la visite' })).toBeVisible(),
+    );
+    expect(screen.getByText('La laveuse est arrivée très en retard.')).toBeVisible();
+
+    const reply = screen.getByLabelText('Répondre') as HTMLInputElement;
+    fireEvent.change(reply, { target: { value: 'Merci, je reste disponible.' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Envoyer' }));
+
+    expect(screen.getByText('Merci, je reste disponible.')).toBeVisible();
+    expect(reply.value).toBe('');
   });
 });
 

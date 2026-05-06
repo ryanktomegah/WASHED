@@ -8,6 +8,9 @@ import {
   type CurrentSubscriberSubscriptionDto,
   type SchedulePreferenceDto,
   type SubscriberProfileDto,
+  type SupportContactCategory,
+  type SupportContactDto,
+  type SupportContactStatus,
   type SubscriptionBillingItemDto,
   type SubscriptionDetailDto,
   type SubscriptionPaymentMethodDto,
@@ -34,11 +37,27 @@ export interface SubscriberApiContextValue {
     readonly paymentMethod: SubscriptionPaymentMethodDto;
     readonly tierCode: SubscriptionTierCode;
   }) => Promise<CreatedSubscriptionDto>;
+  readonly createSupportContact: (input: {
+    readonly body: string;
+    readonly category: SupportContactCategory;
+    readonly createdAt: string;
+    readonly subject: string;
+  }) => Promise<SupportContactDto>;
   readonly getCurrentSubscription: () => Promise<CurrentSubscriberSubscriptionDto>;
+  readonly getSupportContact: (contactId: string) => Promise<SupportContactDto>;
   readonly isConfigured: boolean;
   readonly listBillingHistory: (input?: { readonly limit?: number }) => Promise<{
     readonly items: readonly SubscriptionBillingItemDto[];
     readonly limit: number;
+    readonly subscriptionId: string;
+  }>;
+  readonly listSupportContacts: (input?: {
+    readonly limit?: number;
+    readonly status?: SupportContactStatus;
+  }) => Promise<{
+    readonly items: readonly SupportContactDto[];
+    readonly limit: number;
+    readonly status: SupportContactStatus | null;
     readonly subscriptionId: string;
   }>;
   readonly pauseSubscription: (input: {
@@ -143,12 +162,27 @@ function createConfiguredSubscriberApi(
         body: input,
       });
     },
+    createSupportContact(input) {
+      return api.request('createCurrentSubscriberSupportContact', {
+        body: input,
+      });
+    },
     getCurrentSubscription() {
       return api.request('getCurrentSubscriberSubscription');
+    },
+    getSupportContact(contactId) {
+      return api.request('getCurrentSubscriberSupportContact', {
+        pathParams: { contactId },
+      });
     },
     isConfigured: true,
     listBillingHistory(input = {}) {
       return api.request('listCurrentSubscriberSubscriptionBillingHistory', {
+        query: input,
+      });
+    },
+    listSupportContacts(input = {}) {
+      return api.request('listCurrentSubscriberSupportContacts', {
         query: input,
       });
     },
@@ -195,9 +229,12 @@ function createUnconfiguredSubscriberApi(): SubscriberApiContextValue {
     cancelSubscription: unavailable,
     changeSubscriptionTier: unavailable,
     createSubscription: unavailable,
+    createSupportContact: unavailable,
     getCurrentSubscription: unavailable,
+    getSupportContact: unavailable,
     isConfigured: false,
     listBillingHistory: unavailable,
+    listSupportContacts: unavailable,
     pauseSubscription: unavailable,
     requestFirstVisit: unavailable,
     resumeSubscription: unavailable,
