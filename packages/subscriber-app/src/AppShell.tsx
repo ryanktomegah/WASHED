@@ -151,24 +151,29 @@ function hasCompletedLaunchPreferences(): boolean {
 function SubscriberStartupGate({ children }: { readonly children: ReactNode }): ReactElement {
   const subscriberApi = useSubscriberApi();
   const { syncFromApi } = useSubscriberSubscription();
-  const [launchSplashElapsed, setLaunchSplashElapsed] = useState(false);
-  const [minimumElapsed, setMinimumElapsed] = useState(false);
-  const [bootstrapComplete, setBootstrapComplete] = useState(!subscriberApi.isConfigured);
+  const [shouldRestoreAtLaunch] = useState(shouldResumeSubscriberApp);
+  const [launchSplashElapsed, setLaunchSplashElapsed] = useState(!shouldRestoreAtLaunch);
+  const [minimumElapsed, setMinimumElapsed] = useState(!shouldRestoreAtLaunch);
+  const [bootstrapComplete, setBootstrapComplete] = useState(
+    !shouldRestoreAtLaunch || !subscriberApi.isConfigured,
+  );
   const [fallbackElapsed, setFallbackElapsed] = useState(false);
   const [contentVisible, setContentVisible] = useState(false);
   const [transitionComplete, setTransitionComplete] = useState(false);
 
   useEffect(() => {
+    if (!shouldRestoreAtLaunch) return;
+
     const splashTimer = window.setTimeout(
       () => setLaunchSplashElapsed(true),
       SUBSCRIBER_LAUNCH_SPLASH_MS,
     );
 
     return () => window.clearTimeout(splashTimer);
-  }, []);
+  }, [shouldRestoreAtLaunch]);
 
   useEffect(() => {
-    if (!launchSplashElapsed) return;
+    if (!shouldRestoreAtLaunch || !launchSplashElapsed) return;
 
     const minimumTimer = window.setTimeout(
       () => setMinimumElapsed(true),
@@ -183,9 +188,14 @@ function SubscriberStartupGate({ children }: { readonly children: ReactNode }): 
       window.clearTimeout(minimumTimer);
       window.clearTimeout(fallbackTimer);
     };
-  }, [launchSplashElapsed]);
+  }, [launchSplashElapsed, shouldRestoreAtLaunch]);
 
   useEffect(() => {
+    if (!shouldRestoreAtLaunch) {
+      setBootstrapComplete(true);
+      return;
+    }
+
     if (!subscriberApi.isConfigured) {
       setBootstrapComplete(true);
       return;
@@ -207,7 +217,7 @@ function SubscriberStartupGate({ children }: { readonly children: ReactNode }): 
     return () => {
       cancelled = true;
     };
-  }, [subscriberApi, syncFromApi]);
+  }, [shouldRestoreAtLaunch, subscriberApi, syncFromApi]);
 
   const startupReady = minimumElapsed && (bootstrapComplete || fallbackElapsed);
 
@@ -230,6 +240,10 @@ function SubscriberStartupGate({ children }: { readonly children: ReactNode }): 
 
   if (!launchSplashElapsed) {
     return <SubscriberLaunchSplash />;
+  }
+
+  if (!shouldRestoreAtLaunch) {
+    return <>{children}</>;
   }
 
   if (contentVisible) {
@@ -363,56 +377,89 @@ function LocaleScopedRoutes(): ReactElement {
       <Route element={<PaymentX06 />} path="/signup/payment" />
       <Route element={<ReviewX07 />} path="/signup/review" />
       <Route element={<WelcomeX08 />} path="/signup/welcome" />
-      <Route element={<HubX10 />} path="/hub" />
-      <Route element={<BookingX10B />} path="/booking" />
-      <Route element={<BookingSubmittedX10C />} path="/booking/submitted" />
-      <Route element={<HistoryX16 />} path="/history" />
-      <Route element={<HistoryDetailX17 />} path="/history/:visitId" />
-      <Route element={<PlanX19 />} path="/plan" />
-      <Route element={<PlanPaymentHistoryX20 />} path="/plan/payments" />
-      <Route element={<PlanPaymentMethodX21 />} path="/plan/payment-method" />
-      <Route element={<PlanOverdueX23 />} path="/plan/overdue" />
-      <Route element={<PlanUpgradeX19U />} path="/plan/upgrade" />
-      <Route element={<PlanPauseConfirmX22 />} path="/plan/pause" />
-      <Route element={<PlanPausedSuccessX22A />} path="/plan/pause/submitted" />
-      <Route element={<PlanPausedX19R />} path="/plan/paused" />
-      <Route element={<ProfileX24 />} path="/profile" />
-      <Route element={<ProfileEditX24E />} path="/profile/edit" />
-      <Route element={<AddressEditX25 />} path="/profile/address" />
-      <Route element={<LanguageX24L />} path="/profile/language" />
-      <Route element={<AppearanceX24A />} path="/profile/appearance" />
-      <Route element={<NotificationsX26 />} path="/profile/notifications" />
-      <Route element={<PrivacyX27 />} path="/profile/privacy" />
-      <Route element={<DeleteAccountX28 />} path="/profile/delete" />
-      <Route element={<HelpCenterX29 />} path="/support" />
-      <Route element={<ContactBureauX30 />} path="/support/contact" />
-      <Route element={<ContactSubmittedX30S />} path="/support/contact/submitted" />
-      <Route element={<TicketsX31 />} path="/support/tickets" />
-      <Route element={<TicketDetailX32 />} path="/support/tickets/:ticketId" />
-      <Route element={<OfflineX33 />} path="/offline" />
-      <Route element={<MaintenanceX34 />} path="/maintenance" />
-      <Route element={<UpdateRequiredX35 />} path="/update-required" />
-      <Route element={<WorkerProfileX18 />} path="/worker/:workerId" />
-      <Route element={<WorkerChangeX18C />} path="/worker/:workerId/change" />
-      <Route element={<WorkerChangeSubmittedX18C />} path="/worker/:workerId/change/submitted" />
-      <Route element={<VisitDetailX11 />} path="/visit/detail" />
-      <Route element={<VisitDetailX11 />} path="/visit/detail/:visitId" />
-      <Route element={<VisitRescheduleX11M />} path="/visit/reschedule" />
-      <Route element={<VisitRescheduleX11M />} path="/visit/reschedule/:visitId" />
-      <Route element={<VisitEnRouteX12 />} path="/visit/en-route" />
-      <Route element={<VisitInProgressX13 />} path="/visit/in-progress" />
-      <Route element={<VisitRevealX14 />} path="/visit/reveal" />
-      <Route element={<VisitFeedbackX15 />} path="/visit/feedback" />
-      <Route element={<VisitIssueX15S />} path="/visit/issue" />
-      <Route element={<VisitIssueX15S />} path="/visit/issue/:visitId" />
-      <Route element={<VisitIssueSubmittedX15S />} path="/visit/issue/submitted" />
+      <Route element={protectSubscriberRoute(<HubX10 />)} path="/hub" />
+      <Route element={protectSubscriberRoute(<BookingX10B />)} path="/booking" />
+      <Route element={protectSubscriberRoute(<BookingSubmittedX10C />)} path="/booking/submitted" />
+      <Route element={protectSubscriberRoute(<HistoryX16 />)} path="/history" />
+      <Route element={protectSubscriberRoute(<HistoryDetailX17 />)} path="/history/:visitId" />
+      <Route element={protectSubscriberRoute(<PlanX19 />)} path="/plan" />
+      <Route element={protectSubscriberRoute(<PlanPaymentHistoryX20 />)} path="/plan/payments" />
       <Route
-        element={<VisitIssueSubmittedX15S />}
+        element={protectSubscriberRoute(<PlanPaymentMethodX21 />)}
+        path="/plan/payment-method"
+      />
+      <Route element={protectSubscriberRoute(<PlanOverdueX23 />)} path="/plan/overdue" />
+      <Route element={protectSubscriberRoute(<PlanUpgradeX19U />)} path="/plan/upgrade" />
+      <Route element={protectSubscriberRoute(<PlanPauseConfirmX22 />)} path="/plan/pause" />
+      <Route
+        element={protectSubscriberRoute(<PlanPausedSuccessX22A />)}
+        path="/plan/pause/submitted"
+      />
+      <Route element={protectSubscriberRoute(<PlanPausedX19R />)} path="/plan/paused" />
+      <Route element={protectSubscriberRoute(<ProfileX24 />)} path="/profile" />
+      <Route element={protectSubscriberRoute(<ProfileEditX24E />)} path="/profile/edit" />
+      <Route element={protectSubscriberRoute(<AddressEditX25 />)} path="/profile/address" />
+      <Route element={protectSubscriberRoute(<LanguageX24L />)} path="/profile/language" />
+      <Route element={protectSubscriberRoute(<AppearanceX24A />)} path="/profile/appearance" />
+      <Route element={protectSubscriberRoute(<NotificationsX26 />)} path="/profile/notifications" />
+      <Route element={protectSubscriberRoute(<PrivacyX27 />)} path="/profile/privacy" />
+      <Route element={protectSubscriberRoute(<DeleteAccountX28 />)} path="/profile/delete" />
+      <Route element={protectSubscriberRoute(<HelpCenterX29 />)} path="/support" />
+      <Route element={protectSubscriberRoute(<ContactBureauX30 />)} path="/support/contact" />
+      <Route
+        element={protectSubscriberRoute(<ContactSubmittedX30S />)}
+        path="/support/contact/submitted"
+      />
+      <Route element={protectSubscriberRoute(<TicketsX31 />)} path="/support/tickets" />
+      <Route
+        element={protectSubscriberRoute(<TicketDetailX32 />)}
+        path="/support/tickets/:ticketId"
+      />
+      <Route element={protectSubscriberRoute(<OfflineX33 />)} path="/offline" />
+      <Route element={protectSubscriberRoute(<MaintenanceX34 />)} path="/maintenance" />
+      <Route element={protectSubscriberRoute(<UpdateRequiredX35 />)} path="/update-required" />
+      <Route element={protectSubscriberRoute(<WorkerProfileX18 />)} path="/worker/:workerId" />
+      <Route
+        element={protectSubscriberRoute(<WorkerChangeX18C />)}
+        path="/worker/:workerId/change"
+      />
+      <Route
+        element={protectSubscriberRoute(<WorkerChangeSubmittedX18C />)}
+        path="/worker/:workerId/change/submitted"
+      />
+      <Route element={protectSubscriberRoute(<VisitDetailX11 />)} path="/visit/detail" />
+      <Route element={protectSubscriberRoute(<VisitDetailX11 />)} path="/visit/detail/:visitId" />
+      <Route element={protectSubscriberRoute(<VisitRescheduleX11M />)} path="/visit/reschedule" />
+      <Route
+        element={protectSubscriberRoute(<VisitRescheduleX11M />)}
+        path="/visit/reschedule/:visitId"
+      />
+      <Route element={protectSubscriberRoute(<VisitEnRouteX12 />)} path="/visit/en-route" />
+      <Route element={protectSubscriberRoute(<VisitInProgressX13 />)} path="/visit/in-progress" />
+      <Route element={protectSubscriberRoute(<VisitRevealX14 />)} path="/visit/reveal" />
+      <Route element={protectSubscriberRoute(<VisitFeedbackX15 />)} path="/visit/feedback" />
+      <Route element={protectSubscriberRoute(<VisitIssueX15S />)} path="/visit/issue" />
+      <Route element={protectSubscriberRoute(<VisitIssueX15S />)} path="/visit/issue/:visitId" />
+      <Route
+        element={protectSubscriberRoute(<VisitIssueSubmittedX15S />)}
+        path="/visit/issue/submitted"
+      />
+      <Route
+        element={protectSubscriberRoute(<VisitIssueSubmittedX15S />)}
         path="/visit/issue/:visitId/submitted/:disputeId"
       />
       <Route element={<Navigate replace to="/welcome" />} path="*" />
     </Routes>
   );
+}
+
+function protectSubscriberRoute(element: ReactElement): ReactElement {
+  return <SubscriberRouteGuard>{element}</SubscriberRouteGuard>;
+}
+
+function SubscriberRouteGuard({ children }: { readonly children: ReactElement }): ReactElement {
+  if (!shouldResumeSubscriberApp()) return <Navigate replace to="/welcome" />;
+  return children;
 }
 
 function EntryRoute(): ReactElement {

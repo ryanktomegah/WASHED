@@ -24,6 +24,27 @@ async function expectHeadingVisible(name: string): Promise<void> {
   });
 }
 
+async function expectExistingAccountCtaVisible(): Promise<void> {
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'I already have an account' })).toBeVisible(),
+  );
+}
+
+function storeFreshSubscriberAuthSession(): void {
+  window.localStorage.setItem(
+    SUBSCRIBER_AUTH_STORAGE_KEY,
+    JSON.stringify({
+      accessToken: 'subscriber-access-token',
+      accessTokenExpiresAt: '2027-05-05T10:00:00.000Z',
+      refreshToken: 'subscriber-refresh-token',
+      refreshTokenExpiresAt: '2027-06-05T10:00:00.000Z',
+      role: 'subscriber',
+      sessionId: '22222222-2222-4222-8222-222222222222',
+      userId: '99999999-9999-4999-8999-999999999999',
+    }),
+  );
+}
+
 describe('Subscriber app shell · launch preferences', () => {
   beforeEach(() => {
     window.location.hash = '#/hub';
@@ -72,15 +93,37 @@ describe('Subscriber app shell · launch preferences', () => {
 
     fireEvent.click(appearanceContinue);
 
-    await expectHeadingVisible('Home');
+    await expectExistingAccountCtaVisible();
+    expect(
+      screen.queryByRole('status', { name: 'Restoring your session…' }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Home' })).not.toBeInTheDocument();
     await waitFor(() =>
       expect(window.localStorage.getItem(SUBSCRIBER_APPEARANCE_STORAGE_KEY)).toBe('dark'),
     );
   });
 
-  it('opens the app directly when launch preferences are already saved', async () => {
+  it('sends signed-out launches to sign-in without the home restore skeleton', async () => {
     window.localStorage.setItem(SUBSCRIBER_LANGUAGE_STORAGE_KEY, 'en');
     window.localStorage.setItem(SUBSCRIBER_APPEARANCE_STORAGE_KEY, 'dark');
+
+    render(<AppShell />);
+
+    await expectExistingAccountCtaVisible();
+    expect(screen.queryByRole('main', { busy: true })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('status', { name: 'Restoring your session…' }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Home' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Choose language' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Choose appearance' })).not.toBeInTheDocument();
+    await waitFor(() => expect(document.body).toHaveAttribute('data-color-mode', 'dark'));
+  });
+
+  it('opens the restore path only when a returning auth session is saved', async () => {
+    window.localStorage.setItem(SUBSCRIBER_LANGUAGE_STORAGE_KEY, 'en');
+    window.localStorage.setItem(SUBSCRIBER_APPEARANCE_STORAGE_KEY, 'dark');
+    storeFreshSubscriberAuthSession();
 
     render(<AppShell />);
 
@@ -108,6 +151,7 @@ describe('Subscriber app shell · launch preferences', () => {
     expect(SUBSCRIBER_HOME_REVEAL_MS).toBe(480);
     window.localStorage.setItem(SUBSCRIBER_LANGUAGE_STORAGE_KEY, 'en');
     window.localStorage.setItem(SUBSCRIBER_APPEARANCE_STORAGE_KEY, 'dark');
+    storeFreshSubscriberAuthSession();
 
     const { container } = render(<AppShell />);
 
@@ -163,7 +207,11 @@ describe('Subscriber app shell · launch preferences', () => {
     await waitFor(() => expect(document.body).toHaveAttribute('data-color-mode', 'light'));
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
-    await expectHeadingVisible('Home');
+    await expectExistingAccountCtaVisible();
+    expect(
+      screen.queryByRole('status', { name: 'Restoring your session…' }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Home' })).not.toBeInTheDocument();
     await waitFor(() =>
       expect(window.localStorage.getItem(SUBSCRIBER_APPEARANCE_STORAGE_KEY)).toBe('light'),
     );
