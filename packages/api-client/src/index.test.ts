@@ -86,7 +86,7 @@ describe('createCoreApiClient', () => {
   });
 
   it('keeps generated operation ids complete', () => {
-    expect(CORE_API_OPERATIONS).toHaveLength(84);
+    expect(CORE_API_OPERATIONS).toHaveLength(93);
     expect(CORE_API_OPERATIONS.map((operation) => operation.operationId)).toContain(
       'getCurrentSubscriberSubscription',
     );
@@ -104,6 +104,15 @@ describe('createCoreApiClient', () => {
     );
     expect(CORE_API_OPERATIONS.map((operation) => operation.operationId)).toContain(
       'rescheduleCurrentSubscriberVisit',
+    );
+    expect(CORE_API_OPERATIONS.map((operation) => operation.operationId)).toContain(
+      'getCurrentSubscriberVisitDetail',
+    );
+    expect(CORE_API_OPERATIONS.map((operation) => operation.operationId)).toContain(
+      'createCurrentSubscriberPrivacyRequest',
+    );
+    expect(CORE_API_OPERATIONS.map((operation) => operation.operationId)).toContain(
+      'listSubscriberSupportContacts',
     );
   });
 

@@ -49,7 +49,9 @@ import type {
   CreateWorkerOnboardingCaseInput,
   CreateWorkerMonthlyPayoutInput,
   CreateWorkerAdvanceRequestInput,
+  CreateSubscriberAddressChangeRequestInput,
   CreateSubscriberPrivacyRequestInput,
+  CreateSupportContactMessageInput,
   CreateWorkerUnavailabilityInput,
   CreateSubscriptionInput,
   CreateWorkerSwapRequestInput,
@@ -60,8 +62,13 @@ import type {
   GetSupportContactInput,
   GetCurrentSubscriberSubscriptionInput,
   ListSupportContactsInput,
+  GetSubscriberNotificationPreferencesInput,
   ResolveSupportContactInput,
+  SubscriberAddressChangeRequestRecord,
+  SubscriberNotificationPreferencesRecord,
+  SubscriberVisitDetailRecord,
   SupportContactCategory,
+  SupportContactMessageRecord,
   SupportContactRecord,
   SupportContactStatus,
   GetWorkerMonthlyEarningsInput,
@@ -126,6 +133,7 @@ import type {
   UploadVisitPhotoInput,
   UpdateOperatorVisitStatusInput,
   UpsertSubscriberProfileInput,
+  UpdateSubscriberNotificationPreferencesInput,
   UpdateSubscriptionPaymentMethodInput,
   UpdatedSubscriptionPaymentMethodRecord,
   UpsertWorkerProfileInput,
@@ -159,6 +167,9 @@ import {
   buildAdvancedWorkerOnboardingCaseRecord,
   buildCreatedDisputeRecord,
   buildCreatedSupportContactRecord,
+  buildSubscriberAddressChangeRequestRecord,
+  buildSubscriberNotificationPreferencesRecord,
+  buildSupportContactMessageRecord,
   buildResolvedSupportContactRecord,
   buildCreatedWorkerOnboardingCaseRecord,
   buildCreatedWorkerAdvanceRequestRecord,
@@ -200,6 +211,42 @@ export class PostgresCoreRepository implements CoreRepository {
   public async health(): Promise<'ok'> {
     await this.pool.query('SELECT 1');
     return 'ok';
+  }
+
+  private async buildSubscriptionBillingStatus(
+    detail: SubscriptionDetailRow,
+  ): Promise<SubscriptionDetailRecord['billingStatus']> {
+    const attempts = await withPgTransaction(this.pool, {
+      countryCode: detail.country_code,
+      run: (client) =>
+        client.query<{
+          readonly charged_at: Date;
+          readonly status: 'failed' | 'succeeded';
+        }>(
+          `
+            SELECT charged_at, status
+            FROM payment_attempts
+            WHERE subscription_id = $1
+            ORDER BY charged_at DESC, id ASC
+            LIMIT 12
+          `,
+          [detail.subscription_id],
+        ),
+    });
+    const latestAttempt = attempts.rows[0];
+    const latestSucceededAttempt = attempts.rows.find((attempt) => attempt.status === 'succeeded');
+
+    return {
+      nextChargeAt: addDays(latestSucceededAttempt?.charged_at ?? detail.created_at, 30),
+      overdueSince:
+        detail.status === 'payment_overdue' ? (latestAttempt?.charged_at ?? null) : null,
+      paymentAuthorizationStatus:
+        detail.payment_method_provider === null || detail.payment_method_phone_number === null
+          ? 'unavailable'
+          : latestAttempt?.status === 'failed'
+            ? 'authorization_failed'
+            : 'ready',
+    };
   }
 
   public async close(): Promise<void> {
@@ -443,6 +490,108 @@ export class PostgresCoreRepository implements CoreRepository {
     return this.getSubscriptionDetail({ countryCode: input.countryCode, subscriptionId });
   }
 
+  public async createSubscriberAddressChangeRequest(
+    input: CreateSubscriberAddressChangeRequestInput,
+  ): Promise<SubscriberAddressChangeRequestRecord> {
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const subscription = await selectSubscriptionCountryCodeForUpdate(
+          client,
+          input.subscriptionId,
+        );
+
+        if (subscription === undefined) {
+          throw new Error('Subscription was not found.');
+        }
+
+        await setPgLocalCountryCode(client, subscription.country_code);
+        assertSubscriberOwnsSubscription(subscription, input.subscriberUserId);
+        const record = buildSubscriberAddressChangeRequestRecord({
+          countryCode: subscription.country_code,
+          input,
+        });
+
+        await insertSubscriberAddressChangeRequest(client, this.dataProtector, record);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
+        return record;
+      },
+    });
+  }
+
+  public async getSubscriberNotificationPreferences(
+    input: GetSubscriberNotificationPreferencesInput,
+  ): Promise<SubscriberNotificationPreferencesRecord> {
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const subscription = await selectSubscriptionCountryCodeForUpdate(
+          client,
+          input.subscriptionId,
+        );
+
+        if (subscription === undefined) {
+          throw new Error('Subscription was not found.');
+        }
+
+        await setPgLocalCountryCode(client, subscription.country_code);
+        assertSubscriberOwnsSubscription(subscription, input.subscriberUserId);
+        const existing = await selectSubscriberNotificationPreferences(
+          client,
+          input.subscriptionId,
+        );
+
+        if (existing !== undefined) {
+          return mapSubscriberNotificationPreferencesRow(existing);
+        }
+
+        return buildSubscriberNotificationPreferencesRecord({
+          countryCode: subscription.country_code,
+          input: {
+            emailRecap: true,
+            pushReveal: true,
+            pushRoute: true,
+            smsReminder: true,
+            subscriberUserId: input.subscriberUserId,
+            subscriptionId: input.subscriptionId,
+            traceId: randomUUID(),
+            updatedAt: new Date(),
+          },
+          subscriberId: subscription.subscriber_id,
+          withEvent: false,
+        });
+      },
+    });
+  }
+
+  public async updateSubscriberNotificationPreferences(
+    input: UpdateSubscriberNotificationPreferencesInput,
+  ): Promise<SubscriberNotificationPreferencesRecord> {
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const subscription = await selectSubscriptionCountryCodeForUpdate(
+          client,
+          input.subscriptionId,
+        );
+
+        if (subscription === undefined) {
+          throw new Error('Subscription was not found.');
+        }
+
+        await setPgLocalCountryCode(client, subscription.country_code);
+        assertSubscriberOwnsSubscription(subscription, input.subscriberUserId);
+        const record = buildSubscriberNotificationPreferencesRecord({
+          countryCode: subscription.country_code,
+          input,
+          subscriberId: subscription.subscriber_id,
+          withEvent: true,
+        });
+
+        await upsertSubscriberNotificationPreferences(client, record);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
+        return record;
+      },
+    });
+  }
+
   public async startOtpChallenge(
     input: StartOtpChallengeInput,
   ): Promise<StartedOtpChallengeRecord> {
@@ -523,7 +672,12 @@ export class PostgresCoreRepository implements CoreRepository {
         };
 
         await consumeOtpChallenge(client, input.challengeId);
-        const user = await upsertAuthUser(client, this.dataProtector, verifiedChallenge, input.role);
+        const user = await upsertAuthUser(
+          client,
+          this.dataProtector,
+          verifiedChallenge,
+          input.role,
+        );
         const session = await insertAuthSession(client, this.dataProtector, user, input.deviceId);
         return session;
       },
@@ -778,7 +932,10 @@ export class PostgresCoreRepository implements CoreRepository {
             },
           );
           await insertVisits(client, subscription.country_code, input.subscriptionId, assignment);
-          await insertOutboxEvents(client, this.dataProtector, [...decision.events, ...assignment.events]);
+          await insertOutboxEvents(client, this.dataProtector, [
+            ...decision.events,
+            ...assignment.events,
+          ]);
           return assignment;
         },
       });
@@ -1116,7 +1273,10 @@ export class PostgresCoreRepository implements CoreRepository {
             ...(record.workerName === undefined ? {} : { workerName: record.workerName }),
           });
           await insertWorkerPayout(client, this.dataProtector, payout);
-          await insertOutboxEvents(client, this.dataProtector, [...record.events, ...payout.events]);
+          await insertOutboxEvents(client, this.dataProtector, [
+            ...record.events,
+            ...payout.events,
+          ]);
         } else {
           await insertOutboxEvents(client, this.dataProtector, record.events);
         }
@@ -1236,7 +1396,7 @@ export class PostgresCoreRepository implements CoreRepository {
             : { replacementWorkerName: replacementWorker.display_name }),
         });
 
-          await updateWorkerSwapRequestResolution(client, this.dataProtector, input);
+        await updateWorkerSwapRequestResolution(client, this.dataProtector, input);
         if (input.resolution === 'approved' && input.replacementWorkerId !== undefined) {
           await updateSubscriptionWorkerSwap(
             client,
@@ -1809,6 +1969,64 @@ export class PostgresCoreRepository implements CoreRepository {
     return row === undefined ? null : mapSupportContactRow(this.dataProtector, row);
   }
 
+  public async createSupportContactMessage(
+    input: CreateSupportContactMessageInput,
+  ): Promise<SupportContactMessageRecord> {
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const row = await selectSupportContactForResolution(client, input.contactId);
+
+        if (row === undefined || row.subscription_id !== input.subscriptionId) {
+          throw new Error('Support contact was not found.');
+        }
+
+        await setPgLocalCountryCode(client, row.country_code);
+        const subscription = await selectSubscriptionCountryCodeForUpdate(
+          client,
+          input.subscriptionId,
+        );
+
+        if (subscription === undefined) {
+          throw new Error('Subscription was not found.');
+        }
+
+        assertSubscriberOwnsSubscription(subscription, input.subscriberUserId);
+        const contact = mapSupportContactRow(this.dataProtector, row);
+        if (contact.status !== 'open') {
+          throw new Error(`Support contact cannot receive replies from status ${contact.status}.`);
+        }
+
+        const record = buildSupportContactMessageRecord({
+          countryCode: row.country_code,
+          input,
+        });
+
+        await insertSupportContactMessage(client, this.dataProtector, record);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
+        return record;
+      },
+    });
+  }
+
+  public async listSupportContactMessages(
+    input: GetSupportContactInput,
+  ): Promise<readonly SupportContactMessageRecord[]> {
+    const rows = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: async (client) => {
+        const contact = await selectSupportContactById(client, input);
+
+        if (contact === undefined) {
+          throw new Error('Support contact was not found.');
+        }
+
+        return selectSupportContactMessages(client, input.contactId);
+      },
+    });
+
+    return rows.map((row) => mapSupportContactMessageRow(this.dataProtector, row));
+  }
+
   public async resolveSupportContact(
     input: ResolveSupportContactInput,
   ): Promise<SupportContactRecord> {
@@ -2040,23 +2258,29 @@ export class PostgresCoreRepository implements CoreRepository {
   public async getSubscriptionDetail(
     input: GetSubscriptionDetailInput,
   ): Promise<SubscriptionDetailRecord> {
-    const { detail, recentVisits, supportCredits, visits } = await withPgTransaction(this.pool, {
-      countryCode: input.countryCode,
-      run: async (client) => {
-        const detail = await selectSubscriptionDetail(client, input.subscriptionId);
+    const { detail, pendingAddressChange, recentVisits, supportCredits, visits } =
+      await withPgTransaction(this.pool, {
+        countryCode: input.countryCode,
+        run: async (client) => {
+          const detail = await selectSubscriptionDetail(client, input.subscriptionId);
 
-        if (detail === undefined) {
-          throw new Error('Subscription was not found.');
-        }
+          if (detail === undefined) {
+            throw new Error('Subscription was not found.');
+          }
 
-        return {
-          detail,
-          recentVisits: await selectSubscriptionRecentVisits(client, input.subscriptionId),
-          supportCredits: await selectSubscriptionSupportCredits(client, input.subscriptionId),
-          visits: await selectSubscriptionUpcomingVisits(client, input.subscriptionId),
-        };
-      },
-    });
+          return {
+            detail,
+            pendingAddressChange: await selectPendingSubscriberAddressChangeRequest(
+              client,
+              this.dataProtector,
+              input.subscriptionId,
+            ),
+            recentVisits: await selectSubscriptionRecentVisits(client, input.subscriptionId),
+            supportCredits: await selectSubscriptionSupportCredits(client, input.subscriptionId),
+            visits: await selectSubscriptionUpcomingVisits(client, input.subscriptionId),
+          };
+        },
+      });
 
     return {
       address: revealSubscriberAddress(this.dataProtector, detail),
@@ -2075,8 +2299,10 @@ export class PostgresCoreRepository implements CoreRepository {
               disputeCount: detail.assigned_worker_dispute_count ?? 0,
               workerId: detail.assigned_worker_id,
             },
+      billingStatus: await this.buildSubscriptionBillingStatus(detail),
       countryCode: detail.country_code,
       monthlyPriceMinor: BigInt(detail.monthly_price_minor),
+      pendingAddressChange,
       paymentMethod:
         detail.payment_method_provider === null || detail.payment_method_phone_number === null
           ? null
@@ -2120,6 +2346,76 @@ export class PostgresCoreRepository implements CoreRepository {
         workerId: visit.worker_id,
       })),
       visitsPerCycle: detail.visits_per_cycle,
+    };
+  }
+
+  public async getSubscriberVisitDetail(input: {
+    readonly countryCode: CountryCode;
+    readonly subscriberUserId: string;
+    readonly subscriptionId: string;
+    readonly visitId: string;
+  }): Promise<SubscriberVisitDetailRecord> {
+    const { dispute, photos, rating, visit } = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: async (client) => {
+        const subscription = await selectSubscriptionCountryCodeForUpdate(
+          client,
+          input.subscriptionId,
+        );
+
+        if (subscription === undefined) {
+          throw new Error('Subscription was not found.');
+        }
+
+        assertSubscriberOwnsSubscription(subscription, input.subscriberUserId);
+        const visit = await selectSubscriberVisitDetail(
+          client,
+          input.subscriptionId,
+          input.visitId,
+        );
+
+        if (visit === undefined) {
+          throw new Error('Visit was not found.');
+        }
+
+        return {
+          dispute: await selectDisputeForVisit(client, input.subscriptionId, input.visitId),
+          photos: await selectVisitPhotos(client, input.visitId),
+          rating: await selectVisitRating(client, input.subscriptionId, input.visitId),
+          visit,
+        };
+      },
+    });
+
+    return {
+      address: revealSubscriberAddress(this.dataProtector, visit),
+      countryCode: visit.country_code,
+      dispute: dispute === undefined ? null : mapDisputeRow(this.dataProtector, dispute),
+      photos: photos.map((photo) => ({
+        ...toVisitPhotoRecord(this.dataProtector, photo),
+        events: [],
+      })),
+      rating: rating === undefined ? null : mapVisitRatingRow(this.dataProtector, rating),
+      scheduledDate: visit.scheduled_date,
+      scheduledTimeWindow: visit.scheduled_time_window,
+      status: visit.status,
+      subscriptionId: visit.subscription_id,
+      timeline: {
+        checkedInAt: visit.check_in_at,
+        checkedOutAt: visit.check_out_at,
+        durationMinutes:
+          visit.check_in_at === null || visit.check_out_at === null
+            ? null
+            : durationMinutes(visit.check_in_at, visit.check_out_at),
+      },
+      visitId: visit.visit_id,
+      worker:
+        visit.worker_id === null
+          ? null
+          : {
+              displayName: visit.worker_display_name ?? `Worker ${visit.worker_id.slice(0, 8)}`,
+              workerId: visit.worker_id,
+            },
     };
   }
 
@@ -3302,6 +3598,7 @@ interface SubscriptionDetailRow {
   readonly assigned_worker_dispute_count: number;
   readonly assigned_worker_id: string | null;
   readonly country_code: 'TG';
+  readonly created_at: Date;
   readonly gps_latitude: string;
   readonly gps_latitude_ciphertext: string | null;
   readonly gps_longitude: string;
@@ -3394,6 +3691,7 @@ async function selectSubscriptionDetail(
         subscription.id AS subscription_id,
         subscription.subscriber_id,
         subscription.country_code,
+        subscription.created_at,
         subscription.tier_code,
         subscription.status,
         subscription.visits_per_cycle,
@@ -3589,6 +3887,136 @@ async function selectSubscriptionSupportCredits(
   return result.rows;
 }
 
+async function selectSubscriberVisitDetail(
+  client: PgClient,
+  subscriptionId: string,
+  visitId: string,
+): Promise<SubscriberVisitDetailRow | undefined> {
+  const result = await client.query<SubscriberVisitDetailRow>(
+    `
+      SELECT
+        visit.id AS visit_id,
+        visit.subscription_id,
+        visit.country_code,
+        visit.status,
+        visit.scheduled_date::text AS scheduled_date,
+        visit.scheduled_time_window,
+        visit.worker_id,
+        visit.check_in_at,
+        visit.check_out_at,
+        address.neighborhood,
+        address.landmark,
+        address.gps_latitude,
+        address.gps_latitude_ciphertext,
+        address.gps_longitude,
+        address.gps_longitude_ciphertext,
+        worker.display_name AS worker_display_name
+      FROM visits visit
+      INNER JOIN subscriptions subscription ON subscription.id = visit.subscription_id
+      INNER JOIN subscriber_addresses address ON address.id = subscription.address_id
+      LEFT JOIN workers worker ON worker.id = visit.worker_id
+      WHERE visit.id = $1
+        AND visit.subscription_id = $2
+    `,
+    [visitId, subscriptionId],
+  );
+
+  return result.rows[0];
+}
+
+async function selectVisitPhotos(
+  client: PgClient,
+  visitId: string,
+): Promise<readonly VisitPhotoRow[]> {
+  const result = await client.query<VisitPhotoRow>(
+    `
+      SELECT
+        id AS photo_id,
+        visit_id,
+        worker_id,
+        country_code,
+        photo_type,
+        object_key,
+        content_type,
+        byte_size,
+        captured_at,
+        uploaded_at
+      FROM visit_photos
+      WHERE visit_id = $1
+      ORDER BY captured_at ASC, id ASC
+    `,
+    [visitId],
+  );
+
+  return result.rows;
+}
+
+async function selectVisitRating(
+  client: PgClient,
+  subscriptionId: string,
+  visitId: string,
+): Promise<VisitRatingRow | undefined> {
+  const result = await client.query<VisitRatingRow>(
+    `
+      SELECT
+        rating.id AS rating_id,
+        rating.subscription_id,
+        rating.visit_id,
+        rating.country_code,
+        rating.rating,
+        rating.comment,
+        rating.rated_by_user_id,
+        rating.created_at,
+        visit.worker_id
+      FROM visit_ratings rating
+      INNER JOIN visits visit ON visit.id = rating.visit_id
+      WHERE rating.subscription_id = $1
+        AND rating.visit_id = $2
+    `,
+    [subscriptionId, visitId],
+  );
+
+  return result.rows[0];
+}
+
+async function selectDisputeForVisit(
+  client: PgClient,
+  subscriptionId: string,
+  visitId: string,
+): Promise<DisputeRow | undefined> {
+  const result = await client.query<DisputeRow>(
+    `
+      SELECT
+        dispute.id AS dispute_id,
+        dispute.subscription_id,
+        dispute.visit_id,
+        dispute.country_code,
+        dispute.issue_type,
+        dispute.status,
+        dispute.description,
+        dispute.opened_by_user_id,
+        dispute.resolved_by_operator_user_id,
+        dispute.resolution_note,
+        dispute.created_at,
+        dispute.resolved_at,
+        visit.worker_id,
+        credit.id AS credit_id,
+        credit.amount_minor AS credit_amount_minor,
+        credit.currency_code AS credit_currency_code
+      FROM support_disputes dispute
+      INNER JOIN visits visit ON visit.id = dispute.visit_id
+      LEFT JOIN support_credits credit ON credit.dispute_id = dispute.id
+      WHERE dispute.subscription_id = $1
+        AND dispute.visit_id = $2
+      ORDER BY dispute.created_at DESC, dispute.id ASC
+      LIMIT 1
+    `,
+    [subscriptionId, visitId],
+  );
+
+  return result.rows[0];
+}
+
 interface VisitLifecycleRow {
   readonly check_in_at: Date | null;
   readonly country_code: 'TG';
@@ -3612,6 +4040,37 @@ interface VisitPhotoRow {
   readonly uploaded_at: Date;
   readonly visit_id: string;
   readonly worker_id: string;
+}
+
+interface SubscriberVisitDetailRow {
+  readonly check_in_at: Date | null;
+  readonly check_out_at: Date | null;
+  readonly country_code: 'TG';
+  readonly gps_latitude: string;
+  readonly gps_latitude_ciphertext: string | null;
+  readonly gps_longitude: string;
+  readonly gps_longitude_ciphertext: string | null;
+  readonly landmark: string;
+  readonly neighborhood: string;
+  readonly scheduled_date: string;
+  readonly scheduled_time_window: 'afternoon' | 'morning';
+  readonly status: VisitStatus;
+  readonly subscription_id: string;
+  readonly visit_id: string;
+  readonly worker_display_name: string | null;
+  readonly worker_id: string | null;
+}
+
+interface VisitRatingRow {
+  readonly comment: string | null;
+  readonly country_code: 'TG';
+  readonly created_at: Date;
+  readonly rated_by_user_id: string;
+  readonly rating: 1 | 2 | 3 | 4 | 5;
+  readonly rating_id: string;
+  readonly subscription_id: string;
+  readonly visit_id: string;
+  readonly worker_id: string | null;
 }
 
 interface SubscriberVisitChangeRow {
@@ -4083,13 +4542,7 @@ async function upsertAuthUser(
         phone_number,
         role
     `,
-    [
-      randomUUID(),
-      challenge.country_code,
-      encryptedPhoneNumber,
-      phoneNumberLookupHash,
-      role,
-    ],
+    [randomUUID(), challenge.country_code, encryptedPhoneNumber, phoneNumberLookupHash, role],
   );
 
   const user = result.rows[0];
@@ -5925,6 +6378,21 @@ async function insertVisitRating(
   );
 }
 
+function mapVisitRatingRow(dataProtector: DataProtector, row: VisitRatingRow): VisitRatingRecord {
+  return {
+    comment: dataProtector.revealNullableText(row.comment, 'visit_ratings.comment'),
+    countryCode: row.country_code,
+    createdAt: row.created_at,
+    events: [],
+    ratedByUserId: row.rated_by_user_id,
+    rating: row.rating,
+    ratingId: row.rating_id,
+    subscriptionId: row.subscription_id,
+    visitId: row.visit_id,
+    workerId: row.worker_id,
+  };
+}
+
 async function insertSupportCredit(
   client: PgClient,
   dataProtector: DataProtector,
@@ -6159,6 +6627,42 @@ interface SupportContactRow {
   readonly subscription_id: string;
 }
 
+interface SupportContactMessageRow {
+  readonly author_role: 'operator' | 'subscriber';
+  readonly author_user_id: string;
+  readonly body: string;
+  readonly contact_id: string;
+  readonly country_code: 'TG';
+  readonly created_at: Date;
+  readonly message_id: string;
+  readonly subscription_id: string;
+}
+
+interface SubscriberNotificationPreferencesRow {
+  readonly country_code: 'TG';
+  readonly email_recap: boolean;
+  readonly push_reveal: boolean;
+  readonly push_route: boolean;
+  readonly sms_reminder: boolean;
+  readonly subscriber_id: string;
+  readonly subscription_id: string;
+  readonly updated_at: Date;
+  readonly updated_by_user_id: string;
+}
+
+interface SubscriberAddressChangeRequestRow {
+  readonly address_landmark: string;
+  readonly address_neighborhood: string;
+  readonly country_code: 'TG';
+  readonly gps_latitude_ciphertext: string;
+  readonly gps_longitude_ciphertext: string;
+  readonly requested_at: Date;
+  readonly requested_by_user_id: string;
+  readonly request_id: string;
+  readonly status: 'pending_review';
+  readonly subscription_id: string;
+}
+
 async function selectSubscriptionCountryCodeForUpdate(
   client: PgClient,
   subscriptionId: string,
@@ -6357,6 +6861,278 @@ async function updateSupportContactResolution(
   );
 }
 
+async function insertSupportContactMessage(
+  client: PgClient,
+  dataProtector: DataProtector,
+  record: SupportContactMessageRecord,
+): Promise<void> {
+  await client.query(
+    `
+      INSERT INTO support_contact_messages (
+        id,
+        contact_id,
+        subscription_id,
+        country_code,
+        author_role,
+        author_user_id,
+        body,
+        created_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    `,
+    [
+      record.messageId,
+      record.contactId,
+      record.subscriptionId,
+      record.countryCode,
+      record.authorRole,
+      record.authorUserId,
+      dataProtector.protectText(record.body, 'support_contact_messages.body'),
+      record.createdAt,
+    ],
+  );
+}
+
+async function selectSupportContactMessages(
+  client: PgClient,
+  contactId: string,
+): Promise<readonly SupportContactMessageRow[]> {
+  const result = await client.query<SupportContactMessageRow>(
+    `
+      SELECT
+        id AS message_id,
+        contact_id,
+        subscription_id,
+        country_code,
+        author_role,
+        author_user_id,
+        body,
+        created_at
+      FROM support_contact_messages
+      WHERE contact_id = $1
+      ORDER BY created_at ASC, id ASC
+    `,
+    [contactId],
+  );
+
+  return result.rows;
+}
+
+function mapSupportContactMessageRow(
+  dataProtector: DataProtector,
+  row: SupportContactMessageRow,
+): SupportContactMessageRecord {
+  return {
+    authorRole: row.author_role,
+    authorUserId: row.author_user_id,
+    body: dataProtector.revealText(row.body, 'support_contact_messages.body'),
+    contactId: row.contact_id,
+    countryCode: row.country_code,
+    createdAt: row.created_at,
+    events: [],
+    messageId: row.message_id,
+    subscriptionId: row.subscription_id,
+  };
+}
+
+async function insertSubscriberAddressChangeRequest(
+  client: PgClient,
+  dataProtector: DataProtector,
+  record: SubscriberAddressChangeRequestRecord,
+): Promise<void> {
+  await client.query(
+    `
+      INSERT INTO subscriber_address_change_requests (
+        id,
+        subscription_id,
+        country_code,
+        status,
+        address_neighborhood,
+        address_landmark,
+        gps_latitude_ciphertext,
+        gps_longitude_ciphertext,
+        requested_by_user_id,
+        requested_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    `,
+    [
+      record.requestId,
+      record.subscriptionId,
+      record.countryCode,
+      record.status,
+      dataProtector.protectText(
+        record.address.neighborhood,
+        'subscriber_address_change_requests.address_neighborhood',
+      ),
+      dataProtector.protectText(
+        record.address.landmark,
+        'subscriber_address_change_requests.address_landmark',
+      ),
+      protectCoordinate(
+        dataProtector,
+        record.address.gpsLatitude,
+        'subscriber_address_change_requests.gps_latitude',
+      ),
+      protectCoordinate(
+        dataProtector,
+        record.address.gpsLongitude,
+        'subscriber_address_change_requests.gps_longitude',
+      ),
+      record.requestedByUserId,
+      record.requestedAt,
+    ],
+  );
+}
+
+async function selectPendingSubscriberAddressChangeRequest(
+  client: PgClient,
+  dataProtector: DataProtector,
+  subscriptionId: string,
+): Promise<SubscriberAddressChangeRequestRecord | null> {
+  const result = await client.query<SubscriberAddressChangeRequestRow>(
+    `
+      SELECT
+        id AS request_id,
+        subscription_id,
+        country_code,
+        status,
+        address_neighborhood,
+        address_landmark,
+        gps_latitude_ciphertext,
+        gps_longitude_ciphertext,
+        requested_by_user_id,
+        requested_at
+      FROM subscriber_address_change_requests
+      WHERE subscription_id = $1
+        AND status = 'pending_review'
+      ORDER BY requested_at DESC, id ASC
+      LIMIT 1
+    `,
+    [subscriptionId],
+  );
+  const row = result.rows[0];
+
+  if (row === undefined) {
+    return null;
+  }
+
+  return {
+    address: {
+      gpsLatitude: revealCoordinate(
+        dataProtector,
+        row.gps_latitude_ciphertext,
+        '0',
+        'subscriber_address_change_requests.gps_latitude',
+      ),
+      gpsLongitude: revealCoordinate(
+        dataProtector,
+        row.gps_longitude_ciphertext,
+        '0',
+        'subscriber_address_change_requests.gps_longitude',
+      ),
+      landmark: dataProtector.revealText(
+        row.address_landmark,
+        'subscriber_address_change_requests.address_landmark',
+      ),
+      neighborhood: dataProtector.revealText(
+        row.address_neighborhood,
+        'subscriber_address_change_requests.address_neighborhood',
+      ),
+    },
+    countryCode: row.country_code,
+    events: [],
+    requestId: row.request_id,
+    requestedAt: row.requested_at,
+    requestedByUserId: row.requested_by_user_id,
+    status: row.status,
+    subscriptionId: row.subscription_id,
+  };
+}
+
+async function selectSubscriberNotificationPreferences(
+  client: PgClient,
+  subscriptionId: string,
+): Promise<SubscriberNotificationPreferencesRow | undefined> {
+  const result = await client.query<SubscriberNotificationPreferencesRow>(
+    `
+      SELECT
+        subscription_id,
+        subscriber_id,
+        country_code,
+        sms_reminder,
+        push_route,
+        push_reveal,
+        email_recap,
+        updated_by_user_id,
+        updated_at
+      FROM subscriber_notification_preferences
+      WHERE subscription_id = $1
+    `,
+    [subscriptionId],
+  );
+
+  return result.rows[0];
+}
+
+async function upsertSubscriberNotificationPreferences(
+  client: PgClient,
+  record: SubscriberNotificationPreferencesRecord,
+): Promise<void> {
+  await client.query(
+    `
+      INSERT INTO subscriber_notification_preferences (
+        subscription_id,
+        subscriber_id,
+        country_code,
+        sms_reminder,
+        push_route,
+        push_reveal,
+        email_recap,
+        updated_by_user_id,
+        updated_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      ON CONFLICT (subscription_id)
+      DO UPDATE SET
+        sms_reminder = EXCLUDED.sms_reminder,
+        push_route = EXCLUDED.push_route,
+        push_reveal = EXCLUDED.push_reveal,
+        email_recap = EXCLUDED.email_recap,
+        updated_by_user_id = EXCLUDED.updated_by_user_id,
+        updated_at = EXCLUDED.updated_at
+    `,
+    [
+      record.subscriptionId,
+      record.subscriberId,
+      record.countryCode,
+      record.smsReminder,
+      record.pushRoute,
+      record.pushReveal,
+      record.emailRecap,
+      record.updatedByUserId,
+      record.updatedAt,
+    ],
+  );
+}
+
+function mapSubscriberNotificationPreferencesRow(
+  row: SubscriberNotificationPreferencesRow,
+): SubscriberNotificationPreferencesRecord {
+  return {
+    countryCode: row.country_code,
+    emailRecap: row.email_recap,
+    events: [],
+    pushReveal: row.push_reveal,
+    pushRoute: row.push_route,
+    smsReminder: row.sms_reminder,
+    subscriberId: row.subscriber_id,
+    subscriptionId: row.subscription_id,
+    updatedAt: row.updated_at,
+    updatedByUserId: row.updated_by_user_id,
+  };
+}
+
 function mapWorkerIssueRow(
   dataProtector: DataProtector,
   row: WorkerIssueRow,
@@ -6412,7 +7188,10 @@ function mapWorkerAdvanceRequestRow(
   };
 }
 
-function mapWorkerPayoutRow(dataProtector: DataProtector, row: WorkerPayoutRow): WorkerPayoutRecord {
+function mapWorkerPayoutRow(
+  dataProtector: DataProtector,
+  row: WorkerPayoutRow,
+): WorkerPayoutRecord {
   return {
     advanceRequestId: row.advance_request_id,
     amount: money(BigInt(row.amount_minor), row.currency_code),
@@ -6456,10 +7235,7 @@ async function mapWorkerOnboardingCaseRow(
       operatorUserId: note.operator_user_id,
       stage: note.stage,
     })),
-    phoneNumber: dataProtector.revealText(
-      row.phone_number,
-      'worker_onboarding_cases.phone_number',
-    ),
+    phoneNumber: dataProtector.revealText(row.phone_number, 'worker_onboarding_cases.phone_number'),
     serviceNeighborhoods: row.service_neighborhoods,
     stage: row.stage,
     updatedAt: row.updated_at,
@@ -6808,6 +7584,12 @@ function durationMinutes(startedAt: Date, endedAt: Date): number {
   return Math.max(0, Math.round((endedAt.getTime() - startedAt.getTime()) / 60_000));
 }
 
+function addDays(date: Date, days: number): Date {
+  const next = new Date(date);
+  next.setUTCDate(next.getUTCDate() + days);
+  return next;
+}
+
 function toRadians(value: number): number {
   return (value * Math.PI) / 180;
 }
@@ -7022,7 +7804,10 @@ function emailLookupHash(
     return null;
   }
 
-  return dataProtector.lookupHash(`${countryCode}:${email.trim().toLocaleLowerCase('fr')}`, 'email');
+  return dataProtector.lookupHash(
+    `${countryCode}:${email.trim().toLocaleLowerCase('fr')}`,
+    'email',
+  );
 }
 
 function emailLookupHashes(
@@ -7329,7 +8114,11 @@ async function upsertSubscriber(
     input.phoneNumber,
     'subscribers.phone_number',
   );
-  const phoneNumberLookupHash = phoneLookupHash(dataProtector, input.countryCode, input.phoneNumber);
+  const phoneNumberLookupHash = phoneLookupHash(
+    dataProtector,
+    input.countryCode,
+    input.phoneNumber,
+  );
 
   if (existing !== undefined) {
     await client.query(
@@ -7510,7 +8299,11 @@ async function insertSubscriberAddress(
       dataProtector.protectText(input.address.landmark, 'subscriber_addresses.landmark'),
       coarseCoordinate(input.address.gpsLatitude),
       coarseCoordinate(input.address.gpsLongitude),
-      protectCoordinate(dataProtector, input.address.gpsLatitude, 'subscriber_addresses.gps_latitude'),
+      protectCoordinate(
+        dataProtector,
+        input.address.gpsLatitude,
+        'subscriber_addresses.gps_latitude',
+      ),
       protectCoordinate(
         dataProtector,
         input.address.gpsLongitude,
@@ -7845,7 +8638,9 @@ async function selectPushTokensForNotificationMessage(
       [message.countryCode, message.recipientUserId, message.recipientRole],
     );
 
-    return result.rows.map((row) => dataProtector.revealText(row.token, 'push_device_tokens.token'));
+    return result.rows.map((row) =>
+      dataProtector.revealText(row.token, 'push_device_tokens.token'),
+    );
   }
 
   if (message.recipientRole !== 'subscriber' || message.aggregateType !== 'subscription') {

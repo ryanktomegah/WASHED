@@ -126,8 +126,18 @@ export interface SubscriptionDetailDto {
     readonly disputeCount: number;
     readonly workerId: string;
   } | null;
+  readonly billingStatus: {
+    readonly nextChargeAt: string | null;
+    readonly overdueSince: string | null;
+    readonly paymentAuthorizationStatus:
+      | 'authorization_failed'
+      | 'authorization_pending'
+      | 'ready'
+      | 'unavailable';
+  } | null;
   readonly countryCode: CountryCode;
   readonly monthlyPriceMinor: string;
+  readonly pendingAddressChange: SubscriberAddressChangeRequestDto | null;
   readonly paymentMethod: SubscriptionPaymentMethodDto | null;
   readonly phoneNumber: string;
   readonly recentVisits: readonly VisitSummaryDto[];
@@ -257,6 +267,28 @@ export interface VisitPhotoDto {
   readonly uploadedAt: string;
   readonly visitId: string;
   readonly workerId: string;
+}
+
+export interface SubscriberVisitDetailDto {
+  readonly address: AddressDto;
+  readonly countryCode: CountryCode;
+  readonly dispute: DisputeDto | null;
+  readonly photos: readonly VisitPhotoDto[];
+  readonly rating: VisitRatingDto | null;
+  readonly scheduledDate: string;
+  readonly scheduledTimeWindow: TimeWindow;
+  readonly status: VisitStatus;
+  readonly subscriptionId: string;
+  readonly timeline: {
+    readonly checkedInAt: string | null;
+    readonly checkedOutAt: string | null;
+    readonly durationMinutes: number | null;
+  };
+  readonly visitId: string;
+  readonly worker: {
+    readonly displayName: string;
+    readonly workerId: string;
+  } | null;
 }
 
 export interface CheckInVisitDto {
@@ -393,6 +425,57 @@ export interface SupportContactDto {
   readonly status: SupportContactStatus;
   readonly subject: string;
   readonly subscriptionId: string;
+  readonly messages: readonly SupportContactMessageDto[];
+}
+
+export interface SupportContactMessageDto {
+  readonly authorRole: 'operator' | 'subscriber';
+  readonly authorUserId: string;
+  readonly body: string;
+  readonly contactId: string;
+  readonly countryCode: CountryCode;
+  readonly createdAt: string;
+  readonly messageId: string;
+  readonly subscriptionId: string;
+}
+
+export interface SubscriberAddressChangeRequestDto {
+  readonly address: AddressDto;
+  readonly countryCode: CountryCode;
+  readonly requestId: string;
+  readonly requestedAt: string;
+  readonly requestedByUserId: string;
+  readonly status: 'pending_review';
+  readonly subscriptionId: string;
+}
+
+export interface SubscriberNotificationPreferencesDto {
+  readonly countryCode: CountryCode;
+  readonly emailRecap: boolean;
+  readonly pushReveal: boolean;
+  readonly pushRoute: boolean;
+  readonly smsReminder: boolean;
+  readonly subscriberId: string;
+  readonly subscriptionId: string;
+  readonly updatedAt: string;
+  readonly updatedByUserId: string;
+}
+
+export interface SubscriberPrivacyRequestDto {
+  readonly erasurePlan: {
+    readonly immediateActions: readonly string[];
+    readonly retainedRecords: readonly {
+      readonly reason: string;
+      readonly recordType: string;
+      readonly retention: string;
+    }[];
+  };
+  readonly operatorUserId: string;
+  readonly reason: string;
+  readonly requestedAt: string;
+  readonly requestId: string;
+  readonly requestType: 'erasure' | 'export';
+  readonly subscriptionId: string;
 }
 
 export interface BetaMetricsDto {
@@ -485,6 +568,21 @@ export interface CoreApiLiveOperationMap {
     };
     readonly response: CreatedSubscriptionDto;
   };
+  readonly createCurrentSubscriberAddressChangeRequest: {
+    readonly body: {
+      readonly address: AddressDto;
+      readonly requestedAt: string;
+    };
+    readonly response: SubscriberAddressChangeRequestDto;
+  };
+  readonly createCurrentSubscriberPrivacyRequest: {
+    readonly body: {
+      readonly reason: string;
+      readonly requestedAt?: string;
+      readonly requestType: SubscriberPrivacyRequestDto['requestType'];
+    };
+    readonly response: SubscriberPrivacyRequestDto;
+  };
   readonly createCurrentSubscriberSupportContact: {
     readonly body: {
       readonly body: string;
@@ -493,6 +591,14 @@ export interface CoreApiLiveOperationMap {
       readonly subject: string;
     };
     readonly response: SupportContactDto;
+  };
+  readonly createCurrentSubscriberSupportContactMessage: {
+    readonly body: {
+      readonly body: string;
+      readonly createdAt: string;
+    };
+    readonly pathParams: { readonly contactId: string };
+    readonly response: SupportContactMessageDto;
   };
   readonly createCurrentSubscriberVisitDispute: {
     readonly body: {
@@ -534,6 +640,13 @@ export interface CoreApiLiveOperationMap {
   readonly getCurrentSubscriberSupportContact: {
     readonly pathParams: { readonly contactId: string };
     readonly response: SupportContactDto;
+  };
+  readonly getCurrentSubscriberVisitDetail: {
+    readonly pathParams: { readonly visitId: string };
+    readonly response: SubscriberVisitDetailDto;
+  };
+  readonly getCurrentSubscriberNotificationPreferences: {
+    readonly response: SubscriberNotificationPreferencesDto;
   };
   readonly getOperatorBetaMetrics: {
     readonly query?: { readonly countryCode?: CountryCode };
@@ -756,6 +869,16 @@ export interface CoreApiLiveOperationMap {
       readonly lastName: string;
     };
     readonly response: SubscriberProfileDto;
+  };
+  readonly updateCurrentSubscriberNotificationPreferences: {
+    readonly body: {
+      readonly emailRecap: boolean;
+      readonly pushReveal: boolean;
+      readonly pushRoute: boolean;
+      readonly smsReminder: boolean;
+      readonly updatedAt: string;
+    };
+    readonly response: SubscriberNotificationPreferencesDto;
   };
   readonly verifyOtpChallenge: {
     readonly body: {

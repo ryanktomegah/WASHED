@@ -203,6 +203,52 @@ export interface RequestFirstVisitInput extends GetCurrentSubscriberSubscription
   readonly traceId: string;
 }
 
+export interface CreateSubscriberAddressChangeRequestInput {
+  readonly address: CreateSubscriptionInput['address'];
+  readonly requestedAt: Date;
+  readonly subscriberUserId: string;
+  readonly subscriptionId: string;
+  readonly traceId: string;
+}
+
+export interface SubscriberAddressChangeRequestRecord {
+  readonly address: CreateSubscriptionInput['address'];
+  readonly countryCode: CountryCode;
+  readonly events: readonly DomainEvent[];
+  readonly requestId: string;
+  readonly requestedAt: Date;
+  readonly requestedByUserId: string;
+  readonly status: 'pending_review';
+  readonly subscriptionId: string;
+}
+
+export interface SubscriberNotificationPreferencesRecord {
+  readonly countryCode: CountryCode;
+  readonly emailRecap: boolean;
+  readonly events: readonly DomainEvent[];
+  readonly pushReveal: boolean;
+  readonly pushRoute: boolean;
+  readonly smsReminder: boolean;
+  readonly subscriberId: string;
+  readonly subscriptionId: string;
+  readonly updatedAt: Date;
+  readonly updatedByUserId: string;
+}
+
+export interface GetSubscriberNotificationPreferencesInput {
+  readonly subscriberUserId: string;
+  readonly subscriptionId: string;
+}
+
+export interface UpdateSubscriberNotificationPreferencesInput extends GetSubscriberNotificationPreferencesInput {
+  readonly emailRecap: boolean;
+  readonly pushReveal: boolean;
+  readonly pushRoute: boolean;
+  readonly smsReminder: boolean;
+  readonly traceId: string;
+  readonly updatedAt: Date;
+}
+
 export interface PaymentAttemptRecord {
   readonly amount: Money;
   readonly chargedAt: Date;
@@ -979,6 +1025,27 @@ export interface CreateSupportContactInput {
   readonly traceId: string;
 }
 
+export interface CreateSupportContactMessageInput {
+  readonly body: string;
+  readonly contactId: string;
+  readonly createdAt: Date;
+  readonly subscriberUserId: string;
+  readonly subscriptionId: string;
+  readonly traceId: string;
+}
+
+export interface SupportContactMessageRecord {
+  readonly authorRole: 'operator' | 'subscriber';
+  readonly authorUserId: string;
+  readonly body: string;
+  readonly contactId: string;
+  readonly countryCode: CountryCode;
+  readonly createdAt: Date;
+  readonly events: readonly DomainEvent[];
+  readonly messageId: string;
+  readonly subscriptionId: string;
+}
+
 export interface ListSupportContactsInput {
   readonly countryCode: CountryCode;
   readonly limit: number;
@@ -1022,6 +1089,28 @@ export interface VisitRatingRecord {
   readonly subscriptionId: string;
   readonly visitId: string;
   readonly workerId: string | null;
+}
+
+export interface SubscriberVisitDetailRecord {
+  readonly address: CreateSubscriptionInput['address'];
+  readonly countryCode: CountryCode;
+  readonly dispute: DisputeRecord | null;
+  readonly photos: readonly VisitPhotoRecord[];
+  readonly rating: VisitRatingRecord | null;
+  readonly scheduledDate: string;
+  readonly scheduledTimeWindow: TimeWindow;
+  readonly status: VisitStatus;
+  readonly subscriptionId: string;
+  readonly timeline: {
+    readonly checkedInAt: Date | null;
+    readonly checkedOutAt: Date | null;
+    readonly durationMinutes: number | null;
+  };
+  readonly visitId: string;
+  readonly worker: {
+    readonly displayName: string;
+    readonly workerId: string;
+  } | null;
 }
 
 export interface WorkerIssueReportRecord {
@@ -1168,8 +1257,18 @@ export interface SubscriptionDetailRecord {
     readonly disputeCount: number;
     readonly workerId: string;
   } | null;
+  readonly billingStatus: {
+    readonly nextChargeAt: Date | null;
+    readonly overdueSince: Date | null;
+    readonly paymentAuthorizationStatus:
+      | 'authorization_failed'
+      | 'authorization_pending'
+      | 'ready'
+      | 'unavailable';
+  };
   readonly countryCode: CountryCode;
   readonly monthlyPriceMinor: bigint;
+  readonly pendingAddressChange: SubscriberAddressChangeRequestRecord | null;
   readonly paymentMethod: SubscriptionPaymentMethod | null;
   readonly phoneNumber: string;
   readonly schedulePreference: SubscriptionSchedulePreference | null;
@@ -1337,19 +1436,34 @@ export interface CoreRepository {
     input: CreateWorkerAdvanceRequestInput,
   ): Promise<WorkerAdvanceRequestRecord>;
   createWorkerSwapRequest(input: CreateWorkerSwapRequestInput): Promise<WorkerSwapRequestRecord>;
+  createSubscriberAddressChangeRequest(
+    input: CreateSubscriberAddressChangeRequestInput,
+  ): Promise<SubscriberAddressChangeRequestRecord>;
   rateVisit(input: RateVisitInput): Promise<VisitRatingRecord>;
   refreshAuthSession(input: RefreshAuthSessionInput): Promise<AuthSessionRecord>;
   registerPushDevice(input: RegisterPushDeviceInput): Promise<PushDeviceRecord>;
   reportWorkerIssue(input: ReportWorkerIssueInput): Promise<WorkerIssueReportRecord>;
   resolveDispute(input: ResolveDisputeInput): Promise<DisputeRecord>;
   createSupportContact(input: CreateSupportContactInput): Promise<SupportContactRecord>;
+  createSupportContactMessage(
+    input: CreateSupportContactMessageInput,
+  ): Promise<SupportContactMessageRecord>;
   listSupportContactsForSubscription(
     input: ListSupportContactsInput,
   ): Promise<readonly SupportContactRecord[]>;
   getSupportContact(input: GetSupportContactInput): Promise<SupportContactRecord | null>;
+  listSupportContactMessages(
+    input: GetSupportContactInput,
+  ): Promise<readonly SupportContactMessageRecord[]>;
   resolveSupportContact(input: ResolveSupportContactInput): Promise<SupportContactRecord>;
   rescheduleVisit(input: RescheduleVisitInput): Promise<RescheduledVisitRecord>;
   skipVisit(input: SkipVisitInput): Promise<SkippedVisitRecord>;
+  getSubscriberVisitDetail(input: {
+    readonly countryCode: CountryCode;
+    readonly subscriberUserId: string;
+    readonly subscriptionId: string;
+    readonly visitId: string;
+  }): Promise<SubscriberVisitDetailRecord>;
   updateOperatorVisitStatus(
     input: UpdateOperatorVisitStatusInput,
   ): Promise<OperatorVisitStatusRecord>;
@@ -1365,6 +1479,9 @@ export interface CoreRepository {
   getCurrentSubscriberSubscription(
     input: GetCurrentSubscriberSubscriptionInput,
   ): Promise<SubscriptionDetailRecord | null>;
+  getSubscriberNotificationPreferences(
+    input: GetSubscriberNotificationPreferencesInput,
+  ): Promise<SubscriberNotificationPreferencesRecord>;
   getSubscriptionDetail(input: GetSubscriptionDetailInput): Promise<SubscriptionDetailRecord>;
   health(): Promise<'ok'>;
   listMatchingCandidates(
@@ -1406,6 +1523,9 @@ export interface CoreRepository {
   ): Promise<readonly WorkerSwapRequestRecord[]>;
   upsertWorkerProfile(input: UpsertWorkerProfileInput): Promise<WorkerProfileRecord>;
   upsertSubscriberProfile(input: UpsertSubscriberProfileInput): Promise<SubscriberProfileRecord>;
+  updateSubscriberNotificationPreferences(
+    input: UpdateSubscriberNotificationPreferencesInput,
+  ): Promise<SubscriberNotificationPreferencesRecord>;
   requestFirstVisit(input: RequestFirstVisitInput): Promise<SubscriptionDetailRecord>;
   advanceWorkerOnboardingCase(
     input: AdvanceWorkerOnboardingCaseInput,
@@ -1485,7 +1605,10 @@ export class InMemoryCoreRepository implements CoreRepository {
   public readonly paymentAttempts: PaymentAttemptRecord[] = [];
   public readonly paymentRefunds: PaymentRefundRecord[] = [];
   public readonly paymentReconciliationRuns: PaymentReconciliationRunRecord[] = [];
+  public readonly subscriberAddressChangeRequests: SubscriberAddressChangeRequestRecord[] = [];
+  public readonly subscriberNotificationPreferences: SubscriberNotificationPreferencesRecord[] = [];
   public readonly supportContacts: SupportContactRecord[] = [];
+  public readonly supportContactMessages: SupportContactMessageRecord[] = [];
   public readonly supportCredits: SupportCreditRecord[] = [];
   public readonly firstVisitRequests: FirstVisitRequestRecord[] = [];
   public readonly supportDisputes: DisputeRecord[] = [];
@@ -1668,6 +1791,68 @@ export class InMemoryCoreRepository implements CoreRepository {
       countryCode: state.record.countryCode,
       subscriptionId: state.record.subscriptionId,
     });
+  }
+
+  public async createSubscriberAddressChangeRequest(
+    input: CreateSubscriberAddressChangeRequestInput,
+  ): Promise<SubscriberAddressChangeRequestRecord> {
+    const state = this.getOwnedSubscriptionState(input.subscriptionId, input.subscriberUserId);
+    const record = buildSubscriberAddressChangeRequestRecord({
+      countryCode: state.record.countryCode,
+      input,
+    });
+    this.subscriberAddressChangeRequests.push(record);
+    return record;
+  }
+
+  public async getSubscriberNotificationPreferences(
+    input: GetSubscriberNotificationPreferencesInput,
+  ): Promise<SubscriberNotificationPreferencesRecord> {
+    const state = this.getOwnedSubscriptionState(input.subscriptionId, input.subscriberUserId);
+    const existing = this.subscriberNotificationPreferences.find(
+      (preferences) => preferences.subscriptionId === input.subscriptionId,
+    );
+
+    if (existing !== undefined) return existing;
+
+    return buildSubscriberNotificationPreferencesRecord({
+      countryCode: state.record.countryCode,
+      input: {
+        emailRecap: true,
+        pushReveal: true,
+        pushRoute: true,
+        smsReminder: true,
+        subscriberUserId: input.subscriberUserId,
+        subscriptionId: input.subscriptionId,
+        traceId: randomUUID(),
+        updatedAt: new Date(),
+      },
+      subscriberId: state.record.subscriberId,
+      withEvent: false,
+    });
+  }
+
+  public async updateSubscriberNotificationPreferences(
+    input: UpdateSubscriberNotificationPreferencesInput,
+  ): Promise<SubscriberNotificationPreferencesRecord> {
+    const state = this.getOwnedSubscriptionState(input.subscriptionId, input.subscriberUserId);
+    const record = buildSubscriberNotificationPreferencesRecord({
+      countryCode: state.record.countryCode,
+      input,
+      subscriberId: state.record.subscriberId,
+      withEvent: true,
+    });
+    const existingIndex = this.subscriberNotificationPreferences.findIndex(
+      (preferences) => preferences.subscriptionId === input.subscriptionId,
+    );
+
+    if (existingIndex === -1) {
+      this.subscriberNotificationPreferences.push(record);
+    } else {
+      this.subscriberNotificationPreferences[existingIndex] = record;
+    }
+
+    return record;
   }
 
   public async startOtpChallenge(
@@ -2284,12 +2469,43 @@ export class InMemoryCoreRepository implements CoreRepository {
         creditId: credit.creditId,
         reason: credit.reason,
       }));
+    const latestPaymentAttempt = [...this.paymentAttempts]
+      .filter((attempt) => attempt.subscriptionId === input.subscriptionId)
+      .sort((left, right) => right.chargedAt.getTime() - left.chargedAt.getTime())[0];
+    const latestSucceededPaymentAttempt = [...this.paymentAttempts]
+      .filter(
+        (attempt) =>
+          attempt.subscriptionId === input.subscriptionId && attempt.status === 'succeeded',
+      )
+      .sort((left, right) => right.chargedAt.getTime() - left.chargedAt.getTime())[0];
+    const pendingAddressChange =
+      [...this.subscriberAddressChangeRequests]
+        .filter(
+          (request) =>
+            request.subscriptionId === input.subscriptionId && request.status === 'pending_review',
+        )
+        .sort((left, right) => right.requestedAt.getTime() - left.requestedAt.getTime())[0] ?? null;
 
     return {
       address: state.address,
       assignedWorker: worker,
+      billingStatus: {
+        nextChargeAt: addDays(
+          latestSucceededPaymentAttempt?.chargedAt ?? state.record.createdAt,
+          30,
+        ),
+        overdueSince:
+          state.status === 'payment_overdue' ? (latestPaymentAttempt?.chargedAt ?? null) : null,
+        paymentAuthorizationStatus:
+          state.paymentMethod === null
+            ? 'unavailable'
+            : latestPaymentAttempt?.status === 'failed'
+              ? 'authorization_failed'
+              : 'ready',
+      },
       countryCode: state.record.countryCode,
       monthlyPriceMinor: state.monthlyPriceMinor,
+      pendingAddressChange,
       paymentMethod: state.paymentMethod,
       phoneNumber: state.phoneNumber,
       schedulePreference: state.schedulePreference,
@@ -2301,6 +2517,53 @@ export class InMemoryCoreRepository implements CoreRepository {
       supportCredits,
       upcomingVisits,
       visitsPerCycle: state.visitsPerCycle,
+    };
+  }
+
+  public async getSubscriberVisitDetail(input: {
+    readonly countryCode: CountryCode;
+    readonly subscriberUserId: string;
+    readonly subscriptionId: string;
+    readonly visitId: string;
+  }): Promise<SubscriberVisitDetailRecord> {
+    this.getOwnedSubscriptionState(input.subscriptionId, input.subscriberUserId);
+    const visit = this.visitState.get(input.visitId);
+
+    if (visit === undefined || visit.subscriptionId !== input.subscriptionId) {
+      throw new Error('Visit was not found.');
+    }
+
+    const completed = this.completedVisits.find((candidate) => candidate.visitId === input.visitId);
+    const worker =
+      visit.workerId === null
+        ? null
+        : {
+            displayName:
+              this.workerProfiles.get(visit.workerId)?.displayName ??
+              `Worker ${visit.workerId.slice(0, 8)}`,
+            workerId: visit.workerId,
+          };
+
+    return {
+      address: visit.address,
+      countryCode: visit.countryCode,
+      dispute:
+        this.supportDisputes.find((candidate) => candidate.visitId === input.visitId) ?? null,
+      photos: this.visitPhotos
+        .filter((photo) => photo.visitId === input.visitId)
+        .sort((left, right) => left.capturedAt.getTime() - right.capturedAt.getTime()),
+      rating: this.visitRatings.find((rating) => rating.visitId === input.visitId) ?? null,
+      scheduledDate: visit.scheduledDate,
+      scheduledTimeWindow: visit.scheduledTimeWindow,
+      status: visit.status,
+      subscriptionId: visit.subscriptionId,
+      timeline: {
+        checkedInAt: visit.checkedInAt ?? completed?.checkedInAt ?? null,
+        checkedOutAt: completed?.checkedOutAt ?? null,
+        durationMinutes: completed?.durationMinutes ?? null,
+      },
+      visitId: visit.visitId,
+      worker,
     };
   }
 
@@ -3003,6 +3266,32 @@ export class InMemoryCoreRepository implements CoreRepository {
     return record;
   }
 
+  public async createSupportContactMessage(
+    input: CreateSupportContactMessageInput,
+  ): Promise<SupportContactMessageRecord> {
+    const state = this.getOwnedSubscriptionState(input.subscriptionId, input.subscriberUserId);
+    const contact = this.supportContacts.find(
+      (candidate) =>
+        candidate.contactId === input.contactId &&
+        candidate.subscriptionId === input.subscriptionId,
+    );
+
+    if (contact === undefined) {
+      throw new Error('Support contact was not found.');
+    }
+
+    if (contact.status !== 'open') {
+      throw new Error(`Support contact cannot receive replies from status ${contact.status}.`);
+    }
+
+    const record = buildSupportContactMessageRecord({
+      countryCode: state.record.countryCode,
+      input,
+    });
+    this.supportContactMessages.push(record);
+    return record;
+  }
+
   public async listSupportContactsForSubscription(
     input: ListSupportContactsInput,
   ): Promise<readonly SupportContactRecord[]> {
@@ -3022,6 +3311,20 @@ export class InMemoryCoreRepository implements CoreRepository {
         candidate.subscriptionId === input.subscriptionId,
     );
     return contact ?? null;
+  }
+
+  public async listSupportContactMessages(
+    input: GetSupportContactInput,
+  ): Promise<readonly SupportContactMessageRecord[]> {
+    const contact = await this.getSupportContact(input);
+
+    if (contact === null) {
+      throw new Error('Support contact was not found.');
+    }
+
+    return this.supportContactMessages
+      .filter((message) => message.contactId === input.contactId)
+      .sort((left, right) => left.createdAt.getTime() - right.createdAt.getTime());
   }
 
   public async resolveSupportContact(
@@ -4952,6 +5255,111 @@ export function buildUpdatedSubscriptionPaymentMethodRecord(input: {
   };
 }
 
+export function buildSubscriberAddressChangeRequestRecord(input: {
+  readonly countryCode: CountryCode;
+  readonly input: CreateSubscriberAddressChangeRequestInput;
+}): SubscriberAddressChangeRequestRecord {
+  const requestId = randomUUID();
+  const event = createDomainEvent({
+    actor: { role: 'subscriber', userId: input.input.subscriberUserId },
+    aggregateId: input.input.subscriptionId,
+    aggregateType: 'subscription',
+    countryCode: input.countryCode,
+    eventType: 'SubscriberAddressChangeRequested',
+    occurredAt: input.input.requestedAt,
+    payload: {
+      neighborhood: input.input.address.neighborhood,
+      requestId,
+      status: 'pending_review',
+      subscriptionId: input.input.subscriptionId,
+    },
+    traceId: input.input.traceId,
+  });
+
+  return {
+    address: input.input.address,
+    countryCode: input.countryCode,
+    events: [event],
+    requestId,
+    requestedAt: input.input.requestedAt,
+    requestedByUserId: input.input.subscriberUserId,
+    status: 'pending_review',
+    subscriptionId: input.input.subscriptionId,
+  };
+}
+
+export function buildSubscriberNotificationPreferencesRecord(input: {
+  readonly countryCode: CountryCode;
+  readonly input: UpdateSubscriberNotificationPreferencesInput;
+  readonly subscriberId: string;
+  readonly withEvent: boolean;
+}): SubscriberNotificationPreferencesRecord {
+  const event = input.withEvent
+    ? createDomainEvent({
+        actor: { role: 'subscriber', userId: input.input.subscriberUserId },
+        aggregateId: input.input.subscriptionId,
+        aggregateType: 'subscription',
+        countryCode: input.countryCode,
+        eventType: 'SubscriberNotificationPreferencesUpdated',
+        occurredAt: input.input.updatedAt,
+        payload: {
+          emailRecap: input.input.emailRecap,
+          pushReveal: input.input.pushReveal,
+          pushRoute: input.input.pushRoute,
+          smsReminder: input.input.smsReminder,
+          subscriptionId: input.input.subscriptionId,
+        },
+        traceId: input.input.traceId,
+      })
+    : null;
+
+  return {
+    countryCode: input.countryCode,
+    emailRecap: input.input.emailRecap,
+    events: event === null ? [] : [event],
+    pushReveal: input.input.pushReveal,
+    pushRoute: input.input.pushRoute,
+    smsReminder: input.input.smsReminder,
+    subscriberId: input.subscriberId,
+    subscriptionId: input.input.subscriptionId,
+    updatedAt: input.input.updatedAt,
+    updatedByUserId: input.input.subscriberUserId,
+  };
+}
+
+export function buildSupportContactMessageRecord(input: {
+  readonly countryCode: CountryCode;
+  readonly input: CreateSupportContactMessageInput;
+}): SupportContactMessageRecord {
+  const messageId = randomUUID();
+  const event = createDomainEvent({
+    actor: { role: 'subscriber', userId: input.input.subscriberUserId },
+    aggregateId: input.input.contactId,
+    aggregateType: 'support_contact',
+    countryCode: input.countryCode,
+    eventType: 'SupportContactMessageCreated',
+    occurredAt: input.input.createdAt,
+    payload: {
+      contactId: input.input.contactId,
+      messageId,
+      subscriptionId: input.input.subscriptionId,
+    },
+    traceId: input.input.traceId,
+  });
+
+  return {
+    authorRole: 'subscriber',
+    authorUserId: input.input.subscriberUserId,
+    body: input.input.body,
+    contactId: input.input.contactId,
+    countryCode: input.countryCode,
+    createdAt: input.input.createdAt,
+    events: [event],
+    messageId,
+    subscriptionId: input.input.subscriptionId,
+  };
+}
+
 export function buildSubscriberPrivacyRequestRecord(input: {
   readonly auditEvents: readonly AuditEventRecord[];
   readonly billingHistory: readonly SubscriptionBillingItemRecord[];
@@ -5038,6 +5446,12 @@ function compareTimeWindows(left: TimeWindow, right: TimeWindow): number {
   };
 
   return order[left] - order[right];
+}
+
+function addDays(date: Date, days: number): Date {
+  const next = new Date(date);
+  next.setUTCDate(next.getUTCDate() + days);
+  return next;
 }
 
 function assertCancelledStatus(status: VisitStatus): asserts status is 'cancelled' {

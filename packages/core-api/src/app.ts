@@ -16,7 +16,11 @@ import {
 import { getPaymentProviderReadiness } from './payment-provider-readiness.js';
 import { getPushProviderReadiness } from './push-provider-readiness.js';
 import { createRepositoryFromEnv } from './repository-factory.js';
-import { type CoreRepository, type SupportContactRecord } from './repository.js';
+import {
+  type CoreRepository,
+  type SupportContactMessageRecord,
+  type SupportContactRecord,
+} from './repository.js';
 import { verifyAccessToken } from './auth-tokens.js';
 import type { AuthAccessTokenClaims, AuthRole } from './auth-tokens.js';
 import { buildBetaMetrics } from './beta-metrics.js';
@@ -33,8 +37,11 @@ import {
   parseCreateWorkerUnavailabilityBody,
   parseCreateWorkerAdvanceRequestBody,
   parseCreateVisitPhotoUploadBody,
+  parseCreateCurrentSubscriberAddressChangeRequestBody,
   parseCreateCurrentSubscriberDisputeBody,
+  parseCreateCurrentSubscriberPrivacyRequestBody,
   parseCreateCurrentSubscriberSupportContactBody,
+  parseCreateCurrentSubscriberSupportContactMessageBody,
   parseCreateCurrentSubscriberWorkerSwapRequestBody,
   parseCreateDisputeBody,
   parseCreateSubscriptionBody,
@@ -91,6 +98,7 @@ import {
   parseUploadVisitPhotoBody,
   parseUpsertSubscriberProfileBody,
   parseUpdateCurrentSubscriberPaymentMethodBody,
+  parseUpdateSubscriberNotificationPreferencesBody,
   parseUpdateOperatorVisitStatusBody,
   parseUpsertWorkerProfileBody,
   parseVerifyOtpChallengeBody,
@@ -419,6 +427,150 @@ export function createCoreApiApp(options: CoreApiOptions = {}): FastifyInstance 
 
       return reply.code(400).send({
         code: 'core.subscriber_subscription.invalid_request',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+  });
+
+  app.get('/v1/subscriber/notification-preferences', async (request, reply) => {
+    const traceId = request.headers['x-trace-id'];
+    const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
+
+    let claims: AuthAccessTokenClaims;
+
+    try {
+      claims = readSubscriberClaims(request.headers['authorization']);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Authentication is required.';
+
+      return reply.code(401).send({
+        code: 'core.subscriber_notification_preferences.unauthorized',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+
+    try {
+      const current = await getCurrentSubscriberSubscription(claims);
+
+      if (current === null) {
+        return reply.code(404).send({
+          code: 'core.subscriber_subscription.not_found',
+          message: 'Subscription was not found.',
+          traceId: parsedTraceId,
+        });
+      }
+
+      const preferences = await repository.getSubscriberNotificationPreferences({
+        subscriberUserId: claims.sub,
+        subscriptionId: current.subscriptionId,
+      });
+
+      return reply.code(200).send(toSubscriberNotificationPreferencesDto(preferences));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Invalid request.';
+
+      return reply.code(400).send({
+        code: 'core.subscriber_notification_preferences.invalid_request',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+  });
+
+  app.put('/v1/subscriber/notification-preferences', async (request, reply) => {
+    const traceId = request.headers['x-trace-id'];
+    const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
+
+    let claims: AuthAccessTokenClaims;
+
+    try {
+      claims = readSubscriberClaims(request.headers['authorization']);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Authentication is required.';
+
+      return reply.code(401).send({
+        code: 'core.subscriber_notification_preferences.unauthorized',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+
+    try {
+      const current = await getCurrentSubscriberSubscription(claims);
+
+      if (current === null) {
+        return reply.code(404).send({
+          code: 'core.subscriber_subscription.not_found',
+          message: 'Subscription was not found.',
+          traceId: parsedTraceId,
+        });
+      }
+
+      const input = parseUpdateSubscriberNotificationPreferencesBody(
+        current.subscriptionId,
+        request.body,
+        { subscriberUserId: claims.sub },
+        parsedTraceId,
+      );
+      const preferences = await repository.updateSubscriberNotificationPreferences(input);
+
+      return reply.code(200).send(toSubscriberNotificationPreferencesDto(preferences));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Invalid request.';
+
+      return reply.code(400).send({
+        code: 'core.subscriber_notification_preferences.invalid_request',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+  });
+
+  app.post('/v1/subscriber/subscription/address-change-requests', async (request, reply) => {
+    const traceId = request.headers['x-trace-id'];
+    const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
+
+    let claims: AuthAccessTokenClaims;
+
+    try {
+      claims = readSubscriberClaims(request.headers['authorization']);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Authentication is required.';
+
+      return reply.code(401).send({
+        code: 'core.subscriber_subscription.unauthorized',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+
+    try {
+      const current = await getCurrentSubscriberSubscription(claims);
+
+      if (current === null) {
+        return reply.code(404).send({
+          code: 'core.subscriber_subscription.not_found',
+          message: 'Subscription was not found.',
+          traceId: parsedTraceId,
+        });
+      }
+
+      const input = parseCreateCurrentSubscriberAddressChangeRequestBody(
+        current.subscriptionId,
+        request.body,
+        { subscriberUserId: claims.sub },
+        parsedTraceId,
+      );
+      const record = await repository.createSubscriberAddressChangeRequest(input);
+
+      return reply.code(201).send(toSubscriberAddressChangeRequestDto(record));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Invalid request.';
+
+      return reply.code(400).send({
+        code: 'core.subscriber_address_change.invalid_request',
         message,
         traceId: parsedTraceId,
       });
@@ -909,6 +1061,55 @@ export function createCoreApiApp(options: CoreApiOptions = {}): FastifyInstance 
     }
   });
 
+  app.get('/v1/subscriber/subscription/visits/:visitId', async (request, reply) => {
+    const traceId = request.headers['x-trace-id'];
+    const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
+    const params = request.params as { visitId?: string };
+
+    let claims: AuthAccessTokenClaims;
+
+    try {
+      claims = readSubscriberClaims(request.headers['authorization']);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Authentication is required.';
+
+      return reply.code(401).send({
+        code: 'core.subscriber_subscription.unauthorized',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+
+    try {
+      const current = await getCurrentSubscriberSubscription(claims);
+
+      if (current === null) {
+        return reply.code(404).send({
+          code: 'core.subscriber_subscription.not_found',
+          message: 'Subscription was not found.',
+          traceId: parsedTraceId,
+        });
+      }
+
+      const detail = await repository.getSubscriberVisitDetail({
+        countryCode: current.countryCode,
+        subscriberUserId: claims.sub,
+        subscriptionId: current.subscriptionId,
+        visitId: params.visitId ?? '',
+      });
+
+      return reply.code(200).send(toSubscriberVisitDetailDto(detail));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Invalid request.';
+
+      return reply.code(400).send({
+        code: 'core.subscriber_visit_detail.invalid_request',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+  });
+
   app.post('/v1/subscriber/subscription/visits/:visitId/reschedule', async (request, reply) => {
     const traceId = request.headers['x-trace-id'];
     const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
@@ -1204,7 +1405,7 @@ export function createCoreApiApp(options: CoreApiOptions = {}): FastifyInstance 
       const input = parseListSupportContactsRequest(current.subscriptionId, request.query);
       const items = await repository.listSupportContactsForSubscription(input);
       return reply.code(200).send({
-        items: items.map(toSupportContactDto),
+        items: items.map((item) => toSupportContactDto(item)),
         limit: input.limit,
         status: input.status ?? null,
         subscriptionId: input.subscriptionId,
@@ -1258,11 +1459,115 @@ export function createCoreApiApp(options: CoreApiOptions = {}): FastifyInstance 
           traceId: parsedTraceId,
         });
       }
-      return reply.code(200).send(toSupportContactDto(record));
+      const messages = await repository.listSupportContactMessages(input);
+      return reply.code(200).send(toSupportContactDto(record, messages));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Invalid request.';
       return reply.code(400).send({
         code: 'core.subscriber_support_contact_get.invalid_request',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+  });
+
+  app.post(
+    '/v1/subscriber/subscription/support-contacts/:contactId/messages',
+    async (request, reply) => {
+      const traceId = request.headers['x-trace-id'];
+      const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
+      const params = request.params as { contactId?: string };
+
+      let claims: AuthAccessTokenClaims;
+
+      try {
+        claims = readSubscriberClaims(request.headers['authorization']);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Authentication is required.';
+
+        return reply.code(401).send({
+          code: 'core.subscriber_subscription.unauthorized',
+          message,
+          traceId: parsedTraceId,
+        });
+      }
+
+      try {
+        const current = await getCurrentSubscriberSubscription(claims);
+
+        if (current === null) {
+          return reply.code(404).send({
+            code: 'core.subscriber_subscription.not_found',
+            message: 'Subscription was not found.',
+            traceId: parsedTraceId,
+          });
+        }
+
+        const input = parseCreateCurrentSubscriberSupportContactMessageBody(
+          current.subscriptionId,
+          params.contactId ?? '',
+          request.body,
+          { subscriberUserId: claims.sub },
+          parsedTraceId,
+        );
+        const record = await repository.createSupportContactMessage(input);
+
+        return reply.code(201).send(toSupportContactMessageDto(record));
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Invalid request.';
+
+        return reply.code(400).send({
+          code: 'core.subscriber_support_contact_message.invalid_request',
+          message,
+          traceId: parsedTraceId,
+        });
+      }
+    },
+  );
+
+  app.post('/v1/subscriber/subscription/privacy-requests', async (request, reply) => {
+    const traceId = request.headers['x-trace-id'];
+    const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
+
+    let claims: AuthAccessTokenClaims;
+
+    try {
+      claims = readSubscriberClaims(request.headers['authorization']);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Authentication is required.';
+
+      return reply.code(401).send({
+        code: 'core.subscriber_subscription.unauthorized',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+
+    try {
+      const current = await getCurrentSubscriberSubscription(claims);
+
+      if (current === null) {
+        return reply.code(404).send({
+          code: 'core.subscriber_subscription.not_found',
+          message: 'Subscription was not found.',
+          traceId: parsedTraceId,
+        });
+      }
+
+      const input = parseCreateCurrentSubscriberPrivacyRequestBody(
+        request.body,
+        current.subscriptionId,
+        { subscriberUserId: claims.sub },
+        parsedTraceId,
+      );
+      const privacyRequest = await repository.createSubscriberPrivacyRequest(input);
+
+      return reply.code(201).send(toSubscriberPrivacyRequestDto(privacyRequest));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Invalid request.';
+
+      return reply.code(400).send({
+        code: 'core.subscriber_privacy_request.invalid_request',
         message,
         traceId: parsedTraceId,
       });
@@ -2349,7 +2654,7 @@ export function createCoreApiApp(options: CoreApiOptions = {}): FastifyInstance 
       const input = parseListSupportContactsRequest(params.subscriptionId ?? '', request.query);
       const items = await repository.listSupportContactsForSubscription(input);
       return reply.code(200).send({
-        items: items.map(toSupportContactDto),
+        items: items.map((item) => toSupportContactDto(item)),
         limit: input.limit,
         status: input.status ?? null,
         subscriptionId: input.subscriptionId,
@@ -3105,8 +3410,14 @@ function toSubscriberSupportMatchDto(match: {
 function toSubscriptionDetailDto(detail: {
   readonly address: unknown;
   readonly assignedWorker: unknown;
+  readonly billingStatus?: {
+    readonly nextChargeAt: Date | null;
+    readonly overdueSince: Date | null;
+    readonly paymentAuthorizationStatus: string;
+  };
   readonly countryCode: string;
   readonly monthlyPriceMinor: bigint;
+  readonly pendingAddressChange?: unknown;
   readonly paymentMethod: unknown;
   readonly phoneNumber: string;
   readonly recentVisits: unknown;
@@ -3127,8 +3438,23 @@ function toSubscriptionDetailDto(detail: {
   return {
     address: detail.address,
     assignedWorker: detail.assignedWorker,
+    billingStatus:
+      detail.billingStatus === undefined
+        ? null
+        : {
+            nextChargeAt:
+              detail.billingStatus.nextChargeAt === null
+                ? null
+                : toIsoString(detail.billingStatus.nextChargeAt),
+            overdueSince:
+              detail.billingStatus.overdueSince === null
+                ? null
+                : toIsoString(detail.billingStatus.overdueSince),
+            paymentAuthorizationStatus: detail.billingStatus.paymentAuthorizationStatus,
+          },
     countryCode: detail.countryCode,
     monthlyPriceMinor: detail.monthlyPriceMinor.toString(),
+    pendingAddressChange: detail.pendingAddressChange ?? null,
     paymentMethod: detail.paymentMethod,
     phoneNumber: detail.phoneNumber,
     recentVisits: detail.recentVisits,
@@ -3145,6 +3471,50 @@ function toSubscriptionDetailDto(detail: {
     tierCode: detail.tierCode,
     upcomingVisits: detail.upcomingVisits,
     visitsPerCycle: detail.visitsPerCycle,
+  };
+}
+
+function toSubscriberAddressChangeRequestDto(request: {
+  readonly address: unknown;
+  readonly countryCode: string;
+  readonly requestId: string;
+  readonly requestedAt: Date;
+  readonly requestedByUserId: string;
+  readonly status: string;
+  readonly subscriptionId: string;
+}): Record<string, unknown> {
+  return {
+    address: request.address,
+    countryCode: request.countryCode,
+    requestId: request.requestId,
+    requestedAt: toIsoString(request.requestedAt),
+    requestedByUserId: request.requestedByUserId,
+    status: request.status,
+    subscriptionId: request.subscriptionId,
+  };
+}
+
+function toSubscriberNotificationPreferencesDto(preferences: {
+  readonly countryCode: string;
+  readonly emailRecap: boolean;
+  readonly pushReveal: boolean;
+  readonly pushRoute: boolean;
+  readonly smsReminder: boolean;
+  readonly subscriberId: string;
+  readonly subscriptionId: string;
+  readonly updatedAt: Date;
+  readonly updatedByUserId: string;
+}): Record<string, unknown> {
+  return {
+    countryCode: preferences.countryCode,
+    emailRecap: preferences.emailRecap,
+    pushReveal: preferences.pushReveal,
+    pushRoute: preferences.pushRoute,
+    smsReminder: preferences.smsReminder,
+    subscriberId: preferences.subscriberId,
+    subscriptionId: preferences.subscriptionId,
+    updatedAt: toIsoString(preferences.updatedAt),
+    updatedByUserId: preferences.updatedByUserId,
   };
 }
 
@@ -3340,7 +3710,10 @@ function toDisputeDto(dispute: {
   };
 }
 
-function toSupportContactDto(record: SupportContactRecord): Record<string, unknown> {
+function toSupportContactDto(
+  record: SupportContactRecord,
+  messages: readonly SupportContactMessageRecord[] = [],
+): Record<string, unknown> {
   return {
     body: record.body,
     category: record.category,
@@ -3354,6 +3727,84 @@ function toSupportContactDto(record: SupportContactRecord): Record<string, unkno
     status: record.status,
     subject: record.subject,
     subscriptionId: record.subscriptionId,
+    messages: messages.map(toSupportContactMessageDto),
+  };
+}
+
+function toSupportContactMessageDto(record: SupportContactMessageRecord): Record<string, unknown> {
+  return {
+    authorRole: record.authorRole,
+    authorUserId: record.authorUserId,
+    body: record.body,
+    contactId: record.contactId,
+    countryCode: record.countryCode,
+    createdAt: toIsoString(record.createdAt),
+    messageId: record.messageId,
+    subscriptionId: record.subscriptionId,
+  };
+}
+
+function toVisitPhotoDto(photo: {
+  readonly byteSize: number;
+  readonly capturedAt: Date;
+  readonly contentType: string;
+  readonly objectKey: string;
+  readonly photoId: string;
+  readonly photoType: string;
+  readonly uploadedAt: Date;
+  readonly visitId: string;
+  readonly workerId: string;
+}): Record<string, unknown> {
+  return {
+    byteSize: photo.byteSize,
+    capturedAt: toIsoString(photo.capturedAt),
+    contentType: photo.contentType,
+    objectKey: photo.objectKey,
+    photoId: photo.photoId,
+    photoType: photo.photoType,
+    uploadedAt: toIsoString(photo.uploadedAt),
+    visitId: photo.visitId,
+    workerId: photo.workerId,
+  };
+}
+
+function toSubscriberVisitDetailDto(detail: {
+  readonly address: unknown;
+  readonly countryCode: string;
+  readonly dispute: Parameters<typeof toDisputeDto>[0] | null;
+  readonly photos: readonly Parameters<typeof toVisitPhotoDto>[0][];
+  readonly rating: Parameters<typeof toVisitRatingDto>[0] | null;
+  readonly scheduledDate: string;
+  readonly scheduledTimeWindow: string;
+  readonly status: string;
+  readonly subscriptionId: string;
+  readonly timeline: {
+    readonly checkedInAt: Date | null;
+    readonly checkedOutAt: Date | null;
+    readonly durationMinutes: number | null;
+  };
+  readonly visitId: string;
+  readonly worker: unknown;
+}): Record<string, unknown> {
+  return {
+    address: detail.address,
+    countryCode: detail.countryCode,
+    dispute: detail.dispute === null ? null : toDisputeDto(detail.dispute),
+    photos: detail.photos.map(toVisitPhotoDto),
+    rating: detail.rating === null ? null : toVisitRatingDto(detail.rating),
+    scheduledDate: detail.scheduledDate,
+    scheduledTimeWindow: detail.scheduledTimeWindow,
+    status: detail.status,
+    subscriptionId: detail.subscriptionId,
+    timeline: {
+      checkedInAt:
+        detail.timeline.checkedInAt === null ? null : toIsoString(detail.timeline.checkedInAt),
+      checkedOutAt:
+        detail.timeline.checkedOutAt === null ? null : toIsoString(detail.timeline.checkedOutAt),
+      durationMinutes: detail.timeline.durationMinutes,
+    },
+    visitId: detail.visitId,
+    worker: detail.worker,
   };
 }
 

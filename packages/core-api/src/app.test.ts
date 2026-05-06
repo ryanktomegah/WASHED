@@ -750,6 +750,25 @@ describe('core api app', () => {
       method: 'GET',
       url: `/v1/subscriber/subscription/support-contacts/${support.contactId}`,
     });
+    const supportReply = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'POST',
+      payload: {
+        body: 'Je peux passer les photos si besoin.',
+        createdAt: '2026-05-05T08:35:00.000Z',
+      },
+      url: `/v1/subscriber/subscription/support-contacts/${support.contactId}/messages`,
+    });
+    const supportDetailWithReply = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'GET',
+      url: `/v1/subscriber/subscription/support-contacts/${support.contactId}`,
+    });
+    const visitDetail = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'GET',
+      url: `/v1/subscriber/subscription/visits/${visits[0]?.visitId}`,
+    });
 
     expect(rescheduled.statusCode).toBe(200);
     expect(rescheduled.json()).toMatchObject({
@@ -791,6 +810,132 @@ describe('core api app', () => {
       contactId: support.contactId,
       subscriptionId: subscription.subscriptionId,
     });
+    expect(supportReply.statusCode).toBe(201);
+    expect(supportReply.json()).toMatchObject({
+      authorRole: 'subscriber',
+      body: 'Je peux passer les photos si besoin.',
+      contactId: support.contactId,
+      subscriptionId: subscription.subscriptionId,
+    });
+    expect(supportDetailWithReply.statusCode).toBe(200);
+    expect(supportDetailWithReply.json()).toMatchObject({
+      messages: [
+        {
+          body: 'Je peux passer les photos si besoin.',
+          contactId: support.contactId,
+        },
+      ],
+    });
+    expect(visitDetail.statusCode).toBe(200);
+    expect(visitDetail.json()).toMatchObject({
+      scheduledDate: '2026-05-06',
+      scheduledTimeWindow: 'afternoon',
+      status: 'scheduled',
+      subscriptionId: subscription.subscriptionId,
+      visitId: visits[0]?.visitId,
+      worker: {
+        displayName: 'Akouvi K.',
+        workerId: '22222222-2222-4222-8222-222222222222',
+      },
+    });
+  });
+
+  it('lets the current subscriber request address, notification, and privacy changes', async () => {
+    const repository = new InMemoryCoreRepository();
+    const app = createCoreApiApp({ repository });
+    apps.add(app);
+
+    const created = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'POST',
+      payload: {
+        address: validBody.address,
+        paymentMethod: {
+          phoneNumber: '+22890123456',
+          provider: 'mixx',
+        },
+        tierCode: 'T1',
+      },
+      url: '/v1/subscriber/subscription',
+    });
+    const subscription = created.json() as { subscriptionId: string };
+    const addressRequest = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'POST',
+      payload: {
+        address: {
+          gpsLatitude: 6.141,
+          gpsLongitude: 1.234,
+          landmark: 'Maison bleue pres du marche',
+          neighborhood: 'Adidogome',
+        },
+        requestedAt: '2026-05-05T11:00:00.000Z',
+      },
+      url: '/v1/subscriber/subscription/address-change-requests',
+    });
+    const defaultPreferences = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'GET',
+      url: '/v1/subscriber/notification-preferences',
+    });
+    const updatedPreferences = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'PUT',
+      payload: {
+        emailRecap: false,
+        pushReveal: true,
+        pushRoute: false,
+        smsReminder: true,
+        updatedAt: '2026-05-05T11:05:00.000Z',
+      },
+      url: '/v1/subscriber/notification-preferences',
+    });
+    const privacyRequest = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'POST',
+      payload: {
+        reason: 'Demande envoyee depuis l application abonne.',
+        requestedAt: '2026-05-05T11:10:00.000Z',
+        requestType: 'erasure',
+      },
+      url: '/v1/subscriber/subscription/privacy-requests',
+    });
+
+    expect(addressRequest.statusCode).toBe(201);
+    expect(addressRequest.json()).toMatchObject({
+      address: {
+        neighborhood: 'Adidogome',
+      },
+      status: 'pending_review',
+      subscriptionId: subscription.subscriptionId,
+    });
+    expect(defaultPreferences.statusCode).toBe(200);
+    expect(defaultPreferences.json()).toMatchObject({
+      emailRecap: true,
+      pushReveal: true,
+      pushRoute: true,
+      smsReminder: true,
+      subscriptionId: subscription.subscriptionId,
+    });
+    expect(updatedPreferences.statusCode).toBe(200);
+    expect(updatedPreferences.json()).toMatchObject({
+      emailRecap: false,
+      pushRoute: false,
+      subscriptionId: subscription.subscriptionId,
+    });
+    expect(privacyRequest.statusCode).toBe(201);
+    expect(privacyRequest.json()).toMatchObject({
+      erasurePlan: {
+        immediateActions: expect.arrayContaining([
+          'Revoke subscriber push devices and active auth sessions.',
+        ]),
+      },
+      requestType: 'erasure',
+      subscriptionId: subscription.subscriptionId,
+    });
+    expect(repository.subscriberAddressChangeRequests).toHaveLength(1);
+    expect(repository.subscriberNotificationPreferences).toHaveLength(1);
+    expect(repository.subscriberPrivacyRequests).toHaveLength(1);
   });
 
   it('lets the current subscriber rate and dispute completed visits without body identity', async () => {

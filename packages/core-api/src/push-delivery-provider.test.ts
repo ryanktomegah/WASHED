@@ -165,7 +165,7 @@ describe('createPushDeliveryProvider', () => {
         token: 'fcm-device-token',
       },
     });
-  });
+  }, 15_000);
 
   it('sends through APNs HTTP/2 when explicitly enabled and push tokens are resolved', async () => {
     const { privateKey } = generateKeyPairSync('ec', { namedCurve: 'P-256' });

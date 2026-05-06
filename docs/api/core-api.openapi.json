@@ -506,6 +506,114 @@
         }
       }
     },
+    "/v1/subscriber/notification-preferences": {
+      "get": {
+        "operationId": "getCurrentSubscriberNotificationPreferences",
+        "tags": [
+          "subscriber"
+        ],
+        "responses": {
+          "200": {
+            "description": "Current subscriber notification preferences",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriberNotificationPreferencesDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateCurrentSubscriberNotificationPreferences",
+        "tags": [
+          "subscriber"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSubscriberNotificationPreferencesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current subscriber notification preferences updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriberNotificationPreferencesDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/subscriber/subscription/address-change-requests": {
+      "post": {
+        "operationId": "createCurrentSubscriberAddressChangeRequest",
+        "tags": [
+          "subscriber"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSubscriberAddressChangeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Current subscriber address change request created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriberAddressChangeRequestDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/subscriber/subscription/billing-history": {
       "get": {
         "operationId": "listCurrentSubscriberSubscriptionBillingHistory",
@@ -812,6 +920,47 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": true
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/subscriber/subscription/visits/{visitId}": {
+      "get": {
+        "operationId": "getCurrentSubscriberVisitDetail",
+        "tags": [
+          "subscriber"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current subscriber visit detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriberVisitDetailDto"
                 }
               }
             }
@@ -1168,6 +1317,97 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/subscriber/subscription/support-contacts/{contactId}/messages": {
+      "post": {
+        "operationId": "createCurrentSubscriberSupportContactMessage",
+        "tags": [
+          "subscriber"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contactId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSubscriberSupportContactMessageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Current subscriber support contact message created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportContactMessageDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/subscriber/subscription/privacy-requests": {
+      "post": {
+        "operationId": "createCurrentSubscriberPrivacyRequest",
+        "tags": [
+          "subscriber"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSubscriberPrivacyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Current subscriber privacy request created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriberPrivacyRequestDto"
                 }
               }
             }
@@ -4331,6 +4571,335 @@
         ],
         "type": "object"
       },
+      "UpdateSubscriberNotificationPreferencesRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "emailRecap": {
+            "type": "boolean"
+          },
+          "pushReveal": {
+            "type": "boolean"
+          },
+          "pushRoute": {
+            "type": "boolean"
+          },
+          "smsReminder": {
+            "type": "boolean"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "emailRecap",
+          "pushReveal",
+          "pushRoute",
+          "smsReminder",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "SubscriberNotificationPreferencesDto": {
+        "additionalProperties": false,
+        "properties": {
+          "countryCode": {
+            "enum": [
+              "TG"
+            ],
+            "type": "string"
+          },
+          "emailRecap": {
+            "type": "boolean"
+          },
+          "pushReveal": {
+            "type": "boolean"
+          },
+          "pushRoute": {
+            "type": "boolean"
+          },
+          "smsReminder": {
+            "type": "boolean"
+          },
+          "subscriberId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "subscriptionId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedByUserId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "countryCode",
+          "emailRecap",
+          "pushReveal",
+          "pushRoute",
+          "smsReminder",
+          "subscriberId",
+          "subscriptionId",
+          "updatedAt",
+          "updatedByUserId"
+        ],
+        "type": "object"
+      },
+      "CreateSubscriberAddressChangeRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/AddressDto"
+          },
+          "requestedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "address",
+          "requestedAt"
+        ],
+        "type": "object"
+      },
+      "SubscriberAddressChangeRequestDto": {
+        "additionalProperties": false,
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/AddressDto"
+          },
+          "countryCode": {
+            "enum": [
+              "TG"
+            ],
+            "type": "string"
+          },
+          "requestId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "requestedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "requestedByUserId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "approved",
+              "pending",
+              "rejected"
+            ],
+            "type": "string"
+          },
+          "subscriptionId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "address",
+          "countryCode",
+          "requestId",
+          "requestedAt",
+          "requestedByUserId",
+          "status",
+          "subscriptionId"
+        ],
+        "type": "object"
+      },
+      "SubscriptionBillingStatusDto": {
+        "additionalProperties": false,
+        "properties": {
+          "nextChargeAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "overdueSince": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "paymentAuthorizationStatus": {
+            "enum": [
+              "authorization_failed",
+              "authorization_pending",
+              "ready",
+              "unavailable"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "nextChargeAt",
+          "overdueSince",
+          "paymentAuthorizationStatus"
+        ],
+        "type": "object"
+      },
+      "CreateSubscriberPrivacyRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "countryCode": {
+            "enum": [
+              "TG"
+            ],
+            "type": "string"
+          },
+          "reason": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "requestedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "requestType": {
+            "enum": [
+              "erasure",
+              "export"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason",
+          "requestType"
+        ],
+        "type": "object"
+      },
+      "SubscriberPrivacyRequestDto": {
+        "additionalProperties": true,
+        "properties": {
+          "operatorUserId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "requestedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "requestId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "requestType": {
+            "enum": [
+              "erasure",
+              "export"
+            ],
+            "type": "string"
+          },
+          "subscriptionId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "operatorUserId",
+          "reason",
+          "requestedAt",
+          "requestId",
+          "requestType",
+          "subscriptionId"
+        ],
+        "type": "object"
+      },
+      "CreateSubscriberSupportContactMessageRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "SupportContactMessageDto": {
+        "additionalProperties": false,
+        "properties": {
+          "authorRole": {
+            "enum": [
+              "operator",
+              "subscriber"
+            ],
+            "type": "string"
+          },
+          "authorUserId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "contactId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "countryCode": {
+            "enum": [
+              "TG"
+            ],
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "messageId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "subscriptionId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "authorRole",
+          "authorUserId",
+          "body",
+          "contactId",
+          "countryCode",
+          "createdAt",
+          "messageId",
+          "subscriptionId"
+        ],
+        "type": "object"
+      },
       "LocationDto": {
         "additionalProperties": false,
         "properties": {
@@ -4601,6 +5170,166 @@
         ],
         "type": "object"
       },
+      "VisitPhotoDto": {
+        "additionalProperties": false,
+        "properties": {
+          "byteSize": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "capturedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "objectKey": {
+            "type": "string"
+          },
+          "photoId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "photoType": {
+            "enum": [
+              "after",
+              "before"
+            ],
+            "type": "string"
+          },
+          "uploadedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "visitId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "workerId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "byteSize",
+          "capturedAt",
+          "contentType",
+          "objectKey",
+          "photoId",
+          "photoType",
+          "uploadedAt",
+          "visitId",
+          "workerId"
+        ],
+        "type": "object"
+      },
+      "VisitRatingDto": {
+        "additionalProperties": false,
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "ratedByUserId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "rating": {
+            "maximum": 5,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "ratingId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "subscriptionId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "visitId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "workerId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "comment",
+          "createdAt",
+          "ratedByUserId",
+          "rating",
+          "ratingId",
+          "subscriptionId",
+          "visitId",
+          "workerId"
+        ],
+        "type": "object"
+      },
+      "VisitTimelineDto": {
+        "additionalProperties": false,
+        "properties": {
+          "checkedInAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "checkedOutAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "durationMinutes": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "checkedInAt",
+          "checkedOutAt",
+          "durationMinutes"
+        ],
+        "type": "object"
+      },
       "AssignedWorkerDto": {
         "additionalProperties": false,
         "properties": {
@@ -4636,6 +5365,104 @@
           "displayName",
           "disputeCount",
           "workerId"
+        ],
+        "type": "object"
+      },
+      "SubscriberVisitDetailDto": {
+        "additionalProperties": false,
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/AddressDto"
+          },
+          "countryCode": {
+            "enum": [
+              "TG"
+            ],
+            "type": "string"
+          },
+          "dispute": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DisputeDto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "photos": {
+            "items": {
+              "$ref": "#/components/schemas/VisitPhotoDto"
+            },
+            "type": "array"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VisitRatingDto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scheduledDate": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "type": "string"
+          },
+          "scheduledTimeWindow": {
+            "enum": [
+              "afternoon",
+              "morning"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "cancelled",
+              "completed",
+              "disputed",
+              "in_progress",
+              "no_show",
+              "scheduled"
+            ],
+            "type": "string"
+          },
+          "subscriptionId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "timeline": {
+            "$ref": "#/components/schemas/VisitTimelineDto"
+          },
+          "visitId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "worker": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AssignedWorkerDto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "address",
+          "countryCode",
+          "dispute",
+          "photos",
+          "rating",
+          "scheduledDate",
+          "scheduledTimeWindow",
+          "status",
+          "subscriptionId",
+          "timeline",
+          "visitId",
+          "worker"
         ],
         "type": "object"
       },
@@ -4784,6 +5611,16 @@
               }
             ]
           },
+          "billingStatus": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubscriptionBillingStatusDto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "countryCode": {
             "enum": [
               "TG"
@@ -4798,6 +5635,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/SubscriptionPaymentMethodDto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pendingAddressChange": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubscriberAddressChangeRequestDto"
               },
               {
                 "type": "null"
@@ -4872,8 +5719,10 @@
         "required": [
           "address",
           "assignedWorker",
+          "billingStatus",
           "countryCode",
           "monthlyPriceMinor",
+          "pendingAddressChange",
           "paymentMethod",
           "phoneNumber",
           "recentVisits",

@@ -1568,6 +1568,7 @@ describe('PostgresCoreRepository', () => {
         assigned_worker_display_name: 'Akouvi',
         assigned_worker_id: '22222222-2222-4222-8222-222222222222',
         country_code: 'TG',
+        created_at: new Date('2026-05-01T00:00:00.000Z'),
         gps_latitude: '6.131900',
         gps_longitude: '1.222800',
         landmark: 'Pres de la pharmacie du quartier',
@@ -1623,8 +1624,14 @@ describe('PostgresCoreRepository', () => {
         disputeCount: 0,
         workerId: '22222222-2222-4222-8222-222222222222',
       },
+      billingStatus: {
+        nextChargeAt: new Date('2026-05-31T00:00:00.000Z'),
+        overdueSince: null,
+        paymentAuthorizationStatus: 'ready',
+      },
       countryCode: 'TG',
       monthlyPriceMinor: 2500n,
+      pendingAddressChange: null,
       paymentMethod: {
         phoneNumber: '+22890123456',
         provider: 'mixx',

@@ -14,6 +14,8 @@ import type {
   CreateWorkerMonthlyPayoutInput,
   CreateWorkerOnboardingCaseInput,
   CreateSubscriberPrivacyRequestInput,
+  CreateSubscriberAddressChangeRequestInput,
+  CreateSupportContactMessageInput,
   CreateWorkerUnavailabilityInput,
   CreateWorkerAdvanceRequestInput,
   CreateSubscriptionInput,
@@ -73,6 +75,7 @@ import type {
   SubscriptionPaymentProvider,
   UpsertSubscriberProfileInput,
   UpdateSubscriptionPaymentMethodInput,
+  UpdateSubscriberNotificationPreferencesInput,
   UploadVisitPhotoInput,
   UpdateOperatorVisitStatusInput,
   UpsertWorkerProfileInput,
@@ -218,6 +221,60 @@ const PUSH_DEVICE_STATUS_VALUES = new Set<PushDeviceStatus>(['active', 'revoked'
 const SUBSCRIBER_PRIVACY_REQUEST_TYPE_VALUES = new Set<
   CreateSubscriberPrivacyRequestInput['requestType']
 >(['erasure', 'export']);
+
+export function parseCreateCurrentSubscriberAddressChangeRequestBody(
+  subscriptionId: string,
+  body: unknown,
+  claims: { readonly subscriberUserId: string },
+  traceId: string,
+): CreateSubscriberAddressChangeRequestInput {
+  if (!isUuid(subscriptionId)) {
+    throw new Error('subscriptionId must be a UUID.');
+  }
+  if (!isRecord(body)) {
+    throw new Error('Request body must be an object.');
+  }
+
+  const address = readRecord(body, 'address');
+
+  return {
+    address: {
+      gpsLatitude: readLatitude(address, 'gpsLatitude'),
+      gpsLongitude: readLongitude(address, 'gpsLongitude'),
+      landmark: readString(address, 'landmark'),
+      neighborhood: readString(address, 'neighborhood'),
+    },
+    requestedAt: readIsoDateTime(body, 'requestedAt'),
+    subscriberUserId: claims.subscriberUserId,
+    subscriptionId,
+    traceId,
+  };
+}
+
+export function parseUpdateSubscriberNotificationPreferencesBody(
+  subscriptionId: string,
+  body: unknown,
+  claims: { readonly subscriberUserId: string },
+  traceId: string,
+): UpdateSubscriberNotificationPreferencesInput {
+  if (!isUuid(subscriptionId)) {
+    throw new Error('subscriptionId must be a UUID.');
+  }
+  if (!isRecord(body)) {
+    throw new Error('Request body must be an object.');
+  }
+
+  return {
+    emailRecap: readBoolean(body, 'emailRecap'),
+    pushReveal: readBoolean(body, 'pushReveal'),
+    pushRoute: readBoolean(body, 'pushRoute'),
+    smsReminder: readBoolean(body, 'smsReminder'),
+    subscriberUserId: claims.subscriberUserId,
+    subscriptionId,
+    traceId,
+    updatedAt: readIsoDateTime(body, 'updatedAt'),
+  };
+}
 
 export function parseCreateSubscriptionBody(
   body: unknown,
@@ -1019,6 +1076,38 @@ export function parseGetSupportContactParams(
   return { contactId, countryCode: 'TG', subscriptionId };
 }
 
+export function parseCreateCurrentSubscriberSupportContactMessageBody(
+  subscriptionId: string,
+  contactId: string,
+  body: unknown,
+  claims: { readonly subscriberUserId: string },
+  traceId: string,
+): CreateSupportContactMessageInput {
+  if (!isUuid(subscriptionId)) {
+    throw new Error('subscriptionId must be a UUID.');
+  }
+  if (!isUuid(contactId)) {
+    throw new Error('contactId must be a UUID.');
+  }
+  if (!isRecord(body)) {
+    throw new Error('Request body must be an object.');
+  }
+
+  const text = readString(body, 'body').trim();
+  if (text.length < 1 || text.length > 4000) {
+    throw new Error('body must be between 1 and 4000 characters.');
+  }
+
+  return {
+    body: text,
+    contactId,
+    createdAt: readIsoDateTime(body, 'createdAt'),
+    subscriberUserId: claims.subscriberUserId,
+    subscriptionId,
+    traceId,
+  };
+}
+
 export function parseResolveSupportContactBody(
   contactId: string,
   body: unknown,
@@ -1579,6 +1668,27 @@ export function parseCreateSubscriberPrivacyRequestBody(
   return {
     countryCode: readOptionalLiteral<CountryCode>(body, 'countryCode', new Set(['TG'])) ?? 'TG',
     operatorUserId: readUuid(body, 'operatorUserId'),
+    reason: readString(body, 'reason'),
+    requestedAt: body.requestedAt === undefined ? new Date() : readIsoDateTime(body, 'requestedAt'),
+    requestType: readLiteral(body, 'requestType', SUBSCRIBER_PRIVACY_REQUEST_TYPE_VALUES),
+    subscriptionId: parseUuid(subscriptionId, 'subscriptionId'),
+    traceId,
+  };
+}
+
+export function parseCreateCurrentSubscriberPrivacyRequestBody(
+  body: unknown,
+  subscriptionId: string,
+  claims: { readonly subscriberUserId: string },
+  traceId: string,
+): CreateSubscriberPrivacyRequestInput {
+  if (!isRecord(body)) {
+    throw new Error('Request body must be an object.');
+  }
+
+  return {
+    countryCode: readOptionalLiteral<CountryCode>(body, 'countryCode', new Set(['TG'])) ?? 'TG',
+    operatorUserId: claims.subscriberUserId,
     reason: readString(body, 'reason'),
     requestedAt: body.requestedAt === undefined ? new Date() : readIsoDateTime(body, 'requestedAt'),
     requestType: readLiteral(body, 'requestType', SUBSCRIBER_PRIVACY_REQUEST_TYPE_VALUES),

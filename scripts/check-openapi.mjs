@@ -27,9 +27,14 @@ const liveDataOperationIds = new Set([
   'checkOutVisit',
   'cancelCurrentSubscriberSubscription',
   'changeCurrentSubscriberSubscriptionTier',
+  'createCurrentSubscriberAddressChangeRequest',
+  'createCurrentSubscriberPrivacyRequest',
   'createCurrentSubscriberSubscription',
+  'createCurrentSubscriberSupportContactMessage',
   'createWorkerUnavailability',
+  'getCurrentSubscriberNotificationPreferences',
   'getCurrentSubscriberSubscription',
+  'getCurrentSubscriberVisitDetail',
   'getOperatorBetaMetrics',
   'getSubscriptionDetail',
   'getWorkerEarnings',
@@ -51,6 +56,7 @@ const liveDataOperationIds = new Set([
   'reportWorkerIssue',
   'startOtpChallenge',
   'updateCurrentSubscriberPaymentMethod',
+  'updateCurrentSubscriberNotificationPreferences',
   'verifyOtpChallenge',
 ]);
 
