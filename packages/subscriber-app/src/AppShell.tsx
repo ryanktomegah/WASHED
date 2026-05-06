@@ -96,6 +96,7 @@ import './screens/visits/visit.css';
 
 export const SUBSCRIBER_RESTORE_MIN_MS = 1500;
 export const SUBSCRIBER_RESTORE_FALLBACK_MS = 2000;
+export const SUBSCRIBER_LAUNCH_SPLASH_MS = 700;
 
 export function AppShell(): ReactElement {
   return (
@@ -149,11 +150,23 @@ function hasCompletedLaunchPreferences(): boolean {
 function SubscriberStartupGate({ children }: { readonly children: ReactNode }): ReactElement {
   const subscriberApi = useSubscriberApi();
   const { syncFromApi } = useSubscriberSubscription();
+  const [launchSplashElapsed, setLaunchSplashElapsed] = useState(false);
   const [minimumElapsed, setMinimumElapsed] = useState(false);
   const [bootstrapComplete, setBootstrapComplete] = useState(!subscriberApi.isConfigured);
   const [fallbackElapsed, setFallbackElapsed] = useState(false);
 
   useEffect(() => {
+    const splashTimer = window.setTimeout(
+      () => setLaunchSplashElapsed(true),
+      SUBSCRIBER_LAUNCH_SPLASH_MS,
+    );
+
+    return () => window.clearTimeout(splashTimer);
+  }, []);
+
+  useEffect(() => {
+    if (!launchSplashElapsed) return;
+
     const minimumTimer = window.setTimeout(
       () => setMinimumElapsed(true),
       SUBSCRIBER_RESTORE_MIN_MS,
@@ -167,7 +180,7 @@ function SubscriberStartupGate({ children }: { readonly children: ReactNode }): 
       window.clearTimeout(minimumTimer);
       window.clearTimeout(fallbackTimer);
     };
-  }, []);
+  }, [launchSplashElapsed]);
 
   useEffect(() => {
     if (!subscriberApi.isConfigured) {
@@ -193,11 +206,36 @@ function SubscriberStartupGate({ children }: { readonly children: ReactNode }): 
     };
   }, [subscriberApi, syncFromApi]);
 
+  if (!launchSplashElapsed) {
+    return <SubscriberLaunchSplash />;
+  }
+
   if (!minimumElapsed || (!bootstrapComplete && !fallbackElapsed)) {
     return <SubscriberRestoreSkeleton />;
   }
 
   return <>{children}</>;
+}
+
+function SubscriberLaunchSplash(): ReactElement {
+  return (
+    <main
+      aria-busy="true"
+      aria-labelledby="subscriber-launch-splash-title"
+      className="subscriber-launch-screen"
+      data-screen-id="X-00S"
+    >
+      <h1
+        aria-label="washed."
+        className="subscriber-launch-mark"
+        id="subscriber-launch-splash-title"
+      >
+        <span aria-hidden="true">
+          washed<span className="subscriber-launch-mark-dot">.</span>
+        </span>
+      </h1>
+    </main>
+  );
 }
 
 function SubscriberRestoreSkeleton(): ReactElement {

@@ -24,6 +24,40 @@ body[data-theme='subscriber'][data-runtime='native'] {
   box-sizing: border-box;
 }
 
+.subscriber-launch-screen {
+  display: grid;
+  min-height: 100vh;
+  min-height: 100dvh;
+  place-items: center;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--ink);
+  padding: env(safe-area-inset-top) 22px env(safe-area-inset-bottom);
+}
+
+.subscriber-launch-mark {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 64px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.subscriber-launch-mark-dot {
+  color: var(--primary);
+}
+
+body[data-color-mode='dark'] .subscriber-launch-screen {
+  background: var(--primary);
+}
+
+body[data-color-mode='dark'] .subscriber-launch-mark,
+body[data-color-mode='dark'] .subscriber-launch-mark-dot {
+  color: var(--primary-on);
+}
+
 .subscriber-tab-screen {
   padding-bottom: 0;
 }

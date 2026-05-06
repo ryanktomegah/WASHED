@@ -111,7 +111,7 @@ function wordmarkDocument({ background, color, dotColor, fontSize }) {
         font-family: 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
         font-size: ${fontSize}px;
         font-weight: 500;
-        letter-spacing: -0.025em;
+        letter-spacing: 0;
         line-height: 1;
         transform: translateY(-0.015em);
         white-space: nowrap;
