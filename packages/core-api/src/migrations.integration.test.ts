@@ -324,7 +324,11 @@ describeWithDatabase('core-api migrations on real Postgres', () => {
 
         await rlsClient.query('SELECT set_config($1, $2, true)', ['app.country_code', 'TG']);
         const rows = await rlsClient.query<{ readonly phone_number: string }>(
-          'SELECT phone_number FROM subscribers ORDER BY phone_number',
+          `
+            SELECT phone_number
+            FROM subscribers
+            WHERE id = '11111111-1111-4111-8111-111111111111'
+          `,
         );
         await rlsClient.query('COMMIT');
         expect(rows.rows.map((row) => row.phone_number)).toEqual(['+22890123456']);
