@@ -56,15 +56,40 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         didInstallLaunchOverlay = true
 
+        let isDarkMode = window.traitCollection.userInterfaceStyle == .dark
+        let primary = UIColor(red: 0.039, green: 0.239, blue: 0.122, alpha: 1)
+        let overlayBackground: UIColor
+        let wordColor: UIColor
+        if isDarkMode {
+            overlayBackground = UIColor(red: 0.067, green: 0.067, blue: 0.067, alpha: 1)
+            wordColor = UIColor(red: 0.98, green: 0.98, blue: 0.98, alpha: 1)
+        } else {
+            overlayBackground = primary
+            wordColor = UIColor.white
+        }
+
         let overlay = UIView(frame: window.bounds)
         overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        overlay.backgroundColor = UIColor(red: 0.039, green: 0.239, blue: 0.122, alpha: 1)
+        overlay.backgroundColor = overlayBackground
         overlay.isUserInteractionEnabled = false
 
+        let fontSize = min(44, max(38, window.bounds.width * 0.11))
+        let dotColor = isDarkMode ? primary : wordColor
+        let wordmark = NSMutableAttributedString(
+            string: "washed.",
+            attributes: [
+                .foregroundColor: wordColor,
+                .font: UIFont.systemFont(ofSize: fontSize, weight: .medium),
+            ]
+        )
+        wordmark.addAttribute(
+            .foregroundColor,
+            value: dotColor,
+            range: NSRange(location: 6, length: 1)
+        )
+
         let mark = UILabel()
-        mark.text = "washed."
-        mark.textColor = .white
-        mark.font = .systemFont(ofSize: 76, weight: .medium)
+        mark.attributedText = wordmark
         mark.textAlignment = .center
         mark.translatesAutoresizingMaskIntoConstraints = false
 

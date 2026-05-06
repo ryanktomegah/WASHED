@@ -432,7 +432,7 @@
 }
 
 .onboarding-screen.splash {
-  background: var(--bg);
+  background: var(--primary);
   overflow: hidden;
 }
 
@@ -442,21 +442,21 @@
 
 .onboarding-screen .splash-mark {
   margin: 0;
-  color: var(--ink);
+  color: var(--primary-on);
   font-family: var(--font-display);
-  font-size: 64px;
+  font-size: clamp(38px, 11vw, 44px);
   font-weight: 500;
   letter-spacing: 0;
   line-height: 1;
 }
 
 .onboarding-screen .splash-mark-dot {
-  color: var(--primary);
+  color: currentColor;
 }
 
 .onboarding-screen .splash-tagline {
   margin-top: 18px;
-  color: var(--ink-3);
+  color: color-mix(in srgb, var(--primary-on) 64%, transparent);
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 500;
@@ -475,13 +475,23 @@
   padding: 18px 22px 0;
 }
 
+.onboarding-screen.splash .btn.ghost {
+  border-color: var(--primary-on);
+  background: var(--primary-on);
+  color: var(--primary);
+}
+
 body[data-color-mode='dark'] .onboarding-screen.splash {
-  background: var(--primary);
+  background: var(--bg);
 }
 
 body[data-color-mode='dark'] .onboarding-screen.splash .splash-mark,
+body[data-color-mode='dark'] .onboarding-screen.splash .splash-tagline {
+  color: var(--ink);
+}
+
 body[data-color-mode='dark'] .onboarding-screen.splash .splash-mark-dot {
-  color: var(--primary-on);
+  color: var(--primary);
 }
 
 body[data-color-mode='dark'] .onboarding-screen.splash .btn.ghost {
