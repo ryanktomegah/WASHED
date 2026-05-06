@@ -16,7 +16,7 @@
     "ios:run": "pnpm build && cap run ios",
     "ios:sync": "pnpm build && cap sync ios",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "vitest run",
+    "test": "vitest run --maxWorkers=2",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
