@@ -67,3 +67,6 @@ CREATE UNIQUE INDEX push_device_tokens_user_device_lookup_hash_idx
 ALTER TABLE support_contacts
   DROP CONSTRAINT support_contacts_subject_length,
   DROP CONSTRAINT support_contacts_body_length;
+
+ALTER TABLE subscriber_privacy_requests
+  DROP CONSTRAINT subscriber_privacy_requests_reason_length;
