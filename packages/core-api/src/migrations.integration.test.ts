@@ -79,6 +79,40 @@ describeWithDatabase('core-api migrations on real Postgres', () => {
         'worker_service_cells',
       ]);
 
+      const protectedColumns = await pool.query<{ readonly column_name: string }>(
+        `
+          SELECT table_name || '.' || column_name AS column_name
+          FROM information_schema.columns
+          WHERE table_schema = $1
+            AND (
+              (table_name = 'subscribers' AND column_name IN (
+                'email_lookup_hash',
+                'phone_number_lookup_hash'
+              ))
+              OR (table_name = 'auth_users' AND column_name = 'phone_number_lookup_hash')
+              OR (table_name = 'auth_otp_challenges' AND column_name = 'phone_number_lookup_hash')
+              OR (table_name = 'subscriber_addresses' AND column_name IN (
+                'gps_latitude_ciphertext',
+                'gps_longitude_ciphertext'
+              ))
+              OR (table_name = 'subscriptions' AND column_name = 'payment_method_phone_number_lookup_hash')
+              OR (table_name = 'push_device_tokens' AND column_name = 'device_id_lookup_hash')
+            )
+          ORDER BY table_name, column_name
+        `,
+        [schemaName],
+      );
+      expect(protectedColumns.rows.map((row) => row.column_name)).toEqual([
+        'auth_otp_challenges.phone_number_lookup_hash',
+        'auth_users.phone_number_lookup_hash',
+        'push_device_tokens.device_id_lookup_hash',
+        'subscriber_addresses.gps_latitude_ciphertext',
+        'subscriber_addresses.gps_longitude_ciphertext',
+        'subscribers.email_lookup_hash',
+        'subscribers.phone_number_lookup_hash',
+        'subscriptions.payment_method_phone_number_lookup_hash',
+      ]);
+
       const rlsTables = await pool.query<{
         readonly relforcerowsecurity: boolean;
         readonly relname: string;
@@ -195,5 +229,5 @@ describeWithDatabase('core-api migrations on real Postgres', () => {
       await pool.query(`DROP ROLE IF EXISTS ${roleName}`);
       await pool.end();
     }
-  });
+  }, 120_000);
 });

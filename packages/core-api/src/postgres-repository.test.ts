@@ -2,6 +2,7 @@ import type { QueryResult, QueryResultRow } from 'pg';
 import { describe, expect, it } from 'vitest';
 
 import { hashOtpCode, hashRefreshToken } from './auth-crypto.js';
+import { createDataProtectorFromEnv } from './data-protection.js';
 import type { PgPoolLike, PgTransactionClient } from './postgres-client.js';
 import { PostgresCoreRepository } from './postgres-repository.js';
 import type { CreateSubscriptionInput } from './repository.js';
@@ -26,6 +27,7 @@ const validInput: CreateSubscriptionInput = {
   tierCode: 'T2',
   traceId: 'trace_test',
 };
+const testDataProtector = createDataProtectorFromEnv({});
 
 describe('PostgresCoreRepository', () => {
   it('persists subscription creation and outbox event in one transaction', async () => {
@@ -40,17 +42,28 @@ describe('PostgresCoreRepository', () => {
     expect(client.queries.map((query) => normalizeSql(query.text))).toEqual([
       'BEGIN',
       'SELECT set_config($1, $2, true)',
-      'INSERT INTO subscribers (id, country_code, locale, phone_number) VALUES ($1, $2, $3, $4) ON CONFLICT (country_code, phone_number) DO UPDATE SET updated_at = now() RETURNING id AS subscriber_id',
-      'INSERT INTO subscriber_addresses ( id, subscriber_id, country_code, neighborhood, service_cell_key, landmark, gps_latitude, gps_longitude ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
-      'INSERT INTO subscriptions ( id, subscriber_id, address_id, country_code, currency_code, tier_code, status, visits_per_cycle, monthly_price_minor, preferred_day_of_week, preferred_time_window, payment_method_provider, payment_method_phone_number ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)',
+      'SELECT id AS subscriber_id, country_code, phone_number, first_name, last_name, email, avatar_object_key, is_adult_confirmed, created_at, updated_at FROM subscribers WHERE country_code = $1 AND ( phone_number_lookup_hash = $2 OR ( phone_number_lookup_hash IS NULL AND phone_number = $3 ) )',
+      'INSERT INTO subscribers (id, country_code, locale, phone_number, phone_number_lookup_hash) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (country_code, phone_number_lookup_hash) WHERE phone_number_lookup_hash IS NOT NULL DO UPDATE SET phone_number = EXCLUDED.phone_number, updated_at = now() RETURNING id AS subscriber_id',
+      'INSERT INTO subscriber_addresses ( id, subscriber_id, country_code, neighborhood, service_cell_key, landmark, gps_latitude, gps_longitude, gps_latitude_ciphertext, gps_longitude_ciphertext ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+      'INSERT INTO subscriptions ( id, subscriber_id, address_id, country_code, currency_code, tier_code, status, visits_per_cycle, monthly_price_minor, preferred_day_of_week, preferred_time_window, payment_method_provider, payment_method_phone_number, payment_method_phone_number_lookup_hash ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)',
       'INSERT INTO audit_events ( id, country_code, aggregate_type, aggregate_id, event_type, payload, actor_role, actor_user_id, trace_id, occurred_at ) VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10)',
       'INSERT INTO outbox_events ( id, country_code, aggregate_type, aggregate_id, event_type, payload, actor_role, actor_user_id, trace_id, occurred_at ) VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10)',
       'COMMIT',
     ]);
+    const subscriberInsertValues = valuesForQuery(client.queries, 'INSERT INTO subscribers');
+    expect(subscriberInsertValues?.[3]).not.toBe('+22890123456');
+    expect(subscriberInsertValues?.[4]).toEqual(expect.any(String));
+    const addressInsertValues = valuesForQuery(client.queries, 'INSERT INTO subscriber_addresses');
+    expect(addressInsertValues?.[5]).not.toBe(validInput.address.landmark);
+    expect(addressInsertValues?.[6]).toBe(6.13);
+    expect(addressInsertValues?.[8]).toEqual(expect.stringContaining('wdp:v1:'));
+    const subscriptionInsertValues = valuesForQuery(client.queries, 'INSERT INTO subscriptions');
+    expect(subscriptionInsertValues?.[12]).not.toBe('+22890123456');
+    expect(subscriptionInsertValues?.[13]).toEqual(expect.any(String));
 
     const auditQuery = client.queries.at(-3);
     expect(auditQuery?.values?.[4]).toBe('SubscriptionCreated');
-    expect(JSON.parse(String(auditQuery?.values?.[5]))).toMatchObject({
+    expect(protectedJsonPayload(auditQuery, 'audit_events.payload')).toMatchObject({
       paymentMethod: {
         phoneNumber: '+22890123456',
         provider: 'mixx',
@@ -61,7 +74,7 @@ describe('PostgresCoreRepository', () => {
 
     const outboxQuery = client.queries.at(-2);
     expect(outboxQuery?.values?.[4]).toBe('SubscriptionCreated');
-    expect(JSON.parse(String(outboxQuery?.values?.[5]))).toMatchObject({
+    expect(protectedJsonPayload(outboxQuery, 'outbox_events.payload')).toMatchObject({
       paymentMethod: {
         phoneNumber: '+22890123456',
         provider: 'mixx',
@@ -98,14 +111,15 @@ describe('PostgresCoreRepository', () => {
       testCode: '123456',
     });
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
-      'INSERT INTO auth_otp_challenges ( id, country_code, phone_number, code_hash, expires_at ) VALUES ($1, $2, $3, $4, $5)',
+      'INSERT INTO auth_otp_challenges ( id, country_code, phone_number, phone_number_lookup_hash, code_hash, expires_at ) VALUES ($1, $2, $3, $4, $5, $6)',
     );
     const insertChallengeQuery = client.queries.find((query) =>
       normalizeSql(query.text).startsWith('INSERT INTO auth_otp_challenges'),
     );
     expect(insertChallengeQuery?.values?.[1]).toBe('TG');
-    expect(insertChallengeQuery?.values?.[2]).toBe('+22890123456');
-    expect(insertChallengeQuery?.values?.[3]).toBe(
+    expect(insertChallengeQuery?.values?.[2]).not.toBe('+22890123456');
+    expect(insertChallengeQuery?.values?.[3]).toEqual(expect.any(String));
+    expect(insertChallengeQuery?.values?.[4]).toBe(
       hashOtpCode(String(challenge.challengeId), '123456'),
     );
   });
@@ -475,7 +489,7 @@ describe('PostgresCoreRepository', () => {
 
     const outboxQuery = client.queries.at(-2);
     expect(outboxQuery?.values?.[4]).toBe('SubscriberAssigned');
-    expect(JSON.parse(String(outboxQuery?.values?.[5]))).toMatchObject({
+    expect(protectedJsonPayload(outboxQuery, 'outbox_events.payload')).toMatchObject({
       status: 'active',
       workerId: '22222222-2222-4222-8222-222222222222',
     });
@@ -487,7 +501,12 @@ describe('PostgresCoreRepository', () => {
     expect(notificationQuery?.values?.[4]).toBe('subscriber');
     expect(notificationQuery?.values?.[6]).toBe('subscription');
     expect(notificationQuery?.values?.[7]).toBe('33333333-3333-4333-8333-333333333333');
-    expect(JSON.parse(String(notificationQuery?.values?.[9]))).toMatchObject({
+    expect(
+      testDataProtector.revealJson(
+        JSON.parse(String(notificationQuery?.values?.[9])) as Record<string, unknown>,
+        'notification_messages.payload',
+      ),
+    ).toMatchObject({
       status: 'active',
       subscriptionId: '33333333-3333-4333-8333-333333333333',
       workerId: '22222222-2222-4222-8222-222222222222',
@@ -497,7 +516,7 @@ describe('PostgresCoreRepository', () => {
         normalizeSql(query.text).startsWith('INSERT INTO outbox_events') &&
         query.values?.[4] === 'AssignmentDecisionRecorded',
     );
-    expect(JSON.parse(String(decisionOutboxQuery?.values?.[5]))).toMatchObject({
+    expect(protectedJsonPayload(decisionOutboxQuery, 'outbox_events.payload')).toMatchObject({
       decision: 'assigned',
       reason: 'operator_selected_worker',
       subscriptionId: '33333333-3333-4333-8333-333333333333',
@@ -551,7 +570,7 @@ describe('PostgresCoreRepository', () => {
         normalizeSql(query.text).startsWith('INSERT INTO outbox_events') &&
         query.values?.[4] === 'AssignmentDecisionRecorded',
     );
-    expect(JSON.parse(String(decisionOutboxQuery?.values?.[5]))).toMatchObject({
+    expect(protectedJsonPayload(decisionOutboxQuery, 'outbox_events.payload')).toMatchObject({
       decision: 'rejected',
       reason: 'service_cell_mismatch',
       subscriptionId: '33333333-3333-4333-8333-333333333333',
@@ -649,7 +668,7 @@ describe('PostgresCoreRepository', () => {
 
     expect(visit.status).toBe('in_progress');
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
-      "UPDATE visits SET check_in_at = $1, check_in_latitude = $2, check_in_longitude = $3, check_in_verification_method = $4, status = 'in_progress', updated_at = now() WHERE id = $5",
+      "UPDATE visits SET check_in_at = $1, check_in_latitude = $2, check_in_longitude = $3, check_in_latitude_ciphertext = $4, check_in_longitude_ciphertext = $5, check_in_verification_method = $6, status = 'in_progress', updated_at = now() WHERE id = $7",
     );
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain('COMMIT');
   });
@@ -714,7 +733,7 @@ describe('PostgresCoreRepository', () => {
     expect(visit.status).toBe('completed');
     expect(visit.bonus.amountMinor).toBe(600n);
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
-      "UPDATE visits SET check_out_at = $1, check_out_latitude = $2, check_out_longitude = $3, check_out_verification_method = $4, completed_at = $1, status = 'completed', updated_at = now() WHERE id = $5",
+      "UPDATE visits SET check_out_at = $1, check_out_latitude = $2, check_out_longitude = $3, check_out_latitude_ciphertext = $4, check_out_longitude_ciphertext = $5, check_out_verification_method = $6, completed_at = $1, status = 'completed', updated_at = now() WHERE id = $7",
     );
     expect(
       client.queries.some((query) =>
@@ -724,7 +743,7 @@ describe('PostgresCoreRepository', () => {
 
     const outboxQuery = client.queries.at(-2);
     expect(outboxQuery?.values?.[4]).toBe('VisitCompleted');
-    expect(JSON.parse(String(outboxQuery?.values?.[5]))).toMatchObject({
+    expect(protectedJsonPayload(outboxQuery, 'outbox_events.payload')).toMatchObject({
       bonusAmountMinor: '600',
       bonusCurrencyCode: 'XOF',
       checkedInAt: '2026-05-05T09:00:00.000Z',
@@ -928,7 +947,7 @@ describe('PostgresCoreRepository', () => {
     );
     const outboxQuery = client.queries.at(-2);
     expect(outboxQuery?.values?.[4]).toBe('OperatorVisitStatusUpdated');
-    expect(JSON.parse(String(outboxQuery?.values?.[5]))).toMatchObject({
+    expect(protectedJsonPayload(outboxQuery, 'outbox_events.payload')).toMatchObject({
       note: 'Client absent confirme par operations.',
       previousStatus: 'scheduled',
       status: 'no_show',
@@ -1329,7 +1348,7 @@ describe('PostgresCoreRepository', () => {
     );
     const outboxQuery = client.queries.at(-2);
     expect(outboxQuery?.values?.[4]).toBe('SubscriptionCancelled');
-    expect(JSON.parse(String(outboxQuery?.values?.[5]))).toMatchObject({
+    expect(protectedJsonPayload(outboxQuery, 'outbox_events.payload')).toMatchObject({
       cancelledScheduledVisits: 4,
       status: 'cancelled',
     });
@@ -1386,7 +1405,7 @@ describe('PostgresCoreRepository', () => {
     );
     const outboxQuery = client.queries.at(-2);
     expect(outboxQuery?.values?.[4]).toBe('SubscriptionTierChanged');
-    expect(JSON.parse(String(outboxQuery?.values?.[5]))).toMatchObject({
+    expect(protectedJsonPayload(outboxQuery, 'outbox_events.payload')).toMatchObject({
       monthlyPriceMinor: '4500',
       previousTierCode: 'T1',
       tierCode: 'T2',
@@ -1422,11 +1441,11 @@ describe('PostgresCoreRepository', () => {
       updatedAt: new Date('2026-05-02T09:00:00.000Z'),
     });
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
-      'UPDATE subscriptions SET payment_method_provider = $1, payment_method_phone_number = $2, updated_at = now() WHERE id = $3',
+      'UPDATE subscriptions SET payment_method_provider = $1, payment_method_phone_number = $2, payment_method_phone_number_lookup_hash = $3, updated_at = now() WHERE id = $4',
     );
     const outboxQuery = client.queries.at(-2);
     expect(outboxQuery?.values?.[4]).toBe('SubscriptionPaymentMethodUpdated');
-    expect(JSON.parse(String(outboxQuery?.values?.[5]))).toMatchObject({
+    expect(protectedJsonPayload(outboxQuery, 'outbox_events.payload')).toMatchObject({
       paymentMethod: {
         phoneNumber: '+22890123456',
         provider: 'flooz',
@@ -1522,7 +1541,7 @@ describe('PostgresCoreRepository', () => {
       workerId: '22222222-2222-4222-8222-222222222222',
     });
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
-      "SELECT visit.id AS visit_id, visit.subscription_id, visit.status, visit.scheduled_date::text AS scheduled_date, visit.scheduled_time_window, subscriber.phone_number AS subscriber_phone_number, address.neighborhood, address.landmark, address.gps_latitude, address.gps_longitude FROM visits visit INNER JOIN subscriptions subscription ON subscription.id = visit.subscription_id INNER JOIN subscribers subscriber ON subscriber.id = subscription.subscriber_id INNER JOIN subscriber_addresses address ON address.id = subscription.address_id WHERE visit.worker_id = $1 AND visit.scheduled_date = $2 ORDER BY CASE visit.scheduled_time_window WHEN 'morning' THEN 0 WHEN 'afternoon' THEN 1 ELSE 2 END, visit.id ASC",
+      "SELECT visit.id AS visit_id, visit.subscription_id, visit.status, visit.scheduled_date::text AS scheduled_date, visit.scheduled_time_window, subscriber.phone_number AS subscriber_phone_number, address.neighborhood, address.landmark, address.gps_latitude, address.gps_latitude_ciphertext, address.gps_longitude, address.gps_longitude_ciphertext FROM visits visit INNER JOIN subscriptions subscription ON subscription.id = visit.subscription_id INNER JOIN subscribers subscriber ON subscriber.id = subscription.subscriber_id INNER JOIN subscriber_addresses address ON address.id = subscription.address_id WHERE visit.worker_id = $1 AND visit.scheduled_date = $2 ORDER BY CASE visit.scheduled_time_window WHEN 'morning' THEN 0 WHEN 'afternoon' THEN 1 ELSE 2 END, visit.id ASC",
     );
     expect(valuesForQuery(client.queries, 'SELECT visit.id AS visit_id')).toEqual([
       '22222222-2222-4222-8222-222222222222',
@@ -1698,7 +1717,7 @@ describe('PostgresCoreRepository', () => {
       },
     ]);
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
-      "SELECT subscription.id AS subscription_id, subscription.subscriber_id, subscriber.phone_number, subscription.country_code, subscription.tier_code, subscription.visits_per_cycle, subscription.monthly_price_minor, subscription.preferred_day_of_week, subscription.preferred_time_window, subscription.status, subscription.created_at AS queued_at, subscription.created_at + interval '4 hours' AS assignment_due_at, address.neighborhood, address.landmark, address.gps_latitude, address.gps_longitude FROM subscriptions subscription INNER JOIN subscribers subscriber ON subscriber.id = subscription.subscriber_id INNER JOIN subscriber_addresses address ON address.id = subscription.address_id WHERE subscription.country_code = $1 AND subscription.status = 'pending_match' AND subscription.preferred_day_of_week IS NOT NULL AND subscription.preferred_time_window IS NOT NULL ORDER BY subscription.created_at ASC LIMIT $2",
+      "SELECT subscription.id AS subscription_id, subscription.subscriber_id, subscriber.phone_number, subscription.country_code, subscription.tier_code, subscription.visits_per_cycle, subscription.monthly_price_minor, subscription.preferred_day_of_week, subscription.preferred_time_window, subscription.status, subscription.created_at AS queued_at, subscription.created_at + interval '4 hours' AS assignment_due_at, address.neighborhood, address.landmark, address.gps_latitude, address.gps_latitude_ciphertext, address.gps_longitude, address.gps_longitude_ciphertext FROM subscriptions subscription INNER JOIN subscribers subscriber ON subscriber.id = subscription.subscriber_id INNER JOIN subscriber_addresses address ON address.id = subscription.address_id WHERE subscription.country_code = $1 AND subscription.status = 'pending_match' AND subscription.preferred_day_of_week IS NOT NULL AND subscription.preferred_time_window IS NOT NULL ORDER BY subscription.created_at ASC LIMIT $2",
     );
     expect(valuesForQuery(client.queries, 'SELECT subscription.id AS subscription_id')).toEqual([
       'TG',
@@ -1946,7 +1965,7 @@ describe('PostgresCoreRepository', () => {
       userId: '77777777-7777-4777-8777-777777777777',
     });
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
-      "INSERT INTO push_device_tokens ( id, country_code, user_id, role, app, platform, environment, device_id, token, status, last_registered_at ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'active', $10) ON CONFLICT (user_id, device_id) DO UPDATE SET country_code = excluded.country_code, role = excluded.role, app = excluded.app, platform = excluded.platform, environment = excluded.environment, token = excluded.token, status = 'active', last_registered_at = excluded.last_registered_at, updated_at = now() RETURNING id AS push_device_id, country_code, user_id, role, app, platform, environment, device_id, token, status, last_registered_at, created_at, updated_at",
+      "INSERT INTO push_device_tokens ( id, country_code, user_id, role, app, platform, environment, device_id, device_id_lookup_hash, token, status, last_registered_at ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'active', $11) ON CONFLICT (user_id, device_id_lookup_hash) WHERE device_id_lookup_hash IS NOT NULL DO UPDATE SET country_code = excluded.country_code, role = excluded.role, app = excluded.app, platform = excluded.platform, environment = excluded.environment, device_id = excluded.device_id, token = excluded.token, status = 'active', last_registered_at = excluded.last_registered_at, updated_at = now() RETURNING id AS push_device_id, country_code, user_id, role, app, platform, environment, device_id, token, status, last_registered_at, created_at, updated_at",
     );
   });
 
@@ -2522,12 +2541,12 @@ class FakePgTransactionClient implements PgTransactionClient {
         created_at: new Date('2026-05-01T10:00:00.000Z'),
         device_id: values?.[7],
         environment: values?.[6],
-        last_registered_at: values?.[9],
+        last_registered_at: values?.[10],
         platform: values?.[5],
         push_device_id: values?.[0],
         role: values?.[3],
         status: 'active',
-        token: values?.[8],
+        token: values?.[9],
         updated_at: new Date('2026-05-01T10:00:00.000Z'),
         user_id: values?.[2],
       };
@@ -2756,4 +2775,14 @@ function valuesForQuery(
   normalizedPrefix: string,
 ): readonly unknown[] | undefined {
   return queries.find((query) => normalizeSql(query.text).startsWith(normalizedPrefix))?.values;
+}
+
+function protectedJsonPayload(
+  query: RecordedQuery | undefined,
+  context: 'audit_events.payload' | 'outbox_events.payload',
+): Record<string, unknown> {
+  return testDataProtector.revealJson(
+    JSON.parse(String(query?.values?.[5])) as Record<string, unknown>,
+    context,
+  );
 }

@@ -24,6 +24,7 @@ export interface WashedVitestConfigOptions {
   readonly environment?: WashedTestEnvironment;
   readonly include?: readonly string[];
   readonly setupFiles?: readonly string[];
+  readonly testTimeout?: number;
 }
 
 const DEFAULT_ENV_PREFIX = ['VITE_', 'WASHED_'] as const;
@@ -64,6 +65,7 @@ export function defineWashedVitestConfig(options: WashedVitestConfigOptions = {}
       environment: options.environment ?? 'node',
       include: [...(options.include ?? DEFAULT_TEST_INCLUDE)],
       ...(options.setupFiles === undefined ? {} : { setupFiles: [...options.setupFiles] }),
+      ...(options.testTimeout === undefined ? {} : { testTimeout: options.testTimeout }),
     } satisfies TestUserConfig,
   });
 }

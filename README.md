@@ -189,6 +189,9 @@ MOBILE_MONEY_MERCHANT_ID=washed-lome
 - Every country-scoped record should carry `countryCode`; future database work will enforce this with RLS.
 - Product state changes should emit typed domain events through the shared audit primitives.
 - `DATABASE_URL` switches Core API from the in-memory repository to the Postgres repository.
+  Staging/production also require `WASHED_DATA_ENCRYPTION_KEY` and
+  `WASHED_DATA_ENCRYPTION_KEY_ID`; old read keys go in
+  `WASHED_DATA_ENCRYPTION_PREVIOUS_KEYS` during rotation.
 - Postgres writes each domain event to both `audit_events` and `outbox_events` in the same transaction. `audit_events` is append-only for operator/legal traceability; `outbox_events` remains the unpublished integration stream.
 - Operators can replay audit events through `GET /v1/operator/audit-events` with country, event type, aggregate type, aggregate ID, and limit filters.
 - Core events are registered in the contract catalog before audit/outbox writes. Launch-critical events get strict payload validation, and every current support, worker, visit, subscription, payment, and dispatch event must at least match its registered aggregate, actor role, and required payload keys.

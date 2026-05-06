@@ -65,6 +65,8 @@ numbered file in `packages/core-api/migrations`.
 - Enable continuous WAL archiving and PITR before paid beta.
 - Confirm the latest restore point before every production migration.
 - Keep migration role and app role separate; app role must not own tables.
+- Keep data-protection keys outside Postgres backups. A restore drill must use the matching
+  `WASHED_DATA_ENCRYPTION_KEY` or keyring from the secret manager.
 - Test restore into an isolated database at least once per release sprint.
 - Record restore drill date, operator, source backup timestamp, and smoke-check result in the
   launch readiness log.

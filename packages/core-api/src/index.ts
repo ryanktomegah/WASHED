@@ -1,5 +1,6 @@
 export * from './app.js';
 export * from './beta-metrics.js';
+export * from './data-protection.js';
 export * from './notification-localization.js';
 export * from './notification-retry-policy.js';
 export * from './notification-worker.js';

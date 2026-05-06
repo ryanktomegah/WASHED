@@ -26,6 +26,8 @@ Do not renumber existing migrations. Add a new file with the next number.
 - New country-scoped tables must include `country_code`, an explicit country index for operator
   reads, an RLS policy using `app.country_code`, and forced RLS before production traffic reaches
   the table.
+- New sensitive fields must be encrypted or tokenized in the repository before storage. If lookup is
+  required, add a keyed lookup-hash column instead of querying plaintext.
 - Backfills must be in the same migration as the new nullable column, followed by `SET NOT NULL`
   only after the backfill.
 - Production app roles must not own tables. The app role relies on forced RLS; schema ownership

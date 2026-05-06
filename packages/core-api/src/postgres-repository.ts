@@ -20,6 +20,7 @@ import {
 } from '@washed/shared';
 
 import { hashOtpCode, hashRefreshToken, safeHashEqual } from './auth-crypto.js';
+import { createDataProtectorFromEnv, type DataProtector } from './data-protection.js';
 import { issueAuthTokens } from './auth-tokens.js';
 import { assertCoreDomainEventContract } from './domain-event-contracts.js';
 import { deliverNotificationMessageLocally } from './notification-delivery.js';
@@ -193,6 +194,7 @@ export class PostgresCoreRepository implements CoreRepository {
     private readonly pool: PgPoolLike,
     private readonly otpProvider: OtpProvider = createOtpProvider(),
     private readonly paymentProvider: PaymentProvider = createPaymentProvider(),
+    private readonly dataProtector: DataProtector = createDataProtectorFromEnv(),
   ) {}
 
   public async health(): Promise<'ok'> {
@@ -210,11 +212,11 @@ export class PostgresCoreRepository implements CoreRepository {
     return withPgTransaction(this.pool, {
       countryCode: input.countryCode,
       run: async (client) => {
-        const subscriberId = await upsertSubscriber(client, input);
+        const subscriberId = await upsertSubscriber(client, this.dataProtector, input);
         const record = buildCreatedSubscriptionRecord(input, subscriberId);
-        await insertSubscriberAddress(client, input, record);
-        await insertSubscription(client, input, record);
-        await insertOutboxEvents(client, record.events);
+        await insertSubscriberAddress(client, this.dataProtector, input, record);
+        await insertSubscription(client, this.dataProtector, input, record);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -226,14 +228,19 @@ export class PostgresCoreRepository implements CoreRepository {
     return withPgTransaction(this.pool, {
       countryCode: input.countryCode,
       run: async (client) => {
-        await ensureSubscriberProfile(client, input);
-        const profile = await selectSubscriberProfile(client, input.countryCode, input.phoneNumber);
+        await ensureSubscriberProfile(client, this.dataProtector, input);
+        const profile = await selectSubscriberProfile(
+          client,
+          this.dataProtector,
+          input.countryCode,
+          input.phoneNumber,
+        );
 
         if (profile === undefined) {
           throw new Error('Subscriber profile was not found.');
         }
 
-        return mapSubscriberProfileRow(profile);
+        return mapSubscriberProfileRow(this.dataProtector, profile);
       },
     });
   }
@@ -244,59 +251,126 @@ export class PostgresCoreRepository implements CoreRepository {
     return withPgTransaction(this.pool, {
       countryCode: input.countryCode,
       run: async (client) => {
-        const result = await client.query<SubscriberProfileRow>(
-          `
-            INSERT INTO subscribers (
-              id,
-              country_code,
-              locale,
-              phone_number,
-              first_name,
-              last_name,
-              email,
-              avatar_object_key,
-              is_adult_confirmed
-            )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-            ON CONFLICT (country_code, phone_number) DO UPDATE
-            SET
-              first_name = EXCLUDED.first_name,
-              last_name = EXCLUDED.last_name,
-              email = EXCLUDED.email,
-              avatar_object_key = EXCLUDED.avatar_object_key,
-              is_adult_confirmed = EXCLUDED.is_adult_confirmed,
-              updated_at = now()
-            RETURNING
-              id AS subscriber_id,
-              country_code,
-              phone_number,
-              first_name,
-              last_name,
-              email,
-              avatar_object_key,
-              is_adult_confirmed,
-              created_at,
-              updated_at
-          `,
-          [
-            input.subscriberUserId,
-            input.countryCode,
-            'fr',
-            input.phoneNumber,
-            input.firstName,
-            input.lastName,
-            input.email ?? null,
-            input.avatarObjectKey ?? null,
-            input.isAdultConfirmed,
-          ],
+        const existing = await selectSubscriberProfile(
+          client,
+          this.dataProtector,
+          input.countryCode,
+          input.phoneNumber,
         );
+        const encryptedPhoneNumber = this.dataProtector.protectText(
+          input.phoneNumber,
+          'subscribers.phone_number',
+        );
+        const phoneNumberLookupHash = phoneLookupHash(
+          this.dataProtector,
+          input.countryCode,
+          input.phoneNumber,
+        );
+        const encryptedEmail = this.dataProtector.protectNullableText(
+          input.email,
+          'subscribers.email',
+        );
+        const encryptedFirstName = this.dataProtector.protectNullableText(
+          input.firstName,
+          'subscribers.first_name',
+        );
+        const encryptedLastName = this.dataProtector.protectNullableText(
+          input.lastName,
+          'subscribers.last_name',
+        );
+        const encryptedAvatarObjectKey = this.dataProtector.protectNullableText(
+          input.avatarObjectKey,
+          'subscribers.avatar_object_key',
+        );
+        const result =
+          existing === undefined
+            ? await client.query<SubscriberProfileRow>(
+                `
+                  INSERT INTO subscribers (
+                    id,
+                    country_code,
+                    locale,
+                    phone_number,
+                    phone_number_lookup_hash,
+                    first_name,
+                    last_name,
+                    email,
+                    email_lookup_hash,
+                    avatar_object_key,
+                    is_adult_confirmed
+                  )
+                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                  RETURNING
+                    id AS subscriber_id,
+                    country_code,
+                    phone_number,
+                    first_name,
+                    last_name,
+                    email,
+                    avatar_object_key,
+                    is_adult_confirmed,
+                    created_at,
+                    updated_at
+                `,
+                [
+                  input.subscriberUserId,
+                  input.countryCode,
+                  'fr',
+                  encryptedPhoneNumber,
+                  phoneNumberLookupHash,
+                  encryptedFirstName,
+                  encryptedLastName,
+                  encryptedEmail,
+                  emailLookupHash(this.dataProtector, input.countryCode, input.email),
+                  encryptedAvatarObjectKey,
+                  input.isAdultConfirmed,
+                ],
+              )
+            : await client.query<SubscriberProfileRow>(
+                `
+                  UPDATE subscribers
+                  SET
+                    phone_number = $1,
+                    phone_number_lookup_hash = $2,
+                    first_name = $3,
+                    last_name = $4,
+                    email = $5,
+                    email_lookup_hash = $6,
+                    avatar_object_key = $7,
+                    is_adult_confirmed = $8,
+                    updated_at = now()
+                  WHERE id = $9
+                  RETURNING
+                    id AS subscriber_id,
+                    country_code,
+                    phone_number,
+                    first_name,
+                    last_name,
+                    email,
+                    avatar_object_key,
+                    is_adult_confirmed,
+                    created_at,
+                    updated_at
+                `,
+                [
+                  encryptedPhoneNumber,
+                  phoneNumberLookupHash,
+                  encryptedFirstName,
+                  encryptedLastName,
+                  encryptedEmail,
+                  emailLookupHash(this.dataProtector, input.countryCode, input.email),
+                  encryptedAvatarObjectKey,
+                  input.isAdultConfirmed,
+                  existing.subscriber_id,
+                ],
+              );
         const profile = result.rows[0];
 
         if (profile === undefined) {
           throw new Error('Subscriber profile could not be saved.');
         }
 
-        return mapSubscriberProfileRow(profile);
+        return mapSubscriberProfileRow(this.dataProtector, profile);
       },
     });
   }
@@ -306,7 +380,7 @@ export class PostgresCoreRepository implements CoreRepository {
   ): Promise<SubscriptionDetailRecord | null> {
     const current = await withPgTransaction(this.pool, {
       countryCode: input.countryCode,
-      run: (client) => selectCurrentSubscriberSubscription(client, input),
+      run: (client) => selectCurrentSubscriberSubscription(client, this.dataProtector, input),
     });
 
     if (current === undefined) {
@@ -323,7 +397,12 @@ export class PostgresCoreRepository implements CoreRepository {
     const subscriptionId = await withPgTransaction(this.pool, {
       countryCode: input.countryCode,
       run: async (client) => {
-        const current = await selectCurrentSubscriberSubscription(client, input, true);
+        const current = await selectCurrentSubscriberSubscription(
+          client,
+          this.dataProtector,
+          input,
+          true,
+        );
 
         if (current === undefined) {
           throw new Error('Subscription was not found.');
@@ -356,7 +435,7 @@ export class PostgresCoreRepository implements CoreRepository {
           status,
           timeWindow: input.schedulePreference.timeWindow,
         });
-        await insertOutboxEvents(client, [event]);
+        await insertOutboxEvents(client, this.dataProtector, [event]);
         return current.subscription_id;
       },
     });
@@ -380,15 +459,17 @@ export class PostgresCoreRepository implements CoreRepository {
               id,
               country_code,
               phone_number,
+              phone_number_lookup_hash,
               code_hash,
               expires_at
             )
-            VALUES ($1, $2, $3, $4, $5)
+            VALUES ($1, $2, $3, $4, $5, $6)
           `,
           [
             challengeId,
             input.countryCode,
-            input.phoneNumber,
+            this.dataProtector.protectText(input.phoneNumber, 'auth_otp_challenges.phone_number'),
+            phoneLookupHash(this.dataProtector, input.countryCode, input.phoneNumber),
             hashOtpCode(challengeId, delivery.code),
             expiresAt,
           ],
@@ -433,9 +514,17 @@ export class PostgresCoreRepository implements CoreRepository {
           throw new Error('OTP code is invalid.');
         }
 
+        const verifiedChallenge = {
+          ...challenge,
+          phone_number: this.dataProtector.revealText(
+            challenge.phone_number,
+            'auth_otp_challenges.phone_number',
+          ),
+        };
+
         await consumeOtpChallenge(client, input.challengeId);
-        const user = await upsertAuthUser(client, challenge, input.role);
-        const session = await insertAuthSession(client, user, input.deviceId);
+        const user = await upsertAuthUser(client, this.dataProtector, verifiedChallenge, input.role);
+        const session = await insertAuthSession(client, this.dataProtector, user, input.deviceId);
         return session;
       },
     });
@@ -465,13 +554,17 @@ export class PostgresCoreRepository implements CoreRepository {
         await revokeAuthSession(client, currentSession.session_id);
         const session = await insertAuthSession(
           client,
+          this.dataProtector,
           {
             country_code: currentSession.country_code,
-            phone_number: currentSession.phone_number,
+            phone_number: this.dataProtector.revealText(
+              currentSession.phone_number,
+              'auth_users.phone_number',
+            ),
             role: currentSession.role,
             user_id: currentSession.user_id,
           },
-          currentSession.device_id,
+          this.dataProtector.revealText(currentSession.device_id, 'auth_sessions.device_id'),
         );
         return session;
       },
@@ -534,7 +627,7 @@ export class PostgresCoreRepository implements CoreRepository {
           await updateSubscriptionPaymentStatus(client, input.subscriptionId, subscriptionStatus);
         }
 
-        await insertOutboxEvents(client, attempt.events);
+        await insertOutboxEvents(client, this.dataProtector, attempt.events);
         return attempt;
       },
     });
@@ -593,7 +686,7 @@ export class PostgresCoreRepository implements CoreRepository {
           await updateSubscriptionPaymentStatus(client, input.subscriptionId, subscriptionStatus);
         }
 
-        await insertOutboxEvents(client, attempt.events);
+        await insertOutboxEvents(client, this.dataProtector, attempt.events);
         return attempt;
       },
     });
@@ -685,7 +778,7 @@ export class PostgresCoreRepository implements CoreRepository {
             },
           );
           await insertVisits(client, subscription.country_code, input.subscriptionId, assignment);
-          await insertOutboxEvents(client, [...decision.events, ...assignment.events]);
+          await insertOutboxEvents(client, this.dataProtector, [...decision.events, ...assignment.events]);
           return assignment;
         },
       });
@@ -705,7 +798,7 @@ export class PostgresCoreRepository implements CoreRepository {
                   reason: rejection.reason,
                 },
               );
-              await insertOutboxEvents(client, decision.events);
+              await insertOutboxEvents(client, this.dataProtector, decision.events);
             },
           });
         } catch {
@@ -744,7 +837,7 @@ export class PostgresCoreRepository implements CoreRepository {
           decision: 'declined',
           reason: 'operator_declined_candidate',
         });
-        await insertOutboxEvents(client, decision.events);
+        await insertOutboxEvents(client, this.dataProtector, decision.events);
         return decision;
       },
     });
@@ -780,8 +873,8 @@ export class PostgresCoreRepository implements CoreRepository {
           workerName: worker.display_name,
         });
 
-        await insertWorkerAdvanceRequest(client, record);
-        await insertOutboxEvents(client, record.events);
+        await insertWorkerAdvanceRequest(client, this.dataProtector, record);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -795,7 +888,7 @@ export class PostgresCoreRepository implements CoreRepository {
       run: (client) => selectWorkerAdvanceRequests(client, input),
     });
 
-    return rows.map(mapWorkerAdvanceRequestRow);
+    return rows.map((row) => mapWorkerAdvanceRequestRow(this.dataProtector, row));
   }
 
   public async createWorkerMonthlyPayout(
@@ -830,8 +923,8 @@ export class PostgresCoreRepository implements CoreRepository {
           workerName: worker.display_name,
         });
 
-        await insertWorkerPayout(client, record);
-        await insertOutboxEvents(client, record.events);
+        await insertWorkerPayout(client, this.dataProtector, record);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -845,7 +938,7 @@ export class PostgresCoreRepository implements CoreRepository {
       run: (client) => selectWorkerPayouts(client, input),
     });
 
-    return rows.map(mapWorkerPayoutRow);
+    return rows.map((row) => mapWorkerPayoutRow(this.dataProtector, row));
   }
 
   private async createMonthlyPayoutProviderResult(
@@ -933,8 +1026,8 @@ export class PostgresCoreRepository implements CoreRepository {
           refund: refundResult,
         });
 
-        await insertPaymentRefund(client, refund);
-        await insertOutboxEvents(client, refund.events);
+        await insertPaymentRefund(client, this.dataProtector, refund);
+        await insertOutboxEvents(client, this.dataProtector, refund.events);
         return refund;
       },
     });
@@ -964,7 +1057,7 @@ export class PostgresCoreRepository implements CoreRepository {
         });
 
         await insertPaymentReconciliationRun(client, run);
-        await insertOutboxEvents(client, run.events);
+        await insertOutboxEvents(client, this.dataProtector, run.events);
         return run;
       },
     });
@@ -991,10 +1084,10 @@ export class PostgresCoreRepository implements CoreRepository {
 
         const record = buildResolvedWorkerAdvanceRequestRecord({
           input,
-          request: mapWorkerAdvanceRequestRow(request),
+          request: mapWorkerAdvanceRequestRow(this.dataProtector, request),
         });
 
-        await updateWorkerAdvanceRequestResolution(client, input);
+        await updateWorkerAdvanceRequestResolution(client, this.dataProtector, input);
         if (input.resolution === 'approved') {
           const payoutProviderResult = await this.paymentProvider.payoutWorker({
             amount: record.amount,
@@ -1022,10 +1115,10 @@ export class PostgresCoreRepository implements CoreRepository {
             providerResult: payoutProviderResult,
             ...(record.workerName === undefined ? {} : { workerName: record.workerName }),
           });
-          await insertWorkerPayout(client, payout);
-          await insertOutboxEvents(client, [...record.events, ...payout.events]);
+          await insertWorkerPayout(client, this.dataProtector, payout);
+          await insertOutboxEvents(client, this.dataProtector, [...record.events, ...payout.events]);
         } else {
-          await insertOutboxEvents(client, record.events);
+          await insertOutboxEvents(client, this.dataProtector, record.events);
         }
         return record;
       },
@@ -1079,14 +1172,17 @@ export class PostgresCoreRepository implements CoreRepository {
           currentWorkerId: subscription.assigned_worker_id,
           input,
           subscriberId: subscription.subscriber_id,
-          subscriberPhoneNumber: subscription.phone_number,
+          subscriberPhoneNumber: this.dataProtector.revealText(
+            subscription.phone_number,
+            'subscribers.phone_number',
+          ),
           ...(subscription.assigned_worker_display_name === null
             ? {}
             : { currentWorkerName: subscription.assigned_worker_display_name }),
         });
 
-        await insertWorkerSwapRequest(client, record);
-        await insertOutboxEvents(client, record.events);
+        await insertWorkerSwapRequest(client, this.dataProtector, record);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -1099,7 +1195,7 @@ export class PostgresCoreRepository implements CoreRepository {
       countryCode: input.countryCode,
       run: (client) => selectWorkerSwapRequests(client, input),
     });
-    return rows.map(mapWorkerSwapRequestRow);
+    return rows.map((row) => mapWorkerSwapRequestRow(this.dataProtector, row));
   }
 
   public async resolveWorkerSwapRequest(
@@ -1134,13 +1230,13 @@ export class PostgresCoreRepository implements CoreRepository {
 
         const record = buildResolvedWorkerSwapRequestRecord({
           input,
-          request: mapWorkerSwapRequestRow(request),
+          request: mapWorkerSwapRequestRow(this.dataProtector, request),
           ...(replacementWorker === undefined
             ? {}
             : { replacementWorkerName: replacementWorker.display_name }),
         });
 
-        await updateWorkerSwapRequestResolution(client, input);
+          await updateWorkerSwapRequestResolution(client, this.dataProtector, input);
         if (input.resolution === 'approved' && input.replacementWorkerId !== undefined) {
           await updateSubscriptionWorkerSwap(
             client,
@@ -1153,7 +1249,7 @@ export class PostgresCoreRepository implements CoreRepository {
             input.replacementWorkerId,
           );
         }
-        await insertOutboxEvents(client, record.events);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -1189,7 +1285,7 @@ export class PostgresCoreRepository implements CoreRepository {
         });
 
         await updateSubscriptionStatus(client, input.subscriptionId, status);
-        await insertOutboxEvents(client, record.events);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -1223,7 +1319,7 @@ export class PostgresCoreRepository implements CoreRepository {
         });
 
         await updateSubscriptionStatus(client, input.subscriptionId, status);
-        await insertOutboxEvents(client, record.events);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -1253,7 +1349,7 @@ export class PostgresCoreRepository implements CoreRepository {
         });
 
         await updateSubscriptionStatus(client, input.subscriptionId, status);
-        await insertOutboxEvents(client, record.events);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -1281,7 +1377,7 @@ export class PostgresCoreRepository implements CoreRepository {
         });
 
         await updateSubscriptionTier(client, record);
-        await insertOutboxEvents(client, record.events);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -1313,8 +1409,13 @@ export class PostgresCoreRepository implements CoreRepository {
           input,
         });
 
-        await updateSubscriptionPaymentMethod(client, record);
-        await insertOutboxEvents(client, record.events);
+        await updateSubscriptionPaymentMethod(
+          client,
+          this.dataProtector,
+          subscription.country_code,
+          record,
+        );
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -1335,13 +1436,23 @@ export class PostgresCoreRepository implements CoreRepository {
           fallbackCode: input.fallbackCode,
           location: input.location,
           target: {
-            latitude: Number(visit.gps_latitude),
-            longitude: Number(visit.gps_longitude),
+            latitude: revealCoordinate(
+              this.dataProtector,
+              visit.gps_latitude_ciphertext,
+              visit.gps_latitude,
+              'subscriber_addresses.gps_latitude',
+            ),
+            longitude: revealCoordinate(
+              this.dataProtector,
+              visit.gps_longitude_ciphertext,
+              visit.gps_longitude,
+              'subscriber_addresses.gps_longitude',
+            ),
           },
           visitFallbackCode: visit.fallback_code,
         });
         transitionVisit(visit.status, 'check_in');
-        await updateVisitCheckIn(client, input, visit.fallback_code);
+        await updateVisitCheckIn(client, this.dataProtector, input, visit.fallback_code);
 
         return {
           checkedInAt: input.checkedInAt,
@@ -1380,8 +1491,8 @@ export class PostgresCoreRepository implements CoreRepository {
           },
           traceId: input.traceId,
         });
-        const photo = await upsertVisitPhoto(client, input, visit.country_code);
-        await insertOutboxEvents(client, [event]);
+        const photo = await upsertVisitPhoto(client, this.dataProtector, input, visit.country_code);
+        await insertOutboxEvents(client, this.dataProtector, [event]);
 
         return {
           ...photo,
@@ -1412,8 +1523,18 @@ export class PostgresCoreRepository implements CoreRepository {
           fallbackCode: input.fallbackCode,
           location: input.location,
           target: {
-            latitude: Number(visit.gps_latitude),
-            longitude: Number(visit.gps_longitude),
+            latitude: revealCoordinate(
+              this.dataProtector,
+              visit.gps_latitude_ciphertext,
+              visit.gps_latitude,
+              'subscriber_addresses.gps_latitude',
+            ),
+            longitude: revealCoordinate(
+              this.dataProtector,
+              visit.gps_longitude_ciphertext,
+              visit.gps_longitude,
+              'subscriber_addresses.gps_longitude',
+            ),
           },
           visitFallbackCode: visit.fallback_code,
         });
@@ -1441,9 +1562,9 @@ export class PostgresCoreRepository implements CoreRepository {
           traceId: input.traceId,
         });
 
-        await updateVisitCheckOut(client, input, visit.fallback_code);
+        await updateVisitCheckOut(client, this.dataProtector, input, visit.fallback_code);
         await insertWorkerCompletedVisitBonus(client, visit.country_code, input, event.eventId);
-        await insertOutboxEvents(client, [event]);
+        await insertOutboxEvents(client, this.dataProtector, [event]);
 
         return {
           bonus,
@@ -1488,7 +1609,7 @@ export class PostgresCoreRepository implements CoreRepository {
         });
 
         await updateVisitSchedule(client, input);
-        await insertOutboxEvents(client, record.events);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -1523,7 +1644,7 @@ export class PostgresCoreRepository implements CoreRepository {
         });
 
         await updateVisitStatus(client, input.visitId, status);
-        await insertOutboxEvents(client, record.events);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -1563,7 +1684,7 @@ export class PostgresCoreRepository implements CoreRepository {
         });
 
         await updateVisitStatus(client, input.visitId, status);
-        await insertOutboxEvents(client, record.events);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -1584,13 +1705,16 @@ export class PostgresCoreRepository implements CoreRepository {
         const record = buildCreatedDisputeRecord({
           countryCode: visit.country_code,
           input,
-          subscriberPhoneNumber: visit.subscriber_phone_number,
+          subscriberPhoneNumber: this.dataProtector.revealText(
+            visit.subscriber_phone_number,
+            'subscribers.phone_number',
+          ),
           workerId: visit.worker_id,
         });
 
-        await insertSupportDispute(client, record);
+        await insertSupportDispute(client, this.dataProtector, record);
         await updateVisitStatus(client, input.visitId, status);
-        await insertOutboxEvents(client, record.events);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -1603,7 +1727,7 @@ export class PostgresCoreRepository implements CoreRepository {
       countryCode: input.countryCode,
       run: (client) => selectOperatorDisputes(client, input),
     });
-    return rows.map(mapDisputeRow);
+    return rows.map((row) => mapDisputeRow(this.dataProtector, row));
   }
 
   public async resolveDispute(input: ResolveDisputeInput): Promise<DisputeRecord> {
@@ -1622,16 +1746,16 @@ export class PostgresCoreRepository implements CoreRepository {
         }
 
         const record = buildResolvedDisputeRecord({
-          dispute: mapDisputeRow(dispute),
+          dispute: mapDisputeRow(this.dataProtector, dispute),
           input,
         });
         const credit = buildSupportCreditRecord(record, input);
 
-        await updateSupportDisputeResolution(client, input);
+        await updateSupportDisputeResolution(client, this.dataProtector, input);
         if (credit !== null) {
-          await insertSupportCredit(client, credit, record.countryCode);
+          await insertSupportCredit(client, this.dataProtector, credit, record.countryCode);
         }
-        await insertOutboxEvents(client, record.events);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -1658,8 +1782,8 @@ export class PostgresCoreRepository implements CoreRepository {
           input,
         });
 
-        await insertSupportContact(client, record);
-        await insertOutboxEvents(client, record.events);
+        await insertSupportContact(client, this.dataProtector, record);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -1672,7 +1796,7 @@ export class PostgresCoreRepository implements CoreRepository {
       countryCode: input.countryCode,
       run: (client) => selectSupportContactsForSubscription(client, input),
     });
-    return rows.map(mapSupportContactRow);
+    return rows.map((row) => mapSupportContactRow(this.dataProtector, row));
   }
 
   public async getSupportContact(
@@ -1682,7 +1806,7 @@ export class PostgresCoreRepository implements CoreRepository {
       countryCode: input.countryCode,
       run: (client) => selectSupportContactById(client, input),
     });
-    return row === undefined ? null : mapSupportContactRow(row);
+    return row === undefined ? null : mapSupportContactRow(this.dataProtector, row);
   }
 
   public async resolveSupportContact(
@@ -1697,14 +1821,14 @@ export class PostgresCoreRepository implements CoreRepository {
           throw new Error('Support contact was not found.');
         }
 
-        const contact = mapSupportContactRow(row);
+        const contact = mapSupportContactRow(this.dataProtector, row);
         if (contact.status !== 'open') {
           throw new Error(`Support contact cannot be resolved from status ${contact.status}.`);
         }
 
         const record = buildResolvedSupportContactRecord({ contact, input });
-        await updateSupportContactResolution(client, record);
-        await insertOutboxEvents(client, record.events);
+        await updateSupportContactResolution(client, this.dataProtector, record);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -1732,8 +1856,8 @@ export class PostgresCoreRepository implements CoreRepository {
           workerId: visit.worker_id,
         });
 
-        await insertVisitRating(client, record);
-        await insertOutboxEvents(client, record.events);
+        await insertVisitRating(client, this.dataProtector, record);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -1751,22 +1875,20 @@ export class PostgresCoreRepository implements CoreRepository {
         await setPgLocalCountryCode(client, visit.country_code);
         assertVisitWorker(visit.worker_id, input.workerId);
         const record = buildWorkerIssueReportRecord({
-          address: {
-            gpsLatitude: Number(visit.gps_latitude),
-            gpsLongitude: Number(visit.gps_longitude),
-            landmark: visit.landmark,
-            neighborhood: visit.neighborhood,
-          },
+          address: revealSubscriberAddress(this.dataProtector, visit),
           countryCode: visit.country_code,
           input,
           scheduledDate: visit.scheduled_date,
           scheduledTimeWindow: visit.scheduled_time_window,
-          subscriberPhoneNumber: visit.subscriber_phone_number,
+          subscriberPhoneNumber: this.dataProtector.revealText(
+            visit.subscriber_phone_number,
+            'subscribers.phone_number',
+          ),
           subscriptionId: visit.subscription_id,
         });
 
-        await insertWorkerIssueReport(client, record);
-        await insertOutboxEvents(client, record.events);
+        await insertWorkerIssueReport(client, this.dataProtector, record);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -1779,7 +1901,7 @@ export class PostgresCoreRepository implements CoreRepository {
       countryCode: input.countryCode,
       run: (client) => selectWorkerIssues(client, input),
     });
-    return rows.map(mapWorkerIssueRow);
+    return rows.map((row) => mapWorkerIssueRow(this.dataProtector, row));
   }
 
   public async resolveWorkerIssue(
@@ -1801,11 +1923,11 @@ export class PostgresCoreRepository implements CoreRepository {
 
         const record = buildResolvedWorkerIssueRecord({
           input,
-          issue: mapWorkerIssueRow(issue),
+          issue: mapWorkerIssueRow(this.dataProtector, issue),
         });
 
-        await updateWorkerIssueResolution(client, input);
-        await insertOutboxEvents(client, record.events);
+        await updateWorkerIssueResolution(client, this.dataProtector, input);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -1876,7 +1998,9 @@ export class PostgresCoreRepository implements CoreRepository {
               address.neighborhood,
               address.landmark,
               address.gps_latitude,
-              address.gps_longitude
+              address.gps_latitude_ciphertext,
+              address.gps_longitude,
+              address.gps_longitude_ciphertext
             FROM visits visit
             INNER JOIN subscriptions subscription ON subscription.id = visit.subscription_id
             INNER JOIN subscribers subscriber ON subscriber.id = subscription.subscriber_id
@@ -1898,16 +2022,14 @@ export class PostgresCoreRepository implements CoreRepository {
     return {
       date: input.date,
       visits: result.rows.map((row) => ({
-        address: {
-          gpsLatitude: Number(row.gps_latitude),
-          gpsLongitude: Number(row.gps_longitude),
-          landmark: row.landmark,
-          neighborhood: row.neighborhood,
-        },
+        address: revealSubscriberAddress(this.dataProtector, row),
         scheduledDate: row.scheduled_date,
         scheduledTimeWindow: row.scheduled_time_window,
         status: row.status,
-        subscriberPhoneNumber: row.subscriber_phone_number,
+        subscriberPhoneNumber: this.dataProtector.revealText(
+          row.subscriber_phone_number,
+          'subscribers.phone_number',
+        ),
         subscriptionId: row.subscription_id,
         visitId: row.visit_id,
       })),
@@ -1937,12 +2059,7 @@ export class PostgresCoreRepository implements CoreRepository {
     });
 
     return {
-      address: {
-        gpsLatitude: Number(detail.gps_latitude),
-        gpsLongitude: Number(detail.gps_longitude),
-        landmark: detail.landmark,
-        neighborhood: detail.neighborhood,
-      },
+      address: revealSubscriberAddress(this.dataProtector, detail),
       assignedWorker:
         detail.assigned_worker_id === null
           ? null
@@ -1964,10 +2081,13 @@ export class PostgresCoreRepository implements CoreRepository {
         detail.payment_method_provider === null || detail.payment_method_phone_number === null
           ? null
           : {
-              phoneNumber: detail.payment_method_phone_number,
+              phoneNumber: this.dataProtector.revealText(
+                detail.payment_method_phone_number,
+                'subscriptions.payment_method_phone_number',
+              ),
               provider: detail.payment_method_provider,
             },
-      phoneNumber: detail.phone_number,
+      phoneNumber: this.dataProtector.revealText(detail.phone_number, 'subscribers.phone_number'),
       schedulePreference:
         detail.preferred_day_of_week === null || detail.preferred_time_window === null
           ? null
@@ -1990,7 +2110,7 @@ export class PostgresCoreRepository implements CoreRepository {
         amount: money(BigInt(credit.amount_minor), credit.currency_code),
         createdAt: credit.created_at,
         creditId: credit.credit_id,
-        reason: credit.reason,
+        reason: this.dataProtector.revealText(credit.reason, 'support_credits.reason'),
       })),
       upcomingVisits: visits.map((visit) => ({
         scheduledDate: visit.scheduled_date,
@@ -2047,9 +2167,15 @@ export class PostgresCoreRepository implements CoreRepository {
       run: async (client) => {
         await upsertWorkerForOnboarding(client, input);
         const record = buildCreatedWorkerOnboardingCaseRecord(input);
-        await insertWorkerOnboardingCase(client, record);
-        await insertWorkerOnboardingNotes(client, record.countryCode, record.caseId, record.notes);
-        await insertOutboxEvents(client, record.events);
+        await insertWorkerOnboardingCase(client, this.dataProtector, record);
+        await insertWorkerOnboardingNotes(
+          client,
+          this.dataProtector,
+          record.countryCode,
+          record.caseId,
+          record.notes,
+        );
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -2062,7 +2188,9 @@ export class PostgresCoreRepository implements CoreRepository {
       countryCode: input.countryCode,
       run: async (client) => {
         const rows = await selectWorkerOnboardingCases(client, input);
-        return Promise.all(rows.map((row) => mapWorkerOnboardingCaseRow(client, row)));
+        return Promise.all(
+          rows.map((row) => mapWorkerOnboardingCaseRow(client, this.dataProtector, row)),
+        );
       },
     });
   }
@@ -2080,12 +2208,16 @@ export class PostgresCoreRepository implements CoreRepository {
         }
 
         await setPgLocalCountryCode(client, row.country_code);
-        const current = await mapWorkerOnboardingCaseRow(client, row);
+        const current = await mapWorkerOnboardingCaseRow(client, this.dataProtector, row);
         const record = buildAdvancedWorkerOnboardingCaseRecord({ input, record: current });
         await updateWorkerOnboardingCaseStage(client, record);
-        await insertWorkerOnboardingNotes(client, record.countryCode, record.caseId, [
-          record.notes.at(-1)!,
-        ]);
+        await insertWorkerOnboardingNotes(
+          client,
+          this.dataProtector,
+          record.countryCode,
+          record.caseId,
+          [record.notes.at(-1)!],
+        );
         if (record.stage === 'activated') {
           await updateWorkerStatus(client, record.workerId, 'active');
         } else if (record.stage === 'rejected') {
@@ -2093,7 +2225,7 @@ export class PostgresCoreRepository implements CoreRepository {
         } else {
           await updateWorkerStatus(client, record.workerId, 'onboarding');
         }
-        await insertOutboxEvents(client, record.events);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -2117,8 +2249,8 @@ export class PostgresCoreRepository implements CoreRepository {
         }
 
         const record = buildWorkerUnavailabilityRecord(input);
-        await insertWorkerUnavailability(client, record);
-        await insertOutboxEvents(client, record.events);
+        await insertWorkerUnavailability(client, this.dataProtector, record);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -2132,7 +2264,7 @@ export class PostgresCoreRepository implements CoreRepository {
       run: (client) => selectWorkerUnavailability(client, input),
     });
 
-    return rows.map(mapWorkerUnavailabilityRow);
+    return rows.map((row) => mapWorkerUnavailabilityRow(this.dataProtector, row));
   }
 
   public async listMatchingQueue(
@@ -2159,7 +2291,9 @@ export class PostgresCoreRepository implements CoreRepository {
               address.neighborhood,
               address.landmark,
               address.gps_latitude,
-              address.gps_longitude
+              address.gps_latitude_ciphertext,
+              address.gps_longitude,
+              address.gps_longitude_ciphertext
             FROM subscriptions subscription
             INNER JOIN subscribers subscriber ON subscriber.id = subscription.subscriber_id
             INNER JOIN subscriber_addresses address ON address.id = subscription.address_id
@@ -2175,16 +2309,11 @@ export class PostgresCoreRepository implements CoreRepository {
     });
 
     return result.rows.map((row) => ({
-      address: {
-        gpsLatitude: Number(row.gps_latitude),
-        gpsLongitude: Number(row.gps_longitude),
-        landmark: row.landmark,
-        neighborhood: row.neighborhood,
-      },
+      address: revealSubscriberAddress(this.dataProtector, row),
       assignmentDueAt: row.assignment_due_at,
       countryCode: row.country_code,
       monthlyPriceMinor: BigInt(row.monthly_price_minor),
-      phoneNumber: row.phone_number,
+      phoneNumber: this.dataProtector.revealText(row.phone_number, 'subscribers.phone_number'),
       queuedAt: row.queued_at,
       schedulePreference: {
         dayOfWeek: row.preferred_day_of_week,
@@ -2450,7 +2579,7 @@ export class PostgresCoreRepository implements CoreRepository {
       eventId: row.event_id,
       eventType: row.event_type,
       occurredAt: row.occurred_at,
-      payload: row.payload,
+      payload: this.dataProtector.revealJson(row.payload, 'audit_events.payload'),
       recordedAt: row.recorded_at,
       traceId: row.trace_id,
     }));
@@ -2494,8 +2623,8 @@ export class PostgresCoreRepository implements CoreRepository {
     return withPgTransaction(this.pool, {
       countryCode: detail.countryCode,
       run: async (client) => {
-        await insertSubscriberPrivacyRequest(client, record);
-        await insertOutboxEvents(client, record.events);
+        await insertSubscriberPrivacyRequest(client, this.dataProtector, record);
+        await insertOutboxEvents(client, this.dataProtector, record.events);
         return record;
       },
     });
@@ -2557,17 +2686,31 @@ export class PostgresCoreRepository implements CoreRepository {
             FROM subscriptions subscription
             INNER JOIN subscribers subscriber ON subscriber.id = subscription.subscriber_id
             WHERE subscription.country_code = $1
-              AND ($2::text IS NULL OR subscriber.phone_number ILIKE '%' || $2 || '%')
+              AND (
+                $2::text IS NULL
+                OR subscriber.phone_number_lookup_hash = $2
+                OR (
+                  subscriber.phone_number_lookup_hash IS NULL
+                  AND subscriber.phone_number ILIKE '%' || $3 || '%'
+                )
+              )
             ORDER BY subscription.created_at DESC, subscription.id DESC
-            LIMIT $3
+            LIMIT $4
           `,
-          [input.countryCode, input.phoneNumber ?? null, input.limit],
+          [
+            input.countryCode,
+            input.phoneNumber === undefined
+              ? null
+              : phoneLookupHash(this.dataProtector, input.countryCode, input.phoneNumber),
+            input.phoneNumber ?? null,
+            input.limit,
+          ],
         ),
     });
 
     return result.rows.map((row) => ({
       countryCode: row.country_code,
-      phoneNumber: row.phone_number,
+      phoneNumber: this.dataProtector.revealText(row.phone_number, 'subscribers.phone_number'),
       status: row.status,
       subscriberId: row.subscriber_id,
       subscriptionId: row.subscription_id,
@@ -2609,7 +2752,7 @@ export class PostgresCoreRepository implements CoreRepository {
         paymentAttemptId: refund.payment_attempt_id,
         provider: refund.provider,
         providerReference: refund.provider_reference,
-        reason: refund.reason,
+        reason: this.dataProtector.revealText(refund.reason, 'payment_refunds.reason'),
         refundId: refund.refund_id,
         status: refund.status,
         subscriptionId: refund.subscription_id,
@@ -2675,7 +2818,7 @@ export class PostgresCoreRepository implements CoreRepository {
         ),
     });
 
-    return result.rows.map(mapNotificationMessageRow);
+    return result.rows.map((row) => mapNotificationMessageRow(this.dataProtector, row));
   }
 
   public async registerPushDevice(input: RegisterPushDeviceInput): Promise<PushDeviceRecord> {
@@ -2693,18 +2836,22 @@ export class PostgresCoreRepository implements CoreRepository {
               platform,
               environment,
               device_id,
+              device_id_lookup_hash,
               token,
               status,
               last_registered_at
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'active', $10)
-            ON CONFLICT (user_id, device_id) DO UPDATE
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'active', $11)
+            ON CONFLICT (user_id, device_id_lookup_hash)
+              WHERE device_id_lookup_hash IS NOT NULL
+            DO UPDATE
             SET
               country_code = excluded.country_code,
               role = excluded.role,
               app = excluded.app,
               platform = excluded.platform,
               environment = excluded.environment,
+              device_id = excluded.device_id,
               token = excluded.token,
               status = 'active',
               last_registered_at = excluded.last_registered_at,
@@ -2732,8 +2879,9 @@ export class PostgresCoreRepository implements CoreRepository {
             input.app,
             input.platform,
             input.environment,
-            input.deviceId,
-            input.token,
+            this.dataProtector.protectText(input.deviceId, 'push_device_tokens.device_id'),
+            pushDeviceLookupHash(this.dataProtector, input.userId, input.deviceId),
+            this.dataProtector.protectText(input.token, 'push_device_tokens.token'),
             input.registeredAt,
           ],
         );
@@ -2743,7 +2891,7 @@ export class PostgresCoreRepository implements CoreRepository {
           throw new Error('Push device could not be registered.');
         }
 
-        return mapPushDeviceRow(row);
+        return mapPushDeviceRow(this.dataProtector, row);
       },
     });
   }
@@ -2779,7 +2927,7 @@ export class PostgresCoreRepository implements CoreRepository {
         ),
     });
 
-    return result.rows.map(mapPushDeviceRow);
+    return result.rows.map((row) => mapPushDeviceRow(this.dataProtector, row));
   }
 
   public async deliverDueNotificationMessages(
@@ -2823,13 +2971,17 @@ export class PostgresCoreRepository implements CoreRepository {
         const delivered: NotificationMessageRecord[] = [];
 
         for (const row of result.rows) {
-          const message = mapNotificationMessageRow(row);
+          const message = mapNotificationMessageRow(this.dataProtector, row);
           const updated = await deliverNotificationMessageLocally({
             deliveredAt: input.deliveredAt,
             message,
-            pushTokens: await selectPushTokensForNotificationMessage(client, message),
+            pushTokens: await selectPushTokensForNotificationMessage(
+              client,
+              this.dataProtector,
+              message,
+            ),
           });
-          delivered.push(await updateNotificationDelivery(client, updated));
+          delivered.push(await updateNotificationDelivery(client, this.dataProtector, updated));
         }
 
         return delivered;
@@ -2961,7 +3113,9 @@ interface MatchingQueueRow {
   readonly assignment_due_at: Date;
   readonly country_code: 'TG';
   readonly gps_latitude: string;
+  readonly gps_latitude_ciphertext: string | null;
   readonly gps_longitude: string;
+  readonly gps_longitude_ciphertext: string | null;
   readonly landmark: string;
   readonly monthly_price_minor: string;
   readonly neighborhood: string;
@@ -3058,7 +3212,9 @@ interface WorkerUnavailabilityRow {
 
 interface WorkerRouteRow {
   readonly gps_latitude: string;
+  readonly gps_latitude_ciphertext: string | null;
   readonly gps_longitude: string;
+  readonly gps_longitude_ciphertext: string | null;
   readonly landmark: string;
   readonly neighborhood: string;
   readonly scheduled_date: string;
@@ -3077,7 +3233,9 @@ interface SubscriptionDetailRow {
   readonly assigned_worker_id: string | null;
   readonly country_code: 'TG';
   readonly gps_latitude: string;
+  readonly gps_latitude_ciphertext: string | null;
   readonly gps_longitude: string;
+  readonly gps_longitude_ciphertext: string | null;
   readonly landmark: string;
   readonly monthly_price_minor: string;
   readonly neighborhood: string;
@@ -3178,7 +3336,9 @@ async function selectSubscriptionDetail(
         address.neighborhood,
         address.landmark,
         address.gps_latitude,
+        address.gps_latitude_ciphertext,
         address.gps_longitude,
+        address.gps_longitude_ciphertext,
         worker.id AS assigned_worker_id,
         worker.display_name AS assigned_worker_display_name,
         (
@@ -3213,6 +3373,7 @@ async function selectSubscriptionDetail(
 
 async function selectCurrentSubscriberSubscription(
   client: PgClient,
+  dataProtector: DataProtector,
   input: GetCurrentSubscriberSubscriptionInput,
   lock = false,
 ): Promise<CurrentSubscriberSubscriptionRow | undefined> {
@@ -3226,7 +3387,13 @@ async function selectCurrentSubscriberSubscription(
       FROM subscriptions subscription
       INNER JOIN subscribers subscriber ON subscriber.id = subscription.subscriber_id
       WHERE subscriber.country_code = $1
-        AND subscriber.phone_number = $2
+        AND (
+          subscriber.phone_number_lookup_hash = $2
+          OR (
+            subscriber.phone_number_lookup_hash IS NULL
+            AND subscriber.phone_number = $3
+          )
+        )
       ORDER BY
         CASE WHEN subscription.status = 'cancelled' THEN 1 ELSE 0 END ASC,
         subscription.created_at DESC,
@@ -3234,7 +3401,7 @@ async function selectCurrentSubscriberSubscription(
       LIMIT 1
       ${lock ? 'FOR UPDATE OF subscription' : ''}
     `,
-    [input.countryCode, input.phoneNumber],
+    [input.countryCode, phoneLookupHash(dataProtector, input.countryCode, input.phoneNumber), input.phoneNumber],
   );
 
   return result.rows[0];
@@ -3353,7 +3520,9 @@ interface VisitLifecycleRow {
   readonly country_code: 'TG';
   readonly fallback_code: string | null;
   readonly gps_latitude: string;
+  readonly gps_latitude_ciphertext: string | null;
   readonly gps_longitude: string;
+  readonly gps_longitude_ciphertext: string | null;
   readonly status: 'cancelled' | 'completed' | 'disputed' | 'in_progress' | 'no_show' | 'scheduled';
   readonly worker_id: string;
 }
@@ -3404,7 +3573,9 @@ interface RatingVisitRow {
 interface WorkerIssueVisitRow {
   readonly country_code: 'TG';
   readonly gps_latitude: string;
+  readonly gps_latitude_ciphertext: string | null;
   readonly gps_longitude: string;
+  readonly gps_longitude_ciphertext: string | null;
   readonly landmark: string;
   readonly neighborhood: string;
   readonly scheduled_date: string;
@@ -3420,7 +3591,9 @@ interface WorkerIssueRow {
   readonly created_at: Date;
   readonly description: string;
   readonly gps_latitude: string;
+  readonly gps_latitude_ciphertext: string | null;
   readonly gps_longitude: string;
+  readonly gps_longitude_ciphertext: string | null;
   readonly handled_by_operator_user_id: string | null;
   readonly issue_id: string;
   readonly issue_type: WorkerIssueReportRecord['issueType'];
@@ -3760,19 +3933,71 @@ async function consumeOtpChallenge(client: PgClient, challengeId: string): Promi
 
 async function upsertAuthUser(
   client: PgClient,
+  dataProtector: DataProtector,
   challenge: OtpChallengeRow,
   role: 'operator' | 'subscriber' | 'worker',
 ): Promise<AuthUserRow> {
+  const encryptedPhoneNumber = dataProtector.protectText(
+    challenge.phone_number,
+    'auth_users.phone_number',
+  );
+  const phoneNumberLookupHash = phoneLookupHash(
+    dataProtector,
+    challenge.country_code,
+    challenge.phone_number,
+  );
+  const existing = await client.query<AuthUserRow>(
+    `
+      SELECT
+        id AS user_id,
+        country_code,
+        phone_number,
+        role
+      FROM auth_users
+      WHERE country_code = $1
+        AND (
+          phone_number_lookup_hash = $2
+          OR (
+            phone_number_lookup_hash IS NULL
+            AND phone_number = $3
+          )
+        )
+      FOR UPDATE
+    `,
+    [challenge.country_code, phoneNumberLookupHash, challenge.phone_number],
+  );
+  const existingUser = existing.rows[0];
+  if (existingUser !== undefined) {
+    await client.query(
+      `
+        UPDATE auth_users
+        SET
+          phone_number = $1,
+          phone_number_lookup_hash = $2,
+          updated_at = now()
+        WHERE id = $3
+      `,
+      [encryptedPhoneNumber, phoneNumberLookupHash, existingUser.user_id],
+    );
+    return {
+      ...existingUser,
+      phone_number: challenge.phone_number,
+    };
+  }
+
   const result = await client.query<AuthUserRow>(
     `
       INSERT INTO auth_users (
         id,
         country_code,
         phone_number,
+        phone_number_lookup_hash,
         role
       )
-      VALUES ($1, $2, $3, $4)
-      ON CONFLICT (country_code, phone_number) DO UPDATE
+      VALUES ($1, $2, $3, $4, $5)
+      ON CONFLICT (country_code, phone_number_lookup_hash)
+        WHERE phone_number_lookup_hash IS NOT NULL
+      DO UPDATE
       SET updated_at = now()
       RETURNING
         id AS user_id,
@@ -3780,7 +4005,13 @@ async function upsertAuthUser(
         phone_number,
         role
     `,
-    [randomUUID(), challenge.country_code, challenge.phone_number, role],
+    [
+      randomUUID(),
+      challenge.country_code,
+      encryptedPhoneNumber,
+      phoneNumberLookupHash,
+      role,
+    ],
   );
 
   const user = result.rows[0];
@@ -3789,11 +4020,15 @@ async function upsertAuthUser(
     throw new Error('Auth user could not be created.');
   }
 
-  return user;
+  return {
+    ...user,
+    phone_number: dataProtector.revealText(user.phone_number, 'auth_users.phone_number'),
+  };
 }
 
 async function insertAuthSession(
   client: PgClient,
+  dataProtector: DataProtector,
   user: AuthUserRow,
   deviceId: string,
 ): Promise<AuthSessionRecord> {
@@ -3823,7 +4058,7 @@ async function insertAuthSession(
       user.country_code,
       user.user_id,
       hashRefreshToken(tokens.refreshToken),
-      deviceId,
+      dataProtector.protectText(deviceId, 'auth_sessions.device_id'),
       refreshTokenExpiresAt,
     ],
   );
@@ -4133,7 +4368,11 @@ async function insertPaymentAttempt(
   );
 }
 
-async function insertPaymentRefund(client: PgClient, refund: PaymentRefundRecord): Promise<void> {
+async function insertPaymentRefund(
+  client: PgClient,
+  dataProtector: DataProtector,
+  refund: PaymentRefundRecord,
+): Promise<void> {
   await client.query(
     `
       INSERT INTO payment_refunds (
@@ -4162,7 +4401,7 @@ async function insertPaymentRefund(client: PgClient, refund: PaymentRefundRecord
       refund.status,
       refund.provider,
       refund.providerReference,
-      refund.reason,
+      dataProtector.protectText(refund.reason, 'payment_refunds.reason'),
       refund.operatorUserId,
       refund.issuedAt,
     ],
@@ -4343,6 +4582,7 @@ async function countWorkerAdvanceRequestsForMonth(
 
 async function insertWorkerAdvanceRequest(
   client: PgClient,
+  dataProtector: DataProtector,
   record: WorkerAdvanceRequestRecord,
 ): Promise<void> {
   await client.query(
@@ -4371,11 +4611,14 @@ async function insertWorkerAdvanceRequest(
       record.amount.amountMinor.toString(),
       record.amount.currencyCode,
       record.status,
-      record.reason,
+      dataProtector.protectText(record.reason, 'worker_advance_requests.reason'),
       record.requestedAt,
       record.resolvedAt,
       record.resolvedByOperatorUserId,
-      record.resolutionNote,
+      dataProtector.protectNullableText(
+        record.resolutionNote,
+        'worker_advance_requests.resolution_note',
+      ),
     ],
   );
 }
@@ -4447,6 +4690,7 @@ async function selectWorkerAdvanceRequestForResolution(
 
 async function updateWorkerAdvanceRequestResolution(
   client: PgClient,
+  dataProtector: DataProtector,
   input: ResolveWorkerAdvanceRequestInput,
 ): Promise<void> {
   await client.query(
@@ -4463,7 +4707,7 @@ async function updateWorkerAdvanceRequestResolution(
     [
       input.resolution,
       input.operatorUserId,
-      input.resolutionNote,
+      dataProtector.protectText(input.resolutionNote, 'worker_advance_requests.resolution_note'),
       input.resolvedAt,
       input.requestId,
     ],
@@ -4491,6 +4735,7 @@ async function hasOpenWorkerSwapRequest(
 
 async function insertWorkerSwapRequest(
   client: PgClient,
+  dataProtector: DataProtector,
   record: WorkerSwapRequestRecord,
 ): Promise<void> {
   await client.query(
@@ -4519,9 +4764,12 @@ async function insertWorkerSwapRequest(
       record.currentWorkerId,
       record.replacementWorkerId,
       record.status,
-      record.reason,
+      dataProtector.protectText(record.reason, 'worker_swap_requests.reason'),
       record.resolvedByOperatorUserId,
-      record.resolutionNote,
+      dataProtector.protectNullableText(
+        record.resolutionNote,
+        'worker_swap_requests.resolution_note',
+      ),
       record.requestedAt,
       record.resolvedAt,
     ],
@@ -4599,7 +4847,11 @@ async function selectWorkerSwapRequestForResolution(
   return result.rows[0];
 }
 
-async function insertWorkerPayout(client: PgClient, record: WorkerPayoutRecord): Promise<void> {
+async function insertWorkerPayout(
+  client: PgClient,
+  dataProtector: DataProtector,
+  record: WorkerPayoutRecord,
+): Promise<void> {
   await client.query(
     `
       INSERT INTO worker_payouts (
@@ -4632,8 +4884,8 @@ async function insertWorkerPayout(client: PgClient, record: WorkerPayoutRecord):
       record.status,
       record.provider,
       record.providerReference,
-      record.failureReason,
-      record.note,
+      dataProtector.protectNullableText(record.failureReason, 'worker_payouts.failure_reason'),
+      dataProtector.protectText(record.note, 'worker_payouts.note'),
       record.paidAt,
       record.createdByOperatorUserId,
       record.advanceRequestId,
@@ -4796,6 +5048,7 @@ async function replaceWorkerServiceCells(
 
 async function insertWorkerOnboardingCase(
   client: PgClient,
+  dataProtector: DataProtector,
   record: WorkerOnboardingCaseRecord,
 ): Promise<void> {
   await client.query(
@@ -4805,17 +5058,19 @@ async function insertWorkerOnboardingCase(
         worker_id,
         country_code,
         phone_number,
+        phone_number_lookup_hash,
         stage,
         applied_at,
         updated_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     `,
     [
       record.caseId,
       record.workerId,
       record.countryCode,
-      record.phoneNumber,
+      dataProtector.protectText(record.phoneNumber, 'worker_onboarding_cases.phone_number'),
+      phoneLookupHash(dataProtector, record.countryCode, record.phoneNumber),
       record.stage,
       record.appliedAt,
       record.updatedAt,
@@ -4825,6 +5080,7 @@ async function insertWorkerOnboardingCase(
 
 async function insertWorkerOnboardingNotes(
   client: PgClient,
+  dataProtector: DataProtector,
   countryCode: CountryCode,
   caseId: string,
   notes: readonly WorkerOnboardingNoteRecord[],
@@ -4848,7 +5104,7 @@ async function insertWorkerOnboardingNotes(
         countryCode,
         caseId,
         note.stage,
-        note.note,
+        dataProtector.protectText(note.note, 'worker_onboarding_notes.note'),
         note.operatorUserId,
         note.createdAt,
       ],
@@ -4996,6 +5252,7 @@ async function isWorkerUnavailableOnDate(
 
 async function insertWorkerUnavailability(
   client: PgClient,
+  dataProtector: DataProtector,
   record: WorkerUnavailabilityRecord,
 ): Promise<void> {
   await client.query(
@@ -5012,7 +5269,13 @@ async function insertWorkerUnavailability(
       FROM workers worker
       WHERE worker.id = $2
     `,
-    [record.unavailabilityId, record.workerId, record.date, record.reason, record.createdAt],
+    [
+      record.unavailabilityId,
+      record.workerId,
+      record.date,
+      dataProtector.protectText(record.reason, 'worker_unavailability.reason'),
+      record.createdAt,
+    ],
   );
 }
 
@@ -5060,6 +5323,7 @@ async function selectWorkerForSwapReplacement(
 
 async function updateWorkerSwapRequestResolution(
   client: PgClient,
+  dataProtector: DataProtector,
   input: ResolveWorkerSwapRequestInput,
 ): Promise<void> {
   await client.query(
@@ -5078,7 +5342,7 @@ async function updateWorkerSwapRequestResolution(
       input.resolution,
       input.replacementWorkerId ?? null,
       input.operatorUserId,
-      input.resolutionNote,
+      dataProtector.protectText(input.resolutionNote, 'worker_swap_requests.resolution_note'),
       input.resolvedAt,
       input.requestId,
     ],
@@ -5161,6 +5425,8 @@ async function updateSubscriptionTier(
 
 async function updateSubscriptionPaymentMethod(
   client: PgClient,
+  dataProtector: DataProtector,
+  countryCode: CountryCode,
   record: UpdatedSubscriptionPaymentMethodRecord,
 ): Promise<void> {
   await client.query(
@@ -5169,10 +5435,19 @@ async function updateSubscriptionPaymentMethod(
       SET
         payment_method_provider = $1,
         payment_method_phone_number = $2,
+        payment_method_phone_number_lookup_hash = $3,
         updated_at = now()
-      WHERE id = $3
+      WHERE id = $4
     `,
-    [record.paymentMethod.provider, record.paymentMethod.phoneNumber, record.subscriptionId],
+    [
+      record.paymentMethod.provider,
+      dataProtector.protectText(
+        record.paymentMethod.phoneNumber,
+        'subscriptions.payment_method_phone_number',
+      ),
+      phoneLookupHash(dataProtector, countryCode, record.paymentMethod.phoneNumber),
+      record.subscriptionId,
+    ],
   );
 }
 
@@ -5239,7 +5514,9 @@ async function selectVisitForLifecycle(
         visit.country_code,
         visit.fallback_code,
         address.gps_latitude,
+        address.gps_latitude_ciphertext,
         address.gps_longitude,
+        address.gps_longitude_ciphertext,
         visit.status,
         visit.worker_id
       FROM visits visit
@@ -5375,7 +5652,9 @@ async function selectVisitForWorkerIssue(
         visit.scheduled_time_window,
         subscriber.phone_number AS subscriber_phone_number,
         address.gps_latitude,
+        address.gps_latitude_ciphertext,
         address.gps_longitude,
+        address.gps_longitude_ciphertext,
         address.landmark,
         address.neighborhood
       FROM visits visit
@@ -5393,6 +5672,7 @@ async function selectVisitForWorkerIssue(
 
 async function insertWorkerIssueReport(
   client: PgClient,
+  dataProtector: DataProtector,
   record: WorkerIssueReportRecord,
 ): Promise<void> {
   await client.query(
@@ -5418,7 +5698,7 @@ async function insertWorkerIssueReport(
       record.countryCode,
       record.issueType,
       record.status,
-      record.description,
+      dataProtector.protectText(record.description, 'worker_issue_reports.description'),
       record.createdAt,
     ],
   );
@@ -5447,7 +5727,9 @@ async function selectWorkerIssues(
         visit.scheduled_time_window,
         subscriber.phone_number AS subscriber_phone_number,
         address.gps_latitude,
+        address.gps_latitude_ciphertext,
         address.gps_longitude,
+        address.gps_longitude_ciphertext,
         address.landmark,
         address.neighborhood
       FROM worker_issue_reports issue
@@ -5488,7 +5770,9 @@ async function selectWorkerIssueForResolution(
         visit.scheduled_time_window,
         subscriber.phone_number AS subscriber_phone_number,
         address.gps_latitude,
+        address.gps_latitude_ciphertext,
         address.gps_longitude,
+        address.gps_longitude_ciphertext,
         address.landmark,
         address.neighborhood
       FROM worker_issue_reports issue
@@ -5507,6 +5791,7 @@ async function selectWorkerIssueForResolution(
 
 async function updateWorkerIssueResolution(
   client: PgClient,
+  dataProtector: DataProtector,
   input: ResolveWorkerIssueInput,
 ): Promise<void> {
   await client.query(
@@ -5523,14 +5808,18 @@ async function updateWorkerIssueResolution(
     [
       input.status,
       input.operatorUserId,
-      input.resolutionNote,
+      dataProtector.protectText(input.resolutionNote, 'worker_issue_reports.resolution_note'),
       input.status === 'resolved' ? input.resolvedAt : null,
       input.issueId,
     ],
   );
 }
 
-async function insertVisitRating(client: PgClient, record: VisitRatingRecord): Promise<void> {
+async function insertVisitRating(
+  client: PgClient,
+  dataProtector: DataProtector,
+  record: VisitRatingRecord,
+): Promise<void> {
   await client.query(
     `
       INSERT INTO visit_ratings (
@@ -5551,7 +5840,7 @@ async function insertVisitRating(client: PgClient, record: VisitRatingRecord): P
       record.visitId,
       record.countryCode,
       record.rating,
-      record.comment,
+      dataProtector.protectNullableText(record.comment, 'visit_ratings.comment'),
       record.ratedByUserId,
       record.createdAt,
     ],
@@ -5560,6 +5849,7 @@ async function insertVisitRating(client: PgClient, record: VisitRatingRecord): P
 
 async function insertSupportCredit(
   client: PgClient,
+  dataProtector: DataProtector,
   record: SupportCreditRecord,
   countryCode: string,
 ): Promise<void> {
@@ -5585,14 +5875,18 @@ async function insertSupportCredit(
       countryCode,
       record.amount.amountMinor.toString(),
       record.amount.currencyCode,
-      record.reason,
+      dataProtector.protectText(record.reason, 'support_credits.reason'),
       record.issuedByOperatorUserId,
       record.createdAt,
     ],
   );
 }
 
-async function insertSupportDispute(client: PgClient, record: DisputeRecord): Promise<void> {
+async function insertSupportDispute(
+  client: PgClient,
+  dataProtector: DataProtector,
+  record: DisputeRecord,
+): Promise<void> {
   await client.query(
     `
       INSERT INTO support_disputes (
@@ -5618,10 +5912,10 @@ async function insertSupportDispute(client: PgClient, record: DisputeRecord): Pr
       record.countryCode,
       record.issueType,
       record.status,
-      record.description,
+      dataProtector.protectText(record.description, 'support_disputes.description'),
       record.openedByUserId,
       record.resolvedByOperatorUserId,
-      record.resolutionNote,
+      dataProtector.protectNullableText(record.resolutionNote, 'support_disputes.resolution_note'),
       record.createdAt,
       record.resolvedAt,
     ],
@@ -5708,6 +6002,7 @@ async function selectDisputeForResolution(
 
 async function updateSupportDisputeResolution(
   client: PgClient,
+  dataProtector: DataProtector,
   input: ResolveDisputeInput,
 ): Promise<void> {
   await client.query(
@@ -5724,25 +6019,28 @@ async function updateSupportDisputeResolution(
     [
       input.resolution,
       input.operatorUserId,
-      input.resolutionNote,
+      dataProtector.protectText(input.resolutionNote, 'support_disputes.resolution_note'),
       input.resolvedAt,
       input.disputeId,
     ],
   );
 }
 
-function mapDisputeRow(row: DisputeRow): DisputeRecord {
+function mapDisputeRow(dataProtector: DataProtector, row: DisputeRow): DisputeRecord {
   const record: DisputeRecord = {
     countryCode: row.country_code,
     createdAt: row.created_at,
-    description: row.description,
+    description: dataProtector.revealText(row.description, 'support_disputes.description'),
     disputeId: row.dispute_id,
     events: [],
     issueType: row.issue_type,
     openedByUserId: row.opened_by_user_id,
     resolvedAt: row.resolved_at,
     resolvedByOperatorUserId: row.resolved_by_operator_user_id,
-    resolutionNote: row.resolution_note,
+    resolutionNote: dataProtector.revealNullableText(
+      row.resolution_note,
+      'support_disputes.resolution_note',
+    ),
     status: row.status,
     subscriberCredit:
       row.credit_amount_minor === undefined ||
@@ -5759,7 +6057,13 @@ function mapDisputeRow(row: DisputeRow): DisputeRecord {
 
   return row.subscriber_phone_number === undefined
     ? record
-    : { ...record, subscriberPhoneNumber: row.subscriber_phone_number };
+    : {
+        ...record,
+        subscriberPhoneNumber: dataProtector.revealText(
+          row.subscriber_phone_number,
+          'subscribers.phone_number',
+        ),
+      };
 }
 
 interface SupportContactRow {
@@ -5797,7 +6101,11 @@ async function selectSubscriptionCountryCodeForUpdate(
   return result.rows[0];
 }
 
-async function insertSupportContact(client: PgClient, record: SupportContactRecord): Promise<void> {
+async function insertSupportContact(
+  client: PgClient,
+  dataProtector: DataProtector,
+  record: SupportContactRecord,
+): Promise<void> {
   await client.query(
     `
       INSERT INTO support_contacts (
@@ -5822,11 +6130,11 @@ async function insertSupportContact(client: PgClient, record: SupportContactReco
       record.countryCode,
       record.category,
       record.status,
-      record.subject,
-      record.body,
+      dataProtector.protectText(record.subject, 'support_contacts.subject'),
+      dataProtector.protectText(record.body, 'support_contacts.body'),
       record.openedByUserId,
       record.resolvedByOperatorUserId,
-      record.resolutionNote,
+      dataProtector.protectNullableText(record.resolutionNote, 'support_contacts.resolution_note'),
       record.createdAt,
       record.resolvedAt,
     ],
@@ -5892,20 +6200,26 @@ async function selectSupportContactById(
   return result.rows[0];
 }
 
-function mapSupportContactRow(row: SupportContactRow): SupportContactRecord {
+function mapSupportContactRow(
+  dataProtector: DataProtector,
+  row: SupportContactRow,
+): SupportContactRecord {
   return {
-    body: row.body,
+    body: dataProtector.revealText(row.body, 'support_contacts.body'),
     category: row.category,
     contactId: row.id,
     countryCode: row.country_code,
     createdAt: row.created_at,
     events: [],
     openedByUserId: row.opened_by_user_id,
-    resolutionNote: row.resolution_note,
+    resolutionNote: dataProtector.revealNullableText(
+      row.resolution_note,
+      'support_contacts.resolution_note',
+    ),
     resolvedAt: row.resolved_at,
     resolvedByOperatorUserId: row.resolved_by_operator_user_id,
     status: row.status,
-    subject: row.subject,
+    subject: dataProtector.revealText(row.subject, 'support_contacts.subject'),
     subscriptionId: row.subscription_id,
   };
 }
@@ -5941,6 +6255,7 @@ async function selectSupportContactForResolution(
 
 async function updateSupportContactResolution(
   client: PgClient,
+  dataProtector: DataProtector,
   record: SupportContactRecord,
 ): Promise<void> {
   await client.query(
@@ -5957,67 +6272,80 @@ async function updateSupportContactResolution(
     [
       record.status,
       record.resolvedByOperatorUserId,
-      record.resolutionNote,
+      dataProtector.protectNullableText(record.resolutionNote, 'support_contacts.resolution_note'),
       record.resolvedAt,
       record.contactId,
     ],
   );
 }
 
-function mapWorkerIssueRow(row: WorkerIssueRow): WorkerIssueReportRecord {
+function mapWorkerIssueRow(
+  dataProtector: DataProtector,
+  row: WorkerIssueRow,
+): WorkerIssueReportRecord {
   return {
-    address: {
-      gpsLatitude: Number(row.gps_latitude),
-      gpsLongitude: Number(row.gps_longitude),
-      landmark: row.landmark,
-      neighborhood: row.neighborhood,
-    },
+    address: revealSubscriberAddress(dataProtector, row),
     countryCode: row.country_code,
     createdAt: row.created_at,
-    description: row.description,
+    description: dataProtector.revealText(row.description, 'worker_issue_reports.description'),
     events: [],
     handledByOperatorUserId: row.handled_by_operator_user_id,
     issueId: row.issue_id,
     issueType: row.issue_type,
-    resolutionNote: row.resolution_note,
+    resolutionNote: dataProtector.revealNullableText(
+      row.resolution_note,
+      'worker_issue_reports.resolution_note',
+    ),
     resolvedAt: row.resolved_at,
     scheduledDate: row.scheduled_date,
     scheduledTimeWindow: row.scheduled_time_window,
     status: row.status,
-    subscriberPhoneNumber: row.subscriber_phone_number,
+    subscriberPhoneNumber: dataProtector.revealText(
+      row.subscriber_phone_number,
+      'subscribers.phone_number',
+    ),
     subscriptionId: row.subscription_id,
     visitId: row.visit_id,
     workerId: row.worker_id,
   };
 }
 
-function mapWorkerAdvanceRequestRow(row: WorkerAdvanceRequestRow): WorkerAdvanceRequestRecord {
+function mapWorkerAdvanceRequestRow(
+  dataProtector: DataProtector,
+  row: WorkerAdvanceRequestRow,
+): WorkerAdvanceRequestRecord {
   return {
     amount: money(BigInt(row.amount_minor), row.currency_code),
     countryCode: row.country_code,
     events: [],
     month: row.month,
-    reason: row.reason,
+    reason: dataProtector.revealText(row.reason, 'worker_advance_requests.reason'),
     requestedAt: row.requested_at,
     requestId: row.request_id,
     resolvedAt: row.resolved_at,
     resolvedByOperatorUserId: row.resolved_by_operator_user_id,
-    resolutionNote: row.resolution_note,
+    resolutionNote: dataProtector.revealNullableText(
+      row.resolution_note,
+      'worker_advance_requests.resolution_note',
+    ),
     status: row.status,
     workerId: row.worker_id,
     workerName: row.worker_name,
   };
 }
 
-function mapWorkerPayoutRow(row: WorkerPayoutRow): WorkerPayoutRecord {
+function mapWorkerPayoutRow(dataProtector: DataProtector, row: WorkerPayoutRow): WorkerPayoutRecord {
   return {
     advanceRequestId: row.advance_request_id,
     amount: money(BigInt(row.amount_minor), row.currency_code),
     countryCode: row.country_code,
     createdByOperatorUserId: row.created_by_operator_user_id,
     events: [],
-    failureReason: row.failure_reason,
-    note: row.note,
+    failureReason: dataProtector.revealNullableText(
+      row.failure_reason,
+      'worker_payouts.failure_reason',
+    ),
+    note: dataProtector.revealText(row.note, 'worker_payouts.note'),
     paidAt: row.paid_at,
     payoutId: row.payout_id,
     payoutType: row.payout_type,
@@ -6032,6 +6360,7 @@ function mapWorkerPayoutRow(row: WorkerPayoutRow): WorkerPayoutRecord {
 
 async function mapWorkerOnboardingCaseRow(
   client: PgClient,
+  dataProtector: DataProtector,
   row: WorkerOnboardingCaseRow,
 ): Promise<WorkerOnboardingCaseRecord> {
   const notes = await selectWorkerOnboardingNotes(client, row.case_id);
@@ -6045,11 +6374,14 @@ async function mapWorkerOnboardingCaseRow(
     maxActiveSubscriptions: row.max_active_subscriptions,
     notes: notes.map((note) => ({
       createdAt: note.created_at,
-      note: note.note,
+      note: dataProtector.revealText(note.note, 'worker_onboarding_notes.note'),
       operatorUserId: note.operator_user_id,
       stage: note.stage,
     })),
-    phoneNumber: row.phone_number,
+    phoneNumber: dataProtector.revealText(
+      row.phone_number,
+      'worker_onboarding_cases.phone_number',
+    ),
     serviceNeighborhoods: row.service_neighborhoods,
     stage: row.stage,
     updatedAt: row.updated_at,
@@ -6057,29 +6389,38 @@ async function mapWorkerOnboardingCaseRow(
   };
 }
 
-function mapWorkerUnavailabilityRow(row: WorkerUnavailabilityRow): WorkerUnavailabilityRecord {
+function mapWorkerUnavailabilityRow(
+  dataProtector: DataProtector,
+  row: WorkerUnavailabilityRow,
+): WorkerUnavailabilityRecord {
   return {
     createdAt: row.created_at,
     date: row.unavailable_date,
     events: [],
-    reason: row.reason,
+    reason: dataProtector.revealText(row.reason, 'worker_unavailability.reason'),
     unavailabilityId: row.unavailability_id,
     workerId: row.worker_id,
   };
 }
 
-function mapWorkerSwapRequestRow(row: WorkerSwapRequestRow): WorkerSwapRequestRecord {
+function mapWorkerSwapRequestRow(
+  dataProtector: DataProtector,
+  row: WorkerSwapRequestRow,
+): WorkerSwapRequestRecord {
   const record: WorkerSwapRequestRecord = {
     countryCode: row.country_code,
     currentWorkerId: row.current_worker_id,
     events: [],
-    reason: row.reason,
+    reason: dataProtector.revealText(row.reason, 'worker_swap_requests.reason'),
     replacementWorkerId: row.replacement_worker_id,
     requestedAt: row.requested_at,
     requestId: row.request_id,
     resolvedAt: row.resolved_at,
     resolvedByOperatorUserId: row.resolved_by_operator_user_id,
-    resolutionNote: row.resolution_note,
+    resolutionNote: dataProtector.revealNullableText(
+      row.resolution_note,
+      'worker_swap_requests.resolution_note',
+    ),
     status: row.status,
     subscriberId: row.subscriber_id,
     subscriptionId: row.subscription_id,
@@ -6091,12 +6432,16 @@ function mapWorkerSwapRequestRow(row: WorkerSwapRequestRow): WorkerSwapRequestRe
     ...(row.replacement_worker_name === null
       ? {}
       : { replacementWorkerName: row.replacement_worker_name }),
-    subscriberPhoneNumber: row.subscriber_phone_number,
+    subscriberPhoneNumber: dataProtector.revealText(
+      row.subscriber_phone_number,
+      'subscribers.phone_number',
+    ),
   };
 }
 
 async function updateVisitCheckIn(
   client: PgClient,
+  dataProtector: DataProtector,
   input: CheckInVisitInput,
   fallbackCode: string | null,
 ): Promise<void> {
@@ -6107,15 +6452,19 @@ async function updateVisitCheckIn(
         check_in_at = $1,
         check_in_latitude = $2,
         check_in_longitude = $3,
-        check_in_verification_method = $4,
+        check_in_latitude_ciphertext = $4,
+        check_in_longitude_ciphertext = $5,
+        check_in_verification_method = $6,
         status = 'in_progress',
         updated_at = now()
-      WHERE id = $5
+      WHERE id = $7
     `,
     [
       input.checkedInAt,
-      input.location.latitude,
-      input.location.longitude,
+      coarseCoordinate(input.location.latitude),
+      coarseCoordinate(input.location.longitude),
+      protectCoordinate(dataProtector, input.location.latitude, 'visits.check_in_latitude'),
+      protectCoordinate(dataProtector, input.location.longitude, 'visits.check_in_longitude'),
       visitVerificationMethod(input.fallbackCode, fallbackCode),
       input.visitId,
     ],
@@ -6124,6 +6473,7 @@ async function updateVisitCheckIn(
 
 async function updateVisitCheckOut(
   client: PgClient,
+  dataProtector: DataProtector,
   input: CheckOutVisitInput,
   fallbackCode: string | null,
 ): Promise<void> {
@@ -6134,16 +6484,20 @@ async function updateVisitCheckOut(
         check_out_at = $1,
         check_out_latitude = $2,
         check_out_longitude = $3,
-        check_out_verification_method = $4,
+        check_out_latitude_ciphertext = $4,
+        check_out_longitude_ciphertext = $5,
+        check_out_verification_method = $6,
         completed_at = $1,
         status = 'completed',
         updated_at = now()
-      WHERE id = $5
+      WHERE id = $7
     `,
     [
       input.checkedOutAt,
-      input.location.latitude,
-      input.location.longitude,
+      coarseCoordinate(input.location.latitude),
+      coarseCoordinate(input.location.longitude),
+      protectCoordinate(dataProtector, input.location.latitude, 'visits.check_out_latitude'),
+      protectCoordinate(dataProtector, input.location.longitude, 'visits.check_out_longitude'),
       visitVerificationMethod(input.fallbackCode, fallbackCode),
       input.visitId,
     ],
@@ -6152,6 +6506,7 @@ async function updateVisitCheckOut(
 
 async function upsertVisitPhoto(
   client: PgClient,
+  dataProtector: DataProtector,
   input: UploadVisitPhotoInput,
   countryCode: 'TG',
 ): Promise<Omit<VisitPhotoRecord, 'events'>> {
@@ -6195,7 +6550,7 @@ async function upsertVisitPhoto(
       input.workerId,
       countryCode,
       input.photoType,
-      input.objectKey,
+      dataProtector.protectText(input.objectKey, 'visit_photos.object_key'),
       input.contentType,
       input.byteSize,
       input.capturedAt,
@@ -6207,7 +6562,7 @@ async function upsertVisitPhoto(
     throw new Error('Visit photo was not persisted.');
   }
 
-  return toVisitPhotoRecord(row);
+  return toVisitPhotoRecord(dataProtector, row);
 }
 
 async function updateVisitSchedule(client: PgClient, input: RescheduleVisitInput): Promise<void> {
@@ -6379,13 +6734,16 @@ function toRadians(value: number): number {
   return (value * Math.PI) / 180;
 }
 
-function toVisitPhotoRecord(row: VisitPhotoRow): Omit<VisitPhotoRecord, 'events'> {
+function toVisitPhotoRecord(
+  dataProtector: DataProtector,
+  row: VisitPhotoRow,
+): Omit<VisitPhotoRecord, 'events'> {
   return {
     byteSize: row.byte_size,
     capturedAt: row.captured_at,
     contentType: row.content_type,
     countryCode: row.country_code,
-    objectKey: row.object_key,
+    objectKey: dataProtector.revealText(row.object_key, 'visit_photos.object_key'),
     photoId: row.photo_id,
     photoType: row.photo_type,
     uploadedAt: row.uploaded_at,
@@ -6559,6 +6917,83 @@ function compareMatchingCandidates(
 
 function normalizeNeighborhood(value: string): string {
   return value.trim().toLocaleLowerCase('fr');
+}
+
+function phoneLookupHash(
+  dataProtector: DataProtector,
+  countryCode: CountryCode,
+  phoneNumber: string,
+): string {
+  return dataProtector.lookupHash(`${countryCode}:${phoneNumber}`, 'phone_number');
+}
+
+function emailLookupHash(
+  dataProtector: DataProtector,
+  countryCode: CountryCode,
+  email: string | null | undefined,
+): string | null {
+  if (email === undefined || email === null) {
+    return null;
+  }
+
+  return dataProtector.lookupHash(`${countryCode}:${email.trim().toLocaleLowerCase('fr')}`, 'email');
+}
+
+function pushDeviceLookupHash(
+  dataProtector: DataProtector,
+  userId: string,
+  deviceId: string,
+): string {
+  return dataProtector.lookupHash(`${userId}:${deviceId}`, 'push_device.device_id');
+}
+
+function protectCoordinate(dataProtector: DataProtector, value: number, context: string): string {
+  return dataProtector.protectText(value.toFixed(6), context);
+}
+
+function revealCoordinate(
+  dataProtector: DataProtector,
+  encryptedValue: string | null | undefined,
+  fallbackValue: string,
+  context: string,
+): number {
+  return Number(
+    encryptedValue === undefined || encryptedValue === null
+      ? fallbackValue
+      : dataProtector.revealText(encryptedValue, context),
+  );
+}
+
+function revealSubscriberAddress<
+  T extends {
+    readonly gps_latitude: string;
+    readonly gps_latitude_ciphertext?: string | null;
+    readonly gps_longitude: string;
+    readonly gps_longitude_ciphertext?: string | null;
+    readonly landmark: string;
+    readonly neighborhood: string;
+  },
+>(dataProtector: DataProtector, row: T): CreateSubscriptionInput['address'] {
+  return {
+    gpsLatitude: revealCoordinate(
+      dataProtector,
+      row.gps_latitude_ciphertext,
+      row.gps_latitude,
+      'subscriber_addresses.gps_latitude',
+    ),
+    gpsLongitude: revealCoordinate(
+      dataProtector,
+      row.gps_longitude_ciphertext,
+      row.gps_longitude,
+      'subscriber_addresses.gps_longitude',
+    ),
+    landmark: dataProtector.revealText(row.landmark, 'subscriber_addresses.landmark'),
+    neighborhood: row.neighborhood,
+  };
+}
+
+function coarseCoordinate(value: number): number {
+  return Math.round(value * 100) / 100;
 }
 
 function normalizeServiceCell(
@@ -6774,16 +7209,57 @@ async function insertVisits(
   }
 }
 
-async function upsertSubscriber(client: PgClient, input: CreateSubscriptionInput): Promise<string> {
+async function upsertSubscriber(
+  client: PgClient,
+  dataProtector: DataProtector,
+  input: CreateSubscriptionInput,
+): Promise<string> {
+  const existing = await selectSubscriberProfile(
+    client,
+    dataProtector,
+    input.countryCode,
+    input.phoneNumber,
+  );
+  const encryptedPhoneNumber = dataProtector.protectText(
+    input.phoneNumber,
+    'subscribers.phone_number',
+  );
+  const phoneNumberLookupHash = phoneLookupHash(dataProtector, input.countryCode, input.phoneNumber);
+
+  if (existing !== undefined) {
+    await client.query(
+      `
+        UPDATE subscribers
+        SET
+          phone_number = $1,
+          phone_number_lookup_hash = $2,
+          updated_at = now()
+        WHERE id = $3
+      `,
+      [encryptedPhoneNumber, phoneNumberLookupHash, existing.subscriber_id],
+    );
+    return existing.subscriber_id;
+  }
+
   const result = await client.query<{ readonly subscriber_id: string }>(
     `
-      INSERT INTO subscribers (id, country_code, locale, phone_number)
-      VALUES ($1, $2, $3, $4)
-      ON CONFLICT (country_code, phone_number) DO UPDATE
-      SET updated_at = now()
+      INSERT INTO subscribers (id, country_code, locale, phone_number, phone_number_lookup_hash)
+      VALUES ($1, $2, $3, $4, $5)
+      ON CONFLICT (country_code, phone_number_lookup_hash)
+        WHERE phone_number_lookup_hash IS NOT NULL
+      DO UPDATE
+      SET
+        phone_number = EXCLUDED.phone_number,
+        updated_at = now()
       RETURNING id AS subscriber_id
     `,
-    [input.subscriberUserId ?? randomUUID(), input.countryCode, 'fr', input.phoneNumber],
+    [
+      input.subscriberUserId ?? randomUUID(),
+      input.countryCode,
+      'fr',
+      encryptedPhoneNumber,
+      phoneNumberLookupHash,
+    ],
   );
   const row = result.rows[0];
 
@@ -6796,20 +7272,55 @@ async function upsertSubscriber(client: PgClient, input: CreateSubscriptionInput
 
 async function ensureSubscriberProfile(
   client: PgClient,
+  dataProtector: DataProtector,
   input: GetSubscriberProfileInput,
 ): Promise<void> {
+  const existing = await selectSubscriberProfile(
+    client,
+    dataProtector,
+    input.countryCode,
+    input.phoneNumber,
+  );
+  if (existing !== undefined) {
+    await client.query(
+      `
+        UPDATE subscribers
+        SET
+          phone_number = $1,
+          phone_number_lookup_hash = $2,
+          updated_at = now()
+        WHERE id = $3
+      `,
+      [
+        dataProtector.protectText(input.phoneNumber, 'subscribers.phone_number'),
+        phoneLookupHash(dataProtector, input.countryCode, input.phoneNumber),
+        existing.subscriber_id,
+      ],
+    );
+    return;
+  }
+
   await client.query(
     `
-      INSERT INTO subscribers (id, country_code, locale, phone_number)
-      VALUES ($1, $2, $3, $4)
-      ON CONFLICT (country_code, phone_number) DO NOTHING
+      INSERT INTO subscribers (id, country_code, locale, phone_number, phone_number_lookup_hash)
+      VALUES ($1, $2, $3, $4, $5)
+      ON CONFLICT (country_code, phone_number_lookup_hash)
+        WHERE phone_number_lookup_hash IS NOT NULL
+      DO NOTHING
     `,
-    [input.subscriberUserId, input.countryCode, 'fr', input.phoneNumber],
+    [
+      input.subscriberUserId,
+      input.countryCode,
+      'fr',
+      dataProtector.protectText(input.phoneNumber, 'subscribers.phone_number'),
+      phoneLookupHash(dataProtector, input.countryCode, input.phoneNumber),
+    ],
   );
 }
 
 async function selectSubscriberProfile(
   client: PgClient,
+  dataProtector: DataProtector,
   countryCode: CountryCode,
   phoneNumber: string,
 ): Promise<SubscriberProfileRow | undefined> {
@@ -6827,24 +7338,37 @@ async function selectSubscriberProfile(
         created_at,
         updated_at
       FROM subscribers
-      WHERE country_code = $1 AND phone_number = $2
+      WHERE country_code = $1
+        AND (
+          phone_number_lookup_hash = $2
+          OR (
+            phone_number_lookup_hash IS NULL
+            AND phone_number = $3
+          )
+        )
     `,
-    [countryCode, phoneNumber],
+    [countryCode, phoneLookupHash(dataProtector, countryCode, phoneNumber), phoneNumber],
   );
 
   return result.rows[0];
 }
 
-function mapSubscriberProfileRow(row: SubscriberProfileRow): SubscriberProfileRecord {
+function mapSubscriberProfileRow(
+  dataProtector: DataProtector,
+  row: SubscriberProfileRow,
+): SubscriberProfileRecord {
   return {
-    avatarObjectKey: row.avatar_object_key,
+    avatarObjectKey: dataProtector.revealNullableText(
+      row.avatar_object_key,
+      'subscribers.avatar_object_key',
+    ),
     countryCode: row.country_code,
     createdAt: row.created_at,
-    email: row.email,
-    firstName: row.first_name,
+    email: dataProtector.revealNullableText(row.email, 'subscribers.email'),
+    firstName: dataProtector.revealNullableText(row.first_name, 'subscribers.first_name'),
     isAdultConfirmed: row.is_adult_confirmed,
-    lastName: row.last_name,
-    phoneNumber: row.phone_number,
+    lastName: dataProtector.revealNullableText(row.last_name, 'subscribers.last_name'),
+    phoneNumber: dataProtector.revealText(row.phone_number, 'subscribers.phone_number'),
     subscriberId: row.subscriber_id,
     updatedAt: row.updated_at,
   };
@@ -6852,6 +7376,7 @@ function mapSubscriberProfileRow(row: SubscriberProfileRow): SubscriberProfileRe
 
 async function insertSubscriberAddress(
   client: PgClient,
+  dataProtector: DataProtector,
   input: CreateSubscriptionInput,
   record: CreatedSubscriptionRecord,
 ): Promise<void> {
@@ -6865,9 +7390,11 @@ async function insertSubscriberAddress(
         service_cell_key,
         landmark,
         gps_latitude,
-        gps_longitude
+        gps_longitude,
+        gps_latitude_ciphertext,
+        gps_longitude_ciphertext
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     `,
     [
       record.addressId,
@@ -6875,15 +7402,22 @@ async function insertSubscriberAddress(
       record.countryCode,
       input.address.neighborhood,
       normalizeNeighborhood(input.address.neighborhood),
-      input.address.landmark,
-      input.address.gpsLatitude,
-      input.address.gpsLongitude,
+      dataProtector.protectText(input.address.landmark, 'subscriber_addresses.landmark'),
+      coarseCoordinate(input.address.gpsLatitude),
+      coarseCoordinate(input.address.gpsLongitude),
+      protectCoordinate(dataProtector, input.address.gpsLatitude, 'subscriber_addresses.gps_latitude'),
+      protectCoordinate(
+        dataProtector,
+        input.address.gpsLongitude,
+        'subscriber_addresses.gps_longitude',
+      ),
     ],
   );
 }
 
 async function insertSubscription(
   client: PgClient,
+  dataProtector: DataProtector,
   input: CreateSubscriptionInput,
   record: CreatedSubscriptionRecord,
 ): Promise<void> {
@@ -6902,9 +7436,10 @@ async function insertSubscription(
         preferred_day_of_week,
         preferred_time_window,
         payment_method_provider,
-        payment_method_phone_number
+        payment_method_phone_number,
+        payment_method_phone_number_lookup_hash
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
     `,
     [
       record.subscriptionId,
@@ -6919,13 +7454,20 @@ async function insertSubscription(
       input.schedulePreference?.dayOfWeek ?? null,
       input.schedulePreference?.timeWindow ?? null,
       input.paymentMethod?.provider ?? null,
-      input.paymentMethod?.phoneNumber ?? null,
+      dataProtector.protectNullableText(
+        input.paymentMethod?.phoneNumber,
+        'subscriptions.payment_method_phone_number',
+      ),
+      input.paymentMethod === undefined
+        ? null
+        : phoneLookupHash(dataProtector, record.countryCode, input.paymentMethod.phoneNumber),
     ],
   );
 }
 
 async function insertSubscriberPrivacyRequest(
   client: PgClient,
+  dataProtector: DataProtector,
   record: SubscriberPrivacyRequestRecord,
 ): Promise<void> {
   const detail = record.exportBundle.subscription;
@@ -6953,16 +7495,24 @@ async function insertSubscriberPrivacyRequest(
       detail.subscriberId,
       detail.countryCode,
       record.requestType,
-      record.reason,
+      dataProtector.protectText(record.reason, 'subscriber_privacy_requests.reason'),
       record.operatorUserId,
       record.requestedAt,
-      stringifyJsonForPostgres(record.exportBundle),
-      stringifyJsonForPostgres(record.erasurePlan),
+      stringifyJsonForPostgres(
+        dataProtector.protectJson(record.exportBundle, 'subscriber_privacy_requests.export_bundle'),
+      ),
+      stringifyJsonForPostgres(
+        dataProtector.protectJson(record.erasurePlan, 'subscriber_privacy_requests.erasure_plan'),
+      ),
     ],
   );
 }
 
-async function insertOutboxEvents(client: PgClient, events: readonly DomainEvent[]): Promise<void> {
+async function insertOutboxEvents(
+  client: PgClient,
+  dataProtector: DataProtector,
+  events: readonly DomainEvent[],
+): Promise<void> {
   for (const event of events) {
     assertCoreDomainEventContract(event);
 
@@ -6988,7 +7538,7 @@ async function insertOutboxEvents(client: PgClient, events: readonly DomainEvent
         event.aggregateType,
         event.aggregateId,
         event.eventType,
-        JSON.stringify(event.payload),
+        stringifyJsonForPostgres(dataProtector.protectJson(event.payload, 'audit_events.payload')),
         event.actor.role,
         event.actor.userId,
         event.traceId,
@@ -7001,7 +7551,7 @@ async function insertOutboxEvents(client: PgClient, events: readonly DomainEvent
     const messages = buildNotificationMessagesForEvent(event);
 
     for (const message of messages) {
-      await insertNotificationMessage(client, message);
+      await insertNotificationMessage(client, dataProtector, message);
     }
   }
 
@@ -7028,7 +7578,7 @@ async function insertOutboxEvents(client: PgClient, events: readonly DomainEvent
         event.aggregateType,
         event.aggregateId,
         event.eventType,
-        JSON.stringify(event.payload),
+        stringifyJsonForPostgres(dataProtector.protectJson(event.payload, 'outbox_events.payload')),
         event.actor.role,
         event.actor.userId,
         event.traceId,
@@ -7046,6 +7596,7 @@ function stringifyJsonForPostgres(value: unknown): string {
 
 async function insertNotificationMessage(
   client: PgClient,
+  dataProtector: DataProtector,
   message: NotificationMessageRecord,
 ): Promise<void> {
   await client.query(
@@ -7083,7 +7634,9 @@ async function insertNotificationMessage(
       message.aggregateType,
       message.aggregateId,
       message.eventId,
-      JSON.stringify(message.payload),
+      stringifyJsonForPostgres(
+        dataProtector.protectJson(message.payload, 'notification_messages.payload'),
+      ),
       message.status,
       message.provider,
       message.providerReference,
@@ -7092,13 +7645,17 @@ async function insertNotificationMessage(
       message.createdAt,
       message.lastAttemptAt,
       message.sentAt,
-      message.failureReason,
+      dataProtector.protectNullableText(
+        message.failureReason,
+        'notification_messages.failure_reason',
+      ),
     ],
   );
 }
 
 async function updateNotificationDelivery(
   client: PgClient,
+  dataProtector: DataProtector,
   message: NotificationMessageRecord,
 ): Promise<NotificationMessageRecord> {
   const result = await client.query<NotificationMessageRow>(
@@ -7142,7 +7699,10 @@ async function updateNotificationDelivery(
       message.attemptCount,
       message.lastAttemptAt,
       message.sentAt,
-      message.failureReason,
+      dataProtector.protectNullableText(
+        message.failureReason,
+        'notification_messages.failure_reason',
+      ),
       message.availableAt,
       message.messageId,
     ],
@@ -7153,11 +7713,12 @@ async function updateNotificationDelivery(
     throw new Error('Notification message was not found.');
   }
 
-  return mapNotificationMessageRow(row);
+  return mapNotificationMessageRow(dataProtector, row);
 }
 
 async function selectPushTokensForNotificationMessage(
   client: PgClient,
+  dataProtector: DataProtector,
   message: NotificationMessageRecord,
 ): Promise<readonly string[]> {
   if (message.channel !== 'push') {
@@ -7179,7 +7740,7 @@ async function selectPushTokensForNotificationMessage(
       [message.countryCode, message.recipientUserId, message.recipientRole],
     );
 
-    return result.rows.map((row) => row.token);
+    return result.rows.map((row) => dataProtector.revealText(row.token, 'push_device_tokens.token'));
   }
 
   if (message.recipientRole !== 'subscriber' || message.aggregateType !== 'subscription') {
@@ -7194,7 +7755,18 @@ async function selectPushTokensForNotificationMessage(
         ON subscriber.id = subscription.subscriber_id
       INNER JOIN auth_users auth_user
         ON auth_user.country_code = subscriber.country_code
-        AND auth_user.phone_number = subscriber.phone_number
+        AND (
+          (
+            auth_user.phone_number_lookup_hash IS NOT NULL
+            AND subscriber.phone_number_lookup_hash IS NOT NULL
+            AND auth_user.phone_number_lookup_hash = subscriber.phone_number_lookup_hash
+          )
+          OR (
+            auth_user.phone_number_lookup_hash IS NULL
+            AND subscriber.phone_number_lookup_hash IS NULL
+            AND auth_user.phone_number = subscriber.phone_number
+          )
+        )
         AND auth_user.role = $3
       INNER JOIN push_device_tokens push_device
         ON push_device.user_id = auth_user.id
@@ -7208,10 +7780,13 @@ async function selectPushTokensForNotificationMessage(
     [message.aggregateId, message.countryCode, message.recipientRole],
   );
 
-  return result.rows.map((row) => row.token);
+  return result.rows.map((row) => dataProtector.revealText(row.token, 'push_device_tokens.token'));
 }
 
-function mapNotificationMessageRow(row: NotificationMessageRow): NotificationMessageRecord {
+function mapNotificationMessageRow(
+  dataProtector: DataProtector,
+  row: NotificationMessageRow,
+): NotificationMessageRecord {
   return {
     aggregateId: row.aggregate_id,
     aggregateType: row.aggregate_type,
@@ -7221,10 +7796,13 @@ function mapNotificationMessageRow(row: NotificationMessageRow): NotificationMes
     countryCode: row.country_code,
     createdAt: row.created_at,
     eventId: row.event_id,
-    failureReason: row.failure_reason,
+    failureReason: dataProtector.revealNullableText(
+      row.failure_reason,
+      'notification_messages.failure_reason',
+    ),
     lastAttemptAt: row.last_attempt_at,
     messageId: row.message_id,
-    payload: row.payload,
+    payload: dataProtector.revealJson(row.payload, 'notification_messages.payload'),
     provider: row.provider,
     providerReference: row.provider_reference,
     recipientRole: row.recipient_role,
@@ -7235,19 +7813,19 @@ function mapNotificationMessageRow(row: NotificationMessageRow): NotificationMes
   };
 }
 
-function mapPushDeviceRow(row: PushDeviceRow): PushDeviceRecord {
+function mapPushDeviceRow(dataProtector: DataProtector, row: PushDeviceRow): PushDeviceRecord {
   return {
     app: row.app,
     countryCode: row.country_code,
     createdAt: row.created_at,
-    deviceId: row.device_id,
+    deviceId: dataProtector.revealText(row.device_id, 'push_device_tokens.device_id'),
     environment: row.environment,
     lastRegisteredAt: row.last_registered_at,
     platform: row.platform,
     pushDeviceId: row.push_device_id,
     role: row.role,
     status: row.status,
-    token: row.token,
+    token: dataProtector.revealText(row.token, 'push_device_tokens.token'),
     updatedAt: row.updated_at,
     userId: row.user_id,
   };

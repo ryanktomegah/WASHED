@@ -1,5 +1,6 @@
 import { createPgPool } from './postgres-client.js';
 import { PostgresCoreRepository } from './postgres-repository.js';
+import { createDataProtectorFromEnv } from './data-protection.js';
 import { InMemoryCoreRepository, type CoreRepository } from './repository.js';
 
 export function createRepositoryFromEnv(env: NodeJS.ProcessEnv = process.env): CoreRepository {
@@ -9,5 +10,10 @@ export function createRepositoryFromEnv(env: NodeJS.ProcessEnv = process.env): C
     return new InMemoryCoreRepository();
   }
 
-  return new PostgresCoreRepository(createPgPool(databaseUrl));
+  return new PostgresCoreRepository(
+    createPgPool(databaseUrl),
+    undefined,
+    undefined,
+    createDataProtectorFromEnv(env),
+  );
 }
