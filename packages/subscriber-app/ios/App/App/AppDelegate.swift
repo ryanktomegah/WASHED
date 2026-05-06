@@ -9,6 +9,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        installLaunchOverlayIfNeeded()
         DispatchQueue.main.async {
             self.installLaunchOverlayIfNeeded()
         }
@@ -56,35 +57,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         didInstallLaunchOverlay = true
 
-        let isDarkMode = window.traitCollection.userInterfaceStyle == .dark
-        let primary = UIColor(red: 0.039, green: 0.239, blue: 0.122, alpha: 1)
-        let overlayBackground: UIColor
-        let wordColor: UIColor
-        if isDarkMode {
-            overlayBackground = UIColor(red: 0.067, green: 0.067, blue: 0.067, alpha: 1)
-            wordColor = UIColor(red: 0.98, green: 0.98, blue: 0.98, alpha: 1)
-        } else {
-            overlayBackground = primary
-            wordColor = UIColor.white
-        }
+        let palette = launchPalette(for: window.traitCollection)
+        window.backgroundColor = palette.background
+        window.rootViewController?.view.backgroundColor = palette.background
 
         let overlay = UIView(frame: window.bounds)
         overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        overlay.backgroundColor = overlayBackground
+        overlay.backgroundColor = palette.background
         overlay.isUserInteractionEnabled = false
 
         let fontSize = min(44, max(38, window.bounds.width * 0.11))
-        let dotColor = isDarkMode ? primary : wordColor
         let wordmark = NSMutableAttributedString(
             string: "washed.",
             attributes: [
-                .foregroundColor: wordColor,
+                .foregroundColor: palette.word,
                 .font: UIFont.systemFont(ofSize: fontSize, weight: .medium),
             ]
         )
         wordmark.addAttribute(
             .foregroundColor,
-            value: dotColor,
+            value: palette.dot,
             range: NSRange(location: 6, length: 1)
         )
 
@@ -108,6 +100,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 overlay.removeFromSuperview()
             }
         }
+    }
+
+    private func launchPalette(
+        for traitCollection: UITraitCollection
+    ) -> (background: UIColor, word: UIColor, dot: UIColor) {
+        let primary = UIColor(red: 0.039, green: 0.239, blue: 0.122, alpha: 1)
+        if traitCollection.userInterfaceStyle == .dark {
+            return (
+                background: UIColor(red: 0.067, green: 0.067, blue: 0.067, alpha: 1),
+                word: UIColor(red: 0.98, green: 0.98, blue: 0.98, alpha: 1),
+                dot: primary
+            )
+        }
+
+        return (background: primary, word: UIColor.white, dot: UIColor.white)
     }
 
 }

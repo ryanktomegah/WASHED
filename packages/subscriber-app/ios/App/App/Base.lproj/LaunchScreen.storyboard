@@ -15,17 +15,28 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="washed." textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="YEU-CM-I0J">
-                                <rect key="frame" x="114" y="311.5" width="147" height="44"/>
-                                <fontDescription key="fontDescription" type="system" weight="medium" pointSize="44"/>
-                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <nil key="highlightedColor"/>
-                            </label>
+                            <stackView opaque="NO" contentMode="scaleToFill" alignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="AJ9-Jc-uOL">
+                                <rect key="frame" x="113.5" y="311.5" width="148" height="44"/>
+                                <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="washed" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="YEU-CM-I0J">
+                                        <rect key="frame" x="0.0" y="0.0" width="136.5" height="44"/>
+                                        <fontDescription key="fontDescription" type="system" weight="medium" pointSize="44"/>
+                                        <color key="textColor" name="WashedLaunchWordmark"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="." textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="drE-gV-pfo">
+                                        <rect key="frame" x="136.5" y="0.0" width="11.5" height="44"/>
+                                        <fontDescription key="fontDescription" type="system" weight="medium" pointSize="44"/>
+                                        <color key="textColor" name="WashedLaunchDot"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                </subviews>
+                            </stackView>
                         </subviews>
-                        <color key="backgroundColor" red="0.039215686274509803" green="0.23921568627450981" blue="0.12156862745098039" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="backgroundColor" name="WashedLaunchBackground"/>
                         <constraints>
-                            <constraint firstItem="YEU-CM-I0J" firstAttribute="centerX" secondItem="snD-IY-ifK" secondAttribute="centerX" id="4T8-tD-PJy"/>
-                            <constraint firstItem="YEU-CM-I0J" firstAttribute="centerY" secondItem="snD-IY-ifK" secondAttribute="centerY" id="e6D-kv-buo"/>
+                            <constraint firstItem="AJ9-Jc-uOL" firstAttribute="centerX" secondItem="snD-IY-ifK" secondAttribute="centerX" id="4T8-tD-PJy"/>
+                            <constraint firstItem="AJ9-Jc-uOL" firstAttribute="centerY" secondItem="snD-IY-ifK" secondAttribute="centerY" id="e6D-kv-buo"/>
                         </constraints>
                     </view>
                 </viewController>
@@ -34,4 +45,15 @@
             <point key="canvasLocation" x="53" y="375"/>
         </scene>
     </scenes>
+    <resources>
+        <namedColor name="WashedLaunchBackground">
+            <color red="0.039215686274509803" green="0.23921568627450981" blue="0.12156862745098039" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="WashedLaunchDot">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </namedColor>
+        <namedColor name="WashedLaunchWordmark">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </namedColor>
+    </resources>
 </document>
