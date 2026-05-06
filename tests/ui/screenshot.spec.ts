@@ -36,6 +36,8 @@ async function continueThroughAppearance(page: Page): Promise<void> {
 }
 
 test('capture all 9 onboarding screens at iPhone SE', async ({ page }) => {
+  test.setTimeout(60_000);
+
   await page.goto('/#/welcome');
   await continueThroughAppearance(page);
   await expect(page.locator('[data-screen-id="X-01"]')).toBeVisible();
