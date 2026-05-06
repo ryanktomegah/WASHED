@@ -137,6 +137,7 @@ describe('Onboarding · X-01 Splash', () => {
     renderAt('/welcome', <SplashX01 />);
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-01');
+    expect(screen.getByRole('heading', { name: 'washed.' })).toBeInTheDocument();
     expect(screen.getByText("L'app abonné · Lomé")).toBeInTheDocument();
 
     expect(screen.getByRole('button', { name: 'Continuer' })).toBeEnabled();

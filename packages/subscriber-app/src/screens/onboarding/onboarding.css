@@ -442,12 +442,16 @@
 
 .onboarding-screen .splash-mark {
   margin: 0;
-  color: var(--success);
+  color: var(--ink);
   font-family: var(--font-display);
-  font-size: 72px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: 64px;
+  font-weight: 500;
+  letter-spacing: -0.025em;
   line-height: 1;
+}
+
+.onboarding-screen .splash-mark-dot {
+  color: var(--primary);
 }
 
 .onboarding-screen .splash-tagline {
@@ -471,15 +475,18 @@
   padding: 18px 22px 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  .onboarding-screen.splash .splash-mark {
-    color: var(--success);
-  }
+body[data-color-mode='dark'] .onboarding-screen.splash {
+  background: var(--primary);
+}
 
-  .onboarding-screen.splash .btn.ghost {
-    background: var(--primary);
-    color: var(--primary-on);
-  }
+body[data-color-mode='dark'] .onboarding-screen.splash .splash-mark,
+body[data-color-mode='dark'] .onboarding-screen.splash .splash-mark-dot {
+  color: var(--primary-on);
+}
+
+body[data-color-mode='dark'] .onboarding-screen.splash .btn.ghost {
+  background: var(--primary-on);
+  color: var(--primary);
 }
 
 .onboarding-screen .splash-disabled-note,

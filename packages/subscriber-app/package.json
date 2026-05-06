@@ -9,6 +9,7 @@
     "android:run": "pnpm build && cap run android",
     "android:sync": "pnpm build && cap sync android",
     "build": "vite build",
+    "brand:assets": "node scripts/render-brand-assets.mjs",
     "dev": "vite --host 127.0.0.1",
     "ios:add": "cap add ios",
     "ios:open": "cap open ios",

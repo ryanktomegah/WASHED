@@ -23,8 +23,10 @@ export function SplashX01(): ReactElement {
     <main aria-labelledby="x01-headline" className="onboarding-screen splash" data-screen-id="X-01">
       <div className="body center">
         <div>
-          <h1 className="splash-mark" id="x01-headline">
-            Washed<span aria-hidden="true">.</span>
+          <h1 aria-label="washed." className="splash-mark" id="x01-headline">
+            <span aria-hidden="true">
+              washed<span className="splash-mark-dot">.</span>
+            </span>
           </h1>
           <div className="splash-tagline">{translate('subscriber.splash.tagline')}</div>
         </div>
