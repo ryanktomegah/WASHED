@@ -38,6 +38,7 @@ export function HubX10(): ReactElement {
           status: formatVisitStatus(liveVisit),
           time: formatVisitTimeWindow(liveVisit.scheduledTimeWindow),
           visitId: liveVisit.visitId,
+          workerId: liveWorker.workerId,
           workerName: liveWorker.displayName,
         };
   const hasScheduledVisit =
@@ -124,13 +125,21 @@ export function HubX10(): ReactElement {
                   </span>
                 </button>
               ) : (
-                <div aria-label={liveVisitCard.workerName} className="hub-worker-row">
+                <button
+                  aria-label={liveVisitCard.workerName}
+                  className="hub-worker-row"
+                  onClick={() => navigate(`/worker/${liveVisitCard.workerId}`)}
+                  type="button"
+                >
                   <span aria-hidden="true" className="hub-avatar hub-avatar-worker" />
                   <span className="hub-worker-copy">
                     <strong>{liveVisitCard.workerName}</strong>
                     <span>{liveVisitCard.detail}</span>
                   </span>
-                </div>
+                  <span aria-hidden="true" className="hub-arrow">
+                    →
+                  </span>
+                </button>
               )}
             </section>
 

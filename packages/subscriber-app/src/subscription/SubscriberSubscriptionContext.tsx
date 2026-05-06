@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 
-import type { SubscriptionDetailDto, VisitSummaryDto } from '@washed/api-client';
+import type { AddressDto, SubscriptionDetailDto, VisitSummaryDto } from '@washed/api-client';
 
 import type { SignupPaymentProvider, SignupTier } from '../screens/onboarding/SignupContext.js';
 
@@ -39,13 +39,16 @@ export interface FirstVisitRequest {
 }
 
 export interface SubscriberSubscriptionState {
+  readonly address: AddressDto | null;
   readonly addressNeighborhood: string | null;
   readonly assignedWorker: SubscriptionDetailDto['assignedWorker'];
+  readonly billingStatus: SubscriptionDetailDto['billingStatus'];
   readonly createdAtIso: string | null;
   readonly firstVisitRequest: FirstVisitRequest | null;
   readonly isHydratedFromApi: boolean;
   readonly paymentPhoneNumber: string | null;
   readonly paymentProvider: SignupPaymentProvider;
+  readonly pendingAddressChange: SubscriptionDetailDto['pendingAddressChange'];
   readonly recentVisits: readonly VisitSummaryDto[];
   readonly status: SubscriberSubscriptionStatus;
   readonly subscriptionId: string | null;
@@ -77,13 +80,16 @@ export interface SubscriberSubscriptionContextValue {
 export const SUBSCRIBER_SUBSCRIPTION_STORAGE_KEY = 'washed.subscriber.subscription';
 
 export const DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE: SubscriberSubscriptionState = {
+  address: null,
   addressNeighborhood: null,
   assignedWorker: null,
+  billingStatus: null,
   createdAtIso: null,
   firstVisitRequest: null,
   isHydratedFromApi: false,
   paymentPhoneNumber: null,
   paymentProvider: 'mixx',
+  pendingAddressChange: null,
   recentVisits: [],
   status: 'ready_no_visit',
   subscriptionId: null,
@@ -124,13 +130,16 @@ export function SubscriberSubscriptionProvider({
       readonly tier: SignupTier;
     }) => {
       setState({
+        address: null,
         addressNeighborhood: null,
         assignedWorker: null,
+        billingStatus: null,
         createdAtIso: new Date().toISOString(),
         firstVisitRequest: null,
         isHydratedFromApi: false,
         paymentPhoneNumber: input.paymentPhoneNumber ?? null,
         paymentProvider: input.paymentProvider,
+        pendingAddressChange: null,
         recentVisits: [],
         status: 'ready_no_visit',
         subscriptionId: input.subscriptionId ?? null,
@@ -169,7 +178,9 @@ export function SubscriberSubscriptionProvider({
 
     setState((current) => ({
       addressNeighborhood: subscription.address.neighborhood,
+      address: subscription.address,
       assignedWorker: subscription.assignedWorker,
+      billingStatus: subscription.billingStatus,
       createdAtIso: current.createdAtIso,
       firstVisitRequest:
         subscription.status === 'pending_match' && subscription.schedulePreference !== null
@@ -182,6 +193,7 @@ export function SubscriberSubscriptionProvider({
       isHydratedFromApi: true,
       paymentPhoneNumber: subscription.paymentMethod?.phoneNumber ?? current.paymentPhoneNumber,
       paymentProvider: subscription.paymentMethod?.provider ?? current.paymentProvider,
+      pendingAddressChange: subscription.pendingAddressChange,
       recentVisits: subscription.recentVisits,
       status: toSubscriberSubscriptionStatus(subscription.status),
       subscriptionId: subscription.subscriptionId,
@@ -267,12 +279,15 @@ function readStoredSubscription(storageKey: string): SubscriberSubscriptionState
 
   return {
     addressNeighborhood: parsed.addressNeighborhood ?? null,
+    address: parsed.address ?? null,
     assignedWorker: parsed.assignedWorker ?? null,
+    billingStatus: parsed.billingStatus ?? null,
     createdAtIso: parsed.createdAtIso ?? null,
     firstVisitRequest: parsed.firstVisitRequest ?? null,
     isHydratedFromApi: parsed.isHydratedFromApi ?? false,
     paymentPhoneNumber: parsed.paymentPhoneNumber ?? null,
     paymentProvider: parsed.paymentProvider,
+    pendingAddressChange: parsed.pendingAddressChange ?? null,
     recentVisits: parsed.recentVisits ?? [],
     status: parsed.status,
     subscriptionId: parsed.subscriptionId ?? null,

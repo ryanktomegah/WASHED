@@ -10,10 +10,15 @@ import {
   SUBSCRIBER_APPEARANCE_STORAGE_KEY,
   SubscriberAppearanceProvider,
 } from '../../appearance/AppearanceContext.js';
+import { SubscriberApiProvider } from '../../api/SubscriberApiContext.js';
 import {
   SUBSCRIBER_LANGUAGE_OPTIONS,
   SUBSCRIBER_LANGUAGE_STORAGE_KEY,
 } from '../../language/languageOptions.js';
+import {
+  DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE,
+  SubscriberSubscriptionProvider,
+} from '../../subscription/SubscriberSubscriptionContext.js';
 import { SignupProvider, type SignupInitialState } from '../onboarding/SignupContext.js';
 import {
   AddressEditX25,
@@ -51,10 +56,17 @@ function renderAt(
               supportedLocales={SUBSCRIBER_LANGUAGE_OPTIONS}
             >
               <SubscriberAppearanceProvider>
-                <SignupProvider initialState={initialSignupState}>
-                  {element}
-                  <Spy />
-                </SignupProvider>
+                <SubscriberApiProvider baseUrl={null}>
+                  <SubscriberSubscriptionProvider
+                    initialState={DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE}
+                    storageKey={null}
+                  >
+                    <SignupProvider initialState={initialSignupState}>
+                      {element}
+                      <Spy />
+                    </SignupProvider>
+                  </SubscriberSubscriptionProvider>
+                </SubscriberApiProvider>
               </SubscriberAppearanceProvider>
             </LocaleProvider>
           }
@@ -87,28 +99,35 @@ function renderProfileRoutes(initialSignupState: SignupInitialState): {
         supportedLocales={SUBSCRIBER_LANGUAGE_OPTIONS}
       >
         <SubscriberAppearanceProvider>
-          <SignupProvider initialState={initialSignupState}>
-            <Routes>
-              <Route
-                element={
-                  <>
-                    <ProfileX24 />
-                    <Spy />
-                  </>
-                }
-                path="/profile"
-              />
-              <Route
-                element={
-                  <>
-                    <ProfileEditX24E />
-                    <Spy />
-                  </>
-                }
-                path="/profile/edit"
-              />
-            </Routes>
-          </SignupProvider>
+          <SubscriberApiProvider baseUrl={null}>
+            <SubscriberSubscriptionProvider
+              initialState={DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE}
+              storageKey={null}
+            >
+              <SignupProvider initialState={initialSignupState}>
+                <Routes>
+                  <Route
+                    element={
+                      <>
+                        <ProfileX24 />
+                        <Spy />
+                      </>
+                    }
+                    path="/profile"
+                  />
+                  <Route
+                    element={
+                      <>
+                        <ProfileEditX24E />
+                        <Spy />
+                      </>
+                    }
+                    path="/profile/edit"
+                  />
+                </Routes>
+              </SignupProvider>
+            </SubscriberSubscriptionProvider>
+          </SubscriberApiProvider>
         </SubscriberAppearanceProvider>
       </LocaleProvider>
     </MemoryRouter>,

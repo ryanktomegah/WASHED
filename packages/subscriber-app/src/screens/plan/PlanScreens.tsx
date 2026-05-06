@@ -124,9 +124,20 @@ function activePlanLabel(tier: 'T1' | 'T2'): string {
   );
 }
 
+function initialsFromName(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/u)
+    .slice(0, 2)
+    .map((part) => part.charAt(0))
+    .join('')
+    .toUpperCase();
+}
+
 export function PlanX19(): ReactElement {
   const navigate = useNavigate();
   const locale = useActiveLocale();
+  const subscriberApi = useSubscriberApi();
   const subscription = useSubscriberSubscription();
   if (subscription.state.status === 'paused') {
     return <PlanPausedX19R />;
@@ -138,19 +149,43 @@ export function PlanX19(): ReactElement {
     return <PlanPendingX19 />;
   }
 
-  const active = {
-    ...SUBSCRIBER_PLAN_DEMO.active,
-    amountXof: TIER_PRICE_XOF[subscription.state.tier],
-    tier: subscription.state.tier,
-  };
-  const accountGoodUntil = formatDayMonth(active.accountGoodUntilIso, locale);
-  const nextChargeDate = formatDayMonth(active.nextChargeDateIso, locale);
-  const nextVisitWeekday = formatWeekday(active.nextVisit.dateIso, locale);
-  const nextVisitDate = formatDayMonth(active.nextVisit.dateIso, locale);
-  const nextVisitTime = formatPlanTime(active.nextVisit.time24h, locale);
-  const titleText = translate('subscriber.plan.title.active', {
-    date: accountGoodUntil,
-  });
+  const active = SUBSCRIBER_PLAN_DEMO.active;
+  const isConfigured = subscriberApi.isConfigured;
+  const liveNextVisit = isConfigured ? (subscription.state.upcomingVisits[0] ?? null) : null;
+  const paymentReady =
+    !isConfigured || subscription.state.billingStatus?.paymentAuthorizationStatus === 'ready';
+  const accountGoodUntilIso = isConfigured
+    ? (subscription.state.billingStatus?.nextChargeAt?.slice(0, 10) ?? null)
+    : active.accountGoodUntilIso;
+  const nextChargeIso = isConfigured
+    ? (subscription.state.billingStatus?.nextChargeAt?.slice(0, 10) ?? null)
+    : active.nextChargeDateIso;
+  const accountGoodUntil =
+    !paymentReady || accountGoodUntilIso === null
+      ? translate('subscriber.plan.active_card.payment_setup_pending')
+      : formatDayMonth(accountGoodUntilIso, locale);
+  const nextChargeDate =
+    !paymentReady || nextChargeIso === null
+      ? translate('subscriber.plan.active_card.payment_setup_pending')
+      : formatDayMonth(nextChargeIso, locale);
+  const nextVisitWeekday =
+    liveNextVisit === null ? null : formatWeekday(liveNextVisit.scheduledDate, locale);
+  const nextVisitDate =
+    liveNextVisit === null ? null : formatDayMonth(liveNextVisit.scheduledDate, locale);
+  const nextVisitTime =
+    liveNextVisit === null
+      ? null
+      : translate(
+          liveNextVisit.scheduledTimeWindow === 'morning'
+            ? 'subscriber.booking.time.morning.label'
+            : 'subscriber.booking.time.afternoon.label',
+        );
+  const titleText =
+    !paymentReady || accountGoodUntilIso === null
+      ? translate('subscriber.plan.title.active_payment_setup')
+      : translate('subscriber.plan.title.active', {
+          date: accountGoodUntil,
+        });
 
   return (
     <main
@@ -173,8 +208,8 @@ export function PlanX19(): ReactElement {
           </span>
           <span className="plan-active-card-tier">
             {translate('subscriber.plan.active_card.tier', {
-              label: activePlanLabel(active.tier),
-              amount: formatXof(active.amountXof),
+              label: activePlanLabel(subscription.state.tier),
+              amount: formatXof(TIER_PRICE_XOF[subscription.state.tier]),
             })}
           </span>
           <div className="plan-active-card-row">
@@ -192,25 +227,42 @@ export function PlanX19(): ReactElement {
         <h2 className="plan-eyebrow plan-section-eyebrow">
           {translate('subscriber.plan.next_visit.eyebrow')}
         </h2>
-        <article className="plan-next-visit-card" aria-label={active.nextVisit.workerName}>
-          <span aria-hidden="true" className="plan-avatar">
-            {active.nextVisit.workerInitials}
-          </span>
-          <div className="plan-next-visit-meta">
-            <strong>
-              {translate('subscriber.plan.next_visit.summary', {
-                weekday: nextVisitWeekday,
-                date: nextVisitDate,
-                time: nextVisitTime,
-              })}
-            </strong>
-            <span>
-              {translate('subscriber.plan.next_visit.with_worker', {
-                name: active.nextVisit.workerName,
-              })}
+        {liveNextVisit === null && isConfigured ? (
+          <section className="plan-list-card" aria-labelledby="x19-live-empty">
+            <span className="plan-eyebrow" id="x19-live-empty">
+              {translate('subscriber.plan.next_visit.eyebrow')}
             </span>
-          </div>
-        </article>
+            <p className="plan-copy">{translate('subscriber.plan.next_visit.empty')}</p>
+          </section>
+        ) : (
+          <article
+            className="plan-next-visit-card"
+            aria-label={
+              subscription.state.assignedWorker?.displayName ?? active.nextVisit.workerName
+            }
+          >
+            <span aria-hidden="true" className="plan-avatar">
+              {initialsFromName(
+                subscription.state.assignedWorker?.displayName ?? active.nextVisit.workerName,
+              )}
+            </span>
+            <div className="plan-next-visit-meta">
+              <strong>
+                {translate('subscriber.plan.next_visit.summary', {
+                  weekday: nextVisitWeekday ?? formatWeekday(active.nextVisit.dateIso, locale),
+                  date: nextVisitDate ?? formatDayMonth(active.nextVisit.dateIso, locale),
+                  time: nextVisitTime ?? formatPlanTime(active.nextVisit.time24h, locale),
+                })}
+              </strong>
+              <span>
+                {translate('subscriber.plan.next_visit.with_worker', {
+                  name:
+                    subscription.state.assignedWorker?.displayName ?? active.nextVisit.workerName,
+                })}
+              </span>
+            </div>
+          </article>
+        )}
 
         <div className="plan-row2">
           <button
@@ -606,7 +658,11 @@ export function PlanPaymentMethodX21(): ReactElement {
 export function PlanOverdueX23(): ReactElement {
   const navigate = useNavigate();
   const locale = useActiveLocale();
-  const { active, payment } = SUBSCRIBER_PLAN_DEMO;
+  const signup = useOptionalSignup();
+  const subscription = useSubscriberSubscription();
+  const firstName =
+    signup?.identity.firstName.trim() || translate('subscriber.dashboard.greeting.generic');
+  const nextVisit = subscription.state.upcomingVisits[0] ?? null;
 
   return (
     <main
@@ -618,11 +674,11 @@ export function PlanOverdueX23(): ReactElement {
         <header className="plan-header">
           <span className="plan-eyebrow">
             {translate('subscriber.dashboard.greeting.morning', {
-              name: payment.subscriberFirstName,
+              name: firstName,
             })}
           </span>
           <span aria-hidden="true" className="plan-avatar">
-            {payment.subscriberInitials}
+            {initialsFromName(firstName)}
           </span>
         </header>
 
@@ -653,7 +709,11 @@ export function PlanOverdueX23(): ReactElement {
           <span className="plan-eyebrow" id="x23-next-visit">
             {translate('subscriber.payment.overdue.next_visit_eyebrow')}
           </span>
-          <strong>{formatWeekday(active.nextVisit.dateIso, locale)}</strong>
+          <strong>
+            {nextVisit === null
+              ? translate('subscriber.plan.next_visit.empty')
+              : formatWeekday(nextVisit.scheduledDate, locale)}
+          </strong>
           <span>{translate('subscriber.payment.overdue.waiting')}</span>
         </section>
 
@@ -670,10 +730,26 @@ export function PlanUpgradeX19U(): ReactElement {
   const locale = useActiveLocale();
   const subscriberApi = useSubscriberApi();
   const subscription = useSubscriberSubscription();
-  const { upgrade } = SUBSCRIBER_PLAN_DEMO;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmissionError, setHasSubmissionError] = useState(false);
-  const effectiveDate = formatDayMonth(upgrade.effectiveDateIso, locale);
+  const upgrade = SUBSCRIBER_PLAN_DEMO.upgrade;
+  const currentAmountXof = subscriberApi.isConfigured
+    ? TIER_PRICE_XOF[subscription.state.tier]
+    : upgrade.currentAmountXof;
+  const newAmountXof = subscriberApi.isConfigured ? TIER_PRICE_XOF.T2 : upgrade.newAmountXof;
+  const savingsXof = subscriberApi.isConfigured
+    ? Math.max(0, TIER_PRICE_XOF.T1 * 2 - TIER_PRICE_XOF.T2)
+    : upgrade.savingsXof;
+  const effectiveDate = formatDayMonth(
+    subscriberApi.isConfigured
+      ? (subscription.state.billingStatus?.nextChargeAt?.slice(0, 10) ??
+          new Date().toISOString().slice(0, 10))
+      : upgrade.effectiveDateIso,
+    locale,
+  );
+  const workerFirstName = subscriberApi.isConfigured
+    ? (subscription.state.assignedWorker?.displayName.split(/\s+/u)[0] ?? '')
+    : upgrade.workerFirstName;
 
   async function confirmTierChange(): Promise<void> {
     setHasSubmissionError(false);
@@ -711,7 +787,7 @@ export function PlanUpgradeX19U(): ReactElement {
         <p className="plan-copy">
           {translate('subscriber.plan.upgrade.body', {
             date: effectiveDate,
-            savings: formatXof(upgrade.savingsXof),
+            savings: formatXof(savingsXof),
           })}
         </p>
 
@@ -721,16 +797,16 @@ export function PlanUpgradeX19U(): ReactElement {
           </span>
           <div className="plan-compare-row">
             <span>{translate('subscriber.plan.upgrade.current_label')}</span>
-            <span className="plan-compare-current">{formatXof(upgrade.currentAmountXof)}</span>
+            <span className="plan-compare-current">{formatXof(currentAmountXof)}</span>
           </div>
           <div className="plan-compare-row">
             <strong>{translate('subscriber.plan.upgrade.new_label')}</strong>
-            <span className="plan-compare-new">{formatXof(upgrade.newAmountXof)}</span>
+            <span className="plan-compare-new">{formatXof(newAmountXof)}</span>
           </div>
           <div className="plan-compare-divider" aria-hidden="true" />
           <div className="plan-compare-row plan-compare-row-savings">
             <span>{translate('subscriber.plan.upgrade.savings_label')}</span>
-            <span className="plan-compare-savings">— {formatXof(upgrade.savingsXof)}</span>
+            <span className="plan-compare-savings">— {formatXof(savingsXof)}</span>
           </div>
         </section>
 
@@ -743,13 +819,13 @@ export function PlanUpgradeX19U(): ReactElement {
             <li>
               {translate('subscriber.plan.upgrade.effect.charge', {
                 date: effectiveDate,
-                amount: formatXof(upgrade.newAmountXof),
+                amount: formatXof(newAmountXof),
               })}
             </li>
             <li>{translate('subscriber.plan.upgrade.effect.bureau')}</li>
             <li>
               {translate('subscriber.plan.upgrade.effect.same_worker', {
-                name: upgrade.workerFirstName,
+                name: workerFirstName,
               })}
             </li>
           </ul>
@@ -764,7 +840,7 @@ export function PlanUpgradeX19U(): ReactElement {
           type="button"
         >
           {translate('subscriber.plan.upgrade.confirm.cta', {
-            amount: formatXof(upgrade.newAmountXof),
+            amount: formatXof(newAmountXof),
           })}
         </button>
         {hasSubmissionError ? (
@@ -786,12 +862,36 @@ export function PlanPauseConfirmX22(): ReactElement {
   const locale = useActiveLocale();
   const subscriberApi = useSubscriberApi();
   const subscription = useSubscriberSubscription();
-  const { active, upgrade } = SUBSCRIBER_PLAN_DEMO;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmissionError, setHasSubmissionError] = useState(false);
-  const nextChargeDate = formatDayMonth(active.nextChargeDateIso, locale);
-  const nextVisitWeekday = formatSentenceWeekday(active.nextVisit.dateIso, locale);
-  const nextVisitDate = formatDayMonth(active.nextVisit.dateIso, locale);
+  const active = SUBSCRIBER_PLAN_DEMO.active;
+  const nextVisit = subscriberApi.isConfigured
+    ? (subscription.state.upcomingVisits[0] ?? null)
+    : null;
+  const nextChargeDate = !subscriberApi.isConfigured
+    ? formatDayMonth(active.nextChargeDateIso, locale)
+    : subscription.state.billingStatus?.nextChargeAt === null ||
+        subscription.state.billingStatus?.nextChargeAt === undefined
+      ? translate('subscriber.plan.active_card.payment_setup_pending')
+      : formatDayMonth(subscription.state.billingStatus.nextChargeAt.slice(0, 10), locale);
+  const nextVisitWeekday =
+    nextVisit === null
+      ? subscriberApi.isConfigured
+        ? translate('subscriber.notifications.no_visit')
+        : formatSentenceWeekday(active.nextVisit.dateIso, locale)
+      : formatSentenceWeekday(nextVisit.scheduledDate, locale);
+  const nextVisitDate =
+    nextVisit === null
+      ? subscriberApi.isConfigured
+        ? translate('subscriber.notifications.no_visit')
+        : formatDayMonth(active.nextVisit.dateIso, locale)
+      : formatDayMonth(nextVisit.scheduledDate, locale);
+  const workerFirstName = subscriberApi.isConfigured
+    ? (subscription.state.assignedWorker?.displayName.split(/\s+/u)[0] ?? '')
+    : (active.nextVisit.workerName.split(/\s+/u)[0] ?? '');
+  const amountXof = subscriberApi.isConfigured
+    ? TIER_PRICE_XOF[subscription.state.tier]
+    : active.amountXof;
 
   async function confirmPause(): Promise<void> {
     setHasSubmissionError(false);
@@ -827,8 +927,8 @@ export function PlanPauseConfirmX22(): ReactElement {
 
         <p className="plan-copy">
           {translate('subscriber.plan.pause.body', {
-            name: active.nextVisit.workerName.split(' ')[0] ?? active.nextVisit.workerName,
-            amount: formatXof(active.amountXof),
+            name: workerFirstName,
+            amount: formatXof(amountXof),
           })}
         </p>
 
@@ -858,7 +958,7 @@ export function PlanPauseConfirmX22(): ReactElement {
           </span>
           <p className="plan-cream-body">
             {translate('subscriber.plan.pause.savings_body', {
-              savings: formatXof(upgrade.savingsXof),
+              savings: formatXof(amountXof),
             })}
           </p>
         </section>
@@ -889,11 +989,38 @@ export function PlanPauseConfirmX22(): ReactElement {
 export function PlanPausedSuccessX22A(): ReactElement {
   const navigate = useNavigate();
   const locale = useActiveLocale();
-  const { active, paused } = SUBSCRIBER_PLAN_DEMO;
-  const nextChargeDate = formatDayMonth(active.nextChargeDateIso, locale);
-  const nextVisitWeekday = formatSentenceWeekday(active.nextVisit.dateIso, locale);
-  const nextVisitDate = formatDayMonth(active.nextVisit.dateIso, locale);
-  const autoCloseDate = formatDayMonth(paused.autoCloseDateIso, locale);
+  const subscriberApi = useSubscriberApi();
+  const subscription = useSubscriberSubscription();
+  const active = SUBSCRIBER_PLAN_DEMO.active;
+  const paused = SUBSCRIBER_PLAN_DEMO.paused;
+  const nextVisit = subscriberApi.isConfigured
+    ? (subscription.state.upcomingVisits[0] ?? null)
+    : null;
+  const nextChargeDate = !subscriberApi.isConfigured
+    ? formatDayMonth(active.nextChargeDateIso, locale)
+    : subscription.state.billingStatus?.nextChargeAt === null ||
+        subscription.state.billingStatus?.nextChargeAt === undefined
+      ? translate('subscriber.plan.active_card.payment_setup_pending')
+      : formatDayMonth(subscription.state.billingStatus.nextChargeAt.slice(0, 10), locale);
+  const nextVisitWeekday =
+    nextVisit === null
+      ? subscriberApi.isConfigured
+        ? translate('subscriber.notifications.no_visit')
+        : formatSentenceWeekday(active.nextVisit.dateIso, locale)
+      : formatSentenceWeekday(nextVisit.scheduledDate, locale);
+  const nextVisitDate =
+    nextVisit === null
+      ? subscriberApi.isConfigured
+        ? translate('subscriber.notifications.no_visit')
+        : formatDayMonth(active.nextVisit.dateIso, locale)
+      : formatDayMonth(nextVisit.scheduledDate, locale);
+  const autoCloseDate = formatDayMonth(
+    subscriberApi.isConfigured ? new Date().toISOString().slice(0, 10) : paused.autoCloseDateIso,
+    locale,
+  );
+  const workerFirstName = subscriberApi.isConfigured
+    ? (subscription.state.assignedWorker?.displayName.split(/\s+/u)[0] ?? '')
+    : paused.workerFirstName;
   const titleText = translate('subscriber.plan.pause.success.title');
 
   return (
@@ -911,7 +1038,7 @@ export function PlanPausedSuccessX22A(): ReactElement {
 
         <p className="plan-copy plan-success-copy">
           {translate('subscriber.plan.pause.success.body', {
-            name: paused.workerFirstName,
+            name: workerFirstName,
           })}
         </p>
 
@@ -972,11 +1099,23 @@ export function PlanPausedX19R(): ReactElement {
   const locale = useActiveLocale();
   const subscriberApi = useSubscriberApi();
   const subscription = useSubscriberSubscription();
-  const { paused } = SUBSCRIBER_PLAN_DEMO;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmissionError, setHasSubmissionError] = useState(false);
-  const pauseStartDate = formatDayMonth(paused.pauseStartDateIso, locale);
-  const autoCloseDate = formatDayMonth(paused.autoCloseDateIso, locale);
+  const paused = SUBSCRIBER_PLAN_DEMO.paused;
+  const pauseStartDate = formatDayMonth(
+    subscriberApi.isConfigured ? new Date().toISOString().slice(0, 10) : paused.pauseStartDateIso,
+    locale,
+  );
+  const autoCloseDate = formatDayMonth(
+    subscriberApi.isConfigured ? new Date().toISOString().slice(0, 10) : paused.autoCloseDateIso,
+    locale,
+  );
+  const workerName = subscriberApi.isConfigured
+    ? (subscription.state.assignedWorker?.displayName ?? '')
+    : paused.workerName;
+  const workerFirstName = workerName.split(/\s+/u)[0] ?? '';
+  const daysIntoPause = subscriberApi.isConfigured ? 0 : paused.daysIntoPause;
+  const tenureMonths = subscriberApi.isConfigured ? 0 : paused.tenureMonths;
 
   async function resumePlan(): Promise<void> {
     setHasSubmissionError(false);
@@ -1022,7 +1161,7 @@ export function PlanPausedX19R(): ReactElement {
           <span className="plan-paused-since">
             {translate('subscriber.plan.paused.since', {
               date: pauseStartDate,
-              day: paused.daysIntoPause,
+              day: daysIntoPause,
             })}
           </span>
         </section>
@@ -1037,17 +1176,17 @@ export function PlanPausedX19R(): ReactElement {
           </span>
           <div className="plan-paused-worker">
             <span aria-hidden="true" className="plan-avatar plan-avatar-lg">
-              {paused.workerInitials}
+              {initialsFromName(workerName)}
             </span>
             <div className="plan-paused-worker-meta">
               <strong>
                 {translate('subscriber.plan.paused.worker_line', {
-                  name: paused.workerName,
+                  name: workerName,
                 })}
               </strong>
               <span>
                 {translate('subscriber.plan.paused.worker_sub', {
-                  months: paused.tenureMonths,
+                  months: tenureMonths,
                 })}
               </span>
             </div>
@@ -1061,7 +1200,7 @@ export function PlanPausedX19R(): ReactElement {
           <p className="plan-deadline-body">
             {translate('subscriber.plan.paused.deadline_body', {
               date: autoCloseDate,
-              name: paused.workerFirstName,
+              name: workerFirstName,
             })}
           </p>
         </section>

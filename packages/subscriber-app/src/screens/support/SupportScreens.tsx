@@ -8,6 +8,7 @@ import { useActiveLocale } from '@washed/ui';
 
 import { useSubscriberApi } from '../../api/SubscriberApiContext.js';
 import { useSafeBack } from '../../navigation/useSafeBack.js';
+import { useSubscriberSubscription } from '../../subscription/SubscriberSubscriptionContext.js';
 import {
   findSupportTicket,
   openSupportTicketCount,
@@ -71,6 +72,14 @@ function formatRelativeCreatedAt(createdAt: string, locale: WashedLocale): strin
   return formatter.format(Math.round(diffSeconds / 86_400), 'day');
 }
 
+function formatSystemVisitTime(timeWindow: 'afternoon' | 'morning'): string {
+  return translate(
+    timeWindow === 'morning'
+      ? 'subscriber.booking.time.morning.label'
+      : 'subscriber.booking.time.afternoon.label',
+  );
+}
+
 function demoTicketView(ticket: SupportTicketDemo, locale: WashedLocale): SupportTicketView {
   return {
     ...(ticket.agentName === undefined ? {} : { agentName: ticket.agentName }),
@@ -91,6 +100,8 @@ function demoTicketView(ticket: SupportTicketDemo, locale: WashedLocale): Suppor
 }
 
 function supportContactView(contact: SupportContactDto, locale: WashedLocale): SupportTicketView {
+  const persistedMessages = contact.messages ?? [];
+
   return {
     createdAgo: formatRelativeCreatedAt(contact.createdAt, locale),
     displayId: displayTicketId(contact.contactId),
@@ -102,6 +113,12 @@ function supportContactView(contact: SupportContactDto, locale: WashedLocale): S
         id: `${contact.contactId}-subscriber`,
         timeAgo: formatRelativeCreatedAt(contact.createdAt, locale),
       },
+      ...persistedMessages.map((message) => ({
+        author: message.authorRole === 'operator' ? ('office' as const) : ('subscriber' as const),
+        body: message.body,
+        id: message.messageId,
+        timeAgo: formatRelativeCreatedAt(message.createdAt, locale),
+      })),
       ...(contact.resolutionNote === null
         ? []
         : [
@@ -469,6 +486,8 @@ export function TicketDetailX32(): ReactElement {
   const [sentReplies, setSentReplies] = useState<readonly string[]>([]);
   const [contact, setContact] = useState<SupportContactDto | null>(null);
   const [hasLoadedContact, setHasLoadedContact] = useState(false);
+  const [hasReplyError, setHasReplyError] = useState(false);
+  const [isSendingReply, setIsSendingReply] = useState(false);
   const canSendReply = reply.trim().length > 0;
 
   useEffect(() => {
@@ -517,12 +536,43 @@ export function TicketDetailX32(): ReactElement {
 
   const onReplySubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
-    const trimmedReply = reply.trim();
-    if (trimmedReply.length === 0) return;
-
-    setSentReplies((currentReplies) => [...currentReplies, trimmedReply]);
-    setReply('');
+    void submitReply();
   };
+
+  async function submitReply(): Promise<void> {
+    const trimmedReply = reply.trim();
+    if (trimmedReply.length === 0 || isSendingReply || params.ticketId === undefined) return;
+
+    setHasReplyError(false);
+
+    if (subscriberApi.isConfigured) {
+      setIsSendingReply(true);
+      try {
+        const message = await subscriberApi.createSupportContactMessage({
+          body: trimmedReply,
+          contactId: params.ticketId,
+          createdAt: new Date().toISOString(),
+        });
+        setContact((current) =>
+          current === null
+            ? current
+            : {
+                ...current,
+                messages: [...(current.messages ?? []), message],
+              },
+        );
+      } catch {
+        setHasReplyError(true);
+        setIsSendingReply(false);
+        return;
+      }
+      setIsSendingReply(false);
+    } else {
+      setSentReplies((currentReplies) => [...currentReplies, trimmedReply]);
+    }
+
+    setReply('');
+  }
 
   if (isMissing) {
     return (
@@ -620,6 +670,11 @@ export function TicketDetailX32(): ReactElement {
         </div>
 
         <div className="support-grow" />
+        {hasReplyError ? (
+          <p className="support-copy" role="alert">
+            {translate('error.server.body')}
+          </p>
+        ) : null}
         <form className="support-reply-row" onSubmit={onReplySubmit}>
           <label className="support-sr" htmlFor="x32-reply">
             {translate('subscriber.support.ticket.detail.reply.label')}
@@ -631,7 +686,11 @@ export function TicketDetailX32(): ReactElement {
             placeholder={translate('subscriber.support.ticket.detail.reply.placeholder')}
             value={reply}
           />
-          <button className="support-button dark" disabled={!canSendReply} type="submit">
+          <button
+            className="support-button dark"
+            disabled={!canSendReply || isSendingReply}
+            type="submit"
+          >
             {translate('subscriber.support.ticket.detail.reply.cta')}
           </button>
         </form>
@@ -643,7 +702,12 @@ export function TicketDetailX32(): ReactElement {
 export function OfflineX33(): ReactElement {
   const navigate = useNavigate();
   const locale = useActiveLocale();
+  const subscriberApi = useSubscriberApi();
+  const subscription = useSubscriberSubscription();
+  const liveVisit = subscriberApi.isConfigured ? subscription.state.upcomingVisits[0] : null;
   const visit = SUPPORT_DEMO.nextVisit;
+  const workerDisplayName =
+    subscription.state.assignedWorker?.displayName ?? visit.workerDisplayName;
 
   return (
     <main aria-labelledby="x33-headline" className="support-screen" data-screen-id="X-33">
@@ -651,7 +715,7 @@ export function OfflineX33(): ReactElement {
         <header className="support-topline">
           <span className="support-eyebrow">
             {translate('subscriber.system.offline.greeting', {
-              name: SUPPORT_DEMO.subscriberFirstName,
+              name: translate('subscriber.dashboard.greeting.generic'),
             })}
           </span>
           <span aria-hidden="true" className="support-avatar" />
@@ -670,7 +734,11 @@ export function OfflineX33(): ReactElement {
           </span>
           <h1 className="support-offline-time" id="x33-headline">
             <em>{localized(visit.weekday, locale)}</em>
-            <strong>{localized(visit.time, locale)}</strong>
+            <strong>
+              {liveVisit === undefined || liveVisit === null
+                ? localized(visit.time, locale)
+                : formatSystemVisitTime(liveVisit.scheduledTimeWindow)}
+            </strong>
           </h1>
         </section>
 
@@ -680,7 +748,7 @@ export function OfflineX33(): ReactElement {
         >
           <span aria-hidden="true" className="support-avatar" />
           <span>
-            <strong>{visit.workerDisplayName}</strong>
+            <strong>{workerDisplayName}</strong>
             <small>{translate('subscriber.system.offline.worker_hidden')}</small>
           </span>
         </section>
@@ -701,7 +769,11 @@ export function OfflineX33(): ReactElement {
 
 export function MaintenanceX34(): ReactElement {
   const locale = useActiveLocale();
+  const subscriberApi = useSubscriberApi();
+  const subscription = useSubscriberSubscription();
   const visit = SUPPORT_DEMO.nextVisit;
+  const liveVisit = subscriberApi.isConfigured ? subscription.state.upcomingVisits[0] : null;
+  const workerName = subscription.state.assignedWorker?.displayName ?? visit.workerName;
   const [emergencyPrefix, emergencySuffix = ''] = translate(
     'subscriber.system.maintenance.emergency',
     {
@@ -731,8 +803,11 @@ export function MaintenanceX34(): ReactElement {
           <strong>
             {translate('subscriber.system.maintenance.next_visit_line', {
               date: localized(visit.date, locale),
-              time: localized(visit.time, locale),
-              name: visit.workerName,
+              time:
+                liveVisit === undefined || liveVisit === null
+                  ? localized(visit.time, locale)
+                  : formatSystemVisitTime(liveVisit.scheduledTimeWindow),
+              name: workerName,
             })}
           </strong>
           <small>{translate('subscriber.system.maintenance.no_impact')}</small>

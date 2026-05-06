@@ -10,15 +10,21 @@ import {
   type RescheduledSubscriberVisitDto,
   type SchedulePreferenceDto,
   type SkippedSubscriberVisitDto,
+  type SubscriberAddressChangeRequestDto,
+  type SubscriberNotificationPreferencesDto,
   type SubscriberProfileDto,
+  type SubscriberPrivacyRequestDto,
+  type SubscriberVisitDetailDto,
   type SupportContactCategory,
   type SupportContactDto,
+  type SupportContactMessageDto,
   type SupportContactStatus,
   type SubscriptionBillingItemDto,
   type SubscriptionDetailDto,
   type SubscriptionPaymentMethodDto,
   type SubscriptionTierCode,
   type WorkerSwapRequestDto,
+  type VisitRatingDto,
 } from '@washed/api-client';
 import {
   createAuthManager,
@@ -41,14 +47,31 @@ export interface SubscriberApiContextValue {
     readonly paymentMethod: SubscriptionPaymentMethodDto;
     readonly tierCode: SubscriptionTierCode;
   }) => Promise<CreatedSubscriptionDto>;
+  readonly createAddressChangeRequest: (input: {
+    readonly address: AddressDto;
+    readonly requestedAt: string;
+  }) => Promise<SubscriberAddressChangeRequestDto>;
+  readonly createPrivacyRequest: (input: {
+    readonly reason: string;
+    readonly requestedAt: string;
+    readonly requestType: SubscriberPrivacyRequestDto['requestType'];
+  }) => Promise<SubscriberPrivacyRequestDto>;
   readonly createSupportContact: (input: {
     readonly body: string;
     readonly category: SupportContactCategory;
     readonly createdAt: string;
     readonly subject: string;
   }) => Promise<SupportContactDto>;
+  readonly createSupportContactMessage: (input: {
+    readonly body: string;
+    readonly contactId: string;
+    readonly createdAt: string;
+  }) => Promise<SupportContactMessageDto>;
   readonly getCurrentSubscription: () => Promise<CurrentSubscriberSubscriptionDto>;
+  readonly getProfile: () => Promise<SubscriberProfileDto>;
+  readonly getNotificationPreferences: () => Promise<SubscriberNotificationPreferencesDto>;
   readonly getSupportContact: (contactId: string) => Promise<SupportContactDto>;
+  readonly getVisitDetail: (visitId: string) => Promise<SubscriberVisitDetailDto>;
   readonly isConfigured: boolean;
   readonly listBillingHistory: (input?: { readonly limit?: number }) => Promise<{
     readonly items: readonly SubscriptionBillingItemDto[];
@@ -77,10 +100,21 @@ export interface SubscriberApiContextValue {
     readonly issueType: DisputeDto['issueType'];
     readonly visitId: string;
   }) => Promise<DisputeDto>;
+  readonly rateVisit: (input: {
+    readonly comment?: string;
+    readonly createdAt: string;
+    readonly rating: 1 | 2 | 3 | 4 | 5;
+    readonly visitId: string;
+  }) => Promise<VisitRatingDto>;
   readonly requestWorkerSwap: (input: {
     readonly reason: string;
     readonly requestedAt: string;
   }) => Promise<WorkerSwapRequestDto>;
+  readonly registerPushDevice: (input: {
+    readonly environment: 'development' | 'production' | 'simulator';
+    readonly platform: 'android' | 'ios';
+    readonly token: string;
+  }) => Promise<unknown>;
   readonly rescheduleVisit: (input: {
     readonly scheduledDate: string;
     readonly scheduledTimeWindow: SchedulePreferenceDto['timeWindow'];
@@ -90,6 +124,13 @@ export interface SubscriberApiContextValue {
     readonly resumedAt: string;
   }) => Promise<SubscriptionDetailDto>;
   readonly skipVisit: (visitId: string) => Promise<SkippedSubscriberVisitDto>;
+  readonly updateNotificationPreferences: (input: {
+    readonly emailRecap: boolean;
+    readonly pushReveal: boolean;
+    readonly pushRoute: boolean;
+    readonly smsReminder: boolean;
+    readonly updatedAt: string;
+  }) => Promise<SubscriberNotificationPreferencesDto>;
   readonly updatePaymentMethod: (input: {
     readonly paymentMethod: SubscriptionPaymentMethodDto;
     readonly updatedAt: string;
@@ -182,17 +223,45 @@ function createConfiguredSubscriberApi(
         body: input,
       });
     },
+    createAddressChangeRequest(input) {
+      return api.request('createCurrentSubscriberAddressChangeRequest', {
+        body: input,
+      });
+    },
+    createPrivacyRequest(input) {
+      return api.request('createCurrentSubscriberPrivacyRequest', {
+        body: input,
+      });
+    },
     createSupportContact(input) {
       return api.request('createCurrentSubscriberSupportContact', {
         body: input,
       });
     },
+    createSupportContactMessage(input) {
+      const { contactId, ...body } = input;
+      return api.request('createCurrentSubscriberSupportContactMessage', {
+        body,
+        pathParams: { contactId },
+      });
+    },
     getCurrentSubscription() {
       return api.request('getCurrentSubscriberSubscription');
+    },
+    getProfile() {
+      return api.request('getSubscriberProfile');
+    },
+    getNotificationPreferences() {
+      return api.request('getCurrentSubscriberNotificationPreferences');
     },
     getSupportContact(contactId) {
       return api.request('getCurrentSubscriberSupportContact', {
         pathParams: { contactId },
+      });
+    },
+    getVisitDetail(visitId) {
+      return api.request('getCurrentSubscriberVisitDetail', {
+        pathParams: { visitId },
       });
     },
     isConfigured: true,
@@ -223,9 +292,25 @@ function createConfiguredSubscriberApi(
         pathParams: { visitId },
       });
     },
+    rateVisit(input) {
+      const { visitId, ...body } = input;
+      return api.request('rateCurrentSubscriberVisit', {
+        body,
+        pathParams: { visitId },
+      });
+    },
     requestWorkerSwap(input) {
       return api.request('createCurrentSubscriberWorkerSwapRequest', {
         body: input,
+      });
+    },
+    registerPushDevice(input) {
+      return api.request('registerPushDevice', {
+        body: {
+          app: 'subscriber',
+          deviceId: readOrCreateDeviceId(),
+          ...input,
+        },
       });
     },
     rescheduleVisit(input) {
@@ -244,6 +329,11 @@ function createConfiguredSubscriberApi(
       return api.request('skipCurrentSubscriberVisit', {
         body: {},
         pathParams: { visitId },
+      });
+    },
+    updateNotificationPreferences(input) {
+      return api.request('updateCurrentSubscriberNotificationPreferences', {
+        body: input,
       });
     },
     updatePaymentMethod(input) {
@@ -273,20 +363,29 @@ function createUnconfiguredSubscriberApi(): SubscriberApiContextValue {
   return {
     cancelSubscription: unavailable,
     changeSubscriptionTier: unavailable,
+    createAddressChangeRequest: unavailable,
+    createPrivacyRequest: unavailable,
     createSubscription: unavailable,
     createSupportContact: unavailable,
+    createSupportContactMessage: unavailable,
     getCurrentSubscription: unavailable,
+    getNotificationPreferences: unavailable,
+    getProfile: unavailable,
     getSupportContact: unavailable,
+    getVisitDetail: unavailable,
     isConfigured: false,
     listBillingHistory: unavailable,
     listSupportContacts: unavailable,
     pauseSubscription: unavailable,
     requestFirstVisit: unavailable,
     reportVisitIssue: unavailable,
+    rateVisit: unavailable,
     requestWorkerSwap: unavailable,
+    registerPushDevice: unavailable,
     rescheduleVisit: unavailable,
     resumeSubscription: unavailable,
     skipVisit: unavailable,
+    updateNotificationPreferences: unavailable,
     updatePaymentMethod: unavailable,
     startOtp: unavailable,
     upsertProfile: unavailable,

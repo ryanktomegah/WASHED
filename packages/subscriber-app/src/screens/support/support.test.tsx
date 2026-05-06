@@ -5,6 +5,10 @@ import { describe, expect, it } from 'vitest';
 
 import { SubscriberApiProvider } from '../../api/SubscriberApiContext.js';
 import {
+  DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE,
+  SubscriberSubscriptionProvider,
+} from '../../subscription/SubscriberSubscriptionContext.js';
+import {
   ContactBureauX30,
   ContactSubmittedX30S,
   HelpCenterX29,
@@ -37,20 +41,25 @@ function renderAt(
       {...(apiOptions.baseUrl === undefined ? {} : { baseUrl: apiOptions.baseUrl })}
       {...(apiOptions.fetch === undefined ? {} : { fetch: apiOptions.fetch })}
     >
-      <MemoryRouter initialEntries={[...initialEntries]} initialIndex={initialEntries.length - 1}>
-        <Routes>
-          <Route
-            element={
-              <>
-                {element}
-                <Spy />
-              </>
-            }
-            path={routePath}
-          />
-          <Route element={<Spy />} path="*" />
-        </Routes>
-      </MemoryRouter>
+      <SubscriberSubscriptionProvider
+        initialState={DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE}
+        storageKey={null}
+      >
+        <MemoryRouter initialEntries={[...initialEntries]} initialIndex={initialEntries.length - 1}>
+          <Routes>
+            <Route
+              element={
+                <>
+                  {element}
+                  <Spy />
+                </>
+              }
+              path={routePath}
+            />
+            <Route element={<Spy />} path="*" />
+          </Routes>
+        </MemoryRouter>
+      </SubscriberSubscriptionProvider>
     </SubscriberApiProvider>,
   );
 
@@ -79,6 +88,7 @@ function supportContact(input: {
     status: input.status ?? 'open',
     subject: input.subject ?? 'Une visite · annulation, report, problème',
     subscriptionId: '33333333-3333-4333-8333-333333333333',
+    messages: [],
   };
 }
 
@@ -304,14 +314,31 @@ describe('Subscriber support · X-32 Ticket detail', () => {
   });
 
   it('loads a live support contact detail and keeps reply sending usable', async () => {
-    const fetchStub: typeof fetch = async () =>
-      Response.json(
+    const fetchStub: typeof fetch = async (input) => {
+      if (String(input).endsWith('/messages')) {
+        return Response.json(
+          {
+            authorRole: 'subscriber',
+            authorUserId: '77777777-7777-4777-8777-777777777777',
+            body: 'Merci, je reste disponible.',
+            contactId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            countryCode: 'TG',
+            createdAt: '2026-05-06T10:00:00.000Z',
+            messageId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+            subscriptionId: '33333333-3333-4333-8333-333333333333',
+          },
+          { status: 201 },
+        );
+      }
+
+      return Response.json(
         supportContact({
           body: 'La laveuse est arrivée très en retard.',
           contactId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
           subject: 'Retard sur la visite',
         }),
       );
+    };
 
     renderAt(
       '/support/tickets/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
@@ -330,7 +357,7 @@ describe('Subscriber support · X-32 Ticket detail', () => {
     fireEvent.change(reply, { target: { value: 'Merci, je reste disponible.' } });
     fireEvent.click(screen.getByRole('button', { name: 'Envoyer' }));
 
-    expect(screen.getByText('Merci, je reste disponible.')).toBeVisible();
+    await waitFor(() => expect(screen.getByText('Merci, je reste disponible.')).toBeVisible());
     expect(reply.value).toBe('');
   });
 });

@@ -5,6 +5,11 @@ import { describe, expect, it } from 'vitest';
 
 import { SubscriberApiProvider } from '../../api/SubscriberApiContext.js';
 import {
+  DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE,
+  SubscriberSubscriptionProvider,
+  type SubscriberSubscriptionState,
+} from '../../subscription/SubscriberSubscriptionContext.js';
+import {
   WorkerChangeSubmittedX18C,
   WorkerChangeX18C,
   WorkerProfileX18,
@@ -13,11 +18,13 @@ import {
 function renderWorkerAt(
   path: string,
   initialEntries: readonly string[] = [path],
-  apiOptions: { readonly baseUrl?: string | null; readonly fetch?: typeof fetch } = {
-    baseUrl: null,
-  },
+  options: {
+    readonly api?: { readonly baseUrl?: string | null; readonly fetch?: typeof fetch };
+    readonly subscriptionState?: SubscriberSubscriptionState;
+  } = {},
 ): { locationRef: { current: string } } {
   const locationRef = { current: initialEntries.at(-1) ?? path };
+  const apiOptions = options.api ?? { baseUrl: null };
 
   function Spy(): ReactElement {
     const location = useLocation();
@@ -40,54 +47,74 @@ function renderWorkerAt(
       {...(apiOptions.baseUrl === undefined ? {} : { baseUrl: apiOptions.baseUrl })}
       {...(apiOptions.fetch === undefined ? {} : { fetch: apiOptions.fetch })}
     >
-      <MemoryRouter initialEntries={[...initialEntries]} initialIndex={initialEntries.length - 1}>
-        <Routes>
-          <Route
-            element={
-              <>
-                <WorkerProfileX18 />
-                <BrowserBackProbe />
-                <Spy />
-              </>
-            }
-            path="/worker/:workerId"
-          />
-          <Route
-            element={
-              <>
-                <WorkerChangeX18C />
-                <BrowserBackProbe />
-                <Spy />
-              </>
-            }
-            path="/worker/:workerId/change"
-          />
-          <Route
-            element={
-              <>
-                <WorkerChangeSubmittedX18C />
-                <BrowserBackProbe />
-                <Spy />
-              </>
-            }
-            path="/worker/:workerId/change/submitted"
-          />
-          <Route
-            element={
-              <>
-                <BrowserBackProbe />
-                <Spy />
-              </>
-            }
-            path="*"
-          />
-        </Routes>
-      </MemoryRouter>
+      <SubscriberSubscriptionProvider
+        initialState={options.subscriptionState ?? DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE}
+        storageKey={null}
+      >
+        <MemoryRouter initialEntries={[...initialEntries]} initialIndex={initialEntries.length - 1}>
+          <Routes>
+            <Route
+              element={
+                <>
+                  <WorkerProfileX18 />
+                  <BrowserBackProbe />
+                  <Spy />
+                </>
+              }
+              path="/worker/:workerId"
+            />
+            <Route
+              element={
+                <>
+                  <WorkerChangeX18C />
+                  <BrowserBackProbe />
+                  <Spy />
+                </>
+              }
+              path="/worker/:workerId/change"
+            />
+            <Route
+              element={
+                <>
+                  <WorkerChangeSubmittedX18C />
+                  <BrowserBackProbe />
+                  <Spy />
+                </>
+              }
+              path="/worker/:workerId/change/submitted"
+            />
+            <Route
+              element={
+                <>
+                  <BrowserBackProbe />
+                  <Spy />
+                </>
+              }
+              path="*"
+            />
+          </Routes>
+        </MemoryRouter>
+      </SubscriberSubscriptionProvider>
     </SubscriberApiProvider>,
   );
 
   return { locationRef };
 }
+
+const LIVE_WORKER_SUBSCRIPTION_STATE: SubscriberSubscriptionState = {
+  ...DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE,
+  addressNeighborhood: 'Tokoin',
+  assignedWorker: {
+    averageRating: null,
+    completedVisitCount: 32,
+    displayName: 'Akouvi K.',
+    disputeCount: 0,
+    workerId: '22222222-2222-4222-8222-222222222222',
+  },
+  isHydratedFromApi: true,
+  status: 'active',
+  subscriptionId: '33333333-3333-4333-8333-333333333333',
+};
 
 describe('Subscriber worker profile · X-18', () => {
   it('renders the locked deck copy, relationship metrics, path, and reliability', () => {
@@ -235,15 +262,26 @@ describe('Subscriber worker change request · X-18.C', () => {
         { status: 201 },
       );
     };
-    const { locationRef } = renderWorkerAt('/worker/akouvi/change', ['/worker/akouvi/change'], {
-      baseUrl: 'http://api.test',
-      fetch: fetchStub,
-    });
+    const { locationRef } = renderWorkerAt(
+      '/worker/22222222-2222-4222-8222-222222222222/change',
+      ['/worker/22222222-2222-4222-8222-222222222222/change'],
+      {
+        api: {
+          baseUrl: 'http://api.test',
+          fetch: fetchStub,
+        },
+        subscriptionState: LIVE_WORKER_SUBSCRIPTION_STATE,
+      },
+    );
 
     fireEvent.click(screen.getByText('Souci de qualité du travail'));
     fireEvent.click(screen.getByRole('button', { name: 'Envoyer la demande' }));
 
-    await waitFor(() => expect(locationRef.current).toBe('/worker/akouvi/change/submitted'));
+    await waitFor(() =>
+      expect(locationRef.current).toBe(
+        '/worker/22222222-2222-4222-8222-222222222222/change/submitted',
+      ),
+    );
     expect(requests[0]?.method).toBe('POST');
     expect(requests[0]?.url).toBe(
       'http://api.test/v1/subscriber/subscription/worker-swap-requests',

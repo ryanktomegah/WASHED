@@ -2,32 +2,66 @@ import { useEffect, useState, type ReactElement } from 'react';
 import { Check, ChevronLeft } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { translate } from '@washed/i18n';
+import { translate, type WashedLocale } from '@washed/i18n';
 import { useActiveLocale } from '@washed/ui';
 
 import { useSubscriberApi } from '../../api/SubscriberApiContext.js';
 import { useSafeBack } from '../../navigation/useSafeBack.js';
+import { useSubscriberSubscription } from '../../subscription/SubscriberSubscriptionContext.js';
 import { SUBSCRIBER_WORKER_PROFILE_DEMO } from './workerProfileDemoData.js';
 
 const CHANGE_REASONS = ['personal', 'quality', 'behavior', 'schedule', 'other'] as const;
 
 type ChangeReason = (typeof CHANGE_REASONS)[number];
 
+function initialsFromName(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/u)
+    .slice(0, 2)
+    .map((part) => part.charAt(0))
+    .join('')
+    .toUpperCase();
+}
+
+function localized(
+  value: { readonly en: string; readonly fr: string },
+  locale: WashedLocale,
+): string {
+  return locale === 'fr' ? value.fr : value.en;
+}
+
 export function WorkerProfileX18(): ReactElement {
   const navigate = useNavigate();
   const goBack = useSafeBack('/hub');
-  const locale = useActiveLocale();
   const params = useParams();
-  const worker =
-    params.workerId === SUBSCRIBER_WORKER_PROFILE_DEMO.id
+  const locale = useActiveLocale();
+  const subscriberApi = useSubscriberApi();
+  const subscription = useSubscriberSubscription();
+  const liveWorker =
+    subscriberApi.isConfigured &&
+    params.workerId !== undefined &&
+    subscription.state.assignedWorker?.workerId === params.workerId
+      ? subscription.state.assignedWorker
+      : null;
+  const demoWorker =
+    !subscriberApi.isConfigured && params.workerId === SUBSCRIBER_WORKER_PROFILE_DEMO.id
       ? SUBSCRIBER_WORKER_PROFILE_DEMO
       : undefined;
+  const worker = liveWorker ?? demoWorker;
 
   useEffect(() => {
-    if (worker === undefined) navigate('/hub', { replace: true });
+    if (worker === undefined || worker === null) navigate('/hub', { replace: true });
   }, [navigate, worker]);
 
-  if (worker === undefined) return <></>;
+  if (worker === undefined || worker === null) return <></>;
+  const isLiveWorker = 'displayName' in worker;
+  const displayName = 'displayName' in worker ? worker.displayName : worker.name;
+  const workerId = 'workerId' in worker ? worker.workerId : worker.id;
+  const completedVisitCount =
+    'completedVisitCount' in worker ? worker.completedVisitCount : worker.visitCount;
+  const averageRating = 'averageRating' in worker ? worker.averageRating : null;
+  const disputeCount = 'disputeCount' in worker ? worker.disputeCount : 0;
 
   return (
     <main aria-labelledby="x18-headline" className="worker-profile-screen" data-screen-id="X-18">
@@ -48,17 +82,21 @@ export function WorkerProfileX18(): ReactElement {
 
         <section className="worker-profile-identity" aria-labelledby="x18-headline">
           <span aria-hidden="true" className="worker-profile-avatar">
-            {worker.initials}
+            {initialsFromName(displayName)}
           </span>
           <div>
             <h1 className="worker-profile-name" id="x18-headline">
-              {worker.name}
+              {displayName}
             </h1>
             <p className="worker-profile-location">
-              {translate('subscriber.worker.profile.location', {
-                neighborhood: worker.neighborhood,
-                distance: worker.distanceFromHome,
-              })}
+              {isLiveWorker
+                ? translate('subscriber.worker.profile.location_live', {
+                    neighborhood: subscription.state.addressNeighborhood ?? '',
+                  })
+                : translate('subscriber.worker.profile.location', {
+                    distance: worker.distanceFromHome,
+                    neighborhood: worker.neighborhood,
+                  })}
             </p>
           </div>
         </section>
@@ -70,34 +108,55 @@ export function WorkerProfileX18(): ReactElement {
           <div className="worker-profile-relation-grid">
             <MetricBlock
               label={translate('subscriber.worker.profile.relation.together')}
-              value={translate('subscriber.worker.profile.relation.months', {
-                months: worker.tenureMonths,
-              })}
+              value={
+                isLiveWorker
+                  ? translate('subscriber.worker.profile.relation.active')
+                  : translate('subscriber.worker.profile.relation.months', {
+                      months: worker.tenureMonths,
+                    })
+              }
             />
             <MetricBlock
               align="right"
               label={translate('subscriber.worker.profile.relation.visits')}
-              value={worker.visitCount.toString()}
+              value={completedVisitCount.toString()}
             />
           </div>
         </section>
 
         <InfoCard
-          body={translate('subscriber.worker.profile.path.body', {
-            since: worker.since[locale],
-            households: worker.regularHouseholds,
-            languages: worker.languages[locale],
-          })}
+          body={
+            isLiveWorker
+              ? translate('subscriber.worker.profile.path.body_live', {
+                  name: displayName,
+                })
+              : translate('subscriber.worker.profile.path.body', {
+                  households: worker.regularHouseholds,
+                  languages: localized(worker.languages, locale),
+                  since: localized(worker.since, locale),
+                })
+          }
           id="x18-path-label"
           title={translate('subscriber.worker.profile.path.title')}
         />
 
         <InfoCard
-          body={translate('subscriber.worker.profile.reliability.body', {
-            visits: worker.totalVisits,
-            cancellations: worker.cancellationsByWorker,
-            onTimeRate: worker.onTimeRateThisMonth,
-          })}
+          body={
+            isLiveWorker
+              ? translate('subscriber.worker.profile.reliability.body_live', {
+                  disputes: disputeCount,
+                  rating:
+                    averageRating === null
+                      ? translate('subscriber.worker.profile.reliability.rating_pending')
+                      : averageRating.toFixed(1),
+                  visits: completedVisitCount,
+                })
+              : translate('subscriber.worker.profile.reliability.body', {
+                  cancellations: worker.cancellationsByWorker,
+                  onTimeRate: worker.onTimeRateThisMonth,
+                  visits: worker.totalVisits,
+                })
+          }
           id="x18-reliability-label"
           title={translate('subscriber.worker.profile.reliability.title')}
         />
@@ -106,7 +165,7 @@ export function WorkerProfileX18(): ReactElement {
 
         <button
           className="worker-profile-change-button"
-          onClick={() => navigate(`/worker/${worker.id}/change`)}
+          onClick={() => navigate(`/worker/${workerId}/change`)}
           type="button"
         >
           {translate('subscriber.worker.profile.change.cta')}
@@ -119,24 +178,39 @@ export function WorkerProfileX18(): ReactElement {
 export function WorkerChangeX18C(): ReactElement {
   const navigate = useNavigate();
   const subscriberApi = useSubscriberApi();
+  const subscription = useSubscriberSubscription();
   const params = useParams();
-  const worker =
-    params.workerId === SUBSCRIBER_WORKER_PROFILE_DEMO.id
+  const liveWorker =
+    subscriberApi.isConfigured &&
+    params.workerId !== undefined &&
+    subscription.state.assignedWorker?.workerId === params.workerId
+      ? subscription.state.assignedWorker
+      : null;
+  const demoWorker =
+    !subscriberApi.isConfigured && params.workerId === SUBSCRIBER_WORKER_PROFILE_DEMO.id
       ? SUBSCRIBER_WORKER_PROFILE_DEMO
       : undefined;
-  const goBack = useSafeBack(`/worker/${worker?.id ?? SUBSCRIBER_WORKER_PROFILE_DEMO.id}`);
+  const worker = liveWorker ?? demoWorker;
+  const workerId =
+    worker === null || worker === undefined
+      ? SUBSCRIBER_WORKER_PROFILE_DEMO.id
+      : 'workerId' in worker
+        ? worker.workerId
+        : worker.id;
+  const goBack = useSafeBack(`/worker/${workerId}`);
   const [reason, setReason] = useState<ChangeReason>('personal');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmissionError, setHasSubmissionError] = useState(false);
 
   useEffect(() => {
-    if (worker === undefined) navigate('/hub', { replace: true });
+    if (worker === undefined || worker === null) navigate('/hub', { replace: true });
   }, [navigate, worker]);
 
-  if (worker === undefined) return <></>;
+  if (worker === undefined || worker === null) return <></>;
 
-  const firstName = worker.name.split(' ')[0] ?? worker.name;
-  const submittedPath = `/worker/${worker.id}/change/submitted`;
+  const workerName = 'displayName' in worker ? worker.displayName : worker.name;
+  const firstName = workerName.split(' ')[0] ?? workerName;
+  const submittedPath = `/worker/${workerId}/change/submitted`;
 
   async function submitChangeRequest(): Promise<void> {
     if (isSubmitting) return;
@@ -239,18 +313,28 @@ export function WorkerChangeX18C(): ReactElement {
 export function WorkerChangeSubmittedX18C(): ReactElement {
   const navigate = useNavigate();
   const params = useParams();
-  const worker =
-    params.workerId === SUBSCRIBER_WORKER_PROFILE_DEMO.id
+  const subscriberApi = useSubscriberApi();
+  const subscription = useSubscriberSubscription();
+  const liveWorker =
+    subscriberApi.isConfigured &&
+    params.workerId !== undefined &&
+    subscription.state.assignedWorker?.workerId === params.workerId
+      ? subscription.state.assignedWorker
+      : null;
+  const demoWorker =
+    !subscriberApi.isConfigured && params.workerId === SUBSCRIBER_WORKER_PROFILE_DEMO.id
       ? SUBSCRIBER_WORKER_PROFILE_DEMO
       : undefined;
+  const worker = liveWorker ?? demoWorker;
 
   useEffect(() => {
-    if (worker === undefined) navigate('/hub', { replace: true });
+    if (worker === undefined || worker === null) navigate('/hub', { replace: true });
   }, [navigate, worker]);
 
-  if (worker === undefined) return <></>;
+  if (worker === undefined || worker === null) return <></>;
 
-  const firstName = worker.name.split(' ')[0] ?? worker.name;
+  const workerName = 'displayName' in worker ? worker.displayName : worker.name;
+  const firstName = workerName.split(' ')[0] ?? workerName;
 
   return (
     <main

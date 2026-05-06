@@ -27,6 +27,16 @@ function capitalizeFirst(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+function initialsFromName(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/u)
+    .slice(0, 2)
+    .map((part) => part.charAt(0))
+    .join('')
+    .toUpperCase();
+}
+
 function formatVisitDateLabel(dateIso: string, locale: WashedLocale): string {
   return capitalizeFirst(
     new Intl.DateTimeFormat(localeTag(locale), {
@@ -132,6 +142,10 @@ export function VisitDetailX11(): ReactElement {
   const locale = useActiveLocale();
   const liveVisit = selectVisit(subscription.state.upcomingVisits, params.visitId);
   const shouldUseLiveVisit = subscriberApi.isConfigured;
+  const workerFirstName =
+    subscription.state.assignedWorker?.displayName.split(/\s+/u)[0] ??
+    SUBSCRIBER_VISIT_DEMO.workerName.split(' ')[0] ??
+    '';
 
   useEffect(() => {
     if (shouldUseLiveVisit && subscription.state.isHydratedFromApi && liveVisit === null) {
@@ -230,6 +244,10 @@ export function VisitRescheduleX11M(): ReactElement {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const liveVisit = selectVisit(subscription.state.upcomingVisits, params.visitId);
   const shouldUseLiveVisit = subscriberApi.isConfigured;
+  const workerFirstName =
+    subscription.state.assignedWorker?.displayName.split(/\s+/u)[0] ??
+    SUBSCRIBER_VISIT_DEMO.workerName.split(' ')[0] ??
+    '';
 
   useEffect(() => {
     if (shouldUseLiveVisit && subscription.state.isHydratedFromApi && liveVisit === null) {
@@ -299,7 +317,7 @@ export function VisitRescheduleX11M(): ReactElement {
                 <strong>{formatVisitDateLabel(option.dateIso, locale)}</strong>
                 <small>
                   {translate(option.sublineKey, {
-                    name: SUBSCRIBER_VISIT_DEMO.workerName.split(' ')[0] ?? '',
+                    name: workerFirstName,
                     time: formatClockTime(option.time24h, locale),
                   })}
                 </small>
@@ -327,8 +345,15 @@ export function VisitRescheduleX11M(): ReactElement {
 
 export function VisitEnRouteX12(): ReactElement {
   const locale = useActiveLocale();
-  const visit = SUBSCRIBER_VISIT_DEMO;
-  const arrivalTime = formatClockTime(visit.arrivalTime24h, locale);
+  const subscriberApi = useSubscriberApi();
+  const subscription = useSubscriberSubscription();
+  const visit = subscriberApi.isConfigured ? (subscription.state.upcomingVisits[0] ?? null) : null;
+  const arrivalTime =
+    visit === null
+      ? formatClockTime(SUBSCRIBER_VISIT_DEMO.arrivalTime24h, locale)
+      : formatTimeWindow(visit.scheduledTimeWindow);
+  const workerName =
+    subscription.state.assignedWorker?.displayName ?? SUBSCRIBER_VISIT_DEMO.workerName;
 
   return (
     <main aria-labelledby="x12-headline" className="visit-screen" data-screen-id="X-12">
@@ -342,7 +367,7 @@ export function VisitEnRouteX12(): ReactElement {
           <span className="visit-map-path path-b" />
           <span className="visit-map-pin worker-pin" />
           <span className="visit-map-pin home-pin" />
-          <span className="visit-map-label worker-label">{visit.workerInitials}</span>
+          <span className="visit-map-label worker-label">{initialsFromName(workerName)}</span>
           <span className="visit-map-label home-label">
             {translate('subscriber.visit.enroute.home_label')}
           </span>
@@ -354,19 +379,29 @@ export function VisitEnRouteX12(): ReactElement {
         >
           <div>
             <span>{translate('subscriber.visit.enroute.distance_label')}</span>
-            <strong>{visit.distance}</strong>
+            <strong>
+              {subscriberApi.isConfigured
+                ? translate('subscriber.visit.enroute.distance_live')
+                : SUBSCRIBER_VISIT_DEMO.distance}
+            </strong>
           </div>
           <div>
             <span>{translate('subscriber.visit.enroute.eta_label')}</span>
-            <strong className="accent">{`${visit.etaMinutes} min`}</strong>
+            <strong className="accent">
+              {subscriberApi.isConfigured
+                ? translate('subscriber.visit.enroute.eta_live')
+                : formatDuration(SUBSCRIBER_VISIT_DEMO.etaMinutes, locale)}
+            </strong>
           </div>
         </section>
 
-        <p className="visit-note">
-          {translate('subscriber.visit.enroute.update_note', {
-            cadence: formatCadence(visit.updateCadenceSeconds, locale),
-          })}
-        </p>
+        {subscriberApi.isConfigured ? null : (
+          <p className="visit-note">
+            {translate('subscriber.visit.enroute.update_note', {
+              cadence: formatCadence(SUBSCRIBER_VISIT_DEMO.updateCadenceSeconds, locale),
+            })}
+          </p>
+        )}
       </div>
     </main>
   );
@@ -375,7 +410,9 @@ export function VisitEnRouteX12(): ReactElement {
 export function VisitInProgressX13(): ReactElement {
   const navigate = useNavigate();
   const locale = useActiveLocale();
-  const visit = SUBSCRIBER_VISIT_DEMO;
+  const subscription = useSubscriberSubscription();
+  const workerName =
+    subscription.state.assignedWorker?.displayName ?? SUBSCRIBER_VISIT_DEMO.workerName;
 
   return (
     <main aria-labelledby="x13-headline" className="visit-screen" data-screen-id="X-13">
@@ -396,8 +433,8 @@ export function VisitInProgressX13(): ReactElement {
           <p>
             <strong>
               {translate('subscriber.visit.in_progress.started_body', {
-                name: visit.workerName,
-                time: formatClockTime(visit.arrivedAt24h, locale),
+                name: workerName,
+                time: formatClockTime(SUBSCRIBER_VISIT_DEMO.arrivedAt24h, locale),
               })}
             </strong>{' '}
           </p>
@@ -416,7 +453,9 @@ export function VisitInProgressX13(): ReactElement {
 export function VisitRevealX14(): ReactElement {
   const navigate = useNavigate();
   const locale = useActiveLocale();
+  const subscription = useSubscriberSubscription();
   const visit = SUBSCRIBER_VISIT_DEMO;
+  const workerName = subscription.state.assignedWorker?.displayName ?? visit.workerName;
   const beforePhoto = photoTimeValues(visit.beforePhotoTime24h, locale);
   const afterPhoto = photoTimeValues(visit.afterPhotoTime24h, locale);
 
@@ -429,7 +468,7 @@ export function VisitRevealX14(): ReactElement {
         </h1>
         <p className="visit-note">
           {translate('subscriber.visit.reveal.completed_note', {
-            name: visit.workerName,
+            name: workerName,
             time: formatClockTime(visit.completedAt24h, locale),
             duration: formatDuration(visit.completedDurationMinutes, locale),
           })}
@@ -497,7 +536,24 @@ export function VisitRevealX14(): ReactElement {
 export function VisitFeedbackX15(): ReactElement {
   const navigate = useNavigate();
   const locale = useActiveLocale();
+  const subscriberApi = useSubscriberApi();
+  const subscription = useSubscriberSubscription();
   const visit = SUBSCRIBER_VISIT_DEMO;
+  const recentVisit = subscription.state.recentVisits[0] ?? null;
+  const workerName = subscription.state.assignedWorker?.displayName ?? visit.workerName;
+
+  useEffect(() => {
+    if (!subscriberApi.isConfigured || recentVisit === null || recentVisit.status !== 'completed')
+      return;
+
+    void subscriberApi
+      .rateVisit({
+        createdAt: new Date().toISOString(),
+        rating: 5,
+        visitId: recentVisit.visitId,
+      })
+      .catch(() => undefined);
+  }, [recentVisit, subscriberApi]);
 
   return (
     <main aria-labelledby="x15-headline" className="visit-screen" data-screen-id="X-15">
@@ -518,7 +574,7 @@ export function VisitFeedbackX15(): ReactElement {
           <div className="visit-counter">{formatVisitCounter(visit.counter, locale)}</div>
           <p>
             {translate('subscriber.visit.thanks.counter_line', {
-              name: visit.workerName.split(' ')[0] ?? visit.workerName,
+              name: workerName.split(' ')[0] ?? workerName,
               since: formatMonthYear(visit.counterSinceIso, locale),
             })}
           </p>

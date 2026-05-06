@@ -1,10 +1,18 @@
-import { useRef, useState, type ChangeEvent, type FormEvent, type ReactElement } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type ReactElement,
+} from 'react';
 import { Camera, ChevronLeft, Pencil } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { translate, type WashedLocale } from '@washed/i18n';
 import { useActiveLocale, useLocale } from '@washed/ui';
 
+import { useSubscriberApi } from '../../api/SubscriberApiContext.js';
 import { useSubscriberAppearance } from '../../appearance/AppearanceContext.js';
 import {
   APPEARANCE_OPTIONS,
@@ -17,6 +25,7 @@ import {
   languageOptionLabelKey,
 } from '../../language/languageOptions.js';
 import { useSafeBack } from '../../navigation/useSafeBack.js';
+import { useSubscriberSubscription } from '../../subscription/SubscriberSubscriptionContext.js';
 import {
   hasSignupIdentity,
   signupFullName,
@@ -78,8 +87,11 @@ export function ProfileX24(): ReactElement {
   const navigate = useNavigate();
   const locale = useActiveLocale();
   const { preference } = useSubscriberAppearance();
+  const subscriberApi = useSubscriberApi();
+  const subscription = useSubscriberSubscription();
   const signup = useOptionalSignup();
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const [liveProfileLoaded, setLiveProfileLoaded] = useState(!subscriberApi.isConfigured);
   const hasIdentity = signup !== null && hasSignupIdentity(signup.identity);
   const displayName = hasIdentity
     ? signupFullName(signup.identity)
@@ -89,7 +101,8 @@ export function ProfileX24(): ReactElement {
     : 'W';
   const phoneDisplay = signup?.phone.trim() === '' ? null : (signup?.phone ?? null);
   const addressNeighborhood =
-    signup?.address.neighborhood.trim() === '' ? undefined : signup?.address.neighborhood;
+    subscription.state.addressNeighborhood ??
+    (signup?.address.neighborhood.trim() === '' ? undefined : signup?.address.neighborhood);
   const missing = translate('subscriber.profile.detail.missing');
   const emailDisplay =
     hasIdentity && signup.identity.email.trim() !== ''
@@ -118,6 +131,35 @@ export function ProfileX24(): ReactElement {
           : missing,
     },
   ] as const;
+
+  useEffect(() => {
+    if (!subscriberApi.isConfigured || signup === null) return;
+
+    let cancelled = false;
+    setLiveProfileLoaded(false);
+    void subscriberApi
+      .getProfile()
+      .then((profile) => {
+        if (cancelled) return;
+        signup.setPhone(profile.phoneNumber);
+        signup.setIdentity({
+          firstName: profile.firstName ?? '',
+          lastName: profile.lastName ?? '',
+          email: profile.email ?? '',
+          isAdult: profile.isAdultConfirmed,
+        });
+        setLiveProfileLoaded(true);
+      })
+      .catch(() => setLiveProfileLoaded(true));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [subscriberApi]);
+
+  if (subscriberApi.isConfigured && !liveProfileLoaded) {
+    return <main className="profile-screen subscriber-tab-screen" data-screen-id="X-24" />;
+  }
 
   const onPhotoChange = (event: ChangeEvent<HTMLInputElement>): void => {
     const file = event.target.files?.[0];
@@ -295,11 +337,14 @@ function ProfileMenuItem({
 export function ProfileEditX24E(): ReactElement {
   const navigate = useNavigate();
   const goBack = useSafeBack('/profile');
+  const subscriberApi = useSubscriberApi();
   const signup = useSignup();
   const [firstName, setFirstName] = useState(signup.identity.firstName);
   const [lastName, setLastName] = useState(signup.identity.lastName);
   const [email, setEmail] = useState(signup.identity.email);
   const [isAdult, setIsAdult] = useState(signup.identity.isAdult);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSubmissionError, setHasSubmissionError] = useState(false);
 
   const normalizedEmail = email.trim();
   const isEmailValid =
@@ -309,15 +354,41 @@ export function ProfileEditX24E(): ReactElement {
 
   const onSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
-    if (!isValid) return;
-    signup.setIdentity({
+    void saveProfile();
+  };
+
+  async function saveProfile(): Promise<void> {
+    if (!isValid || isSubmitting) return;
+
+    const identity = {
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       email: normalizedEmail,
       isAdult,
-    });
+    };
+    setHasSubmissionError(false);
+
+    if (subscriberApi.isConfigured) {
+      setIsSubmitting(true);
+      try {
+        const profileInput = {
+          firstName: identity.firstName,
+          isAdultConfirmed: identity.isAdult,
+          lastName: identity.lastName,
+          ...(normalizedEmail === '' ? {} : { email: normalizedEmail }),
+        };
+        await subscriberApi.upsertProfile(profileInput);
+      } catch {
+        setHasSubmissionError(true);
+        setIsSubmitting(false);
+        return;
+      }
+      setIsSubmitting(false);
+    }
+
+    signup.setIdentity(identity);
     navigate('/profile');
-  };
+  }
 
   return (
     <main aria-labelledby="x24e-headline" className="profile-screen" data-screen-id="X-24E">
@@ -406,9 +477,19 @@ export function ProfileEditX24E(): ReactElement {
           <span>{translate('subscriber.signup.identity.adult')}</span>
         </label>
 
+        {hasSubmissionError ? (
+          <p className="profile-copy" role="alert">
+            {translate('error.server.body')}
+          </p>
+        ) : null}
+
         <div className="profile-grow" />
 
-        <button className="profile-button primary full lg" disabled={!isValid} type="submit">
+        <button
+          className="profile-button primary full lg"
+          disabled={!isValid || isSubmitting}
+          type="submit"
+        >
           {translate('subscriber.profile.edit.save_cta')}
         </button>
       </form>
@@ -510,21 +591,93 @@ export function LanguageX24L(): ReactElement {
 export function AddressEditX25(): ReactElement {
   const navigate = useNavigate();
   const goBack = useSafeBack('/profile');
-  const profile = SUBSCRIBER_PROFILE_DEMO;
+  const subscriberApi = useSubscriberApi();
+  const subscription = useSubscriberSubscription();
+  const signup = useOptionalSignup();
+  const workerFirstName = subscription.state.assignedWorker?.displayName.split(/\s+/u)[0] ?? '';
   const [neighborhood, setNeighborhood] = useState<LomeNeighborhood>(
-    profile.addressNeighborhood as LomeNeighborhood,
+    (subscription.state.addressNeighborhood ??
+      (subscriberApi.isConfigured
+        ? null
+        : signup?.address.neighborhood.trim() === ''
+          ? SUBSCRIBER_PROFILE_DEMO.addressNeighborhood
+          : (signup?.address.neighborhood ?? SUBSCRIBER_PROFILE_DEMO.addressNeighborhood)) ??
+      LOME_NEIGHBORHOODS[0]) as LomeNeighborhood,
   );
-  const [street, setStreet] = useState(profile.addressStreet);
-  const [landmark, setLandmark] = useState(profile.addressLandmark);
+  const [street, setStreet] = useState(
+    subscriberApi.isConfigured
+      ? ''
+      : signup?.address.street.trim() === ''
+        ? SUBSCRIBER_PROFILE_DEMO.addressStreet
+        : (signup?.address.street ?? SUBSCRIBER_PROFILE_DEMO.addressStreet),
+  );
+  const [landmark, setLandmark] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSubmissionError, setHasSubmissionError] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const isValid = street.trim().length >= 3;
+  const isValid =
+    street.trim().length >= 3 &&
+    (!subscriberApi.isConfigured || subscription.state.address !== null);
 
   const onSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
-    if (!isValid) return;
-    // Demo: route back to profile. Real validation goes through the bureau.
-    navigate('/profile');
+    void submitAddressRequest();
   };
+
+  async function submitAddressRequest(): Promise<void> {
+    if (!isValid || isSubmitting) return;
+
+    setHasSubmissionError(false);
+    if (!subscriberApi.isConfigured) {
+      navigate('/profile');
+      return;
+    }
+
+    const currentAddress = subscription.state.address;
+    if (currentAddress === null) return;
+
+    setIsSubmitting(true);
+    try {
+      await subscriberApi.createAddressChangeRequest({
+        address: {
+          gpsLatitude: currentAddress.gpsLatitude,
+          gpsLongitude: currentAddress.gpsLongitude,
+          landmark: [street.trim(), landmark.trim()].filter(Boolean).join(' · '),
+          neighborhood,
+        },
+        requestedAt: new Date().toISOString(),
+      });
+      setIsSubmitted(true);
+    } catch {
+      setHasSubmissionError(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  if (isSubmitted) {
+    return (
+      <main aria-labelledby="x25-submitted" className="profile-screen" data-screen-id="X-25">
+        <div className="profile-body profile-body-flow">
+          <BackHeader label={translate('subscriber.address_edit.header')} onBack={goBack} />
+          <div className="profile-grow" />
+          <h1 className="profile-title" id="x25-submitted">
+            {translate('subscriber.address_edit.submitted.title')}
+          </h1>
+          <p className="profile-copy">{translate('subscriber.address_edit.submitted.body')}</p>
+          <div className="profile-grow" />
+          <button
+            className="profile-button primary full lg"
+            onClick={() => navigate('/profile')}
+            type="button"
+          >
+            {translate('subscriber.address_edit.submitted.cta')}
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main aria-labelledby="x25-headline" className="profile-screen" data-screen-id="X-25">
@@ -537,7 +690,7 @@ export function AddressEditX25(): ReactElement {
 
         <p className="profile-copy">
           {translate('subscriber.address_edit.body', {
-            name: profile.workerFirstName,
+            name: workerFirstName,
           })}
         </p>
 
@@ -610,7 +763,17 @@ export function AddressEditX25(): ReactElement {
 
         <div className="profile-grow" />
 
-        <button className="profile-button primary full lg" disabled={!isValid} type="submit">
+        {hasSubmissionError ? (
+          <p className="profile-copy" role="alert">
+            {translate('error.server.body')}
+          </p>
+        ) : null}
+
+        <button
+          className="profile-button primary full lg"
+          disabled={!isValid || isSubmitting}
+          type="submit"
+        >
           {translate('subscriber.address_edit.submit.cta')}
         </button>
       </form>
@@ -624,6 +787,8 @@ export function AddressEditX25(): ReactElement {
 export function NotificationsX26(): ReactElement {
   const goBack = useSafeBack('/profile');
   const locale = useActiveLocale();
+  const subscriberApi = useSubscriberApi();
+  const subscription = useSubscriberSubscription();
   const [enabled, setEnabled] = useState<Record<NotificationToggleDemo['id'], boolean>>(() =>
     SUBSCRIBER_NOTIFICATION_DEFAULTS.reduce(
       (acc, toggle) => {
@@ -633,18 +798,79 @@ export function NotificationsX26(): ReactElement {
       {} as Record<NotificationToggleDemo['id'], boolean>,
     ),
   );
-  const profile = SUBSCRIBER_PROFILE_DEMO;
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasSubmissionError, setHasSubmissionError] = useState(false);
+  const nextVisit = subscription.state.upcomingVisits[0] ?? null;
+  const workerFirstName = subscription.state.assignedWorker?.displayName.split(/\s+/u)[0] ?? '';
+
+  useEffect(() => {
+    if (!subscriberApi.isConfigured) return;
+
+    let cancelled = false;
+    void subscriberApi
+      .getNotificationPreferences()
+      .then((preferences) => {
+        if (cancelled) return;
+        setEnabled({
+          email_recap: preferences.emailRecap,
+          push_reveal: preferences.pushReveal,
+          push_route: preferences.pushRoute,
+          sms_reminder: preferences.smsReminder,
+        });
+      })
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [subscriberApi]);
+
+  async function persistToggle(id: NotificationToggleDemo['id'], value: boolean): Promise<void> {
+    const next = { ...enabled, [id]: value };
+    setEnabled(next);
+    setHasSubmissionError(false);
+
+    if (!subscriberApi.isConfigured) return;
+
+    setIsSaving(true);
+    try {
+      await subscriberApi.updateNotificationPreferences({
+        emailRecap: next.email_recap,
+        pushReveal: next.push_reveal,
+        pushRoute: next.push_route,
+        smsReminder: next.sms_reminder,
+        updatedAt: new Date().toISOString(),
+      });
+      if ((id === 'push_route' || id === 'push_reveal') && value) {
+        await registerSubscriberPushDevice(subscriberApi);
+      }
+    } catch {
+      setEnabled(enabled);
+      setHasSubmissionError(true);
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   const subFor = (id: NotificationToggleDemo['id']): string => {
     if (id === 'sms_reminder')
       return translate('subscriber.notifications.sms_reminder.sub', {
-        weekday: formatSentenceWeekday(profile.nextVisit.dateIso, locale),
-        time: formatClockHour(profile.nextVisit.time24h, locale),
+        weekday:
+          nextVisit === null
+            ? translate('subscriber.notifications.no_visit')
+            : formatSentenceWeekday(nextVisit.scheduledDate, locale),
+        time:
+          nextVisit === null
+            ? translate('subscriber.notifications.no_visit')
+            : formatClockHour(
+                nextVisit.scheduledTimeWindow === 'morning' ? '09:00' : '15:00',
+                locale,
+              ),
         hours: 21,
       });
     if (id === 'push_route')
       return translate('subscriber.notifications.push_route.sub', {
-        name: profile.workerFirstName,
+        name: workerFirstName,
       });
     if (id === 'push_reveal') return translate('subscriber.notifications.push_reveal.sub');
     return translate('subscriber.notifications.email_recap.sub');
@@ -679,9 +905,8 @@ export function NotificationsX26(): ReactElement {
                 aria-checked={enabled[toggle.id]}
                 aria-label={titleFor(toggle.id)}
                 className={`profile-switch${enabled[toggle.id] ? ' on' : ''}`}
-                onClick={() =>
-                  setEnabled((current) => ({ ...current, [toggle.id]: !current[toggle.id] }))
-                }
+                disabled={isSaving}
+                onClick={() => void persistToggle(toggle.id, !enabled[toggle.id])}
                 role="switch"
                 type="button"
               >
@@ -692,6 +917,12 @@ export function NotificationsX26(): ReactElement {
         </ul>
 
         <div className="profile-grow" />
+
+        {hasSubmissionError ? (
+          <p className="profile-footnote" role="alert">
+            {translate('error.server.body')}
+          </p>
+        ) : null}
 
         <p className="profile-footnote">{translate('subscriber.notifications.no_marketing')}</p>
       </div>
@@ -705,6 +936,34 @@ export function NotificationsX26(): ReactElement {
 export function PrivacyX27(): ReactElement {
   const navigate = useNavigate();
   const goBack = useSafeBack('/profile');
+  const subscriberApi = useSubscriberApi();
+  const [isSubmittingExport, setIsSubmittingExport] = useState(false);
+  const [exportRequestId, setExportRequestId] = useState<string | null>(null);
+  const [hasSubmissionError, setHasSubmissionError] = useState(false);
+
+  async function requestExport(): Promise<void> {
+    if (isSubmittingExport) return;
+
+    if (!subscriberApi.isConfigured) {
+      setExportRequestId('DEMO');
+      return;
+    }
+
+    setHasSubmissionError(false);
+    setIsSubmittingExport(true);
+    try {
+      const request = await subscriberApi.createPrivacyRequest({
+        reason: translate('subscriber.privacy.export.reason'),
+        requestedAt: new Date().toISOString(),
+        requestType: 'export',
+      });
+      setExportRequestId(request.requestId);
+    } catch {
+      setHasSubmissionError(true);
+    } finally {
+      setIsSubmittingExport(false);
+    }
+  }
 
   return (
     <main aria-labelledby="x27-headline" className="profile-screen" data-screen-id="X-27">
@@ -734,7 +993,23 @@ export function PrivacyX27(): ReactElement {
 
         <div className="profile-grow" />
 
-        <button className="profile-button ghost full" type="button">
+        {exportRequestId === null ? null : (
+          <p className="profile-footnote" role="status">
+            {translate('subscriber.privacy.export.submitted', { requestId: exportRequestId })}
+          </p>
+        )}
+        {hasSubmissionError ? (
+          <p className="profile-footnote" role="alert">
+            {translate('error.server.body')}
+          </p>
+        ) : null}
+
+        <button
+          className="profile-button ghost full"
+          disabled={isSubmittingExport}
+          onClick={() => void requestExport()}
+          type="button"
+        >
           {translate('subscriber.privacy.export.cta')}
         </button>
         <button
@@ -772,6 +1047,34 @@ function PrivacyCard({
   );
 }
 
+async function registerSubscriberPushDevice(subscriberApi: ReturnType<typeof useSubscriberApi>) {
+  const [{ Capacitor }, { PushNotifications }] = await Promise.all([
+    import('@capacitor/core'),
+    import('@capacitor/push-notifications'),
+  ]);
+
+  if (!Capacitor.isNativePlatform()) return;
+
+  const permission = await PushNotifications.requestPermissions();
+  if (permission.receive !== 'granted') return;
+
+  await PushNotifications.register();
+  await new Promise<void>((resolve) => {
+    const timeout = window.setTimeout(resolve, 3000);
+    void PushNotifications.addListener('registration', (token) => {
+      window.clearTimeout(timeout);
+      const platform = Capacitor.getPlatform() === 'ios' ? 'ios' : 'android';
+      void subscriberApi
+        .registerPushDevice({
+          environment: import.meta.env.DEV ? 'development' : 'production',
+          platform,
+          token: token.value,
+        })
+        .finally(resolve);
+    });
+  });
+}
+
 // ──────────────────────────────────────────────────────────────────────────
 // X-28 · Delete account (typed-confirmation)
 // ──────────────────────────────────────────────────────────────────────────
@@ -779,14 +1082,78 @@ export function DeleteAccountX28(): ReactElement {
   const navigate = useNavigate();
   const goBack = useSafeBack('/profile/privacy');
   const locale = useActiveLocale();
-  const profile = SUBSCRIBER_PROFILE_DEMO;
+  const subscriberApi = useSubscriberApi();
+  const subscription = useSubscriberSubscription();
+  const workerFirstName = subscriberApi.isConfigured
+    ? (subscription.state.assignedWorker?.displayName.split(/\s+/u)[0] ?? '')
+    : SUBSCRIBER_PROFILE_DEMO.workerFirstName;
+  const visitsWithWorker = subscriberApi.isConfigured
+    ? (subscription.state.assignedWorker?.completedVisitCount ?? 0)
+    : SUBSCRIBER_PROFILE_DEMO.visitsWithWorker;
+  const nextVisit = subscriberApi.isConfigured
+    ? (subscription.state.upcomingVisits[0] ?? null)
+    : {
+        scheduledDate: SUBSCRIBER_PROFILE_DEMO.nextVisit.dateIso,
+      };
   const requiredToken = translate('subscriber.delete.confirm.token');
   const [typed, setTyped] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittedRequestId, setSubmittedRequestId] = useState<string | null>(null);
+  const [hasSubmissionError, setHasSubmissionError] = useState(false);
   const isConfirmed = typed.trim() === requiredToken;
 
   const onChange = (event: ChangeEvent<HTMLInputElement>): void => {
     setTyped(event.target.value);
   };
+
+  async function requestDeletion(): Promise<void> {
+    if (!isConfirmed || isSubmitting) return;
+
+    if (!subscriberApi.isConfigured) {
+      setSubmittedRequestId('DEMO');
+      return;
+    }
+
+    setHasSubmissionError(false);
+    setIsSubmitting(true);
+    try {
+      const request = await subscriberApi.createPrivacyRequest({
+        reason: translate('subscriber.delete.reason'),
+        requestedAt: new Date().toISOString(),
+        requestType: 'erasure',
+      });
+      setSubmittedRequestId(request.requestId);
+    } catch {
+      setHasSubmissionError(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  if (submittedRequestId !== null) {
+    return (
+      <main aria-labelledby="x28-submitted" className="profile-screen" data-screen-id="X-28">
+        <div className="profile-body profile-body-flow">
+          <BackHeader label={translate('subscriber.delete.header')} onBack={goBack} />
+          <div className="profile-grow" />
+          <h1 className="profile-title" id="x28-submitted">
+            {translate('subscriber.delete.submitted.title')}
+          </h1>
+          <p className="profile-copy">
+            {translate('subscriber.delete.submitted.body', { requestId: submittedRequestId })}
+          </p>
+          <div className="profile-grow" />
+          <button
+            className="profile-button primary full lg"
+            onClick={() => navigate('/profile/privacy')}
+            type="button"
+          >
+            {translate('subscriber.delete.submitted.cta')}
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main aria-labelledby="x28-headline" className="profile-screen" data-screen-id="X-28">
@@ -799,8 +1166,8 @@ export function DeleteAccountX28(): ReactElement {
 
         <p className="profile-copy">
           {translate('subscriber.delete.body', {
-            count: profile.visitsWithWorker,
-            name: profile.workerFirstName,
+            count: visitsWithWorker,
+            name: workerFirstName,
           })}
         </p>
 
@@ -811,14 +1178,20 @@ export function DeleteAccountX28(): ReactElement {
           <ul className="profile-list">
             <li>
               {translate('subscriber.delete.warn.cancel_visit', {
-                weekday: formatSentenceWeekday(profile.nextVisit.dateIso, locale),
-                date: formatDayMonth(profile.nextVisit.dateIso, locale),
+                weekday:
+                  nextVisit === null
+                    ? translate('subscriber.notifications.no_visit')
+                    : formatSentenceWeekday(nextVisit.scheduledDate, locale),
+                date:
+                  nextVisit === null
+                    ? translate('subscriber.notifications.no_visit')
+                    : formatDayMonth(nextVisit.scheduledDate, locale),
               })}
             </li>
             <li>{translate('subscriber.delete.warn.photos')}</li>
             <li>
               {translate('subscriber.delete.warn.reassign', {
-                name: profile.workerFirstName,
+                name: workerFirstName,
               })}
             </li>
             <li>{translate('subscriber.delete.warn.legal')}</li>
@@ -855,11 +1228,17 @@ export function DeleteAccountX28(): ReactElement {
         <button
           aria-disabled={!isConfirmed}
           className="profile-button danger full"
-          disabled={!isConfirmed}
+          disabled={!isConfirmed || isSubmitting}
+          onClick={() => void requestDeletion()}
           type="button"
         >
           {translate('subscriber.delete.confirm.cta')}
         </button>
+        {hasSubmissionError ? (
+          <p className="profile-footnote" role="alert">
+            {translate('error.server.body')}
+          </p>
+        ) : null}
       </div>
     </main>
   );
