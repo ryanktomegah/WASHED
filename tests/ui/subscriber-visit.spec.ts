@@ -451,6 +451,30 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
     expect(await bottomNavFrame(page)).toEqual(homeFrame);
   });
 
+  test('bottom navigation keeps the same native safe-area frame across tabs', async ({ page }) => {
+    await page.goto('/#/hub');
+    await continueThroughAppearance(page);
+    await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
+    await page.evaluate(() => document.body.setAttribute('data-runtime', 'native'));
+    const homeFrame = await bottomNavFrame(page);
+
+    await page.getByRole('button', { name: 'Visites' }).click();
+    await expect(page.locator('[data-screen-id="X-16"]')).toBeVisible();
+    expect(await bottomNavFrame(page)).toEqual(homeFrame);
+
+    await page.getByRole('button', { name: 'Forfait' }).click();
+    await expect(page.locator('[data-screen-id="X-19"]')).toBeVisible();
+    expect(await bottomNavFrame(page)).toEqual(homeFrame);
+
+    await page.getByRole('button', { name: 'Profil', exact: true }).click();
+    await expect(page.locator('[data-screen-id="X-24"]')).toBeVisible();
+    expect(await bottomNavFrame(page)).toEqual(homeFrame);
+
+    await page.getByRole('button', { name: 'Accueil' }).click();
+    await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
+    expect(await bottomNavFrame(page)).toEqual(homeFrame);
+  });
+
   test('Profil tab opens account actions and lets the subscriber edit identity', async ({
     page,
   }) => {

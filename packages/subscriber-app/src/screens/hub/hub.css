@@ -1,3 +1,12 @@
+body[data-theme='subscriber'] {
+  --subscriber-tab-bar-safe-bottom: env(safe-area-inset-bottom);
+  --subscriber-tab-bar-height: calc(73px + var(--subscriber-tab-bar-safe-bottom));
+}
+
+body[data-theme='subscriber'][data-runtime='native'] {
+  --subscriber-tab-bar-safe-bottom: max(env(safe-area-inset-bottom), 34px);
+}
+
 .hub-screen {
   display: flex;
   min-height: 100vh;
@@ -13,6 +22,18 @@
 .hub-screen *::before,
 .hub-screen *::after {
   box-sizing: border-box;
+}
+
+.subscriber-tab-screen {
+  padding-bottom: 0;
+}
+
+body[data-runtime='native'] .subscriber-tab-screen {
+  padding-bottom: 0;
+}
+
+.subscriber-tab-screen > :is(.hub-body, .history-body, .plan-body, .profile-body) {
+  padding-bottom: calc(var(--subscriber-tab-bar-height) + 18px);
 }
 
 .hub-body {
@@ -695,19 +716,21 @@
    className "hub-nav".
    ============================================================ */
 .hub-nav {
-  position: sticky;
+  position: fixed;
   bottom: 0;
+  left: 0;
+  right: 0;
   z-index: 10;
   display: grid;
+  height: var(--subscriber-tab-bar-height);
   width: 100%;
-  flex: 0 0 auto;
   grid-template-columns: repeat(4, 1fr);
   gap: 0;
   border-top: 1px solid var(--line);
   background: var(--surface);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
-  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  padding: 8px 8px calc(8px + var(--subscriber-tab-bar-safe-bottom));
 }
 
 .hub-nav-item {

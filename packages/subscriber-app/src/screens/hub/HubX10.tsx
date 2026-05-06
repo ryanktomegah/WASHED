@@ -40,7 +40,11 @@ export function HubX10(): ReactElement {
         });
 
   return (
-    <main aria-labelledby="x10-headline" className="hub-screen" data-screen-id="X-10">
+    <main
+      aria-labelledby="x10-headline"
+      className="hub-screen subscriber-tab-screen"
+      data-screen-id="X-10"
+    >
       <div className="hub-body">
         <header className="hub-header">
           <div>

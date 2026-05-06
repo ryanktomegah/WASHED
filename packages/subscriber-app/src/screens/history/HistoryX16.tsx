@@ -66,7 +66,11 @@ export function HistoryX16(): ReactElement {
   });
 
   return (
-    <main aria-labelledby="x16-headline" className="history-screen" data-screen-id="X-16">
+    <main
+      aria-labelledby="x16-headline"
+      className="history-screen subscriber-tab-screen"
+      data-screen-id="X-16"
+    >
       <div className="history-body">
         <header className="history-header">
           <span className="history-eyebrow">{translate('subscriber.history.eyebrow')}</span>

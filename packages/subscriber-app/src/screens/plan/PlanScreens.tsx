@@ -153,7 +153,11 @@ export function PlanX19(): ReactElement {
   });
 
   return (
-    <main aria-labelledby="x19-headline" className="plan-screen" data-screen-id="X-19">
+    <main
+      aria-labelledby="x19-headline"
+      className="plan-screen subscriber-tab-screen"
+      data-screen-id="X-19"
+    >
       <div className="plan-body">
         <header className="plan-header">
           <span className="plan-eyebrow">{translate('subscriber.plan.eyebrow')}</span>
@@ -270,7 +274,11 @@ function PlanPendingX19(): ReactElement {
     : 'subscriber.dashboard.empty_visit.cta';
 
   return (
-    <main aria-labelledby="x19-headline" className="plan-screen" data-screen-id="X-19">
+    <main
+      aria-labelledby="x19-headline"
+      className="plan-screen subscriber-tab-screen"
+      data-screen-id="X-19"
+    >
       <div className="plan-body">
         <header className="plan-header">
           <span className="plan-eyebrow">{translate('subscriber.plan.eyebrow')}</span>
@@ -601,7 +609,11 @@ export function PlanOverdueX23(): ReactElement {
   const { active, payment } = SUBSCRIBER_PLAN_DEMO;
 
   return (
-    <main aria-labelledby="x23-headline" className="plan-screen" data-screen-id="X-23">
+    <main
+      aria-labelledby="x23-headline"
+      className="plan-screen subscriber-tab-screen"
+      data-screen-id="X-23"
+    >
       <div className="plan-body">
         <header className="plan-header">
           <span className="plan-eyebrow">
@@ -990,7 +1002,11 @@ export function PlanPausedX19R(): ReactElement {
   }
 
   return (
-    <main aria-labelledby="x19r-headline" className="plan-screen" data-screen-id="X-19.R">
+    <main
+      aria-labelledby="x19r-headline"
+      className="plan-screen subscriber-tab-screen"
+      data-screen-id="X-19.R"
+    >
       <div className="plan-body">
         <header className="plan-header">
           <span className="plan-eyebrow">{translate('subscriber.plan.eyebrow')}</span>

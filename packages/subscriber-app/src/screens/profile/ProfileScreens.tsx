@@ -130,7 +130,11 @@ export function ProfileX24(): ReactElement {
   };
 
   return (
-    <main aria-labelledby="x24-headline" className="profile-screen" data-screen-id="X-24">
+    <main
+      aria-labelledby="x24-headline"
+      className="profile-screen subscriber-tab-screen"
+      data-screen-id="X-24"
+    >
       <div className="profile-body">
         <header className="profile-header">
           <span className="profile-eyebrow">{translate('subscriber.profile.eyebrow')}</span>
