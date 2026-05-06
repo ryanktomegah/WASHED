@@ -56,6 +56,16 @@ export interface WorkerCopy {
     readonly route: string;
     readonly title: string;
   };
+  readonly login: {
+    readonly cta: string;
+    readonly forgot: string;
+    readonly greeting: string;
+    readonly header: string;
+    readonly help: string;
+    readonly phoneLabel: string;
+    readonly pinLabel: string;
+    readonly prompt: string;
+  };
   readonly location: {
     readonly checkInCaptured: string;
     readonly checkOutCaptured: string;
@@ -105,6 +115,10 @@ export interface WorkerCopy {
     readonly offline: string;
     readonly pending: string;
     readonly ready: string;
+  };
+  readonly splash: {
+    readonly sync: string;
+    readonly tagline: string;
   };
   readonly today: {
     readonly addressHint: string;
@@ -196,6 +210,16 @@ export const workerCopy = {
     route: 'Route de demain confirmée',
     title: 'Notifications',
   },
+  login: {
+    cta: translate('worker.login.cta'),
+    forgot: translate('worker.login.forgot'),
+    greeting: translate('worker.login.greeting'),
+    header: translate('worker.login.header'),
+    help: translate('worker.login.help'),
+    phoneLabel: translate('worker.login.phone_label'),
+    pinLabel: translate('worker.login.pin_label'),
+    prompt: translate('worker.login.prompt'),
+  },
   location: {
     checkInCaptured: 'GPS arrivée capturé',
     checkOutCaptured: 'GPS sortie capturé',
@@ -245,6 +269,10 @@ export const workerCopy = {
       "Mode hors ligne actif. Les photos, pointages et signalements restent en file d'attente.",
     pending: '3 actions en attente de synchronisation',
     ready: 'Synchronisation prête',
+  },
+  splash: {
+    sync: translate('worker.splash.sync'),
+    tagline: translate('worker.splash.tagline'),
   },
   today: {
     addressHint: 'Repère: portail bleu, pharmacie à côté',

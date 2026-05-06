@@ -20,7 +20,7 @@ import {
   ShieldAlert,
   UserRound,
 } from 'lucide-react';
-import type { Dispatch, ReactElement, ReactNode } from 'react';
+import type { Dispatch, FormEvent, ReactElement, ReactNode } from 'react';
 
 import {
   routeCards,
@@ -60,9 +60,14 @@ const navIcons = {
   today: <MapPinned aria-hidden="true" size={18} strokeWidth={2.3} />,
 } as const satisfies Record<PrimaryWorkerRoute, ReactNode>;
 
+const WORKER_ACCESS_STORAGE_KEY = 'washed.worker.access.v1';
+
+type WorkerLaunchStage = 'app' | 'login' | 'splash';
+
 export function App(): ReactElement {
   const [route, setRoute] = useState<WorkerRoute>('today');
   const [workerState, dispatch] = useReducer(workerReducer, initialWorkerState);
+  const [launchStage, setLaunchStage] = useState<WorkerLaunchStage>('splash');
   const [captureInProgress, setCaptureInProgress] = useState(false);
   const [locationCheckpoint, setLocationCheckpoint] = useState<VisitLocationCheckpoint | null>(
     null,
@@ -98,6 +103,7 @@ export function App(): ReactElement {
       }
 
       setPersistenceReady(true);
+      setLaunchStage(hasStoredWorkerAccess() ? 'app' : 'login');
     });
 
     return () => {
@@ -157,6 +163,24 @@ export function App(): ReactElement {
     } finally {
       setSyncInProgress(false);
     }
+  }
+
+  function completeLogin() {
+    persistWorkerAccess();
+    setLaunchStage('app');
+  }
+
+  if (launchStage !== 'app') {
+    return (
+      <WashedThemeProvider className="worker-frame" theme="worker">
+        <div className="status-spacer" />
+        {launchStage === 'splash' ? (
+          <WorkerSplash t={t} />
+        ) : (
+          <WorkerLogin onLogin={completeLogin} t={t} />
+        )}
+      </WashedThemeProvider>
+    );
   }
 
   return (
@@ -237,6 +261,103 @@ export function App(): ReactElement {
         }))}
       />
     </WashedThemeProvider>
+  );
+}
+
+function hasStoredWorkerAccess(): boolean {
+  return globalThis.localStorage?.getItem(WORKER_ACCESS_STORAGE_KEY) === '1';
+}
+
+function persistWorkerAccess(): void {
+  globalThis.localStorage?.setItem(WORKER_ACCESS_STORAGE_KEY, '1');
+}
+
+function WorkerSplash({ t }: { readonly t: typeof workerCopy }): ReactElement {
+  return (
+    <main className="worker-splash" aria-label={t.splash.sync}>
+      <div className="worker-splash-mark">Washed.</div>
+      <div className="worker-splash-tagline">{t.splash.tagline}</div>
+      <div className="worker-splash-sync">{t.splash.sync}</div>
+      <div className="worker-splash-progress" aria-hidden="true">
+        <span />
+      </div>
+    </main>
+  );
+}
+
+function WorkerLogin({
+  onLogin,
+  t,
+}: {
+  readonly onLogin: () => void;
+  readonly t: typeof workerCopy;
+}): ReactElement {
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [pin, setPin] = useState('');
+  const canSubmit = phoneNumber.trim().length >= 8 && /^\d{4}$/u.test(pin);
+
+  function submitLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (canSubmit) {
+      onLogin();
+    }
+  }
+
+  return (
+    <main className="worker-login-shell">
+      <form className="worker-login-card" onSubmit={submitLogin}>
+        <span className="eyebrow">{t.login.header}</span>
+        <h1>
+          {t.login.greeting}
+          <br />
+          {t.login.prompt}
+        </h1>
+        <p>{t.login.help}</p>
+
+        <label className="worker-login-field">
+          <span>{t.login.phoneLabel}</span>
+          <div className="worker-login-phone">
+            <strong>+228</strong>
+            <input
+              aria-label={t.login.phoneLabel}
+              autoComplete="tel-national"
+              inputMode="tel"
+              onChange={(event) => setPhoneNumber(event.target.value)}
+              type="tel"
+              value={phoneNumber}
+            />
+          </div>
+        </label>
+
+        <label className="worker-login-field">
+          <span>{t.login.pinLabel}</span>
+          <div className="worker-pin-entry">
+            <input
+              aria-label={t.login.pinLabel}
+              autoComplete="current-password"
+              className="worker-login-pin"
+              inputMode="numeric"
+              maxLength={4}
+              onChange={(event) => setPin(event.target.value.replace(/\D/gu, '').slice(0, 4))}
+              type="password"
+              value={pin}
+            />
+            <div className="worker-pin-boxes" aria-hidden="true">
+              {[0, 1, 2, 3].map((index) => (
+                <span className={index < pin.length ? 'is-filled' : undefined} key={index}>
+                  {index < pin.length ? '●' : ''}
+                </span>
+              ))}
+            </div>
+          </div>
+        </label>
+
+        <Button disabled={!canSubmit} fullWidth type="submit">
+          {t.login.cta}
+        </Button>
+        <p className="worker-login-help">{t.login.forgot}</p>
+      </form>
+    </main>
   );
 }
 

@@ -3,9 +3,39 @@ import { describe, expect, it } from 'vitest';
 
 import { App } from './App.js';
 
+async function unlockWorkerApp() {
+  await screen.findByRole('heading', { name: /Bonjour\.\s*Votre numéro \?/u });
+  fireEvent.change(screen.getByLabelText('Numéro'), { target: { value: '99 87 65 43' } });
+  fireEvent.change(screen.getByLabelText('Code PIN — 4 chiffres'), {
+    target: { value: '2468' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Entrer' }));
+  await screen.findByRole('heading', { name: 'Bonjour Akouvi.' });
+}
+
 describe('worker app', () => {
-  it('renders route, offline, and safety surfaces', () => {
+  it('shows splash and requires a PIN before route surfaces', async () => {
     render(<App />);
+
+    expect(screen.getByText("L'appli laveuse")).toBeInTheDocument();
+    await screen.findByRole('heading', { name: /Bonjour\.\s*Votre numéro \?/u });
+    expect(screen.getByText('Connexion')).toBeInTheDocument();
+    expect(screen.getByText('Le numéro inscrit chez Washed.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Entrer' })).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('Numéro'), { target: { value: '99 87 65 43' } });
+    fireEvent.change(screen.getByLabelText('Code PIN — 4 chiffres'), {
+      target: { value: '2468' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Entrer' }));
+
+    expect(await screen.findByRole('heading', { name: 'Bonjour Akouvi.' })).toBeInTheDocument();
+  });
+
+  it('renders route, offline, and safety surfaces', async () => {
+    render(<App />);
+
+    await unlockWorkerApp();
 
     expect(screen.getByRole('heading', { name: 'Bonjour Akouvi.' })).toBeInTheDocument();
     expect(screen.getByText(/5 visites/u)).toBeInTheDocument();
@@ -24,8 +54,10 @@ describe('worker app', () => {
     expect(screen.getByText('En route · Ama Dossou')).toBeInTheDocument();
   });
 
-  it('opens and closes the SOS sheet', () => {
+  it('opens and closes the SOS sheet', async () => {
     render(<App />);
+
+    await unlockWorkerApp();
 
     fireEvent.click(screen.getByRole('button', { name: /Démarrer la route/u }));
     fireEvent.click(screen.getByRole('button', { name: 'SOS' }));
@@ -39,8 +71,10 @@ describe('worker app', () => {
     expect(screen.queryByRole('dialog', { name: 'Que se passe-t-il ?' })).not.toBeInTheDocument();
   });
 
-  it('records SOS reason through worker state', () => {
+  it('records SOS reason through worker state', async () => {
     render(<App />);
+
+    await unlockWorkerApp();
 
     fireEvent.click(screen.getByRole('button', { name: /Démarrer la route/u }));
     fireEvent.click(screen.getByRole('button', { name: 'SOS' }));
@@ -57,6 +91,8 @@ describe('worker app', () => {
 
   it('syncs offline actions and advances the visit lifecycle', async () => {
     render(<App />);
+
+    await unlockWorkerApp();
 
     fireEvent.click(screen.getByRole('button', { name: /Démarrer la route/u }));
 
@@ -111,8 +147,10 @@ describe('worker app', () => {
     expect(screen.getByLabelText('Offline action ledger')).not.toHaveTextContent('checkOutVisit');
   });
 
-  it('navigates to planning, earnings, and profile and records worker actions', () => {
+  it('navigates to planning, earnings, and profile and records worker actions', async () => {
     render(<App />);
+
+    await unlockWorkerApp();
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Planning' }).at(-1) as HTMLElement);
     expect(screen.getByRole('heading', { name: 'Planning' })).toBeInTheDocument();
@@ -146,6 +184,8 @@ describe('worker app', () => {
   it('handles activation, inbox, photo retry, and day summary surfaces', async () => {
     render(<App />);
 
+    await unlockWorkerApp();
+
     fireEvent.click(screen.getByRole('button', { name: 'Profil' }));
     fireEvent.click(screen.getByRole('button', { name: 'Activation' }));
     expect(screen.getByRole('heading', { name: 'Activation du profil' })).toBeInTheDocument();
@@ -178,6 +218,8 @@ describe('worker app', () => {
 
   it('restores queued worker state after an app restart', async () => {
     const { unmount } = render(<App />);
+
+    await unlockWorkerApp();
 
     fireEvent.click(screen.getByRole('button', { name: /Démarrer la route/u }));
     fireEvent.click(screen.getByRole('button', { name: "J'arrive" }));

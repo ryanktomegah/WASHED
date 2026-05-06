@@ -4,6 +4,7 @@ test('worker mobile covers activation, offline visit actions, SOS, and daily sum
   page,
 }) => {
   await page.goto('/');
+  await unlockWorkerApp(page);
 
   await expect(page.getByRole('heading', { name: 'Bonjour Akouvi.' })).toBeVisible();
   await expect(page.getByText(/5 visites/u)).toBeVisible();
@@ -85,4 +86,14 @@ async function assertNoHorizontalOverflow(page: import('@playwright/test').Page)
     () => document.documentElement.scrollWidth - window.innerWidth,
   );
   expect(overflow).toBeLessThanOrEqual(1);
+}
+
+async function unlockWorkerApp(page: import('@playwright/test').Page) {
+  await expect(page.getByRole('heading', { name: /Bonjour\.\s*Votre numéro \?/u })).toBeVisible();
+  await expect(page.getByText('Connexion')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Entrer' })).toBeDisabled();
+  await page.getByLabel('Numéro').fill('99 87 65 43');
+  await page.getByLabel('Code PIN — 4 chiffres').fill('2468');
+  await page.getByRole('button', { name: 'Entrer' }).click();
+  await expect(page.getByRole('heading', { name: 'Bonjour Akouvi.' })).toBeVisible();
 }
