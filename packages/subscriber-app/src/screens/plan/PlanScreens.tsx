@@ -124,6 +124,32 @@ function activePlanLabel(tier: 'T1' | 'T2'): string {
   );
 }
 
+function PlanTierDetails({ tier }: { readonly tier: 'T1' | 'T2' }): ReactElement {
+  const savingsXof = Math.max(0, TIER_PRICE_XOF.T1 * 2 - TIER_PRICE_XOF.T2);
+  const detailItems =
+    tier === 'T1'
+      ? [
+          translate('subscriber.plan.detail.choose_slot'),
+          translate('subscriber.plan.detail.t1.visits'),
+        ]
+      : [
+          translate('subscriber.plan.detail.choose_slot'),
+          translate('subscriber.plan.detail.t2.visits'),
+          translate('subscriber.plan.detail.t2.second_slot'),
+          translate('subscriber.plan.detail.t2.savings', {
+            amount: formatXof(savingsXof),
+          }),
+        ];
+
+  return (
+    <ul className="plan-tier-detail-list">
+      {detailItems.map((item) => (
+        <li key={item}>{item}</li>
+      ))}
+    </ul>
+  );
+}
+
 function initialsFromName(name: string): string {
   return name
     .trim()
@@ -212,6 +238,7 @@ export function PlanX19(): ReactElement {
               amount: formatXof(TIER_PRICE_XOF[subscription.state.tier]),
             })}
           </span>
+          <PlanTierDetails tier={subscription.state.tier} />
           <div className="plan-active-card-row">
             <span className="plan-active-card-row-label">
               {translate('subscriber.plan.active_card.next_charge_label')}
@@ -350,6 +377,7 @@ function PlanPendingX19(): ReactElement {
               amount: formatXof(TIER_PRICE_XOF[subscription.state.tier]),
             })}
           </span>
+          <PlanTierDetails tier={subscription.state.tier} />
           <div className="plan-active-card-row">
             <span className="plan-active-card-row-label">
               {translate('subscriber.dashboard.empty_visit.eyebrow')}
@@ -358,23 +386,19 @@ function PlanPendingX19(): ReactElement {
           </div>
         </section>
 
-        <section className="plan-list-card" aria-labelledby="x19-first-visit-eyebrow">
-          <span className="plan-eyebrow" id="x19-first-visit-eyebrow">
-            {translate('subscriber.dashboard.empty_visit.eyebrow')}
-          </span>
-          <p className="plan-copy">
-            {translate(
-              isPendingRequest
-                ? 'subscriber.plan.pending.request_body'
-                : 'subscriber.dashboard.empty_visit.body',
-            )}
-          </p>
-          {requestedDay !== undefined && requestedTimeWindow !== undefined ? (
-            <strong className="plan-pending-choice">
-              {translate(requestedDay.labelKey)} · {translate(requestedTimeWindow.labelKey)}
-            </strong>
-          ) : null}
-        </section>
+        {isPendingRequest ? (
+          <section className="plan-list-card" aria-labelledby="x19-first-visit-eyebrow">
+            <span className="plan-eyebrow" id="x19-first-visit-eyebrow">
+              {translate('subscriber.dashboard.empty_visit.eyebrow')}
+            </span>
+            <p className="plan-copy">{translate('subscriber.plan.pending.request_body')}</p>
+            {requestedDay !== undefined && requestedTimeWindow !== undefined ? (
+              <strong className="plan-pending-choice">
+                {translate(requestedDay.labelKey)} · {translate(requestedTimeWindow.labelKey)}
+              </strong>
+            ) : null}
+          </section>
+        ) : null}
 
         <div className="plan-grow" />
 

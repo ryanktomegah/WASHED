@@ -120,6 +120,12 @@ describe('Subscriber plan · X-19', () => {
     expect(screen.getByText('Votre forfait')).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Votre forfait est prêt.' })).toBeVisible();
     expect(screen.getByText(/Une visite · 2\s500\s+XOF \/ mois/u)).toBeVisible();
+    expect(
+      screen.getByText(
+        "Choisissez le jour et le moment souhaités. Le bureau confirme avant d'assigner votre laveuse.",
+      ),
+    ).toBeVisible();
+    expect(screen.getByText('1 visite par mois.')).toBeVisible();
     expect(screen.getByText('Visite à planifier')).toBeVisible();
     expect(screen.queryByText('Mardi 5 mai · 9 h 00')).not.toBeInTheDocument();
     expect(screen.queryByText('avec Akouvi K.')).not.toBeInTheDocument();
@@ -131,9 +137,25 @@ describe('Subscriber plan · X-19', () => {
 
     expect(screen.getByRole('heading', { name: /Compte bon jusqu'au 31 mai/u })).toBeVisible();
     expect(screen.getByText(/Une visite · 2\s500\s+XOF \/ mois/u)).toBeVisible();
+    expect(screen.getByText('1 visite par mois.')).toBeVisible();
     expect(screen.getByText('1 juin · auto')).toBeVisible();
     expect(screen.getByText('Mardi 5 mai · 9 h 00')).toBeVisible();
     expect(screen.getByText('avec Akouvi K.')).toBeVisible();
+  });
+
+  it('renders two-visit plan details without implying unlimited scheduling', () => {
+    renderAt('/plan', <PlanX19 />, ['/plan'], {
+      ...ACTIVE_SUBSCRIPTION_STATE,
+      tier: 'T2',
+      visitsPerCycle: 2,
+    });
+
+    expect(screen.getByText(/Deux visites · 4\s500\s+XOF \/ mois/u)).toBeVisible();
+    expect(screen.getByText('2 visites par mois.')).toBeVisible();
+    expect(
+      screen.getByText('Le bureau planifie le 2e créneau avec vous selon les disponibilités.'),
+    ).toBeVisible();
+    expect(screen.getByText(/Vous économisez 500\s+XOF par mois/u)).toBeVisible();
   });
 
   it('routes first-visit planning to booking while pending activation', () => {

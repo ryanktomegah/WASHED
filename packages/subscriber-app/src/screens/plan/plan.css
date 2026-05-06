@@ -160,6 +160,34 @@
   line-height: 1.3;
 }
 
+.plan-tier-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plan-tier-detail-list li {
+  position: relative;
+  color: color-mix(in srgb, var(--primary-on) 82%, transparent);
+  font-size: 12px;
+  line-height: 1.35;
+  padding-left: 14px;
+}
+
+.plan-tier-detail-list li::before {
+  position: absolute;
+  left: 0;
+  top: 0.48em;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--primary-on);
+  content: '';
+}
+
 .plan-active-card-row {
   display: flex;
   align-items: flex-end;
