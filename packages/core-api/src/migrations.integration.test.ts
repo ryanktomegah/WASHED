@@ -5,6 +5,9 @@ import { join } from 'node:path';
 import { Pool } from 'pg';
 import { describe, expect, it } from 'vitest';
 
+import { backfillSensitiveDataProtection } from './data-protection-backfill.js';
+import { createDataProtector } from './data-protection.js';
+
 const databaseUrl = process.env['DATABASE_URL'];
 const describeWithDatabase = databaseUrl === undefined ? describe.skip : describe;
 
@@ -112,6 +115,125 @@ describeWithDatabase('core-api migrations on real Postgres', () => {
         'subscribers.phone_number_lookup_hash',
         'subscriptions.payment_method_phone_number_lookup_hash',
       ]);
+
+      const privacyReasonConstraint = await pool.query<{ readonly count: string }>(
+        `
+          SELECT COUNT(*)::text AS count
+          FROM information_schema.check_constraints check_constraint
+          INNER JOIN information_schema.constraint_column_usage constraint_column
+            ON constraint_column.constraint_name = check_constraint.constraint_name
+            AND constraint_column.constraint_schema = check_constraint.constraint_schema
+          WHERE constraint_column.table_schema = $1
+            AND constraint_column.table_name = 'subscriber_privacy_requests'
+            AND check_constraint.constraint_name = 'subscriber_privacy_requests_reason_length'
+        `,
+        [schemaName],
+      );
+      expect(privacyReasonConstraint.rows[0]?.count).toBe('0');
+
+      const scopedPool = new Pool({
+        connectionString: databaseUrl,
+        options: `-c search_path=${schemaName},public`,
+      });
+      const dataProtector = createDataProtector({
+        keyId: 'migration-test',
+        masterKey: Buffer.alloc(32, 9),
+      });
+      const subscriberId = randomUUID();
+      const eventId = randomUUID();
+      const legacyClient = await scopedPool.connect();
+
+      try {
+        await legacyClient.query('BEGIN');
+        await legacyClient.query('SELECT set_config($1, $2, true)', ['app.country_code', 'TG']);
+        await legacyClient.query(
+          `
+            INSERT INTO subscribers (id, country_code, locale, phone_number)
+            VALUES ($1, 'TG', 'fr', $2)
+          `,
+          [subscriberId, '+22890123456'],
+        );
+        await legacyClient.query(
+          `
+            INSERT INTO audit_events (
+              id,
+              country_code,
+              aggregate_type,
+              aggregate_id,
+              event_type,
+              payload,
+              actor_role,
+              actor_user_id,
+              trace_id,
+              occurred_at
+            )
+            VALUES ($1, 'TG', 'subscription', $2, 'SubscriptionCreated', $3::jsonb, 'subscriber', $2, 'trace_backfill', now())
+          `,
+          [
+            eventId,
+            subscriberId,
+            JSON.stringify({ phoneNumber: '+22890123456', tierCode: 'T1' }),
+          ],
+        );
+        await legacyClient.query('COMMIT');
+      } catch (error) {
+        await legacyClient.query('ROLLBACK');
+        throw error;
+      } finally {
+        legacyClient.release();
+      }
+
+      await backfillSensitiveDataProtection(scopedPool, dataProtector);
+
+      const backfillClient = await scopedPool.connect();
+      try {
+        await backfillClient.query('BEGIN');
+        await backfillClient.query('SELECT set_config($1, $2, true)', ['app.country_code', 'TG']);
+        const subscriber = await backfillClient.query<{
+          readonly phone_number: string;
+          readonly phone_number_lookup_hash: string | null;
+        }>(
+          `
+            SELECT phone_number, phone_number_lookup_hash
+            FROM subscribers
+            WHERE id = $1
+          `,
+          [subscriberId],
+        );
+        const auditEvent = await backfillClient.query<{ readonly payload: Record<string, unknown> }>(
+          `
+            SELECT payload
+            FROM audit_events
+            WHERE id = $1
+          `,
+          [eventId],
+        );
+        await backfillClient.query('COMMIT');
+
+        expect(subscriber.rows[0]?.phone_number).toContain('wdp:v1:migration-test');
+        expect(subscriber.rows[0]?.phone_number).not.toContain('+22890123456');
+        expect(subscriber.rows[0]?.phone_number_lookup_hash).toBe(
+          dataProtector.lookupHash('TG:+22890123456', 'phone_number'),
+        );
+        expect(
+          dataProtector.revealText(
+            subscriber.rows[0]?.phone_number ?? '',
+            'subscribers.phone_number',
+          ),
+        ).toBe('+22890123456');
+        expect(JSON.stringify(auditEvent.rows[0]?.payload)).not.toContain('+22890123456');
+        expect(dataProtector.revealJson(auditEvent.rows[0]?.payload ?? {}, 'audit_events.payload'))
+          .toEqual({
+            phoneNumber: '+22890123456',
+            tierCode: 'T1',
+          });
+      } catch (error) {
+        await backfillClient.query('ROLLBACK');
+        throw error;
+      } finally {
+        backfillClient.release();
+        await scopedPool.end();
+      }
 
       const rlsTables = await pool.query<{
         readonly relforcerowsecurity: boolean;
