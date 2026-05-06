@@ -259,6 +259,23 @@ export function useSubscriberSubscription(): SubscriberSubscriptionContextValue 
   return value;
 }
 
+export function hasStoredSubscriberSubscription(
+  storageKey = SUBSCRIBER_SUBSCRIPTION_STORAGE_KEY,
+): boolean {
+  if (typeof window === 'undefined') return false;
+
+  const stored = readStoredSubscription(storageKey);
+  if (stored === null) return false;
+
+  return (
+    stored.createdAtIso !== null ||
+    stored.firstVisitRequest !== null ||
+    stored.paymentPhoneNumber !== null ||
+    stored.subscriptionId !== null ||
+    stored.status !== DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE.status
+  );
+}
+
 function readStoredSubscription(storageKey: string): SubscriberSubscriptionState | null {
   const raw = window.localStorage.getItem(storageKey);
   if (raw === null) return null;

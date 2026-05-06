@@ -19,13 +19,17 @@ import {
 } from './appearanceOptions.js';
 
 export function AppearanceLaunchGate({
+  initialStep,
   onContinue,
+  requiresAppearance,
 }: {
+  readonly initialStep: 'appearance' | 'language';
   readonly onContinue: () => void;
+  readonly requiresAppearance: boolean;
 }): ReactElement {
   const { previewPreference, setPreference } = useSubscriberAppearance();
   const { setLocale } = useLocale();
-  const [launchStep, setLaunchStep] = useState<'appearance' | 'language'>('language');
+  const [launchStep, setLaunchStep] = useState<'appearance' | 'language'>(initialStep);
   const [selectedLanguage, setSelectedLanguage] = useState<WashedLocale | null>(null);
   const [selectedPreference, setSelectedPreference] =
     useState<SubscriberAppearancePreference | null>(null);
@@ -42,6 +46,10 @@ export function AppearanceLaunchGate({
 
   const continueToAppearance = (): void => {
     if (selectedLanguage === null) return;
+    if (!requiresAppearance) {
+      onContinue();
+      return;
+    }
     setLaunchStep('appearance');
   };
 

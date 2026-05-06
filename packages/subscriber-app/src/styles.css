@@ -25,6 +25,11 @@ body[data-theme='subscriber'] {
   line-height: normal;
 }
 
+body[data-runtime='native'][data-theme='subscriber'] {
+  -webkit-text-size-adjust: 112%;
+  text-size-adjust: 112%;
+}
+
 body[data-theme='subscriber']
   :is(
     .onboarding-screen,

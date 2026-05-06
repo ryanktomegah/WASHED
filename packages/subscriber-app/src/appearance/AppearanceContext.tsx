@@ -88,6 +88,13 @@ export function useSubscriberAppearance(): SubscriberAppearanceContextValue {
   return useContext(SubscriberAppearanceContext);
 }
 
+export function hasStoredSubscriberAppearancePreference(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  const stored = window.localStorage.getItem(SUBSCRIBER_APPEARANCE_STORAGE_KEY);
+  return APPEARANCE_VALUES.has(stored as SubscriberAppearancePreference);
+}
+
 function readStoredAppearance(): SubscriberAppearanceState {
   const stored = window.localStorage.getItem(SUBSCRIBER_APPEARANCE_STORAGE_KEY);
   if (APPEARANCE_VALUES.has(stored as SubscriberAppearancePreference)) {

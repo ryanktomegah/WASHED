@@ -28,6 +28,7 @@ import {
 } from '@washed/api-client';
 import {
   createAuthManager,
+  isRefreshTokenFresh,
   type AuthManager,
   type AuthSession,
   type AuthStorage,
@@ -150,6 +151,19 @@ export interface SubscriberApiContextValue {
 
 export const SUBSCRIBER_AUTH_STORAGE_KEY = 'washed.subscriber.auth-session';
 export const SUBSCRIBER_DEVICE_ID_STORAGE_KEY = 'washed.subscriber.device-id';
+
+export function hasStoredSubscriberAuthSession(storageKey = SUBSCRIBER_AUTH_STORAGE_KEY): boolean {
+  if (typeof window === 'undefined') return false;
+
+  const raw = window.localStorage.getItem(storageKey);
+  if (raw === null) return false;
+
+  try {
+    return isRefreshTokenFresh(JSON.parse(raw) as AuthSession);
+  } catch {
+    return false;
+  }
+}
 
 const SubscriberApiContext = createContext<SubscriberApiContextValue | null>(null);
 const UNCONFIGURED_SUBSCRIBER_API = createUnconfiguredSubscriberApi();

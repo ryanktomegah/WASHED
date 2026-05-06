@@ -5,17 +5,24 @@ import { LocaleProvider, WashedThemeProvider, useActiveLocale } from '@washed/ui
 
 import { AppearanceLaunchGate } from './appearance/AppearanceLaunchGate.js';
 import {
+  hasStoredSubscriberAppearancePreference,
   SubscriberAppearanceProvider,
   useSubscriberAppearance,
 } from './appearance/AppearanceContext.js';
 import {
+  hasStoredSubscriberLanguagePreference,
   SUBSCRIBER_LANGUAGE_OPTIONS,
   SUBSCRIBER_LANGUAGE_STORAGE_KEY,
 } from './language/languageOptions.js';
-import { SubscriberApiProvider, useSubscriberApi } from './api/SubscriberApiContext.js';
+import {
+  hasStoredSubscriberAuthSession,
+  SubscriberApiProvider,
+  useSubscriberApi,
+} from './api/SubscriberApiContext.js';
 import { BookingSubmittedX10C, BookingX10B } from './screens/hub/BookingScreens.js';
 import { SignupProvider } from './screens/onboarding/SignupContext.js';
 import {
+  hasStoredSubscriberSubscription,
   SubscriberSubscriptionProvider,
   useSubscriberSubscription,
 } from './subscription/SubscriberSubscriptionContext.js';
@@ -102,7 +109,9 @@ export function AppShell(): ReactElement {
 
 function SubscriberThemedShell(): ReactElement {
   const { effectiveMode } = useSubscriberAppearance();
-  const [hasEnteredApp, setHasEnteredApp] = useState(false);
+  const [hasEnteredApp, setHasEnteredApp] = useState(hasCompletedLaunchPreferences);
+  const requiresLanguage = !hasStoredSubscriberLanguagePreference();
+  const requiresAppearance = !hasStoredSubscriberAppearancePreference();
 
   return (
     <WashedThemeProvider colorMode={effectiveMode} theme="subscriber">
@@ -118,10 +127,18 @@ function SubscriberThemedShell(): ReactElement {
           </SignupProvider>
         </SubscriberApiProvider>
       ) : (
-        <AppearanceLaunchGate onContinue={() => setHasEnteredApp(true)} />
+        <AppearanceLaunchGate
+          initialStep={requiresLanguage ? 'language' : 'appearance'}
+          onContinue={() => setHasEnteredApp(true)}
+          requiresAppearance={requiresAppearance}
+        />
       )}
     </WashedThemeProvider>
   );
+}
+
+function hasCompletedLaunchPreferences(): boolean {
+  return hasStoredSubscriberLanguagePreference() && hasStoredSubscriberAppearancePreference();
 }
 
 function SubscriberSubscriptionHydrator(): null {
@@ -152,8 +169,8 @@ function LocaleScopedRoutes(): ReactElement {
 
   return (
     <Routes key={locale}>
-      <Route element={<Navigate replace to="/welcome" />} path="/" />
-      <Route element={<SplashX01 />} path="/welcome" />
+      <Route element={<EntryRoute />} path="/" />
+      <Route element={<WelcomeRoute />} path="/welcome" />
       <Route element={<PhoneX02 />} path="/signup/phone" />
       <Route element={<OtpX03 />} path="/signup/otp" />
       <Route element={<IdentityX03I />} path="/signup/identity" />
@@ -212,4 +229,17 @@ function LocaleScopedRoutes(): ReactElement {
       <Route element={<Navigate replace to="/welcome" />} path="*" />
     </Routes>
   );
+}
+
+function EntryRoute(): ReactElement {
+  return <Navigate replace to={shouldResumeSubscriberApp() ? '/hub' : '/welcome'} />;
+}
+
+function WelcomeRoute(): ReactElement {
+  if (shouldResumeSubscriberApp()) return <Navigate replace to="/hub" />;
+  return <SplashX01 />;
+}
+
+function shouldResumeSubscriberApp(): boolean {
+  return hasStoredSubscriberAuthSession() || hasStoredSubscriberSubscription();
 }
