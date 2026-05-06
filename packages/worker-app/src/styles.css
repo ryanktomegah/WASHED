@@ -10,6 +10,26 @@ body {
   overflow-x: hidden;
 }
 
+[data-theme='worker'] {
+  --washed-background: var(--bg);
+  --washed-surface: var(--surface);
+  --washed-surface-2: var(--surface-2);
+  --washed-foreground: var(--ink);
+  --washed-muted: var(--ink-3);
+  --washed-border: var(--line);
+  --washed-primary: var(--primary);
+  --washed-primary-soft: var(--primary-soft);
+  --washed-primary-tint: var(--primary-tint);
+  --washed-accent: var(--accent);
+  --washed-accent-soft: var(--accent-soft);
+  --washed-success: var(--success);
+  --washed-success-soft: var(--success-soft);
+  --washed-danger: var(--danger);
+  --washed-danger-soft: var(--danger-soft);
+  --washed-focus-ring: var(--focus-ring);
+  --washed-font-body: var(--font-body);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -210,6 +230,41 @@ button {
   margin: 8px 0 0;
   color: var(--washed-muted);
   line-height: 1.4;
+}
+
+.sos-reason-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.sos-reason-button {
+  display: grid;
+  gap: 3px;
+  min-height: 64px;
+  border: 0;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--washed-surface) 8%, var(--washed-foreground));
+  color: var(--washed-surface);
+  cursor: pointer;
+  padding: 14px;
+  text-align: left;
+}
+
+.sos-reason-button.is-danger {
+  background: var(--washed-danger);
+}
+
+.sos-reason-button strong {
+  font-size: 13px;
+  line-height: 1.15;
+}
+
+.sos-reason-button span {
+  color: color-mix(in srgb, var(--washed-surface) 76%, transparent);
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.25;
 }
 
 .eyebrow {

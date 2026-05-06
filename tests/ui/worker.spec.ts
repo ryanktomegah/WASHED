@@ -62,8 +62,8 @@ test('worker mobile covers activation, offline visit actions, SOS, and daily sum
   await page.getByRole('button', { name: "Aujourd'hui" }).click();
   await page.getByRole('button', { name: /Démarrer la route/u }).click();
   await page.getByRole('button', { name: 'SOS' }).click();
-  await expect(page.getByRole('dialog', { name: 'Aide immédiate' })).toBeVisible();
-  await page.getByRole('button', { name: "Prévenir l'opérateur" }).click();
+  await expect(page.getByRole('dialog', { name: 'Que se passe-t-il ?' })).toBeVisible();
+  await page.getByRole('button', { name: /Je suis en danger/u }).click();
   await expect(page.getByText("Alerte SOS envoyée à l'opérateur.")).toBeVisible();
 
   await page.getByRole('button', { name: 'Planning' }).last().click();

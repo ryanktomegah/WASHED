@@ -30,6 +30,7 @@
     "@capacitor/status-bar": "8.0.2",
     "@washed/api-client": "workspace:*",
     "@washed/auth": "workspace:*",
+    "@washed/design-tokens": "workspace:*",
     "@washed/i18n": "workspace:*",
     "@washed/ui": "workspace:*",
     "lucide-react": "^1.14.0",

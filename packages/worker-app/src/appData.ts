@@ -1,3 +1,5 @@
+import { translate } from '@washed/i18n';
+
 import type { VisitStep, WorkerFeedback } from './workerState.js';
 
 export type PrimaryWorkerRoute = 'earnings' | 'planning' | 'profile' | 'today';
@@ -79,6 +81,21 @@ export interface WorkerCopy {
   };
   readonly safety: {
     readonly body: string;
+    readonly cancel: string;
+    readonly options: {
+      readonly clientIssue: {
+        readonly body: string;
+        readonly title: string;
+      };
+      readonly danger: {
+        readonly body: string;
+        readonly title: string;
+      };
+      readonly medical: {
+        readonly body: string;
+        readonly title: string;
+      };
+    };
     readonly panic: string;
     readonly title: string;
   };
@@ -202,9 +219,24 @@ export const workerCopy = {
     title: 'Profil',
   },
   safety: {
-    body: "Ce bouton alerte immédiatement l'opérateur, journalise l'incident, et peut suspendre la visite.",
-    panic: 'SOS',
-    title: 'Aide immédiate',
+    body: translate('worker.sos.callback'),
+    cancel: translate('worker.sos.cancel'),
+    options: {
+      clientIssue: {
+        body: translate('worker.sos.option.client_issue_detail'),
+        title: translate('worker.sos.option.client_issue'),
+      },
+      danger: {
+        body: translate('worker.sos.option.danger_detail'),
+        title: translate('worker.sos.option.danger'),
+      },
+      medical: {
+        body: translate('worker.sos.option.medical_detail'),
+        title: translate('worker.sos.option.medical'),
+      },
+    },
+    panic: translate('worker.sos.panic'),
+    title: translate('worker.sos.title'),
   },
   sync: {
     complete: 'Toutes les preuves locales sont synchronisées.',

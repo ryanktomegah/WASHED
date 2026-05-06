@@ -397,6 +397,9 @@ importers:
       '@washed/auth':
         specifier: workspace:*
         version: link:../auth
+      '@washed/design-tokens':
+        specifier: workspace:*
+        version: link:../design-tokens
       '@washed/i18n':
         specifier: workspace:*
         version: link:../i18n

@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client';
 
 import { App } from './App.js';
+import '@washed/design-tokens/styles.css';
 import './styles.css';
 
 const root = document.getElementById('root');

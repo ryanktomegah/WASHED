@@ -30,25 +30,29 @@ describe('worker app', () => {
     fireEvent.click(screen.getByRole('button', { name: /Démarrer la route/u }));
     fireEvent.click(screen.getByRole('button', { name: 'SOS' }));
 
-    expect(screen.getByRole('dialog', { name: 'Aide immédiate' })).toBeInTheDocument();
-    expect(screen.getByText("Prévenir l'opérateur")).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Que se passe-t-il ?' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Je suis en danger/u })).toBeInTheDocument();
+    expect(screen.getByText('Le bureau vous appelle dans 30 secondes.')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Annuler' }));
 
-    expect(screen.queryByRole('dialog', { name: 'Aide immédiate' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Que se passe-t-il ?' })).not.toBeInTheDocument();
   });
 
-  it('records SOS confirmation through worker state', () => {
+  it('records SOS reason through worker state', () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole('button', { name: /Démarrer la route/u }));
     fireEvent.click(screen.getByRole('button', { name: 'SOS' }));
-    fireEvent.click(screen.getByRole('button', { name: "Prévenir l'opérateur" }));
+    fireEvent.click(screen.getByRole('button', { name: /Je suis en danger/u }));
 
-    expect(screen.queryByRole('dialog', { name: 'Aide immédiate' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Que se passe-t-il ?' })).not.toBeInTheDocument();
     expect(screen.getByText("Alerte SOS envoyée à l'opérateur.")).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: "Aujourd'hui" }));
     expect(screen.getByText('1 actions en attente de synchronisation')).toBeInTheDocument();
+    expect(screen.getByLabelText('Offline action ledger')).toHaveTextContent(
+      'SOS · Je suis en danger',
+    );
   });
 
   it('syncs offline actions and advances the visit lifecycle', async () => {

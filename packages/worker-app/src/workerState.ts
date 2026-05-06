@@ -2,10 +2,12 @@ import {
   DEMO_WORKER_APP_SNAPSHOT,
   FRONTEND_OPERATION_IDS,
   type CoreApiOperationId,
+  type WorkerIssueType,
   type WorkerVisitStep,
 } from '@washed/api-client';
 
 export type VisitStep = WorkerVisitStep;
+export type WorkerSosReason = 'clientIssue' | 'danger' | 'medical';
 
 export type WorkerFeedback =
   | 'activationCompleted'
@@ -106,7 +108,7 @@ export type WorkerAction =
   | { readonly type: 'privacy/erasure' }
   | { readonly type: 'privacy/export' }
   | { readonly type: 'sos/close' }
-  | { readonly type: 'sos/confirm' }
+  | { readonly reason: WorkerSosReason; readonly reasonLabel: string; readonly type: 'sos/confirm' }
   | { readonly type: 'sos/open' }
   | { readonly state: WorkerState; readonly type: 'state/hydrate' }
   | { readonly type: 'sync/complete' }
@@ -180,6 +182,8 @@ type WorkerOfflineQueueInput = Omit<
   WorkerOfflineQueueItem,
   'createdAt' | 'id' | 'idempotencyKey' | 'request' | 'status'
 > & {
+  readonly description?: string;
+  readonly issueType?: WorkerIssueType;
   readonly locationProof?: WorkerVisitLocationProof | undefined;
   readonly photoProof?: WorkerVisitPhotoProof | undefined;
 };
@@ -241,17 +245,19 @@ export function buildOfflineQueueRequest(
     body: {
       createdAt,
       description:
-        input.kind === 'sos'
+        input.description ??
+        (input.kind === 'sos'
           ? "Alerte SOS déclenchée depuis l'app travailleuse."
           : input.kind === 'visit.no_show'
             ? 'Foyer absent au moment de la visite.'
-            : 'Signalement terrain envoyé depuis la visite.',
+            : 'Signalement terrain envoyé depuis la visite.'),
       issueType:
-        input.kind === 'sos'
-          ? 'safety_concern'
-          : input.kind === 'visit.no_show'
-            ? 'client_unavailable'
-            : 'other',
+        input.issueType ??
+        (input.kind === 'visit.no_show'
+          ? 'client_unavailable'
+          : input.kind === 'sos'
+            ? 'safety_concern'
+            : 'other'),
       workerId: WORKER_APP_DEMO_IDS.workerId,
     },
     pathParams: visitPathParams,
@@ -395,8 +401,9 @@ export function workerReducer(state: WorkerState, action: WorkerAction): WorkerS
 
   if (action.type === 'sos/confirm') {
     const queued = queueAction(state, {
+      description: `SOS immédiat · ${action.reasonLabel}. Le bureau doit rappeler dans 30 secondes.`,
       kind: 'sos',
-      label: 'SOS terrain · Ama K.',
+      label: `SOS · ${action.reasonLabel}`,
       operationId: FRONTEND_OPERATION_IDS.worker.reportIssue,
     });
 

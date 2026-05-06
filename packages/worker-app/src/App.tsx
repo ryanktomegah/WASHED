@@ -34,6 +34,7 @@ import {
   workerReducer,
   type WorkerAction,
   type WorkerOfflineQueueItem,
+  type WorkerSosReason,
   type WorkerState,
 } from './workerState.js';
 import { captureVisitPhoto } from './nativeCamera.js';
@@ -1159,18 +1160,56 @@ function SosSheet({
   readonly dispatch: Dispatch<WorkerAction>;
   readonly t: typeof workerCopy;
 }): ReactElement {
+  const sosOptions = [
+    {
+      body: t.safety.options.danger.body,
+      reason: 'danger',
+      title: t.safety.options.danger.title,
+    },
+    {
+      body: t.safety.options.clientIssue.body,
+      reason: 'clientIssue',
+      title: t.safety.options.clientIssue.title,
+    },
+    {
+      body: t.safety.options.medical.body,
+      reason: 'medical',
+      title: t.safety.options.medical.title,
+    },
+  ] as const satisfies readonly {
+    readonly body: string;
+    readonly reason: WorkerSosReason;
+    readonly title: string;
+  }[];
+
   return (
     <div aria-label={t.safety.title} className="sheet-backdrop" role="dialog">
       <Card className="sos-sheet" elevated>
         <Badge tone="danger">{t.safety.panic}</Badge>
         <h2>{t.safety.title}</h2>
         <p>{t.safety.body}</p>
+        <div className="sos-reason-list">
+          {sosOptions.map((option) => (
+            <button
+              className={`sos-reason-button${option.reason === 'danger' ? ' is-danger' : ''}`}
+              key={option.reason}
+              onClick={() =>
+                dispatch({
+                  reason: option.reason,
+                  reasonLabel: option.title,
+                  type: 'sos/confirm',
+                })
+              }
+              type="button"
+            >
+              <strong>{option.title}</strong>
+              <span>{option.body}</span>
+            </button>
+          ))}
+        </div>
         <div className="sheet-actions">
-          <Button fullWidth onClick={() => dispatch({ type: 'sos/confirm' })} variant="danger">
-            {t.action.confirmSos}
-          </Button>
           <Button fullWidth onClick={() => dispatch({ type: 'sos/close' })} variant="secondary">
-            {t.action.close}
+            {t.safety.cancel}
           </Button>
         </div>
       </Card>
