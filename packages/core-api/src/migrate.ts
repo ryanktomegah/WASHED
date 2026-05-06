@@ -1,6 +1,8 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { backfillSensitiveDataProtection } from './data-protection-backfill.js';
+import { createDataProtectorFromEnv } from './data-protection.js';
 import { createPgPool } from './postgres-client.js';
 
 const databaseUrl = process.env['DATABASE_URL'];
@@ -9,6 +11,7 @@ if (databaseUrl === undefined || databaseUrl.trim().length === 0) {
   throw new Error('DATABASE_URL is required to run migrations.');
 }
 
+const dataProtector = createDataProtectorFromEnv();
 const pool = createPgPool(databaseUrl);
 const migrationsDir = new URL('../migrations', import.meta.url);
 
@@ -46,6 +49,8 @@ try {
       throw error;
     }
   }
+
+  await backfillSensitiveDataProtection(pool, dataProtector);
 } finally {
   await pool.end();
 }
