@@ -86,7 +86,7 @@ describe('createCoreApiClient', () => {
   });
 
   it('keeps generated operation ids complete', () => {
-    expect(CORE_API_OPERATIONS).toHaveLength(76);
+    expect(CORE_API_OPERATIONS).toHaveLength(84);
     expect(CORE_API_OPERATIONS.map((operation) => operation.operationId)).toContain(
       'getCurrentSubscriberSubscription',
     );
@@ -102,6 +102,9 @@ describe('createCoreApiClient', () => {
     expect(CORE_API_OPERATIONS.map((operation) => operation.operationId)).toContain(
       'upsertSubscriberProfile',
     );
+    expect(CORE_API_OPERATIONS.map((operation) => operation.operationId)).toContain(
+      'rescheduleCurrentSubscriberVisit',
+    );
   });
 
   it('maps frontend actions to existing operation ids', () => {
@@ -111,7 +114,7 @@ describe('createCoreApiClient', () => {
     );
 
     expect(frontendOperationIds.every((operationId) => operationIds.has(operationId))).toBe(true);
-    expect(FRONTEND_OPERATION_IDS.subscriber.skipVisit).toBe('skipVisit');
+    expect(FRONTEND_OPERATION_IDS.subscriber.skipVisit).toBe('skipCurrentSubscriberVisit');
     expect(FRONTEND_OPERATION_IDS.worker.checkIn).toBe('checkInVisit');
     expect(FRONTEND_OPERATION_IDS.operator.issueRefund).toBe('issueOperatorPaymentRefund');
   });

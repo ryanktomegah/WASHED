@@ -79,33 +79,81 @@ describeWithDatabase('core-api migrations on real Postgres', () => {
         'worker_service_cells',
       ]);
 
-      const rlsTables = await pool.query<{ readonly relname: string }>(
+      const rlsTables = await pool.query<{
+        readonly relforcerowsecurity: boolean;
+        readonly relname: string;
+        readonly relrowsecurity: boolean;
+      }>(
         `
-          SELECT class.relname
+          SELECT class.relname, class.relrowsecurity, class.relforcerowsecurity
           FROM pg_class class
           INNER JOIN pg_namespace namespace ON namespace.oid = class.relnamespace
           WHERE namespace.nspname = $1
-            AND class.relname IN ('subscribers', 'payment_attempts', 'subscriber_privacy_requests')
-            AND class.relrowsecurity = true
+            AND class.relname IN (
+              'audit_events',
+              'auth_sessions',
+              'auth_otp_challenges',
+              'auth_users',
+              'data_retention_policies',
+              'notification_messages',
+              'outbox_events',
+              'payment_attempts',
+              'payment_reconciliation_runs',
+              'payment_refunds',
+              'push_device_tokens',
+              'service_cells',
+              'subscriber_addresses',
+              'subscriber_privacy_requests',
+              'subscribers',
+              'subscriptions',
+              'support_contacts',
+              'support_credits',
+              'support_disputes',
+              'visit_photos',
+              'visit_ratings',
+              'visits',
+              'worker_advance_requests',
+              'worker_earning_ledger',
+              'worker_issue_reports',
+              'worker_onboarding_cases',
+              'worker_onboarding_notes',
+              'worker_payouts',
+              'worker_service_cells',
+              'worker_swap_requests',
+              'worker_unavailability',
+              'workers'
+            )
           ORDER BY class.relname
         `,
         [schemaName],
       );
-      expect(rlsTables.rows.map((row) => row.relname)).toEqual([
-        'payment_attempts',
-        'subscriber_privacy_requests',
-        'subscribers',
-      ]);
+      expect(rlsTables.rows).toHaveLength(32);
+      expect(rlsTables.rows.every((row) => row.relrowsecurity)).toBe(true);
+      expect(rlsTables.rows.every((row) => row.relforcerowsecurity)).toBe(true);
 
       await pool.query(`CREATE ROLE ${roleName} LOGIN`);
       await pool.query(`GRANT USAGE ON SCHEMA ${schemaName} TO ${roleName}`);
-      await pool.query(`GRANT SELECT ON ${schemaName}.subscribers TO ${roleName}`);
+      await pool.query(
+        `GRANT SELECT, INSERT, UPDATE, DELETE ON ${schemaName}.subscribers TO ${roleName}`,
+      );
+
+      await pool.query('BEGIN');
+      await pool.query(`SET LOCAL search_path TO ${schemaName}, public`);
+      await pool.query('SELECT set_config($1, $2, true)', ['app.country_code', 'TG']);
       await pool.query(`
-        INSERT INTO ${schemaName}.subscribers (id, country_code, locale, phone_number)
-        VALUES
-          ('11111111-1111-4111-8111-111111111111', 'TG', 'fr', '+22890123456'),
-          ('22222222-2222-4222-8222-222222222222', 'BJ', 'fr', '+22990123456')
+        INSERT INTO subscribers (id, country_code, locale, phone_number)
+        VALUES ('11111111-1111-4111-8111-111111111111', 'TG', 'fr', '+22890123456')
       `);
+      await pool.query('COMMIT');
+
+      await pool.query('BEGIN');
+      await pool.query(`SET LOCAL search_path TO ${schemaName}, public`);
+      await pool.query('SELECT set_config($1, $2, true)', ['app.country_code', 'BJ']);
+      await pool.query(`
+        INSERT INTO subscribers (id, country_code, locale, phone_number)
+        VALUES ('22222222-2222-4222-8222-222222222222', 'BJ', 'fr', '+22990123456')
+      `);
+      await pool.query('COMMIT');
 
       const rlsClient = await pool.connect();
 
@@ -113,12 +161,29 @@ describeWithDatabase('core-api migrations on real Postgres', () => {
         await rlsClient.query('BEGIN');
         await rlsClient.query(`SET LOCAL ROLE ${roleName}`);
         await rlsClient.query(`SET LOCAL search_path TO ${schemaName}, public`);
+        const rowsWithoutCountry = await rlsClient.query<{ readonly phone_number: string }>(
+          'SELECT phone_number FROM subscribers ORDER BY phone_number',
+        );
+        expect(rowsWithoutCountry.rows).toEqual([]);
+
         await rlsClient.query('SELECT set_config($1, $2, true)', ['app.country_code', 'TG']);
         const rows = await rlsClient.query<{ readonly phone_number: string }>(
           'SELECT phone_number FROM subscribers ORDER BY phone_number',
         );
         await rlsClient.query('COMMIT');
         expect(rows.rows.map((row) => row.phone_number)).toEqual(['+22890123456']);
+
+        await rlsClient.query('BEGIN');
+        await rlsClient.query(`SET LOCAL ROLE ${roleName}`);
+        await rlsClient.query(`SET LOCAL search_path TO ${schemaName}, public`);
+        await rlsClient.query('SELECT set_config($1, $2, true)', ['app.country_code', 'TG']);
+        await expect(
+          rlsClient.query(`
+            INSERT INTO subscribers (id, country_code, locale, phone_number)
+            VALUES ('33333333-3333-4333-8333-333333333333', 'BJ', 'fr', '+22999123456')
+          `),
+        ).rejects.toThrow(/row-level security/u);
+        await rlsClient.query('ROLLBACK');
       } catch (error) {
         await rlsClient.query('ROLLBACK');
         throw error;

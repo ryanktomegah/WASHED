@@ -87,6 +87,27 @@ export const CORE_API_OPERATIONS = [
   },
   {
     method: 'POST',
+    operationId: 'createCurrentSubscriberSupportContact',
+    path: '/v1/subscriber/subscription/support-contacts',
+    pathParameters: [],
+    tags: ['subscriber'],
+  },
+  {
+    method: 'POST',
+    operationId: 'createCurrentSubscriberVisitDispute',
+    path: '/v1/subscriber/subscription/visits/{visitId}/disputes',
+    pathParameters: ['visitId'],
+    tags: ['subscriber'],
+  },
+  {
+    method: 'POST',
+    operationId: 'createCurrentSubscriberWorkerSwapRequest',
+    path: '/v1/subscriber/subscription/worker-swap-requests',
+    pathParameters: [],
+    tags: ['subscriber'],
+  },
+  {
+    method: 'POST',
     operationId: 'createOperatorWorkerMonthlyPayout',
     path: '/v1/operator/workers/{workerId}/monthly-payouts',
     pathParameters: ['workerId'],
@@ -164,8 +185,22 @@ export const CORE_API_OPERATIONS = [
   },
   {
     method: 'GET',
+    operationId: 'getCurrentSubscriberSupportContact',
+    path: '/v1/subscriber/subscription/support-contacts/{contactId}',
+    pathParameters: ['contactId'],
+    tags: ['subscriber'],
+  },
+  {
+    method: 'GET',
     operationId: 'listCurrentSubscriberSubscriptionBillingHistory',
     path: '/v1/subscriber/subscription/billing-history',
+    pathParameters: [],
+    tags: ['subscriber'],
+  },
+  {
+    method: 'GET',
+    operationId: 'listCurrentSubscriberSupportContacts',
+    path: '/v1/subscriber/subscription/support-contacts',
     pathParameters: [],
     tags: ['subscriber'],
   },
@@ -409,6 +444,13 @@ export const CORE_API_OPERATIONS = [
   },
   {
     method: 'POST',
+    operationId: 'rateCurrentSubscriberVisit',
+    path: '/v1/subscriber/subscription/visits/{visitId}/rating',
+    pathParameters: ['visitId'],
+    tags: ['subscriber'],
+  },
+  {
+    method: 'POST',
     operationId: 'recordVisitPhoto',
     path: '/v1/visits/{visitId}/photos',
     pathParameters: ['visitId'],
@@ -441,6 +483,13 @@ export const CORE_API_OPERATIONS = [
     path: '/v1/subscriptions/{subscriptionId}/visits/{visitId}/reschedule',
     pathParameters: ['subscriptionId', 'visitId'],
     tags: ['subscriptions'],
+  },
+  {
+    method: 'POST',
+    operationId: 'rescheduleCurrentSubscriberVisit',
+    path: '/v1/subscriber/subscription/visits/{visitId}/reschedule',
+    pathParameters: ['visitId'],
+    tags: ['subscriber'],
   },
   {
     method: 'POST',
@@ -497,6 +546,13 @@ export const CORE_API_OPERATIONS = [
     path: '/v1/subscriptions/{subscriptionId}/visits/{visitId}/skip',
     pathParameters: ['subscriptionId', 'visitId'],
     tags: ['subscriptions'],
+  },
+  {
+    method: 'POST',
+    operationId: 'skipCurrentSubscriberVisit',
+    path: '/v1/subscriber/subscription/visits/{visitId}/skip',
+    pathParameters: ['visitId'],
+    tags: ['subscriber'],
   },
   {
     method: 'POST',

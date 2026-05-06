@@ -313,7 +313,10 @@ export class PostgresCoreRepository implements CoreRepository {
       return null;
     }
 
-    return this.getSubscriptionDetail({ subscriptionId: current.subscription_id });
+    return this.getSubscriptionDetail({
+      countryCode: input.countryCode,
+      subscriptionId: current.subscription_id,
+    });
   }
 
   public async requestFirstVisit(input: RequestFirstVisitInput): Promise<SubscriptionDetailRecord> {
@@ -358,7 +361,7 @@ export class PostgresCoreRepository implements CoreRepository {
       },
     });
 
-    return this.getSubscriptionDetail({ subscriptionId });
+    return this.getSubscriptionDetail({ countryCode: input.countryCode, subscriptionId });
   }
 
   public async startOtpChallenge(
@@ -787,7 +790,10 @@ export class PostgresCoreRepository implements CoreRepository {
   public async listWorkerAdvanceRequests(
     input: ListWorkerAdvanceRequestsInput,
   ): Promise<readonly WorkerAdvanceRequestRecord[]> {
-    const rows = await selectWorkerAdvanceRequests(this.pool, input);
+    const rows = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: (client) => selectWorkerAdvanceRequests(client, input),
+    });
 
     return rows.map(mapWorkerAdvanceRequestRow);
   }
@@ -834,7 +840,10 @@ export class PostgresCoreRepository implements CoreRepository {
   public async listWorkerPayouts(
     input: ListWorkerPayoutsInput,
   ): Promise<readonly WorkerPayoutRecord[]> {
-    const rows = await selectWorkerPayouts(this.pool, input);
+    const rows = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: (client) => selectWorkerPayouts(client, input),
+    });
 
     return rows.map(mapWorkerPayoutRow);
   }
@@ -1001,6 +1010,7 @@ export class PostgresCoreRepository implements CoreRepository {
             amount: record.amount,
             countryCode: record.countryCode,
             input: {
+              countryCode: record.countryCode,
               month: record.month,
               note: input.resolutionNote,
               operatorUserId: input.operatorUserId,
@@ -1037,6 +1047,7 @@ export class PostgresCoreRepository implements CoreRepository {
         }
 
         await setPgLocalCountryCode(client, subscription.country_code);
+        assertSubscriberOwnsSubscription(subscription, input.subscriberUserId);
 
         if (subscription.status !== 'active') {
           throw new Error(`Worker swap cannot be requested from status ${subscription.status}.`);
@@ -1084,7 +1095,10 @@ export class PostgresCoreRepository implements CoreRepository {
   public async listWorkerSwapRequests(
     input: ListWorkerSwapRequestsInput,
   ): Promise<readonly WorkerSwapRequestRecord[]> {
-    const rows = await selectWorkerSwapRequests(this.pool, input);
+    const rows = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: (client) => selectWorkerSwapRequests(client, input),
+    });
     return rows.map(mapWorkerSwapRequestRow);
   }
 
@@ -1157,6 +1171,7 @@ export class PostgresCoreRepository implements CoreRepository {
         }
 
         await setPgLocalCountryCode(client, subscription.country_code);
+        assertSubscriberOwnsSubscription(subscription, input.subscriberUserId);
         const status = transitionSubscription(subscription.status, 'cancel');
         if (status !== 'cancelled') {
           throw new Error(`Expected cancelled subscription status, received ${status}.`);
@@ -1190,6 +1205,7 @@ export class PostgresCoreRepository implements CoreRepository {
         }
 
         await setPgLocalCountryCode(client, subscription.country_code);
+        assertSubscriberOwnsSubscription(subscription, input.subscriberUserId);
         const status = transitionSubscription(subscription.status, 'pause');
         if (status !== 'paused') {
           throw new Error(`Expected paused subscription status, received ${status}.`);
@@ -1225,6 +1241,7 @@ export class PostgresCoreRepository implements CoreRepository {
         }
 
         await setPgLocalCountryCode(client, subscription.country_code);
+        assertSubscriberOwnsSubscription(subscription, input.subscriberUserId);
         const status = transitionSubscription(subscription.status, 'resume');
         if (status !== 'active') {
           throw new Error(`Expected active subscription status, received ${status}.`);
@@ -1254,6 +1271,7 @@ export class PostgresCoreRepository implements CoreRepository {
         }
 
         await setPgLocalCountryCode(client, subscription.country_code);
+        assertSubscriberOwnsSubscription(subscription, input.subscriberUserId);
         assertSubscriptionCanChangeTier(subscription.status);
         const record = buildChangedSubscriptionTierRecord({
           countryCode: subscription.country_code,
@@ -1282,6 +1300,8 @@ export class PostgresCoreRepository implements CoreRepository {
         if (subscription === undefined) {
           throw new Error('Subscription was not found.');
         }
+
+        assertSubscriberOwnsSubscription(subscription, input.subscriberUserId);
 
         if (subscription.status === 'cancelled') {
           throw new Error('Cancelled subscriptions cannot change payment method.');
@@ -1453,6 +1473,7 @@ export class PostgresCoreRepository implements CoreRepository {
         }
 
         await setPgLocalCountryCode(client, visit.country_code);
+        assertSubscriberOwnsSubscription(visit, input.subscriberUserId);
 
         if (visit.status !== 'scheduled') {
           throw new Error(`Visit cannot be rescheduled from status ${visit.status}.`);
@@ -1487,6 +1508,7 @@ export class PostgresCoreRepository implements CoreRepository {
         }
 
         await setPgLocalCountryCode(client, visit.country_code);
+        assertSubscriberOwnsSubscription(visit, input.subscriberUserId);
         const status = transitionVisit(visit.status, 'cancel');
         if (status !== 'cancelled') {
           throw new Error(`Expected cancelled visit status, received ${status}.`);
@@ -1557,6 +1579,7 @@ export class PostgresCoreRepository implements CoreRepository {
         }
 
         await setPgLocalCountryCode(client, visit.country_code);
+        assertSubscriberOwnsSubscription(visit, input.subscriberUserId);
         const status = transitionVisit(visit.status, 'dispute');
         const record = buildCreatedDisputeRecord({
           countryCode: visit.country_code,
@@ -1576,7 +1599,10 @@ export class PostgresCoreRepository implements CoreRepository {
   public async listOperatorDisputes(
     input: ListOperatorDisputesInput,
   ): Promise<readonly DisputeRecord[]> {
-    const rows = await selectOperatorDisputes(this.pool, input);
+    const rows = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: (client) => selectOperatorDisputes(client, input),
+    });
     return rows.map(mapDisputeRow);
   }
 
@@ -1626,6 +1652,7 @@ export class PostgresCoreRepository implements CoreRepository {
         }
 
         await setPgLocalCountryCode(client, subscription.country_code);
+        assertSubscriberOwnsSubscription(subscription, input.subscriberUserId);
         const record = buildCreatedSupportContactRecord({
           countryCode: subscription.country_code,
           input,
@@ -1641,46 +1668,46 @@ export class PostgresCoreRepository implements CoreRepository {
   public async listSupportContactsForSubscription(
     input: ListSupportContactsInput,
   ): Promise<readonly SupportContactRecord[]> {
-    const rows = await selectSupportContactsForSubscription(this.pool, input);
+    const rows = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: (client) => selectSupportContactsForSubscription(client, input),
+    });
     return rows.map(mapSupportContactRow);
   }
 
   public async getSupportContact(
     input: GetSupportContactInput,
   ): Promise<SupportContactRecord | null> {
-    const row = await selectSupportContactById(this.pool, input);
+    const row = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: (client) => selectSupportContactById(client, input),
+    });
     return row === undefined ? null : mapSupportContactRow(row);
   }
 
   public async resolveSupportContact(
     input: ResolveSupportContactInput,
   ): Promise<SupportContactRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: async (client) => {
+        const row = await selectSupportContactForResolution(client, input.contactId);
 
-    try {
-      await client.query('BEGIN');
-      const row = await selectSupportContactForResolution(client, input.contactId);
+        if (row === undefined) {
+          throw new Error('Support contact was not found.');
+        }
 
-      if (row === undefined) {
-        throw new Error('Support contact was not found.');
-      }
+        const contact = mapSupportContactRow(row);
+        if (contact.status !== 'open') {
+          throw new Error(`Support contact cannot be resolved from status ${contact.status}.`);
+        }
 
-      const contact = mapSupportContactRow(row);
-      if (contact.status !== 'open') {
-        throw new Error(`Support contact cannot be resolved from status ${contact.status}.`);
-      }
-
-      const record = buildResolvedSupportContactRecord({ contact, input });
-      await updateSupportContactResolution(client, record);
-      await insertOutboxEvents(client, record.events);
-      await client.query('COMMIT');
-      return record;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        const record = buildResolvedSupportContactRecord({ contact, input });
+        await updateSupportContactResolution(client, record);
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
   }
 
   public async rateVisit(input: RateVisitInput): Promise<VisitRatingRecord> {
@@ -1693,6 +1720,7 @@ export class PostgresCoreRepository implements CoreRepository {
         }
 
         await setPgLocalCountryCode(client, visit.country_code);
+        assertSubscriberOwnsSubscription(visit, input.subscriberUserId);
 
         if (visit.status !== 'completed' && visit.status !== 'disputed') {
           throw new Error(`Visit cannot be rated from status ${visit.status}.`);
@@ -1747,7 +1775,10 @@ export class PostgresCoreRepository implements CoreRepository {
   public async listWorkerIssues(
     input: ListWorkerIssuesInput,
   ): Promise<readonly WorkerIssueReportRecord[]> {
-    const rows = await selectWorkerIssues(this.pool, input);
+    const rows = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: (client) => selectWorkerIssues(client, input),
+    });
     return rows.map(mapWorkerIssueRow);
   }
 
@@ -1784,21 +1815,26 @@ export class PostgresCoreRepository implements CoreRepository {
     input: GetWorkerMonthlyEarningsInput,
   ): Promise<WorkerMonthlyEarningsRecord> {
     const { endExclusive, startInclusive } = getUtcMonthRange(input.month);
-    const result = await this.pool.query<WorkerMonthlyEarningsRow>(
-      `
-        SELECT COUNT(*)::int AS completed_visits
-        FROM worker_earning_ledger ledger
-        INNER JOIN visits visit ON visit.id = ledger.visit_id
-        WHERE ledger.worker_id = $1
-          AND ledger.reason = 'completed_visit_bonus'
-          AND visit.completed_at >= $2
-          AND visit.completed_at < $3
-      `,
-      [input.workerId, startInclusive, endExclusive],
-    );
+    const result = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: (client) =>
+        client.query<WorkerMonthlyEarningsRow>(
+          `
+            SELECT COUNT(*)::int AS completed_visits
+            FROM worker_earning_ledger ledger
+            INNER JOIN visits visit ON visit.id = ledger.visit_id
+            WHERE ledger.worker_id = $1
+              AND ledger.reason = 'completed_visit_bonus'
+              AND visit.completed_at >= $2
+              AND visit.completed_at < $3
+          `,
+          [input.workerId, startInclusive, endExclusive],
+        ),
+    });
     const completedVisits = Number(result.rows[0]?.completed_visits ?? 0);
     const compensation = calculateWorkerMonthlyCompensation(completedVisits);
     const payoutHistory = await this.listWorkerPayouts({
+      countryCode: input.countryCode,
       limit: 100,
       month: input.month,
       workerId: input.workerId,
@@ -1825,35 +1861,39 @@ export class PostgresCoreRepository implements CoreRepository {
   }
 
   public async getWorkerRoute(input: GetWorkerRouteInput): Promise<WorkerRouteRecord> {
-    const result = await this.pool.query<WorkerRouteRow>(
-      `
-        SELECT
-          visit.id AS visit_id,
-          visit.subscription_id,
-          visit.status,
-          visit.scheduled_date::text AS scheduled_date,
-          visit.scheduled_time_window,
-          subscriber.phone_number AS subscriber_phone_number,
-          address.neighborhood,
-          address.landmark,
-          address.gps_latitude,
-          address.gps_longitude
-        FROM visits visit
-        INNER JOIN subscriptions subscription ON subscription.id = visit.subscription_id
-        INNER JOIN subscribers subscriber ON subscriber.id = subscription.subscriber_id
-        INNER JOIN subscriber_addresses address ON address.id = subscription.address_id
-        WHERE visit.worker_id = $1
-          AND visit.scheduled_date = $2
-        ORDER BY
-          CASE visit.scheduled_time_window
-            WHEN 'morning' THEN 0
-            WHEN 'afternoon' THEN 1
-            ELSE 2
-          END,
-          visit.id ASC
-      `,
-      [input.workerId, input.date],
-    );
+    const result = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: (client) =>
+        client.query<WorkerRouteRow>(
+          `
+            SELECT
+              visit.id AS visit_id,
+              visit.subscription_id,
+              visit.status,
+              visit.scheduled_date::text AS scheduled_date,
+              visit.scheduled_time_window,
+              subscriber.phone_number AS subscriber_phone_number,
+              address.neighborhood,
+              address.landmark,
+              address.gps_latitude,
+              address.gps_longitude
+            FROM visits visit
+            INNER JOIN subscriptions subscription ON subscription.id = visit.subscription_id
+            INNER JOIN subscribers subscriber ON subscriber.id = subscription.subscriber_id
+            INNER JOIN subscriber_addresses address ON address.id = subscription.address_id
+            WHERE visit.worker_id = $1
+              AND visit.scheduled_date = $2
+            ORDER BY
+              CASE visit.scheduled_time_window
+                WHEN 'morning' THEN 0
+                WHEN 'afternoon' THEN 1
+                ELSE 2
+              END,
+              visit.id ASC
+          `,
+          [input.workerId, input.date],
+        ),
+    });
 
     return {
       date: input.date,
@@ -1878,15 +1918,23 @@ export class PostgresCoreRepository implements CoreRepository {
   public async getSubscriptionDetail(
     input: GetSubscriptionDetailInput,
   ): Promise<SubscriptionDetailRecord> {
-    const detail = await selectSubscriptionDetail(this.pool, input.subscriptionId);
+    const { detail, recentVisits, supportCredits, visits } = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: async (client) => {
+        const detail = await selectSubscriptionDetail(client, input.subscriptionId);
 
-    if (detail === undefined) {
-      throw new Error('Subscription was not found.');
-    }
+        if (detail === undefined) {
+          throw new Error('Subscription was not found.');
+        }
 
-    const visits = await selectSubscriptionUpcomingVisits(this.pool, input.subscriptionId);
-    const recentVisits = await selectSubscriptionRecentVisits(this.pool, input.subscriptionId);
-    const supportCredits = await selectSubscriptionSupportCredits(this.pool, input.subscriptionId);
+        return {
+          detail,
+          recentVisits: await selectSubscriptionRecentVisits(client, input.subscriptionId),
+          supportCredits: await selectSubscriptionSupportCredits(client, input.subscriptionId),
+          visits: await selectSubscriptionUpcomingVisits(client, input.subscriptionId),
+        };
+      },
+    });
 
     return {
       address: {
@@ -1980,7 +2028,9 @@ export class PostgresCoreRepository implements CoreRepository {
   }
 
   public async getWorkerProfile(workerId: string): Promise<WorkerProfileRecord> {
-    const worker = await selectWorkerProfile(this.pool, workerId);
+    const worker = await withPgTransaction(this.pool, {
+      run: (client) => selectWorkerProfile(client, workerId),
+    });
 
     if (worker === undefined) {
       throw new Error('Worker profile was not found.');
@@ -2008,15 +2058,20 @@ export class PostgresCoreRepository implements CoreRepository {
   public async listWorkerOnboardingCases(
     input: ListWorkerOnboardingCasesInput,
   ): Promise<readonly WorkerOnboardingCaseRecord[]> {
-    const rows = await selectWorkerOnboardingCases(this.pool, input);
-
-    return Promise.all(rows.map((row) => mapWorkerOnboardingCaseRow(this.pool, row)));
+    return withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: async (client) => {
+        const rows = await selectWorkerOnboardingCases(client, input);
+        return Promise.all(rows.map((row) => mapWorkerOnboardingCaseRow(client, row)));
+      },
+    });
   }
 
   public async advanceWorkerOnboardingCase(
     input: AdvanceWorkerOnboardingCaseInput,
   ): Promise<WorkerOnboardingCaseRecord> {
     return withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
       run: async (client) => {
         const row = await selectWorkerOnboardingCaseForUpdate(client, input.caseId);
 
@@ -2072,7 +2127,10 @@ export class PostgresCoreRepository implements CoreRepository {
   public async listWorkerUnavailability(
     input: ListWorkerUnavailabilityInput,
   ): Promise<readonly WorkerUnavailabilityRecord[]> {
-    const rows = await selectWorkerUnavailability(this.pool, input);
+    const rows = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: (client) => selectWorkerUnavailability(client, input),
+    });
 
     return rows.map(mapWorkerUnavailabilityRow);
   }
@@ -2080,37 +2138,41 @@ export class PostgresCoreRepository implements CoreRepository {
   public async listMatchingQueue(
     input: ListMatchingQueueInput,
   ): Promise<readonly MatchingQueueItemRecord[]> {
-    const result = await this.pool.query<MatchingQueueRow>(
-      `
-        SELECT
-          subscription.id AS subscription_id,
-          subscription.subscriber_id,
-          subscriber.phone_number,
-          subscription.country_code,
-          subscription.tier_code,
-          subscription.visits_per_cycle,
-          subscription.monthly_price_minor,
-          subscription.preferred_day_of_week,
-          subscription.preferred_time_window,
-          subscription.status,
-          subscription.created_at AS queued_at,
-          subscription.created_at + interval '4 hours' AS assignment_due_at,
-          address.neighborhood,
-          address.landmark,
-          address.gps_latitude,
-          address.gps_longitude
-        FROM subscriptions subscription
-        INNER JOIN subscribers subscriber ON subscriber.id = subscription.subscriber_id
-        INNER JOIN subscriber_addresses address ON address.id = subscription.address_id
-        WHERE subscription.country_code = $1
-          AND subscription.status = 'pending_match'
-          AND subscription.preferred_day_of_week IS NOT NULL
-          AND subscription.preferred_time_window IS NOT NULL
-        ORDER BY subscription.created_at ASC
-        LIMIT $2
-      `,
-      [input.countryCode, input.limit],
-    );
+    const result = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: (client) =>
+        client.query<MatchingQueueRow>(
+          `
+            SELECT
+              subscription.id AS subscription_id,
+              subscription.subscriber_id,
+              subscriber.phone_number,
+              subscription.country_code,
+              subscription.tier_code,
+              subscription.visits_per_cycle,
+              subscription.monthly_price_minor,
+              subscription.preferred_day_of_week,
+              subscription.preferred_time_window,
+              subscription.status,
+              subscription.created_at AS queued_at,
+              subscription.created_at + interval '4 hours' AS assignment_due_at,
+              address.neighborhood,
+              address.landmark,
+              address.gps_latitude,
+              address.gps_longitude
+            FROM subscriptions subscription
+            INNER JOIN subscribers subscriber ON subscriber.id = subscription.subscriber_id
+            INNER JOIN subscriber_addresses address ON address.id = subscription.address_id
+            WHERE subscription.country_code = $1
+              AND subscription.status = 'pending_match'
+              AND subscription.preferred_day_of_week IS NOT NULL
+              AND subscription.preferred_time_window IS NOT NULL
+            ORDER BY subscription.created_at ASC
+            LIMIT $2
+          `,
+          [input.countryCode, input.limit],
+        ),
+    });
 
     return result.rows.map((row) => ({
       address: {
@@ -2139,83 +2201,91 @@ export class PostgresCoreRepository implements CoreRepository {
   public async listMatchingCandidates(
     input: ListMatchingCandidatesInput,
   ): Promise<readonly MatchingCandidateRecord[]> {
-    const subscription = await selectSubscriptionForCandidates(this.pool, input.subscriptionId);
+    const { result, subscription } = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: async (client) => {
+        const subscription = await selectSubscriptionForCandidates(client, input.subscriptionId);
 
-    if (subscription === undefined) {
-      throw new Error('Subscription was not found.');
-    }
+        if (subscription === undefined) {
+          throw new Error('Subscription was not found.');
+        }
 
-    const result = await this.pool.query<MatchingCandidateRow>(
-      `
-        SELECT
-          worker.id AS worker_id,
-          worker.display_name,
-          COALESCE(
-            array_agg(DISTINCT service_cell.display_name)
-              FILTER (WHERE service_cell.display_name IS NOT NULL),
-            worker.service_neighborhoods
-          ) AS service_neighborhoods,
-          worker.max_active_subscriptions,
-          COUNT(DISTINCT active_subscription.id)::int AS active_subscription_count
-        FROM workers worker
-        LEFT JOIN worker_service_cells worker_cell
-          ON worker_cell.worker_id = worker.id
-        LEFT JOIN service_cells service_cell
-          ON service_cell.country_code = worker_cell.country_code
-          AND service_cell.cell_key = worker_cell.cell_key
-        LEFT JOIN subscriptions active_subscription
-          ON active_subscription.assigned_worker_id = worker.id
-          AND active_subscription.status = 'active'
-        WHERE worker.country_code = $1
-          AND worker.status = 'active'
-          AND NOT EXISTS (
-            SELECT 1
-            FROM assignment_decisions declined_decision
-            WHERE declined_decision.subscription_id = $4
-              AND declined_decision.worker_id = worker.id
-              AND declined_decision.decision = 'declined'
-          )
-          AND (
-            $3::date IS NULL
-            OR NOT EXISTS (
-              SELECT 1
-              FROM worker_unavailability unavailable
-              WHERE unavailable.worker_id = worker.id
-                AND unavailable.unavailable_date = $3
-            )
-          )
-          AND EXISTS (
-            SELECT 1
-            FROM worker_service_cells matching_worker_cell
-            WHERE matching_worker_cell.worker_id = worker.id
-              AND matching_worker_cell.cell_key = lower($2)
-            UNION ALL
-            SELECT 1
-            FROM unnest(worker.service_neighborhoods) service_neighborhood
-            WHERE NOT EXISTS (
-                SELECT 1
-                FROM worker_service_cells existing_worker_cell
-                WHERE existing_worker_cell.worker_id = worker.id
-              )
-              AND lower(service_neighborhood) = lower($2)
-          )
-        GROUP BY
-          worker.id,
-          worker.display_name,
-          worker.service_neighborhoods,
-          worker.max_active_subscriptions
-        HAVING COUNT(DISTINCT active_subscription.id) < worker.max_active_subscriptions
-        ORDER BY
-          COUNT(DISTINCT active_subscription.id) ASC,
-          worker.display_name ASC
-      `,
-      [
-        subscription.country_code,
-        subscription.neighborhood,
-        input.anchorDate ?? null,
-        input.subscriptionId,
-      ],
-    );
+        return {
+          subscription,
+          result: await client.query<MatchingCandidateRow>(
+            `
+              SELECT
+                worker.id AS worker_id,
+                worker.display_name,
+                COALESCE(
+                  array_agg(DISTINCT service_cell.display_name)
+                    FILTER (WHERE service_cell.display_name IS NOT NULL),
+                  worker.service_neighborhoods
+                ) AS service_neighborhoods,
+                worker.max_active_subscriptions,
+                COUNT(DISTINCT active_subscription.id)::int AS active_subscription_count
+              FROM workers worker
+              LEFT JOIN worker_service_cells worker_cell
+                ON worker_cell.worker_id = worker.id
+              LEFT JOIN service_cells service_cell
+                ON service_cell.country_code = worker_cell.country_code
+                AND service_cell.cell_key = worker_cell.cell_key
+              LEFT JOIN subscriptions active_subscription
+                ON active_subscription.assigned_worker_id = worker.id
+                AND active_subscription.status = 'active'
+              WHERE worker.country_code = $1
+                AND worker.status = 'active'
+                AND NOT EXISTS (
+                  SELECT 1
+                  FROM assignment_decisions declined_decision
+                  WHERE declined_decision.subscription_id = $4
+                    AND declined_decision.worker_id = worker.id
+                    AND declined_decision.decision = 'declined'
+                )
+                AND (
+                  $3::date IS NULL
+                  OR NOT EXISTS (
+                    SELECT 1
+                    FROM worker_unavailability unavailable
+                    WHERE unavailable.worker_id = worker.id
+                      AND unavailable.unavailable_date = $3
+                  )
+                )
+                AND EXISTS (
+                  SELECT 1
+                  FROM worker_service_cells matching_worker_cell
+                  WHERE matching_worker_cell.worker_id = worker.id
+                    AND matching_worker_cell.cell_key = lower($2)
+                  UNION ALL
+                  SELECT 1
+                  FROM unnest(worker.service_neighborhoods) service_neighborhood
+                  WHERE NOT EXISTS (
+                      SELECT 1
+                      FROM worker_service_cells existing_worker_cell
+                      WHERE existing_worker_cell.worker_id = worker.id
+                    )
+                    AND lower(service_neighborhood) = lower($2)
+                )
+              GROUP BY
+                worker.id,
+                worker.display_name,
+                worker.service_neighborhoods,
+                worker.max_active_subscriptions
+              HAVING COUNT(DISTINCT active_subscription.id) < worker.max_active_subscriptions
+              ORDER BY
+                COUNT(DISTINCT active_subscription.id) ASC,
+                worker.display_name ASC
+            `,
+            [
+              subscription.country_code,
+              subscription.neighborhood,
+              input.anchorDate ?? null,
+              input.subscriptionId,
+            ],
+          ),
+        };
+      },
+    });
 
     return result.rows
       .map((row) =>
@@ -2238,8 +2308,11 @@ export class PostgresCoreRepository implements CoreRepository {
   public async listServiceCells(
     input: ListServiceCellsInput,
   ): Promise<readonly ServiceCellCapacityRecord[]> {
-    const result = await this.pool.query<ServiceCellCapacityRow>(
-      `
+    const result = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: (client) =>
+        client.query<ServiceCellCapacityRow>(
+          `
         WITH worker_cell_source AS (
           SELECT
             worker.id AS worker_id,
@@ -2326,43 +2399,48 @@ export class PostgresCoreRepository implements CoreRepository {
           service_cell ASC
         LIMIT $2
       `,
-      [input.date, input.limit],
-    );
+          [input.date, input.limit],
+        ),
+    });
 
     return result.rows.map((row) => toServiceCellCapacityRecord(row));
   }
 
   public async listAuditEvents(input: ListAuditEventsInput): Promise<readonly AuditEventRecord[]> {
-    const result = await this.pool.query<AuditEventRow>(
-      `
-        SELECT
-          id AS event_id,
-          country_code,
-          aggregate_type,
-          aggregate_id,
-          event_type,
-          payload,
-          actor_role,
-          actor_user_id,
-          trace_id,
-          occurred_at,
-          recorded_at
-        FROM audit_events
-        WHERE country_code = $1
-          AND ($2::text IS NULL OR aggregate_type = $2)
-          AND ($3::uuid IS NULL OR aggregate_id = $3)
-          AND ($4::text IS NULL OR event_type = $4)
-        ORDER BY occurred_at ASC, id ASC
-        LIMIT $5
-      `,
-      [
-        input.countryCode,
-        input.aggregateType ?? null,
-        input.aggregateId ?? null,
-        input.eventType ?? null,
-        input.limit,
-      ],
-    );
+    const result = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: (client) =>
+        client.query<AuditEventRow>(
+          `
+            SELECT
+              id AS event_id,
+              country_code,
+              aggregate_type,
+              aggregate_id,
+              event_type,
+              payload,
+              actor_role,
+              actor_user_id,
+              trace_id,
+              occurred_at,
+              recorded_at
+            FROM audit_events
+            WHERE country_code = $1
+              AND ($2::text IS NULL OR aggregate_type = $2)
+              AND ($3::uuid IS NULL OR aggregate_id = $3)
+              AND ($4::text IS NULL OR event_type = $4)
+            ORDER BY occurred_at ASC, id ASC
+            LIMIT $5
+          `,
+          [
+            input.countryCode,
+            input.aggregateType ?? null,
+            input.aggregateId ?? null,
+            input.eventType ?? null,
+            input.limit,
+          ],
+        ),
+    });
 
     return result.rows.map((row) => ({
       actor: { role: row.actor_role, userId: row.actor_user_id },
@@ -2381,10 +2459,17 @@ export class PostgresCoreRepository implements CoreRepository {
   public async createSubscriberPrivacyRequest(
     input: CreateSubscriberPrivacyRequestInput,
   ): Promise<SubscriberPrivacyRequestRecord> {
-    const detail = await this.getSubscriptionDetail({ subscriptionId: input.subscriptionId });
+    const detail = await this.getSubscriptionDetail({
+      countryCode: input.countryCode,
+      subscriptionId: input.subscriptionId,
+    });
     const [billingHistory, disputes, notifications, auditEvents] = await Promise.all([
-      this.listSubscriptionBilling({ limit: 100, subscriptionId: input.subscriptionId }),
-      this.listOperatorDisputes({ limit: 500 }),
+      this.listSubscriptionBilling({
+        countryCode: detail.countryCode,
+        limit: 100,
+        subscriptionId: input.subscriptionId,
+      }),
+      this.listOperatorDisputes({ countryCode: detail.countryCode, limit: 500 }),
       this.listNotificationMessages({
         aggregateId: input.subscriptionId,
         countryCode: detail.countryCode,
@@ -2419,30 +2504,34 @@ export class PostgresCoreRepository implements CoreRepository {
   public async listPaymentAttempts(
     input: ListPaymentAttemptsInput,
   ): Promise<readonly PaymentAttemptSummaryRecord[]> {
-    const result = await this.pool.query<PaymentAttemptSummaryRow>(
-      `
-        SELECT
-          attempt.id AS payment_attempt_id,
-          attempt.subscription_id,
-          attempt.country_code,
-          attempt.amount_minor,
-          attempt.currency_code,
-          attempt.status,
-          attempt.provider,
-          attempt.provider_reference,
-          attempt.idempotency_key,
-          attempt.charged_at,
-          subscription.status AS subscription_status
-        FROM payment_attempts attempt
-        INNER JOIN subscriptions subscription ON subscription.id = attempt.subscription_id
-        WHERE attempt.country_code = $1
-          AND ($2::text IS NULL OR attempt.provider = $2)
-          AND ($3::text IS NULL OR attempt.status = $3)
-        ORDER BY attempt.charged_at DESC, attempt.id DESC
-        LIMIT $4
-      `,
-      [input.countryCode, input.provider ?? null, input.status ?? null, input.limit],
-    );
+    const result = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: (client) =>
+        client.query<PaymentAttemptSummaryRow>(
+          `
+            SELECT
+              attempt.id AS payment_attempt_id,
+              attempt.subscription_id,
+              attempt.country_code,
+              attempt.amount_minor,
+              attempt.currency_code,
+              attempt.status,
+              attempt.provider,
+              attempt.provider_reference,
+              attempt.idempotency_key,
+              attempt.charged_at,
+              subscription.status AS subscription_status
+            FROM payment_attempts attempt
+            INNER JOIN subscriptions subscription ON subscription.id = attempt.subscription_id
+            WHERE attempt.country_code = $1
+              AND ($2::text IS NULL OR attempt.provider = $2)
+              AND ($3::text IS NULL OR attempt.status = $3)
+            ORDER BY attempt.charged_at DESC, attempt.id DESC
+            LIMIT $4
+          `,
+          [input.countryCode, input.provider ?? null, input.status ?? null, input.limit],
+        ),
+    });
 
     return result.rows.map((row) => ({
       ...mapPaymentAttemptRow(row),
@@ -2453,24 +2542,28 @@ export class PostgresCoreRepository implements CoreRepository {
   public async listSubscriberSupportMatches(
     input: ListSubscriberSupportMatchesInput,
   ): Promise<readonly SubscriberSupportMatchRecord[]> {
-    const result = await this.pool.query<SubscriberSupportMatchRow>(
-      `
-        SELECT
-          subscription.id AS subscription_id,
-          subscription.subscriber_id,
-          subscriber.phone_number,
-          subscription.country_code,
-          subscription.tier_code,
-          subscription.status
-        FROM subscriptions subscription
-        INNER JOIN subscribers subscriber ON subscriber.id = subscription.subscriber_id
-        WHERE subscription.country_code = $1
-          AND ($2::text IS NULL OR subscriber.phone_number ILIKE '%' || $2 || '%')
-        ORDER BY subscription.created_at DESC, subscription.id DESC
-        LIMIT $3
-      `,
-      [input.countryCode, input.phoneNumber ?? null, input.limit],
-    );
+    const result = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: (client) =>
+        client.query<SubscriberSupportMatchRow>(
+          `
+            SELECT
+              subscription.id AS subscription_id,
+              subscription.subscriber_id,
+              subscriber.phone_number,
+              subscription.country_code,
+              subscription.tier_code,
+              subscription.status
+            FROM subscriptions subscription
+            INNER JOIN subscribers subscriber ON subscriber.id = subscription.subscriber_id
+            WHERE subscription.country_code = $1
+              AND ($2::text IS NULL OR subscriber.phone_number ILIKE '%' || $2 || '%')
+            ORDER BY subscription.created_at DESC, subscription.id DESC
+            LIMIT $3
+          `,
+          [input.countryCode, input.phoneNumber ?? null, input.limit],
+        ),
+    });
 
     return result.rows.map((row) => ({
       countryCode: row.country_code,
@@ -2485,10 +2578,13 @@ export class PostgresCoreRepository implements CoreRepository {
   public async listSubscriptionBilling(
     input: ListSubscriptionBillingInput,
   ): Promise<readonly SubscriptionBillingItemRecord[]> {
-    const [chargeRows, refundRows] = await Promise.all([
-      selectPaymentAttemptsForSubscription(this.pool, input.subscriptionId),
-      selectPaymentRefundsForSubscription(this.pool, input.subscriptionId),
-    ]);
+    const { chargeRows, refundRows } = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: async (client) => ({
+        chargeRows: await selectPaymentAttemptsForSubscription(client, input.subscriptionId),
+        refundRows: await selectPaymentRefundsForSubscription(client, input.subscriptionId),
+      }),
+    });
     const charges = chargeRows.map(
       (attempt): SubscriptionBillingItemRecord => ({
         amount: money(BigInt(attempt.amount_minor), attempt.currency_code),
@@ -2532,48 +2628,52 @@ export class PostgresCoreRepository implements CoreRepository {
   public async listNotificationMessages(
     input: ListNotificationMessagesInput,
   ): Promise<readonly NotificationMessageRecord[]> {
-    const result = await this.pool.query<NotificationMessageRow>(
-      `
-        SELECT
-          id AS message_id,
-          country_code,
-          channel,
-          template_key,
-          recipient_role,
-          recipient_user_id,
-          aggregate_type,
-          aggregate_id,
-          event_id,
-          payload,
-          status,
-          provider,
-          provider_reference,
-          attempt_count,
-          available_at,
-          created_at,
-          last_attempt_at,
-          sent_at,
-          failure_reason
-        FROM notification_messages
-        WHERE country_code = $1
-          AND ($2::text IS NULL OR status = $2)
-          AND ($3::text IS NULL OR channel = $3)
-          AND ($4::text IS NULL OR template_key = $4)
-          AND ($5::text IS NULL OR aggregate_type = $5)
-          AND ($6::uuid IS NULL OR aggregate_id = $6)
-        ORDER BY available_at ASC, id ASC
-        LIMIT $7
-      `,
-      [
-        input.countryCode,
-        input.status ?? null,
-        input.channel ?? null,
-        input.templateKey ?? null,
-        input.aggregateType ?? null,
-        input.aggregateId ?? null,
-        input.limit,
-      ],
-    );
+    const result = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: (client) =>
+        client.query<NotificationMessageRow>(
+          `
+            SELECT
+              id AS message_id,
+              country_code,
+              channel,
+              template_key,
+              recipient_role,
+              recipient_user_id,
+              aggregate_type,
+              aggregate_id,
+              event_id,
+              payload,
+              status,
+              provider,
+              provider_reference,
+              attempt_count,
+              available_at,
+              created_at,
+              last_attempt_at,
+              sent_at,
+              failure_reason
+            FROM notification_messages
+            WHERE country_code = $1
+              AND ($2::text IS NULL OR status = $2)
+              AND ($3::text IS NULL OR channel = $3)
+              AND ($4::text IS NULL OR template_key = $4)
+              AND ($5::text IS NULL OR aggregate_type = $5)
+              AND ($6::uuid IS NULL OR aggregate_id = $6)
+            ORDER BY available_at ASC, id ASC
+            LIMIT $7
+          `,
+          [
+            input.countryCode,
+            input.status ?? null,
+            input.channel ?? null,
+            input.templateKey ?? null,
+            input.aggregateType ?? null,
+            input.aggregateId ?? null,
+            input.limit,
+          ],
+        ),
+    });
 
     return result.rows.map(mapNotificationMessageRow);
   }
@@ -2649,31 +2749,35 @@ export class PostgresCoreRepository implements CoreRepository {
   }
 
   public async listPushDevices(input: ListPushDevicesInput): Promise<readonly PushDeviceRecord[]> {
-    const result = await this.pool.query<PushDeviceRow>(
-      `
-        SELECT
-          id AS push_device_id,
-          country_code,
-          user_id,
-          role,
-          app,
-          platform,
-          environment,
-          device_id,
-          token,
-          status,
-          last_registered_at,
-          created_at,
-          updated_at
-        FROM push_device_tokens
-        WHERE country_code = $1
-          AND ($2::text IS NULL OR role = $2)
-          AND ($3::text IS NULL OR status = $3)
-        ORDER BY last_registered_at DESC, id ASC
-        LIMIT $4
-      `,
-      [input.countryCode, input.role ?? null, input.status ?? null, input.limit],
-    );
+    const result = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: (client) =>
+        client.query<PushDeviceRow>(
+          `
+            SELECT
+              id AS push_device_id,
+              country_code,
+              user_id,
+              role,
+              app,
+              platform,
+              environment,
+              device_id,
+              token,
+              status,
+              last_registered_at,
+              created_at,
+              updated_at
+            FROM push_device_tokens
+            WHERE country_code = $1
+              AND ($2::text IS NULL OR role = $2)
+              AND ($3::text IS NULL OR status = $3)
+            ORDER BY last_registered_at DESC, id ASC
+            LIMIT $4
+          `,
+          [input.countryCode, input.role ?? null, input.status ?? null, input.limit],
+        ),
+    });
 
     return result.rows.map(mapPushDeviceRow);
   }
@@ -3272,6 +3376,7 @@ interface SubscriberVisitChangeRow {
   readonly scheduled_date: string;
   readonly scheduled_time_window: 'afternoon' | 'morning';
   readonly status: VisitStatus;
+  readonly subscriber_id: string;
   readonly subscription_id: string;
   readonly visit_id: string;
   readonly worker_id: string;
@@ -3280,6 +3385,7 @@ interface SubscriberVisitChangeRow {
 interface DisputeVisitRow {
   readonly country_code: 'TG';
   readonly status: VisitStatus;
+  readonly subscriber_id: string;
   readonly subscriber_phone_number: string;
   readonly subscription_id: string;
   readonly visit_id: string;
@@ -3289,6 +3395,7 @@ interface DisputeVisitRow {
 interface RatingVisitRow {
   readonly country_code: 'TG';
   readonly status: VisitStatus;
+  readonly subscriber_id: string;
   readonly subscription_id: string;
   readonly visit_id: string;
   readonly worker_id: string | null;
@@ -3370,11 +3477,13 @@ interface SubscriptionAssignmentRow {
 interface SubscriptionCancellationRow {
   readonly country_code: 'TG';
   readonly status: SubscriptionStatus;
+  readonly subscriber_id: string;
 }
 
 interface SubscriptionTierChangeRow {
   readonly country_code: 'TG';
   readonly status: SubscriptionStatus;
+  readonly subscriber_id: string;
   readonly tier_code: 'T1' | 'T2';
 }
 
@@ -3551,6 +3660,7 @@ async function selectSubscriptionForStatusChange(
     `
       SELECT
         country_code,
+        subscriber_id,
         status
       FROM subscriptions
       WHERE id = $1
@@ -3570,6 +3680,7 @@ async function selectSubscriptionForTierChange(
     `
       SELECT
         country_code,
+        subscriber_id,
         status,
         tier_code
       FROM subscriptions
@@ -3590,6 +3701,7 @@ async function selectSubscriptionForPaymentMethodUpdate(
     `
       SELECT
         country_code,
+        subscriber_id,
         status
       FROM subscriptions
       WHERE id = $1
@@ -5150,17 +5262,19 @@ async function selectVisitForSubscriberChange(
   const result = await client.query<SubscriberVisitChangeRow>(
     `
       SELECT
-        id AS visit_id,
-        subscription_id,
-        country_code,
-        status,
-        worker_id,
-        scheduled_date::text AS scheduled_date,
-        scheduled_time_window
-      FROM visits
-      WHERE id = $1
-        AND subscription_id = $2
-      FOR UPDATE
+        visit.id AS visit_id,
+        visit.subscription_id,
+        visit.country_code,
+        visit.status,
+        visit.worker_id,
+        visit.scheduled_date::text AS scheduled_date,
+        visit.scheduled_time_window,
+        subscription.subscriber_id
+      FROM visits visit
+      INNER JOIN subscriptions subscription ON subscription.id = visit.subscription_id
+      WHERE visit.id = $1
+        AND visit.subscription_id = $2
+      FOR UPDATE OF visit
     `,
     [visitId, subscriptionId],
   );
@@ -5205,6 +5319,7 @@ async function selectVisitForDispute(
         visit.country_code,
         visit.status,
         visit.worker_id,
+        subscription.subscriber_id,
         subscriber.phone_number AS subscriber_phone_number
       FROM visits visit
       INNER JOIN subscriptions subscription ON subscription.id = visit.subscription_id
@@ -5227,15 +5342,17 @@ async function selectVisitForRating(
   const result = await client.query<RatingVisitRow>(
     `
       SELECT
-        id AS visit_id,
-        subscription_id,
-        country_code,
-        status,
-        worker_id
-      FROM visits
-      WHERE id = $1
-        AND subscription_id = $2
-      FOR UPDATE
+        visit.id AS visit_id,
+        visit.subscription_id,
+        visit.country_code,
+        visit.status,
+        visit.worker_id,
+        subscription.subscriber_id
+      FROM visits visit
+      INNER JOIN subscriptions subscription ON subscription.id = visit.subscription_id
+      WHERE visit.id = $1
+        AND visit.subscription_id = $2
+      FOR UPDATE OF visit
     `,
     [visitId, subscriptionId],
   );
@@ -5663,10 +5780,13 @@ interface SupportContactRow {
 async function selectSubscriptionCountryCodeForUpdate(
   client: PgClient,
   subscriptionId: string,
-): Promise<{ readonly country_code: 'TG' } | undefined> {
-  const result = await client.query<{ readonly country_code: 'TG' }>(
+): Promise<{ readonly country_code: 'TG'; readonly subscriber_id: string } | undefined> {
+  const result = await client.query<{
+    readonly country_code: 'TG';
+    readonly subscriber_id: string;
+  }>(
     `
-      SELECT country_code
+      SELECT country_code, subscriber_id
       FROM subscriptions
       WHERE id = $1
       FOR UPDATE
@@ -5714,7 +5834,7 @@ async function insertSupportContact(client: PgClient, record: SupportContactReco
 }
 
 async function selectSupportContactsForSubscription(
-  pool: PgPoolLike,
+  pool: PgClient,
   input: ListSupportContactsInput,
 ): Promise<readonly SupportContactRow[]> {
   const result = await pool.query<SupportContactRow>(
@@ -5745,7 +5865,7 @@ async function selectSupportContactsForSubscription(
 }
 
 async function selectSupportContactById(
-  pool: PgPoolLike,
+  pool: PgClient,
   input: GetSupportContactInput,
 ): Promise<SupportContactRow | undefined> {
   const result = await pool.query<SupportContactRow>(
@@ -6164,6 +6284,15 @@ function assertVisitWorker(actualWorkerId: string, requestedWorkerId: string): v
 function assertSubscriptionCanChangeTier(status: SubscriptionStatus): void {
   if (status === 'cancelled') {
     throw new Error('Cancelled subscriptions cannot change tier.');
+  }
+}
+
+function assertSubscriberOwnsSubscription(
+  record: { readonly subscriber_id: string },
+  subscriberUserId: string,
+): void {
+  if (record.subscriber_id !== subscriberUserId) {
+    throw new Error('Subscription was not found.');
   }
 }
 

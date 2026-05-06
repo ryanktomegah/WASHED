@@ -24,15 +24,18 @@ Do not renumber existing migrations. Add a new file with the next number.
 - Do not use `CREATE INDEX CONCURRENTLY` in repository migrations; the migration runner wraps each
   file in one transaction.
 - New country-scoped tables must include `country_code`, an explicit country index for operator
-  reads, and an RLS policy using `app.country_code`.
+  reads, an RLS policy using `app.country_code`, and forced RLS before production traffic reaches
+  the table.
 - Backfills must be in the same migration as the new nullable column, followed by `SET NOT NULL`
   only after the backfill.
-- Production app roles must not own tables. The app role relies on RLS; schema ownership stays with
-  the migration role.
+- Production app roles must not own tables. The app role relies on forced RLS; schema ownership
+  stays with the migration role.
 
 ## Commands
 
 - `pnpm migrations:check` validates migration naming and ordering.
+- `pnpm database:drill` runs migration replay, RLS checks, backup, restore, and restored-copy
+  verification against local Postgres.
 - `pnpm --filter @washed/core-api migrate` applies pending migrations using `DATABASE_URL`.
 
 ## Production Rollout

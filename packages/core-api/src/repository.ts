@@ -187,6 +187,7 @@ export interface UpdateSubscriptionPaymentMethodInput {
 }
 
 export interface GetSubscriptionDetailInput {
+  readonly countryCode: CountryCode;
   readonly subscriptionId: string;
 }
 
@@ -266,6 +267,7 @@ export interface PaymentRefundRecord {
 }
 
 export interface ListSubscriptionBillingInput {
+  readonly countryCode: CountryCode;
   readonly limit: number;
   readonly subscriptionId: string;
 }
@@ -524,11 +526,13 @@ export interface CreateWorkerSwapRequestInput {
 }
 
 export interface ListWorkerSwapRequestsInput {
+  readonly countryCode: CountryCode;
   readonly limit: number;
   readonly status?: WorkerSwapRequestStatus;
 }
 
 export interface ResolveWorkerSwapRequestInput {
+  readonly countryCode: CountryCode;
   readonly operatorUserId: string;
   readonly replacementWorkerId?: string;
   readonly requestId: string;
@@ -539,11 +543,13 @@ export interface ResolveWorkerSwapRequestInput {
 }
 
 export interface ListWorkerIssuesInput {
+  readonly countryCode: CountryCode;
   readonly limit: number;
   readonly status?: WorkerIssueStatus;
 }
 
 export interface ResolveWorkerIssueInput {
+  readonly countryCode: CountryCode;
   readonly issueId: string;
   readonly operatorUserId: string;
   readonly resolutionNote: string;
@@ -553,12 +559,14 @@ export interface ResolveWorkerIssueInput {
 }
 
 export interface ListOperatorDisputesInput {
+  readonly countryCode: CountryCode;
   readonly limit: number;
   readonly status?: DisputeStatus;
   readonly subscriptionId?: string;
 }
 
 export interface ResolveDisputeInput {
+  readonly countryCode: CountryCode;
   readonly disputeId: string;
   readonly operatorUserId: string;
   readonly resolution: Exclude<DisputeStatus, 'open'>;
@@ -569,11 +577,13 @@ export interface ResolveDisputeInput {
 }
 
 export interface GetWorkerMonthlyEarningsInput {
+  readonly countryCode: CountryCode;
   readonly month: string;
   readonly workerId: string;
 }
 
 export interface CreateWorkerMonthlyPayoutInput {
+  readonly countryCode: CountryCode;
   readonly month: string;
   readonly note: string;
   readonly operatorUserId: string;
@@ -584,6 +594,7 @@ export interface CreateWorkerMonthlyPayoutInput {
 }
 
 export interface ListWorkerPayoutsInput {
+  readonly countryCode: CountryCode;
   readonly limit: number;
   readonly month?: string;
   readonly workerId?: string;
@@ -593,6 +604,7 @@ export type WorkerAdvanceRequestStatus = 'approved' | 'declined' | 'open';
 
 export interface CreateWorkerAdvanceRequestInput {
   readonly amountMinor: bigint;
+  readonly countryCode: CountryCode;
   readonly month: string;
   readonly reason: string;
   readonly requestedAt: Date;
@@ -601,6 +613,7 @@ export interface CreateWorkerAdvanceRequestInput {
 }
 
 export interface ListWorkerAdvanceRequestsInput {
+  readonly countryCode: CountryCode;
   readonly limit: number;
   readonly month?: string;
   readonly status?: WorkerAdvanceRequestStatus;
@@ -608,6 +621,7 @@ export interface ListWorkerAdvanceRequestsInput {
 }
 
 export interface ResolveWorkerAdvanceRequestInput {
+  readonly countryCode: CountryCode;
   readonly operatorUserId: string;
   readonly requestId: string;
   readonly resolution: Exclude<WorkerAdvanceRequestStatus, 'open'>;
@@ -617,6 +631,7 @@ export interface ResolveWorkerAdvanceRequestInput {
 }
 
 export interface GetWorkerRouteInput {
+  readonly countryCode: CountryCode;
   readonly date: string;
   readonly workerId: string;
 }
@@ -658,12 +673,14 @@ export interface CreateWorkerOnboardingCaseInput {
 }
 
 export interface ListWorkerOnboardingCasesInput {
+  readonly countryCode: CountryCode;
   readonly limit: number;
   readonly stage?: WorkerOnboardingStage;
 }
 
 export interface AdvanceWorkerOnboardingCaseInput {
   readonly caseId: string;
+  readonly countryCode: CountryCode;
   readonly note: string;
   readonly occurredAt: Date;
   readonly operatorUserId: string;
@@ -673,11 +690,13 @@ export interface AdvanceWorkerOnboardingCaseInput {
 
 export interface ListMatchingCandidatesInput {
   readonly anchorDate?: string;
+  readonly countryCode: CountryCode;
   readonly limit: number;
   readonly subscriptionId: string;
 }
 
 export interface CreateWorkerUnavailabilityInput {
+  readonly countryCode: CountryCode;
   readonly createdAt: Date;
   readonly date: string;
   readonly reason: string;
@@ -686,6 +705,7 @@ export interface CreateWorkerUnavailabilityInput {
 }
 
 export interface ListWorkerUnavailabilityInput {
+  readonly countryCode: CountryCode;
   readonly dateFrom?: string;
   readonly dateTo?: string;
   readonly limit: number;
@@ -693,6 +713,7 @@ export interface ListWorkerUnavailabilityInput {
 }
 
 export interface ListServiceCellsInput {
+  readonly countryCode: CountryCode;
   readonly date: string;
   readonly limit: number;
 }
@@ -721,6 +742,7 @@ export interface AuditEventRecord {
 export type SubscriberPrivacyRequestType = 'erasure' | 'export';
 
 export interface CreateSubscriberPrivacyRequestInput {
+  readonly countryCode: CountryCode;
   readonly operatorUserId: string;
   readonly reason: string;
   readonly requestedAt: Date;
@@ -958,17 +980,20 @@ export interface CreateSupportContactInput {
 }
 
 export interface ListSupportContactsInput {
+  readonly countryCode: CountryCode;
   readonly limit: number;
   readonly status?: SupportContactStatus;
   readonly subscriptionId: string;
 }
 
 export interface GetSupportContactInput {
+  readonly countryCode: CountryCode;
   readonly contactId: string;
   readonly subscriptionId: string;
 }
 
 export interface ResolveSupportContactInput {
+  readonly countryCode: CountryCode;
   readonly contactId: string;
   readonly operatorUserId: string;
   readonly resolutionNote: string;
@@ -1490,6 +1515,19 @@ export class InMemoryCoreRepository implements CoreRepository {
     return 'ok';
   }
 
+  private getOwnedSubscriptionState(
+    subscriptionId: string,
+    subscriberUserId: string,
+  ): InMemorySubscriptionState {
+    const state = this.subscriptionState.get(subscriptionId);
+
+    if (state === undefined || state.record.subscriberId !== subscriberUserId) {
+      throw new Error('Subscription was not found.');
+    }
+
+    return state;
+  }
+
   public async createSubscription(
     input: CreateSubscriptionInput,
   ): Promise<CreatedSubscriptionRecord> {
@@ -1578,7 +1616,10 @@ export class InMemoryCoreRepository implements CoreRepository {
       return null;
     }
 
-    return this.getSubscriptionDetail({ subscriptionId: state.record.subscriptionId });
+    return this.getSubscriptionDetail({
+      countryCode: state.record.countryCode,
+      subscriptionId: state.record.subscriptionId,
+    });
   }
 
   public async requestFirstVisit(input: RequestFirstVisitInput): Promise<SubscriptionDetailRecord> {
@@ -1623,7 +1664,10 @@ export class InMemoryCoreRepository implements CoreRepository {
     });
     this.recordNotificationMessages([event]);
 
-    return this.getSubscriptionDetail({ subscriptionId: state.record.subscriptionId });
+    return this.getSubscriptionDetail({
+      countryCode: state.record.countryCode,
+      subscriptionId: state.record.subscriptionId,
+    });
   }
 
   public async startOtpChallenge(
@@ -2081,11 +2125,7 @@ export class InMemoryCoreRepository implements CoreRepository {
   public async cancelSubscription(
     input: CancelSubscriptionInput,
   ): Promise<CancelledSubscriptionRecord> {
-    const state = this.subscriptionState.get(input.subscriptionId);
-
-    if (state === undefined) {
-      throw new Error('Subscription was not found.');
-    }
+    const state = this.getOwnedSubscriptionState(input.subscriptionId, input.subscriberUserId);
 
     const status = transitionSubscription(state.status, 'cancel');
     assertCancelledSubscriptionStatus(status);
@@ -2107,11 +2147,7 @@ export class InMemoryCoreRepository implements CoreRepository {
   }
 
   public async pauseSubscription(input: PauseSubscriptionInput): Promise<PausedSubscriptionRecord> {
-    const state = this.subscriptionState.get(input.subscriptionId);
-
-    if (state === undefined) {
-      throw new Error('Subscription was not found.');
-    }
+    const state = this.getOwnedSubscriptionState(input.subscriptionId, input.subscriberUserId);
 
     const status = transitionSubscription(state.status, 'pause');
     assertPausedSubscriptionStatus(status);
@@ -2135,11 +2171,7 @@ export class InMemoryCoreRepository implements CoreRepository {
   public async resumeSubscription(
     input: ResumeSubscriptionInput,
   ): Promise<ResumedSubscriptionRecord> {
-    const state = this.subscriptionState.get(input.subscriptionId);
-
-    if (state === undefined) {
-      throw new Error('Subscription was not found.');
-    }
+    const state = this.getOwnedSubscriptionState(input.subscriptionId, input.subscriberUserId);
 
     const status = transitionSubscription(state.status, 'resume');
     assertActiveSubscriptionStatus(status);
@@ -2322,6 +2354,7 @@ export class InMemoryCoreRepository implements CoreRepository {
     }
 
     const earnings = await this.getWorkerMonthlyEarnings({
+      countryCode: worker.countryCode,
       month: input.month,
       workerId: input.workerId,
     });
@@ -2413,6 +2446,7 @@ export class InMemoryCoreRepository implements CoreRepository {
         amount: request.amount,
         countryCode: request.countryCode,
         input: {
+          countryCode: request.countryCode,
           month: request.month,
           note: input.resolutionNote,
           operatorUserId: input.operatorUserId,
@@ -2432,12 +2466,12 @@ export class InMemoryCoreRepository implements CoreRepository {
   public async createWorkerSwapRequest(
     input: CreateWorkerSwapRequestInput,
   ): Promise<WorkerSwapRequestRecord> {
-    const state = this.subscriptionState.get(input.subscriptionId);
+    const state = this.getOwnedSubscriptionState(input.subscriptionId, input.subscriberUserId);
     const assignment = [...this.assignments]
       .reverse()
       .find((candidate) => candidate.subscriptionId === input.subscriptionId);
 
-    if (state === undefined || assignment === undefined) {
+    if (assignment === undefined) {
       throw new Error('Subscription was not found.');
     }
 
@@ -2551,11 +2585,7 @@ export class InMemoryCoreRepository implements CoreRepository {
   public async changeSubscriptionTier(
     input: ChangeSubscriptionTierInput,
   ): Promise<ChangedSubscriptionTierRecord> {
-    const state = this.subscriptionState.get(input.subscriptionId);
-
-    if (state === undefined) {
-      throw new Error('Subscription was not found.');
-    }
+    const state = this.getOwnedSubscriptionState(input.subscriptionId, input.subscriberUserId);
 
     assertSubscriptionCanChangeTier(state.status);
     const record = buildChangedSubscriptionTierRecord({
@@ -2574,11 +2604,7 @@ export class InMemoryCoreRepository implements CoreRepository {
   public async updateSubscriptionPaymentMethod(
     input: UpdateSubscriptionPaymentMethodInput,
   ): Promise<UpdatedSubscriptionPaymentMethodRecord> {
-    const state = this.subscriptionState.get(input.subscriptionId);
-
-    if (state === undefined) {
-      throw new Error('Subscription was not found.');
-    }
+    const state = this.getOwnedSubscriptionState(input.subscriptionId, input.subscriberUserId);
 
     if (state.status === 'cancelled') {
       throw new Error('Cancelled subscriptions cannot change payment method.');
@@ -2828,6 +2854,8 @@ export class InMemoryCoreRepository implements CoreRepository {
       throw new Error('Visit was not found.');
     }
 
+    this.getOwnedSubscriptionState(input.subscriptionId, input.subscriberUserId);
+
     if (visit.status !== 'scheduled') {
       throw new Error(`Visit cannot be rescheduled from status ${visit.status}.`);
     }
@@ -2851,6 +2879,8 @@ export class InMemoryCoreRepository implements CoreRepository {
     if (visit === undefined || visit.subscriptionId !== input.subscriptionId) {
       throw new Error('Visit was not found.');
     }
+
+    this.getOwnedSubscriptionState(input.subscriptionId, input.subscriberUserId);
 
     const status = transitionVisit(visit.status, 'cancel');
     assertCancelledStatus(status);
@@ -2910,6 +2940,8 @@ export class InMemoryCoreRepository implements CoreRepository {
       throw new Error('Visit was not found.');
     }
 
+    this.getOwnedSubscriptionState(input.subscriptionId, input.subscriberUserId);
+
     visit.status = transitionVisit(visit.status, 'dispute');
     const record = buildCreatedDisputeRecord({
       countryCode: visit.countryCode,
@@ -2961,11 +2993,7 @@ export class InMemoryCoreRepository implements CoreRepository {
   public async createSupportContact(
     input: CreateSupportContactInput,
   ): Promise<SupportContactRecord> {
-    const state = this.subscriptionState.get(input.subscriptionId);
-
-    if (state === undefined) {
-      throw new Error('Subscription was not found.');
-    }
+    const state = this.getOwnedSubscriptionState(input.subscriptionId, input.subscriberUserId);
 
     const record = buildCreatedSupportContactRecord({
       countryCode: state.record.countryCode,
@@ -3023,6 +3051,8 @@ export class InMemoryCoreRepository implements CoreRepository {
     if (visit === undefined || visit.subscriptionId !== input.subscriptionId) {
       throw new Error('Visit was not found.');
     }
+
+    this.getOwnedSubscriptionState(input.subscriptionId, input.subscriberUserId);
 
     if (visit.status !== 'completed' && visit.status !== 'disputed') {
       throw new Error(`Visit cannot be rated from status ${visit.status}.`);
@@ -3191,14 +3221,18 @@ export class InMemoryCoreRepository implements CoreRepository {
   public async createSubscriberPrivacyRequest(
     input: CreateSubscriberPrivacyRequestInput,
   ): Promise<SubscriberPrivacyRequestRecord> {
-    const detail = await this.getSubscriptionDetail({ subscriptionId: input.subscriptionId });
+    const detail = await this.getSubscriptionDetail({
+      countryCode: input.countryCode,
+      subscriptionId: input.subscriptionId,
+    });
     const billingHistory = await this.listSubscriptionBilling({
+      countryCode: detail.countryCode,
       limit: 100,
       subscriptionId: input.subscriptionId,
     });
-    const disputes = (await this.listOperatorDisputes({ limit: 500 })).filter(
-      (dispute) => dispute.subscriptionId === input.subscriptionId,
-    );
+    const disputes = (
+      await this.listOperatorDisputes({ countryCode: detail.countryCode, limit: 500 })
+    ).filter((dispute) => dispute.subscriptionId === input.subscriptionId);
     const notifications = await this.listNotificationMessages({
       aggregateId: input.subscriptionId,
       countryCode: detail.countryCode,

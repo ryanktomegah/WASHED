@@ -229,6 +229,39 @@ describe('core api app', () => {
       method: 'GET',
       url: '/v1/workers/22222222-2222-4222-8222-222222222222/route?date=2026-05-05',
     });
+    const currentSubscriber = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'GET',
+      url: '/v1/subscriber/subscription',
+    });
+    const missingSubscriptionAuth = await app.inject({
+      method: 'POST',
+      payload: validBody,
+      url: '/v1/subscriptions',
+    });
+    const wrongSubscriptionRole = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'POST',
+      payload: validBody,
+      url: '/v1/subscriptions',
+    });
+    const operatorSubscription = await app.inject({
+      headers: authHeader('operator'),
+      method: 'POST',
+      payload: validBody,
+      url: '/v1/subscriptions',
+    });
+    const subscription = operatorSubscription.json() as { subscriptionId: string };
+    const subscriberDirectSubscription = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'GET',
+      url: `/v1/subscriptions/${subscription.subscriptionId}`,
+    });
+    const operatorDirectSubscription = await app.inject({
+      headers: authHeader('operator'),
+      method: 'GET',
+      url: `/v1/subscriptions/${subscription.subscriptionId}`,
+    });
 
     expect(publicPricing.statusCode).toBe(200);
     expect(missingOperator.statusCode).toBe(401);
@@ -237,6 +270,16 @@ describe('core api app', () => {
     expect(wrongRole.json()).toMatchObject({ code: 'core.auth.forbidden' });
     expect(operator.statusCode).toBe(200);
     expect(workerRoute.statusCode).toBe(200);
+    expect(currentSubscriber.statusCode).toBe(200);
+    expect(currentSubscriber.json()).toEqual({ subscription: null });
+    expect(missingSubscriptionAuth.statusCode).toBe(401);
+    expect(missingSubscriptionAuth.json()).toMatchObject({ code: 'core.auth.unauthorized' });
+    expect(wrongSubscriptionRole.statusCode).toBe(403);
+    expect(wrongSubscriptionRole.json()).toMatchObject({ code: 'core.auth.forbidden' });
+    expect(operatorSubscription.statusCode).toBe(201);
+    expect(subscriberDirectSubscription.statusCode).toBe(403);
+    expect(subscriberDirectSubscription.json()).toMatchObject({ code: 'core.auth.forbidden' });
+    expect(operatorDirectSubscription.statusCode).toBe(200);
   });
 
   it('starts, verifies, and refreshes an OTP auth session', async () => {
@@ -616,6 +659,224 @@ describe('core api app', () => {
     expect(resumed.json()).toMatchObject({
       status: 'active',
       subscriptionId: subscription.subscriptionId,
+    });
+  });
+
+  it('lets the current subscriber manage visits, support, and worker swaps without body identity', async () => {
+    const repository = new InMemoryCoreRepository();
+    const app = createCoreApiApp({ repository });
+    apps.add(app);
+
+    await app.inject({
+      method: 'PUT',
+      payload: {
+        countryCode: 'TG',
+        displayName: 'Akouvi K.',
+        maxActiveSubscriptions: 10,
+        serviceNeighborhoods: ['Tokoin'],
+        status: 'active',
+      },
+      url: '/v1/operator/workers/22222222-2222-4222-8222-222222222222/profile',
+    });
+    const created = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'POST',
+      payload: {
+        address: validBody.address,
+        paymentMethod: {
+          phoneNumber: '+22890123456',
+          provider: 'mixx',
+        },
+        schedulePreference: validBody.schedulePreference,
+        tierCode: 'T2',
+      },
+      url: '/v1/subscriber/subscription',
+    });
+    const subscription = created.json() as { subscriptionId: string };
+    const assignment = await app.inject({
+      method: 'POST',
+      payload: {
+        anchorDate: '2026-05-05',
+        operatorUserId: '11111111-1111-4111-8111-111111111111',
+        workerId: '22222222-2222-4222-8222-222222222222',
+      },
+      url: `/v1/subscriptions/${subscription.subscriptionId}/assignment`,
+    });
+    const visits = (assignment.json() as { visits: Array<{ visitId: string }> }).visits;
+
+    const rescheduled = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'POST',
+      payload: {
+        scheduledDate: '2026-05-06',
+        scheduledTimeWindow: 'afternoon',
+      },
+      url: `/v1/subscriber/subscription/visits/${visits[0]?.visitId}/reschedule`,
+    });
+    const skipped = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'POST',
+      payload: {},
+      url: `/v1/subscriber/subscription/visits/${visits[1]?.visitId}/skip`,
+    });
+    const swap = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'POST',
+      payload: {
+        reason: 'Je souhaite changer de laveuse.',
+        requestedAt: '2026-05-05T08:00:00.000Z',
+      },
+      url: '/v1/subscriber/subscription/worker-swap-requests',
+    });
+    const openedSupport = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'POST',
+      payload: {
+        body: 'Mon pull rouge a deteint sur deux chemises blanches.',
+        category: 'visit',
+        createdAt: '2026-05-05T08:30:00.000Z',
+        subject: 'Linge endommage',
+      },
+      url: '/v1/subscriber/subscription/support-contacts',
+    });
+    const support = openedSupport.json() as { contactId: string };
+    const supportList = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'GET',
+      url: '/v1/subscriber/subscription/support-contacts?limit=10',
+    });
+    const supportDetail = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'GET',
+      url: `/v1/subscriber/subscription/support-contacts/${support.contactId}`,
+    });
+
+    expect(rescheduled.statusCode).toBe(200);
+    expect(rescheduled.json()).toMatchObject({
+      scheduledDate: '2026-05-06',
+      scheduledTimeWindow: 'afternoon',
+      subscriptionId: subscription.subscriptionId,
+      visitId: visits[0]?.visitId,
+    });
+    expect(skipped.statusCode).toBe(200);
+    expect(skipped.json()).toMatchObject({
+      status: 'cancelled',
+      subscriptionId: subscription.subscriptionId,
+      visitId: visits[1]?.visitId,
+    });
+    expect(swap.statusCode).toBe(201);
+    expect(swap.json()).toMatchObject({
+      currentWorkerId: '22222222-2222-4222-8222-222222222222',
+      status: 'open',
+      subscriberId: '99999999-9999-4999-8999-999999999999',
+      subscriptionId: subscription.subscriptionId,
+    });
+    expect(openedSupport.statusCode).toBe(201);
+    expect(openedSupport.json()).toMatchObject({
+      category: 'visit',
+      status: 'open',
+      subject: 'Linge endommage',
+      subscriptionId: subscription.subscriptionId,
+    });
+    expect(supportList.statusCode).toBe(200);
+    expect(supportList.json()).toMatchObject({
+      items: [{ contactId: support.contactId }],
+      limit: 10,
+      status: null,
+      subscriptionId: subscription.subscriptionId,
+    });
+    expect(supportDetail.statusCode).toBe(200);
+    expect(supportDetail.json()).toMatchObject({
+      body: 'Mon pull rouge a deteint sur deux chemises blanches.',
+      contactId: support.contactId,
+      subscriptionId: subscription.subscriptionId,
+    });
+  });
+
+  it('lets the current subscriber rate and dispute completed visits without body identity', async () => {
+    const repository = new InMemoryCoreRepository();
+    const app = createCoreApiApp({ repository });
+    apps.add(app);
+
+    const created = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'POST',
+      payload: {
+        address: validBody.address,
+        paymentMethod: {
+          phoneNumber: '+22890123456',
+          provider: 'mixx',
+        },
+        schedulePreference: validBody.schedulePreference,
+        tierCode: 'T1',
+      },
+      url: '/v1/subscriber/subscription',
+    });
+    const subscription = created.json() as { subscriptionId: string };
+    const assignment = await app.inject({
+      method: 'POST',
+      payload: {
+        anchorDate: '2026-05-05',
+        operatorUserId: '11111111-1111-4111-8111-111111111111',
+        workerId: '22222222-2222-4222-8222-222222222222',
+      },
+      url: `/v1/subscriptions/${subscription.subscriptionId}/assignment`,
+    });
+    const visit = (assignment.json() as { visits: Array<{ visitId: string }> }).visits[0];
+
+    await app.inject({
+      method: 'POST',
+      payload: {
+        checkedInAt: '2026-05-05T09:00:00.000Z',
+        location: { latitude: 6.1319, longitude: 1.2228 },
+        workerId: '22222222-2222-4222-8222-222222222222',
+      },
+      url: `/v1/visits/${visit?.visitId}/check-in`,
+    });
+    await uploadVisitPhotos(app, visit?.visitId);
+    await app.inject({
+      method: 'POST',
+      payload: {
+        checkedOutAt: '2026-05-05T09:45:00.000Z',
+        location: { latitude: 6.132, longitude: 1.223 },
+        workerId: '22222222-2222-4222-8222-222222222222',
+      },
+      url: `/v1/visits/${visit?.visitId}/check-out`,
+    });
+
+    const rating = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'POST',
+      payload: {
+        comment: 'Service impeccable.',
+        createdAt: '2026-05-05T10:00:00.000Z',
+        rating: 5,
+      },
+      url: `/v1/subscriber/subscription/visits/${visit?.visitId}/rating`,
+    });
+    const dispute = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'POST',
+      payload: {
+        createdAt: '2026-05-05T10:05:00.000Z',
+        description: 'Chemise blanche abimee apres la visite.',
+        issueType: 'damaged_item',
+      },
+      url: `/v1/subscriber/subscription/visits/${visit?.visitId}/disputes`,
+    });
+
+    expect(rating.statusCode).toBe(201);
+    expect(rating.json()).toMatchObject({
+      comment: 'Service impeccable.',
+      rating: 5,
+      visitId: visit?.visitId,
+    });
+    expect(dispute.statusCode).toBe(201);
+    expect(dispute.json()).toMatchObject({
+      issueType: 'damaged_item',
+      status: 'open',
+      subscriptionId: subscription.subscriptionId,
+      visitId: visit?.visitId,
     });
   });
 
@@ -1526,6 +1787,107 @@ describe('core api app', () => {
         visitId: firstVisit?.visitId,
       },
     ]);
+  });
+
+  it('rejects forged subscriber ids on direct subscription actions', async () => {
+    const repository = new InMemoryCoreRepository();
+    const app = createCoreApiApp({ repository });
+    apps.add(app);
+
+    const wrongSubscriberId = '88888888-8888-4888-8888-888888888888';
+    const subscriptionResponse = await app.inject({
+      method: 'POST',
+      payload: validBody,
+      url: '/v1/subscriptions',
+    });
+    const subscription = subscriptionResponse.json() as {
+      subscriptionId: string;
+    };
+    const assignmentResponse = await app.inject({
+      method: 'POST',
+      payload: {
+        anchorDate: '2026-05-05',
+        operatorUserId: '11111111-1111-4111-8111-111111111111',
+        workerId: '22222222-2222-4222-8222-222222222222',
+      },
+      url: `/v1/subscriptions/${subscription.subscriptionId}/assignment`,
+    });
+    const visits = assignmentResponse.json() as { visits: Array<{ visitId: string }> };
+    const visit = visits.visits[0];
+
+    const cancelResponse = await app.inject({
+      method: 'POST',
+      payload: {
+        cancelledAt: '2026-05-02T08:00:00.000Z',
+        subscriberUserId: wrongSubscriberId,
+      },
+      url: `/v1/subscriptions/${subscription.subscriptionId}/cancel`,
+    });
+    const rescheduleResponse = await app.inject({
+      method: 'POST',
+      payload: {
+        scheduledDate: '2026-05-06',
+        scheduledTimeWindow: 'afternoon',
+        subscriberUserId: wrongSubscriberId,
+      },
+      url: `/v1/subscriptions/${subscription.subscriptionId}/visits/${visit?.visitId}/reschedule`,
+    });
+    const skipResponse = await app.inject({
+      method: 'POST',
+      payload: {
+        subscriberUserId: wrongSubscriberId,
+      },
+      url: `/v1/subscriptions/${subscription.subscriptionId}/visits/${visit?.visitId}/skip`,
+    });
+    const supportContactResponse = await app.inject({
+      method: 'POST',
+      payload: {
+        body: 'Je veux signaler un souci sur mon abonnement.',
+        category: 'plan',
+        createdAt: '2026-05-05T08:00:00.000Z',
+        subject: 'Question abonnement',
+        subscriberUserId: wrongSubscriberId,
+      },
+      url: `/v1/subscriptions/${subscription.subscriptionId}/support-contacts`,
+    });
+    const workerSwapResponse = await app.inject({
+      method: 'POST',
+      payload: {
+        reason: 'Je souhaite changer de laveuse.',
+        requestedAt: '2026-05-05T08:00:00.000Z',
+        subscriberUserId: wrongSubscriberId,
+      },
+      url: `/v1/subscriptions/${subscription.subscriptionId}/worker-swap-requests`,
+    });
+    const detailResponse = await app.inject({
+      method: 'GET',
+      url: `/v1/subscriptions/${subscription.subscriptionId}`,
+    });
+
+    const responses = [
+      cancelResponse,
+      rescheduleResponse,
+      skipResponse,
+      supportContactResponse,
+      workerSwapResponse,
+    ];
+    expect(responses.map((response) => response.statusCode)).toEqual([400, 400, 400, 400, 400]);
+    for (const response of responses) {
+      expect(response.json()).toMatchObject({ message: 'Subscription was not found.' });
+    }
+    expect(repository.supportContacts).toHaveLength(0);
+    expect(repository.workerSwapRequests).toHaveLength(0);
+    expect(detailResponse.json()).toMatchObject({
+      status: 'active',
+      upcomingVisits: [
+        {
+          scheduledDate: '2026-05-05',
+          scheduledTimeWindow: 'morning',
+          status: 'scheduled',
+          visitId: visit?.visitId,
+        },
+      ],
+    });
   });
 
   it('lets subscribers cancel subscriptions and clears upcoming scheduled visits', async () => {

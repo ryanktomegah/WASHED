@@ -20,6 +20,7 @@
     "ios:sim:all": "node scripts/launch-ios-simulator.mjs all",
     "ui:smoke": "playwright test",
     "dry-run:beta": "pnpm --filter @washed/core-api build && node scripts/closed-beta-dry-run.mjs",
+    "database:drill": "./scripts/database-drill.sh",
     "load:beta": "pnpm --filter @washed/core-api build && node scripts/beta-load-test.mjs",
     "test": "turbo test",
     "test:coverage": "turbo test:coverage",

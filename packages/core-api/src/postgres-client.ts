@@ -2,6 +2,8 @@ import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from 'pg
 
 import type { CountryCode } from '@washed/shared';
 
+const LAUNCH_COUNTRY_CODE: CountryCode = 'TG';
+
 export interface PgClient {
   query<T extends QueryResultRow = QueryResultRow>(
     text: string,
@@ -45,9 +47,7 @@ export async function withPgTransaction<T>(
   try {
     await client.query('BEGIN');
 
-    if (input.countryCode !== undefined) {
-      await setPgLocalCountryCode(client, input.countryCode);
-    }
+    await setPgLocalCountryCode(client, input.countryCode ?? LAUNCH_COUNTRY_CODE);
 
     const result = await input.run(client);
     await client.query('COMMIT');

@@ -6,6 +6,18 @@ Protect Washed's Postgres system of record before closed beta and every producti
 
 ## Local Restore Drill
 
+Preferred full drill:
+
+```bash
+pnpm database:drill
+```
+
+The script applies migrations, runs the real Postgres RLS test, takes a custom-format backup,
+restores it into `washed_restore_drill`, and repeats migration/RLS verification against the
+restored copy.
+
+Manual equivalent:
+
 1. Start local services:
 
 ```bash

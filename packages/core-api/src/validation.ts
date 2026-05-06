@@ -598,6 +598,7 @@ export function parseGetSubscriptionDetailRequest(
   }
 
   return {
+    countryCode: 'TG',
     subscriptionId,
   };
 }
@@ -615,6 +616,7 @@ export function parseListSubscriptionBillingRequest(
   }
 
   return {
+    countryCode: 'TG',
     limit: readOptionalLimit(query, 'limit') ?? 25,
     subscriptionId,
   };
@@ -769,6 +771,29 @@ export function parseRescheduleVisitBody(
   };
 }
 
+export function parseRescheduleCurrentSubscriberVisitBody(
+  subscriptionId: string,
+  visitId: string,
+  body: unknown,
+  claims: { readonly subscriberUserId: string },
+  traceId: string,
+): RescheduleVisitInput {
+  assertSubscriptionVisitParams(subscriptionId, visitId);
+
+  if (!isRecord(body)) {
+    throw new Error('Request body must be an object.');
+  }
+
+  return {
+    scheduledDate: readDateString(body, 'scheduledDate'),
+    scheduledTimeWindow: readLiteral<TimeWindow>(body, 'scheduledTimeWindow', TIME_WINDOW_VALUES),
+    subscriberUserId: claims.subscriberUserId,
+    subscriptionId,
+    traceId,
+    visitId,
+  };
+}
+
 export function parseSkipVisitBody(
   subscriptionId: string,
   visitId: string,
@@ -783,6 +808,27 @@ export function parseSkipVisitBody(
 
   return {
     subscriberUserId: readUuid(body, 'subscriberUserId'),
+    subscriptionId,
+    traceId,
+    visitId,
+  };
+}
+
+export function parseSkipCurrentSubscriberVisitBody(
+  subscriptionId: string,
+  visitId: string,
+  body: unknown,
+  claims: { readonly subscriberUserId: string },
+  traceId: string,
+): SkipVisitInput {
+  assertSubscriptionVisitParams(subscriptionId, visitId);
+
+  if (!isRecord(body)) {
+    throw new Error('Request body must be an object.');
+  }
+
+  return {
+    subscriberUserId: claims.subscriberUserId,
     subscriptionId,
     traceId,
     visitId,
@@ -839,6 +885,30 @@ export function parseCreateDisputeBody(
   };
 }
 
+export function parseCreateCurrentSubscriberDisputeBody(
+  subscriptionId: string,
+  visitId: string,
+  body: unknown,
+  claims: { readonly subscriberUserId: string },
+  traceId: string,
+): CreateDisputeInput {
+  assertSubscriptionVisitParams(subscriptionId, visitId);
+
+  if (!isRecord(body)) {
+    throw new Error('Request body must be an object.');
+  }
+
+  return {
+    createdAt: readIsoDateTime(body, 'createdAt'),
+    description: readString(body, 'description'),
+    issueType: readLiteral<DisputeIssueType>(body, 'issueType', DISPUTE_ISSUE_TYPE_VALUES),
+    subscriberUserId: claims.subscriberUserId,
+    subscriptionId,
+    traceId,
+    visitId,
+  };
+}
+
 export function parseCreateSupportContactBody(
   subscriptionId: string,
   body: unknown,
@@ -876,6 +946,44 @@ export function parseCreateSupportContactBody(
   };
 }
 
+export function parseCreateCurrentSubscriberSupportContactBody(
+  subscriptionId: string,
+  body: unknown,
+  claims: { readonly subscriberUserId: string },
+  traceId: string,
+): CreateSupportContactInput {
+  if (!isUuid(subscriptionId)) {
+    throw new Error('subscriptionId must be a UUID.');
+  }
+  if (!isRecord(body)) {
+    throw new Error('Request body must be an object.');
+  }
+
+  const subject = readString(body, 'subject').trim();
+  if (subject.length < 1 || subject.length > 120) {
+    throw new Error('subject must be between 1 and 120 characters.');
+  }
+
+  const text = readString(body, 'body').trim();
+  if (text.length < 1 || text.length > 4000) {
+    throw new Error('body must be between 1 and 4000 characters.');
+  }
+
+  return {
+    body: text,
+    category: readLiteral<SupportContactCategory>(
+      body,
+      'category',
+      SUPPORT_CONTACT_CATEGORY_VALUES,
+    ),
+    createdAt: readIsoDateTime(body, 'createdAt'),
+    subject,
+    subscriberUserId: claims.subscriberUserId,
+    subscriptionId,
+    traceId,
+  };
+}
+
 export function parseListSupportContactsRequest(
   subscriptionId: string,
   query: unknown,
@@ -891,6 +999,7 @@ export function parseListSupportContactsRequest(
   );
 
   const base: ListSupportContactsInput = {
+    countryCode: 'TG',
     limit: readOptionalLimit(record, 'limit') ?? 20,
     subscriptionId,
   };
@@ -907,7 +1016,7 @@ export function parseGetSupportContactParams(
   if (!isUuid(contactId)) {
     throw new Error('contactId must be a UUID.');
   }
-  return { contactId, subscriptionId };
+  return { contactId, countryCode: 'TG', subscriptionId };
 }
 
 export function parseResolveSupportContactBody(
@@ -929,6 +1038,7 @@ export function parseResolveSupportContactBody(
 
   return {
     contactId,
+    countryCode: 'TG',
     operatorUserId: readUuid(body, 'operatorUserId'),
     resolutionNote: note,
     resolvedAt: readIsoDateTime(body, 'resolvedAt'),
@@ -953,6 +1063,32 @@ export function parseRateVisitBody(
     createdAt: readIsoDateTime(body, 'createdAt'),
     rating: readBoundedInteger(body, 'rating', 1, 5) as RateVisitInput['rating'],
     subscriberUserId: readUuid(body, 'subscriberUserId'),
+    subscriptionId,
+    traceId,
+    visitId,
+  };
+
+  return comment === undefined ? input : { ...input, comment };
+}
+
+export function parseRateCurrentSubscriberVisitBody(
+  subscriptionId: string,
+  visitId: string,
+  body: unknown,
+  claims: { readonly subscriberUserId: string },
+  traceId: string,
+): RateVisitInput {
+  assertSubscriptionVisitParams(subscriptionId, visitId);
+
+  if (!isRecord(body)) {
+    throw new Error('Request body must be an object.');
+  }
+
+  const comment = readOptionalString(body, 'comment');
+  const input: RateVisitInput = {
+    createdAt: readIsoDateTime(body, 'createdAt'),
+    rating: readBoundedInteger(body, 'rating', 1, 5) as RateVisitInput['rating'],
+    subscriberUserId: claims.subscriberUserId,
     subscriptionId,
     traceId,
     visitId,
@@ -1006,6 +1142,29 @@ export function parseCreateWorkerSwapRequestBody(
   };
 }
 
+export function parseCreateCurrentSubscriberWorkerSwapRequestBody(
+  subscriptionId: string,
+  body: unknown,
+  claims: { readonly subscriberUserId: string },
+  traceId: string,
+): CreateWorkerSwapRequestInput {
+  if (!isUuid(subscriptionId)) {
+    throw new Error('subscriptionId must be a UUID.');
+  }
+
+  if (!isRecord(body)) {
+    throw new Error('Request body must be an object.');
+  }
+
+  return {
+    reason: readString(body, 'reason'),
+    requestedAt: readIsoDateTime(body, 'requestedAt'),
+    subscriberUserId: claims.subscriberUserId,
+    subscriptionId,
+    traceId,
+  };
+}
+
 export function parseListWorkerSwapRequestsRequest(query: unknown): ListWorkerSwapRequestsInput {
   if (!isRecord(query)) {
     throw new Error('Query string must be an object.');
@@ -1017,6 +1176,7 @@ export function parseListWorkerSwapRequestsRequest(query: unknown): ListWorkerSw
     WORKER_SWAP_STATUS_VALUES,
   );
   const input: ListWorkerSwapRequestsInput = {
+    countryCode: readOptionalLiteral<CountryCode>(query, 'countryCode', new Set(['TG'])) ?? 'TG',
     limit: readOptionalLimit(query, 'limit') ?? 50,
   };
 
@@ -1038,6 +1198,7 @@ export function parseResolveWorkerSwapRequestBody(
 
   const replacementWorkerId = readOptionalUuid(body, 'replacementWorkerId');
   const input: ResolveWorkerSwapRequestInput = {
+    countryCode: readOptionalLiteral<CountryCode>(body, 'countryCode', new Set(['TG'])) ?? 'TG',
     operatorUserId: readUuid(body, 'operatorUserId'),
     requestId,
     resolution: readLiteral<ResolveWorkerSwapRequestInput['resolution']>(
@@ -1064,6 +1225,7 @@ export function parseListWorkerIssuesRequest(query: unknown): ListWorkerIssuesIn
     WORKER_ISSUE_STATUS_VALUES,
   );
   const input: ListWorkerIssuesInput = {
+    countryCode: readOptionalLiteral<CountryCode>(query, 'countryCode', new Set(['TG'])) ?? 'TG',
     limit: readOptionalLimit(query, 'limit') ?? 50,
   };
 
@@ -1084,6 +1246,7 @@ export function parseResolveWorkerIssueBody(
   }
 
   return {
+    countryCode: readOptionalLiteral<CountryCode>(body, 'countryCode', new Set(['TG'])) ?? 'TG',
     issueId,
     operatorUserId: readUuid(body, 'operatorUserId'),
     resolutionNote: readString(body, 'resolutionNote'),
@@ -1105,6 +1268,7 @@ export function parseListOperatorDisputesRequest(query: unknown): ListOperatorDi
   const status = readOptionalLiteral<DisputeStatus>(query, 'status', DISPUTE_STATUS_VALUES);
   const subscriptionId = readOptionalUuid(query, 'subscriptionId');
   const input: ListOperatorDisputesInput = {
+    countryCode: readOptionalLiteral<CountryCode>(query, 'countryCode', new Set(['TG'])) ?? 'TG',
     limit: readOptionalLimit(query, 'limit') ?? 50,
   };
 
@@ -1130,6 +1294,7 @@ export function parseResolveDisputeBody(
 
   const subscriberCreditAmountMinor = readOptionalAmountMinor(body, 'subscriberCreditAmountMinor');
   const input: ResolveDisputeInput = {
+    countryCode: readOptionalLiteral<CountryCode>(body, 'countryCode', new Set(['TG'])) ?? 'TG',
     disputeId,
     operatorUserId: readUuid(body, 'operatorUserId'),
     resolution: readLiteral<ResolveDisputeInput['resolution']>(
@@ -1166,6 +1331,7 @@ export function parseGetWorkerMonthlyEarningsRequest(
   }
 
   return {
+    countryCode: readOptionalLiteral<CountryCode>(query, 'countryCode', new Set(['TG'])) ?? 'TG',
     month,
     workerId,
   };
@@ -1188,6 +1354,7 @@ export function parseCreateWorkerAdvanceRequestBody(
 
   return {
     amountMinor: readAmountMinor(body, 'amountMinor'),
+    countryCode: readOptionalLiteral<CountryCode>(body, 'countryCode', new Set(['TG'])) ?? 'TG',
     month,
     reason: readString(body, 'reason'),
     requestedAt: readIsoDateTime(body, 'requestedAt'),
@@ -1211,6 +1378,7 @@ export function parseCreateWorkerMonthlyPayoutBody(
 
   const providerReference = readOptionalString(body, 'providerReference');
   const input: CreateWorkerMonthlyPayoutInput = {
+    countryCode: readOptionalLiteral<CountryCode>(body, 'countryCode', new Set(['TG'])) ?? 'TG',
     month: readYearMonth(body, 'month'),
     note: readString(body, 'note'),
     operatorUserId: readUuid(body, 'operatorUserId'),
@@ -1237,6 +1405,7 @@ export function parseListWorkerPayoutsRequest(
   const month = query.month === undefined ? undefined : readYearMonth(query, 'month');
 
   return {
+    countryCode: readOptionalLiteral<CountryCode>(query, 'countryCode', new Set(['TG'])) ?? 'TG',
     limit: readOptionalLimit(query, 'limit') ?? 50,
     ...(month === undefined ? {} : { month }),
     ...(workerId === undefined ? {} : { workerId }),
@@ -1261,6 +1430,7 @@ export function parseListWorkerAdvanceRequestsRequest(
       ? undefined
       : readLiteral<WorkerAdvanceRequestStatus>(query, 'status', WORKER_ADVANCE_STATUS_VALUES);
   const input: ListWorkerAdvanceRequestsInput = {
+    countryCode: readOptionalLiteral<CountryCode>(query, 'countryCode', new Set(['TG'])) ?? 'TG',
     limit: readOptionalLimit(query, 'limit') ?? 50,
   };
 
@@ -1286,6 +1456,7 @@ export function parseResolveWorkerAdvanceRequestBody(
   }
 
   return {
+    countryCode: readOptionalLiteral<CountryCode>(body, 'countryCode', new Set(['TG'])) ?? 'TG',
     operatorUserId: readUuid(body, 'operatorUserId'),
     requestId,
     resolution: readLiteral<ResolveWorkerAdvanceRequestInput['resolution']>(
@@ -1315,6 +1486,7 @@ export function parseGetWorkerRouteRequest(workerId: string, query: unknown): Ge
   }
 
   return {
+    countryCode: readOptionalLiteral<CountryCode>(query, 'countryCode', new Set(['TG'])) ?? 'TG',
     date,
     workerId,
   };
@@ -1405,6 +1577,7 @@ export function parseCreateSubscriberPrivacyRequestBody(
   }
 
   return {
+    countryCode: readOptionalLiteral<CountryCode>(body, 'countryCode', new Set(['TG'])) ?? 'TG',
     operatorUserId: readUuid(body, 'operatorUserId'),
     reason: readString(body, 'reason'),
     requestedAt: body.requestedAt === undefined ? new Date() : readIsoDateTime(body, 'requestedAt'),
@@ -1572,6 +1745,7 @@ export function parseListWorkerOnboardingCasesRequest(
       : readLiteral<WorkerOnboardingStage>(query, 'stage', WORKER_ONBOARDING_STAGE_VALUES);
 
   return {
+    countryCode: readOptionalLiteral<CountryCode>(query, 'countryCode', new Set(['TG'])) ?? 'TG',
     limit: readOptionalLimit(query, 'limit') ?? 50,
     ...(stage === undefined ? {} : { stage }),
   };
@@ -1592,6 +1766,7 @@ export function parseAdvanceWorkerOnboardingCaseBody(
 
   return {
     caseId,
+    countryCode: readOptionalLiteral<CountryCode>(body, 'countryCode', new Set(['TG'])) ?? 'TG',
     note: readString(body, 'note'),
     occurredAt: readIsoDateTime(body, 'occurredAt'),
     operatorUserId: readUuid(body, 'operatorUserId'),
@@ -1610,6 +1785,7 @@ export function parseListServiceCellsRequest(query: unknown): ListServiceCellsIn
   }
 
   return {
+    countryCode: readOptionalLiteral<CountryCode>(query, 'countryCode', new Set(['TG'])) ?? 'TG',
     date: readOptionalDateString(query, 'date') ?? new Date().toISOString().slice(0, 10),
     limit: readOptionalLimit(query, 'limit') ?? 50,
   };
@@ -1632,6 +1808,7 @@ export function parseListMatchingCandidatesRequest(
 
   return {
     ...(anchorDate === undefined ? {} : { anchorDate }),
+    countryCode: readOptionalLiteral<CountryCode>(query, 'countryCode', new Set(['TG'])) ?? 'TG',
     limit: readOptionalLimit(query, 'limit') ?? 10,
     subscriptionId,
   };
@@ -1651,6 +1828,7 @@ export function parseCreateWorkerUnavailabilityBody(
   }
 
   return {
+    countryCode: readOptionalLiteral<CountryCode>(body, 'countryCode', new Set(['TG'])) ?? 'TG',
     createdAt: readIsoDateTime(body, 'createdAt'),
     date: readDateString(body, 'date'),
     reason: readString(body, 'reason'),
@@ -1677,6 +1855,7 @@ export function parseListWorkerUnavailabilityRequest(
   return {
     ...(dateFrom === undefined ? {} : { dateFrom }),
     ...(dateTo === undefined ? {} : { dateTo }),
+    countryCode: readOptionalLiteral<CountryCode>(query, 'countryCode', new Set(['TG'])) ?? 'TG',
     limit: readOptionalLimit(query, 'limit') ?? 50,
     workerId,
   };

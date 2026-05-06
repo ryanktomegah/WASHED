@@ -756,6 +756,7 @@ describe('PostgresCoreRepository', () => {
         scheduled_date: '2026-05-05',
         scheduled_time_window: 'morning',
         status: 'scheduled',
+        subscriber_id: '55555555-5555-4555-8555-555555555555',
         subscription_id: '33333333-3333-4333-8333-333333333333',
         visit_id: '44444444-4444-4444-8444-444444444444',
         worker_id: '22222222-2222-4222-8222-222222222222',
@@ -807,6 +808,7 @@ describe('PostgresCoreRepository', () => {
         scheduled_date: '2026-05-05',
         scheduled_time_window: 'morning',
         status: 'scheduled',
+        subscriber_id: '55555555-5555-4555-8555-555555555555',
         subscription_id: '33333333-3333-4333-8333-333333333333',
         visit_id: '44444444-4444-4444-8444-444444444444',
         worker_id: '22222222-2222-4222-8222-222222222222',
@@ -830,6 +832,51 @@ describe('PostgresCoreRepository', () => {
     );
     const outboxQuery = client.queries.at(-2);
     expect(outboxQuery?.values?.[4]).toBe('VisitSkipped');
+  });
+
+  it('rejects subscriber visit changes for non-owning Postgres subscribers', async () => {
+    const client = new FakePgTransactionClient(
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      {
+        country_code: 'TG',
+        scheduled_date: '2026-05-05',
+        scheduled_time_window: 'morning',
+        status: 'scheduled',
+        subscriber_id: '55555555-5555-4555-8555-555555555555',
+        subscription_id: '33333333-3333-4333-8333-333333333333',
+        visit_id: '44444444-4444-4444-8444-444444444444',
+        worker_id: '22222222-2222-4222-8222-222222222222',
+      },
+    );
+    const repository = new PostgresCoreRepository(new FakePgPool(client));
+
+    await expect(
+      repository.rescheduleVisit({
+        scheduledDate: '2026-05-06',
+        scheduledTimeWindow: 'afternoon',
+        subscriberUserId: '88888888-8888-4888-8888-888888888888',
+        subscriptionId: '33333333-3333-4333-8333-333333333333',
+        traceId: 'trace_reschedule_owner',
+        visitId: '44444444-4444-4444-8444-444444444444',
+      }),
+    ).rejects.toThrow('Subscription was not found.');
+    expect(client.queries.map((query) => normalizeSql(query.text))).not.toContain(
+      'UPDATE visits SET scheduled_date = $1, scheduled_time_window = $2, updated_at = now() WHERE id = $3',
+    );
   });
 
   it('updates operator visit status and writes an outbox event', async () => {
@@ -909,6 +956,7 @@ describe('PostgresCoreRepository', () => {
       {
         country_code: 'TG',
         status: 'completed',
+        subscriber_id: '55555555-5555-4555-8555-555555555555',
         subscriber_phone_number: '+22890123456',
         subscription_id: '33333333-3333-4333-8333-333333333333',
         visit_id: '44444444-4444-4444-8444-444444444444',
@@ -1010,7 +1058,11 @@ describe('PostgresCoreRepository', () => {
         workerId: '22222222-2222-4222-8222-222222222222',
       },
     ]);
-    expect(client.queries[0]?.values).toEqual(['open', '33333333-3333-4333-8333-333333333333', 10]);
+    expect(valuesForQuery(client.queries, 'SELECT dispute.id AS dispute_id')).toEqual([
+      'open',
+      '33333333-3333-4333-8333-333333333333',
+      10,
+    ]);
   });
 
   it('resolves support disputes and writes an outbox event', async () => {
@@ -1083,6 +1135,7 @@ describe('PostgresCoreRepository', () => {
 
   it('records worker issue reports and writes an outbox event', async () => {
     const client = new FakePgTransactionClient(
+      undefined,
       undefined,
       undefined,
       undefined,
@@ -1197,7 +1250,7 @@ describe('PostgresCoreRepository', () => {
         workerId: '22222222-2222-4222-8222-222222222222',
       },
     ]);
-    expect(client.queries[0]?.values).toEqual(['open', 10]);
+    expect(valuesForQuery(client.queries, 'SELECT issue.id AS issue_id')).toEqual(['open', 10]);
   });
 
   it('resolves worker issues and writes an outbox event', async () => {
@@ -1252,6 +1305,7 @@ describe('PostgresCoreRepository', () => {
     const client = new FakePgTransactionClient(undefined, {
       country_code: 'TG',
       status: 'active',
+      subscriber_id: '55555555-5555-4555-8555-555555555555',
     });
     const repository = new PostgresCoreRepository(new FakePgPool(client));
 
@@ -1281,10 +1335,32 @@ describe('PostgresCoreRepository', () => {
     });
   });
 
+  it('rejects subscription status changes for non-owning Postgres subscribers', async () => {
+    const client = new FakePgTransactionClient(undefined, {
+      country_code: 'TG',
+      status: 'active',
+      subscriber_id: '55555555-5555-4555-8555-555555555555',
+    });
+    const repository = new PostgresCoreRepository(new FakePgPool(client));
+
+    await expect(
+      repository.cancelSubscription({
+        cancelledAt: new Date('2026-05-02T08:00:00.000Z'),
+        subscriberUserId: '88888888-8888-4888-8888-888888888888',
+        subscriptionId: '33333333-3333-4333-8333-333333333333',
+        traceId: 'trace_cancel_owner',
+      }),
+    ).rejects.toThrow('Subscription was not found.');
+    expect(client.queries.map((query) => normalizeSql(query.text))).not.toContain(
+      'UPDATE subscriptions SET status = $1, updated_at = now() WHERE id = $2',
+    );
+  });
+
   it('changes subscription tiers and writes an outbox event', async () => {
     const client = new FakePgTransactionClient(undefined, {
       country_code: 'TG',
       status: 'active',
+      subscriber_id: '55555555-5555-4555-8555-555555555555',
       tier_code: 'T1',
     });
     const repository = new PostgresCoreRepository(new FakePgPool(client));
@@ -1322,6 +1398,7 @@ describe('PostgresCoreRepository', () => {
     const client = new FakePgTransactionClient(undefined, {
       country_code: 'TG',
       status: 'active',
+      subscriber_id: '55555555-5555-4555-8555-555555555555',
     });
     const repository = new PostgresCoreRepository(new FakePgPool(client));
 
@@ -1381,7 +1458,7 @@ describe('PostgresCoreRepository', () => {
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
       "SELECT COUNT(*)::int AS completed_visits FROM worker_earning_ledger ledger INNER JOIN visits visit ON visit.id = ledger.visit_id WHERE ledger.worker_id = $1 AND ledger.reason = 'completed_visit_bonus' AND visit.completed_at >= $2 AND visit.completed_at < $3",
     );
-    expect(client.queries[0]?.values).toEqual([
+    expect(valuesForQuery(client.queries, 'SELECT COUNT(*)::int AS completed_visits')).toEqual([
       '22222222-2222-4222-8222-222222222222',
       new Date('2026-05-01T00:00:00.000Z'),
       new Date('2026-06-01T00:00:00.000Z'),
@@ -1447,7 +1524,7 @@ describe('PostgresCoreRepository', () => {
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
       "SELECT visit.id AS visit_id, visit.subscription_id, visit.status, visit.scheduled_date::text AS scheduled_date, visit.scheduled_time_window, subscriber.phone_number AS subscriber_phone_number, address.neighborhood, address.landmark, address.gps_latitude, address.gps_longitude FROM visits visit INNER JOIN subscriptions subscription ON subscription.id = visit.subscription_id INNER JOIN subscribers subscriber ON subscriber.id = subscription.subscriber_id INNER JOIN subscriber_addresses address ON address.id = subscription.address_id WHERE visit.worker_id = $1 AND visit.scheduled_date = $2 ORDER BY CASE visit.scheduled_time_window WHEN 'morning' THEN 0 WHEN 'afternoon' THEN 1 ELSE 2 END, visit.id ASC",
     );
-    expect(client.queries[0]?.values).toEqual([
+    expect(valuesForQuery(client.queries, 'SELECT visit.id AS visit_id')).toEqual([
       '22222222-2222-4222-8222-222222222222',
       '2026-05-05',
     ]);
@@ -1623,7 +1700,10 @@ describe('PostgresCoreRepository', () => {
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
       "SELECT subscription.id AS subscription_id, subscription.subscriber_id, subscriber.phone_number, subscription.country_code, subscription.tier_code, subscription.visits_per_cycle, subscription.monthly_price_minor, subscription.preferred_day_of_week, subscription.preferred_time_window, subscription.status, subscription.created_at AS queued_at, subscription.created_at + interval '4 hours' AS assignment_due_at, address.neighborhood, address.landmark, address.gps_latitude, address.gps_longitude FROM subscriptions subscription INNER JOIN subscribers subscriber ON subscriber.id = subscription.subscriber_id INNER JOIN subscriber_addresses address ON address.id = subscription.address_id WHERE subscription.country_code = $1 AND subscription.status = 'pending_match' AND subscription.preferred_day_of_week IS NOT NULL AND subscription.preferred_time_window IS NOT NULL ORDER BY subscription.created_at ASC LIMIT $2",
     );
-    expect(client.queries[0]?.values).toEqual(['TG', 25]);
+    expect(valuesForQuery(client.queries, 'SELECT subscription.id AS subscription_id')).toEqual([
+      'TG',
+      25,
+    ]);
   });
 
   it('lists audit events in replay order with filters', async () => {
@@ -1674,7 +1754,13 @@ describe('PostgresCoreRepository', () => {
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
       'SELECT id AS event_id, country_code, aggregate_type, aggregate_id, event_type, payload, actor_role, actor_user_id, trace_id, occurred_at, recorded_at FROM audit_events WHERE country_code = $1 AND ($2::text IS NULL OR aggregate_type = $2) AND ($3::uuid IS NULL OR aggregate_id = $3) AND ($4::text IS NULL OR event_type = $4) ORDER BY occurred_at ASC, id ASC LIMIT $5',
     );
-    expect(client.queries[0]?.values).toEqual(['TG', null, null, 'AssignmentDecisionRecorded', 25]);
+    expect(valuesForQuery(client.queries, 'SELECT id AS event_id')).toEqual([
+      'TG',
+      null,
+      null,
+      'AssignmentDecisionRecorded',
+      25,
+    ]);
   });
 
   it('lists notification messages with operator filters', async () => {
@@ -1744,7 +1830,15 @@ describe('PostgresCoreRepository', () => {
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
       'SELECT id AS message_id, country_code, channel, template_key, recipient_role, recipient_user_id, aggregate_type, aggregate_id, event_id, payload, status, provider, provider_reference, attempt_count, available_at, created_at, last_attempt_at, sent_at, failure_reason FROM notification_messages WHERE country_code = $1 AND ($2::text IS NULL OR status = $2) AND ($3::text IS NULL OR channel = $3) AND ($4::text IS NULL OR template_key = $4) AND ($5::text IS NULL OR aggregate_type = $5) AND ($6::uuid IS NULL OR aggregate_id = $6) ORDER BY available_at ASC, id ASC LIMIT $7',
     );
-    expect(client.queries[0]?.values).toEqual(['TG', 'pending', null, null, null, null, 25]);
+    expect(valuesForQuery(client.queries, 'SELECT id AS message_id')).toEqual([
+      'TG',
+      'pending',
+      null,
+      null,
+      null,
+      null,
+      25,
+    ]);
   });
 
   it('delivers due notification messages transactionally with the local provider', async () => {
@@ -1904,7 +1998,12 @@ describe('PostgresCoreRepository', () => {
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
       'SELECT id AS push_device_id, country_code, user_id, role, app, platform, environment, device_id, token, status, last_registered_at, created_at, updated_at FROM push_device_tokens WHERE country_code = $1 AND ($2::text IS NULL OR role = $2) AND ($3::text IS NULL OR status = $3) ORDER BY last_registered_at DESC, id ASC LIMIT $4',
     );
-    expect(client.queries[0]?.values).toEqual(['TG', 'subscriber', 'active', 25]);
+    expect(valuesForQuery(client.queries, 'SELECT id AS push_device_id')).toEqual([
+      'TG',
+      'subscriber',
+      'active',
+      25,
+    ]);
   });
 
   it('upserts worker dispatch profiles', async () => {
@@ -2291,16 +2390,44 @@ class FakePgTransactionClient implements PgTransactionClient {
 
     if (
       normalizeSql(text).startsWith('SELECT visit.id AS visit_id') &&
-      normalizeSql(text).includes('visit.scheduled_date') &&
+      normalizeSql(text).includes('address.gps_latitude') &&
       normalizeSql(text).includes('FOR UPDATE OF visit')
     ) {
-      const row = this.workerIssueVisitRow ?? this.ratingVisitRow;
       return {
         command: 'SELECT',
         fields: [],
         oid: 0,
-        rowCount: row === undefined ? 0 : 1,
-        rows: row === undefined ? [] : [row as T],
+        rowCount: this.workerIssueVisitRow === undefined ? 0 : 1,
+        rows: this.workerIssueVisitRow === undefined ? [] : [this.workerIssueVisitRow as T],
+      };
+    }
+
+    if (
+      normalizeSql(text).startsWith('SELECT visit.id AS visit_id') &&
+      normalizeSql(text).includes('visit.scheduled_date') &&
+      normalizeSql(text).includes('FOR UPDATE OF visit')
+    ) {
+      return {
+        command: 'SELECT',
+        fields: [],
+        oid: 0,
+        rowCount: this.subscriberVisitChangeRow === undefined ? 0 : 1,
+        rows:
+          this.subscriberVisitChangeRow === undefined ? [] : [this.subscriberVisitChangeRow as T],
+      };
+    }
+
+    if (
+      normalizeSql(text).startsWith('SELECT visit.id AS visit_id') &&
+      normalizeSql(text).includes('subscription.subscriber_id') &&
+      normalizeSql(text).includes('FOR UPDATE OF visit')
+    ) {
+      return {
+        command: 'SELECT',
+        fields: [],
+        oid: 0,
+        rowCount: this.ratingVisitRow === undefined ? 0 : 1,
+        rows: this.ratingVisitRow === undefined ? [] : [this.ratingVisitRow as T],
       };
     }
 
@@ -2622,4 +2749,11 @@ class FakePgTransactionClient implements PgTransactionClient {
 
 function normalizeSql(sql: string): string {
   return sql.replace(/\s+/gu, ' ').trim();
+}
+
+function valuesForQuery(
+  queries: readonly RecordedQuery[],
+  normalizedPrefix: string,
+): readonly unknown[] | undefined {
+  return queries.find((query) => normalizeSql(query.text).startsWith(normalizedPrefix))?.values;
 }

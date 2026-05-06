@@ -77,9 +77,9 @@ export async function buildBetaMetrics(
         countryCode: input.countryCode,
         limit: METRICS_LIMIT,
       }),
-      repository.listOperatorDisputes({ limit: METRICS_LIMIT }),
-      repository.listWorkerIssues({ limit: METRICS_LIMIT }),
-      repository.listWorkerPayouts({ limit: METRICS_LIMIT }),
+      repository.listOperatorDisputes({ countryCode: input.countryCode, limit: METRICS_LIMIT }),
+      repository.listWorkerIssues({ countryCode: input.countryCode, limit: METRICS_LIMIT }),
+      repository.listWorkerPayouts({ countryCode: input.countryCode, limit: METRICS_LIMIT }),
     ]);
 
   const completed = countEvents(auditEvents, 'VisitCompleted');
