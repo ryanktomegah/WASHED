@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 
+import { SubscriberApiProvider } from '../../api/SubscriberApiContext.js';
 import {
   WorkerChangeSubmittedX18C,
   WorkerChangeX18C,
@@ -12,6 +13,9 @@ import {
 function renderWorkerAt(
   path: string,
   initialEntries: readonly string[] = [path],
+  apiOptions: { readonly baseUrl?: string | null; readonly fetch?: typeof fetch } = {
+    baseUrl: null,
+  },
 ): { locationRef: { current: string } } {
   const locationRef = { current: initialEntries.at(-1) ?? path };
 
@@ -32,49 +36,54 @@ function renderWorkerAt(
   }
 
   render(
-    <MemoryRouter initialEntries={[...initialEntries]} initialIndex={initialEntries.length - 1}>
-      <Routes>
-        <Route
-          element={
-            <>
-              <WorkerProfileX18 />
-              <BrowserBackProbe />
-              <Spy />
-            </>
-          }
-          path="/worker/:workerId"
-        />
-        <Route
-          element={
-            <>
-              <WorkerChangeX18C />
-              <BrowserBackProbe />
-              <Spy />
-            </>
-          }
-          path="/worker/:workerId/change"
-        />
-        <Route
-          element={
-            <>
-              <WorkerChangeSubmittedX18C />
-              <BrowserBackProbe />
-              <Spy />
-            </>
-          }
-          path="/worker/:workerId/change/submitted"
-        />
-        <Route
-          element={
-            <>
-              <BrowserBackProbe />
-              <Spy />
-            </>
-          }
-          path="*"
-        />
-      </Routes>
-    </MemoryRouter>,
+    <SubscriberApiProvider
+      {...(apiOptions.baseUrl === undefined ? {} : { baseUrl: apiOptions.baseUrl })}
+      {...(apiOptions.fetch === undefined ? {} : { fetch: apiOptions.fetch })}
+    >
+      <MemoryRouter initialEntries={[...initialEntries]} initialIndex={initialEntries.length - 1}>
+        <Routes>
+          <Route
+            element={
+              <>
+                <WorkerProfileX18 />
+                <BrowserBackProbe />
+                <Spy />
+              </>
+            }
+            path="/worker/:workerId"
+          />
+          <Route
+            element={
+              <>
+                <WorkerChangeX18C />
+                <BrowserBackProbe />
+                <Spy />
+              </>
+            }
+            path="/worker/:workerId/change"
+          />
+          <Route
+            element={
+              <>
+                <WorkerChangeSubmittedX18C />
+                <BrowserBackProbe />
+                <Spy />
+              </>
+            }
+            path="/worker/:workerId/change/submitted"
+          />
+          <Route
+            element={
+              <>
+                <BrowserBackProbe />
+                <Spy />
+              </>
+            }
+            path="*"
+          />
+        </Routes>
+      </MemoryRouter>
+    </SubscriberApiProvider>,
   );
 
   return { locationRef };
@@ -198,6 +207,50 @@ describe('Subscriber worker change request · X-18.C', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Envoyer la demande' }));
 
     expect(locationRef.current).toBe('/worker/akouvi/change/submitted');
+  });
+
+  it('creates a current-subscriber worker swap request when the API is configured', async () => {
+    const requests: Request[] = [];
+    const fetchStub: typeof fetch = async (input, init) => {
+      const request = new Request(input, init);
+      requests.push(request);
+      return Response.json(
+        {
+          countryCode: 'TG',
+          currentWorkerId: '22222222-2222-4222-8222-222222222222',
+          currentWorkerName: 'Akouvi K.',
+          reason: 'Souci de qualité du travail',
+          replacementWorkerId: null,
+          replacementWorkerName: null,
+          requestedAt: '2026-05-05T09:00:00.000Z',
+          requestId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+          resolvedAt: null,
+          resolvedByOperatorUserId: null,
+          resolutionNote: null,
+          status: 'open',
+          subscriberId: '99999999-9999-4999-8999-999999999999',
+          subscriberPhoneNumber: '+22890123456',
+          subscriptionId: '33333333-3333-4333-8333-333333333333',
+        },
+        { status: 201 },
+      );
+    };
+    const { locationRef } = renderWorkerAt('/worker/akouvi/change', ['/worker/akouvi/change'], {
+      baseUrl: 'http://api.test',
+      fetch: fetchStub,
+    });
+
+    fireEvent.click(screen.getByText('Souci de qualité du travail'));
+    fireEvent.click(screen.getByRole('button', { name: 'Envoyer la demande' }));
+
+    await waitFor(() => expect(locationRef.current).toBe('/worker/akouvi/change/submitted'));
+    expect(requests[0]?.method).toBe('POST');
+    expect(requests[0]?.url).toBe(
+      'http://api.test/v1/subscriber/subscription/worker-swap-requests',
+    );
+    await expect(requests[0]?.json()).resolves.toMatchObject({
+      reason: 'Souci de qualité du travail',
+    });
   });
 });
 

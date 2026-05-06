@@ -52,6 +52,8 @@ export type {
   WorkerPayoutDto,
   WorkerProfileDto,
   WorkerRouteDto,
+  WorkerSwapRequestDto,
+  WorkerSwapRequestStatus,
   WorkerUnavailabilityDto,
 } from './live-data-contract.js';
 export {

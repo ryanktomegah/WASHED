@@ -44,6 +44,7 @@ export type WorkerIssueType =
   | 'supplies_missing';
 export type SupportContactCategory = 'other' | 'payment' | 'plan' | 'visit' | 'worker';
 export type SupportContactStatus = 'open' | 'resolved';
+export type WorkerSwapRequestStatus = 'approved' | 'declined' | 'open';
 
 export interface MoneyDto {
   readonly amountMinor: string;
@@ -281,6 +282,24 @@ export interface WorkerUnavailabilityDto {
   readonly workerId: string;
 }
 
+export interface WorkerSwapRequestDto {
+  readonly countryCode: CountryCode;
+  readonly currentWorkerId: string;
+  readonly currentWorkerName: string | null;
+  readonly reason: string;
+  readonly replacementWorkerId: string | null;
+  readonly replacementWorkerName: string | null;
+  readonly requestedAt: string;
+  readonly requestId: string;
+  readonly resolvedAt: string | null;
+  readonly resolvedByOperatorUserId: string | null;
+  readonly resolutionNote: string | null;
+  readonly status: WorkerSwapRequestStatus;
+  readonly subscriberId: string;
+  readonly subscriberPhoneNumber: string | null;
+  readonly subscriptionId: string;
+}
+
 export interface PaymentAttemptDto {
   readonly amount: MoneyDto;
   readonly chargedAt: string;
@@ -447,6 +466,13 @@ export interface CoreApiLiveOperationMap {
       readonly subject: string;
     };
     readonly response: SupportContactDto;
+  };
+  readonly createCurrentSubscriberWorkerSwapRequest: {
+    readonly body: {
+      readonly reason: string;
+      readonly requestedAt: string;
+    };
+    readonly response: WorkerSwapRequestDto;
   };
   readonly cancelCurrentSubscriberSubscription: {
     readonly body: { readonly cancelledAt: string };

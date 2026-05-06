@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { translate } from '@washed/i18n';
 import { useActiveLocale } from '@washed/ui';
 
+import { useSubscriberApi } from '../../api/SubscriberApiContext.js';
 import { useSafeBack } from '../../navigation/useSafeBack.js';
 import { SUBSCRIBER_WORKER_PROFILE_DEMO } from './workerProfileDemoData.js';
 
@@ -117,6 +118,7 @@ export function WorkerProfileX18(): ReactElement {
 
 export function WorkerChangeX18C(): ReactElement {
   const navigate = useNavigate();
+  const subscriberApi = useSubscriberApi();
   const params = useParams();
   const worker =
     params.workerId === SUBSCRIBER_WORKER_PROFILE_DEMO.id
@@ -124,6 +126,8 @@ export function WorkerChangeX18C(): ReactElement {
       : undefined;
   const goBack = useSafeBack(`/worker/${worker?.id ?? SUBSCRIBER_WORKER_PROFILE_DEMO.id}`);
   const [reason, setReason] = useState<ChangeReason>('personal');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSubmissionError, setHasSubmissionError] = useState(false);
 
   useEffect(() => {
     if (worker === undefined) navigate('/hub', { replace: true });
@@ -132,6 +136,30 @@ export function WorkerChangeX18C(): ReactElement {
   if (worker === undefined) return <></>;
 
   const firstName = worker.name.split(' ')[0] ?? worker.name;
+  const submittedPath = `/worker/${worker.id}/change/submitted`;
+
+  async function submitChangeRequest(): Promise<void> {
+    if (isSubmitting) return;
+
+    if (!subscriberApi.isConfigured) {
+      navigate(submittedPath);
+      return;
+    }
+
+    setHasSubmissionError(false);
+    setIsSubmitting(true);
+    try {
+      await subscriberApi.requestWorkerSwap({
+        reason: translate(changeReasonKey(reason), { name: firstName }),
+        requestedAt: new Date().toISOString(),
+      });
+      navigate(submittedPath);
+    } catch {
+      setHasSubmissionError(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <main aria-labelledby="x18c-headline" className="worker-profile-screen" data-screen-id="X-18.C">
@@ -187,11 +215,18 @@ export function WorkerChangeX18C(): ReactElement {
           <p>{translate('subscriber.worker.change.note.body', { name: firstName })}</p>
         </aside>
 
+        {hasSubmissionError ? (
+          <p className="worker-profile-note" role="alert">
+            {translate('error.server.body')}
+          </p>
+        ) : null}
+
         <div className="worker-profile-grow" />
 
         <button
           className="worker-profile-submit-button"
-          onClick={() => navigate(`/worker/${worker.id}/change/submitted`)}
+          disabled={isSubmitting}
+          onClick={() => void submitChangeRequest()}
           type="button"
         >
           {translate('subscriber.worker.change.submit.cta')}

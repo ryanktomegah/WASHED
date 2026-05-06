@@ -15,6 +15,7 @@ import {
   type SubscriptionDetailDto,
   type SubscriptionPaymentMethodDto,
   type SubscriptionTierCode,
+  type WorkerSwapRequestDto,
 } from '@washed/api-client';
 import {
   createAuthManager,
@@ -67,6 +68,10 @@ export interface SubscriberApiContextValue {
     readonly requestedAt: string;
     readonly schedulePreference: SchedulePreferenceDto;
   }) => Promise<SubscriptionDetailDto>;
+  readonly requestWorkerSwap: (input: {
+    readonly reason: string;
+    readonly requestedAt: string;
+  }) => Promise<WorkerSwapRequestDto>;
   readonly resumeSubscription: (input: {
     readonly resumedAt: string;
   }) => Promise<SubscriptionDetailDto>;
@@ -196,6 +201,11 @@ function createConfiguredSubscriberApi(
         body: input,
       });
     },
+    requestWorkerSwap(input) {
+      return api.request('createCurrentSubscriberWorkerSwapRequest', {
+        body: input,
+      });
+    },
     resumeSubscription(input) {
       return api.request('resumeCurrentSubscriberSubscription', {
         body: input,
@@ -237,6 +247,7 @@ function createUnconfiguredSubscriberApi(): SubscriberApiContextValue {
     listSupportContacts: unavailable,
     pauseSubscription: unavailable,
     requestFirstVisit: unavailable,
+    requestWorkerSwap: unavailable,
     resumeSubscription: unavailable,
     updatePaymentMethod: unavailable,
     startOtp: unavailable,
