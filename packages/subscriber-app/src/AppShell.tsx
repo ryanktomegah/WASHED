@@ -21,7 +21,10 @@ import {
   useSubscriberApi,
 } from './api/SubscriberApiContext.js';
 import { BookingSubmittedX10C, BookingX10B } from './screens/hub/BookingScreens.js';
-import { SignupProvider } from './screens/onboarding/SignupContext.js';
+import {
+  SUBSCRIBER_SIGNUP_STORAGE_KEY,
+  SignupProvider,
+} from './screens/onboarding/SignupContext.js';
 import {
   hasStoredSubscriberSubscription,
   SubscriberSubscriptionProvider,
@@ -123,7 +126,7 @@ function SubscriberThemedShell(): ReactElement {
     <WashedThemeProvider colorMode={effectiveMode} theme="subscriber">
       {hasEnteredApp ? (
         <SubscriberApiProvider>
-          <SignupProvider>
+          <SignupProvider storageKey={SUBSCRIBER_SIGNUP_STORAGE_KEY}>
             <SubscriberSubscriptionProvider>
               <SubscriberStartupGate>
                 <HashRouter>

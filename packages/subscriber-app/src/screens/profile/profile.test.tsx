@@ -209,8 +209,9 @@ describe('Subscriber profile · X-24', () => {
     expect(screen.getByText('18 ans ou plus confirmé')).toBeVisible();
 
     // Menu rows.
-    expect(screen.getByRole('button', { name: /Informations personnelles/u })).toBeVisible();
-    expect(screen.getByText('Nom, email, photo')).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Informations personnelles' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: /Informations personnelles/u })).toBeNull();
+    expect(screen.queryByText('Nom, email, photo')).toBeNull();
     expect(screen.getByRole('button', { name: /Adresse/u })).toBeVisible();
     expect(screen.getAllByText('Tokoin Casablanca')).toHaveLength(2);
     expect(screen.getByRole('button', { name: /Notifications/u })).toBeVisible();
@@ -226,7 +227,7 @@ describe('Subscriber profile · X-24', () => {
 
   it('routes profile actions, Adresse, Notifications, Apparence, Vie privée, and Aide', () => {
     const edit = renderAt('/profile', <ProfileX24 />);
-    fireEvent.click(screen.getByRole('button', { name: /Informations personnelles/u }));
+    fireEvent.click(screen.getByRole('button', { name: 'Modifier le profil' }));
     expect(edit.locationRef.current).toBe('/profile/edit');
 
     const a = renderAt('/profile', <ProfileX24 />);
@@ -257,7 +258,7 @@ describe('Subscriber profile · X-24', () => {
   it('edits the account name and email, then reflects them on the profile page', () => {
     const { locationRef } = renderProfileRoutes(PROFILE_SIGNUP_STATE);
 
-    fireEvent.click(screen.getByRole('button', { name: /Informations personnelles/u }));
+    fireEvent.click(screen.getByRole('button', { name: 'Modifier le profil' }));
     expect(locationRef.current).toBe('/profile/edit');
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-24E');
     expect(screen.getByRole('heading', { name: 'Modifier vos informations' })).toBeVisible();
@@ -276,6 +277,21 @@ describe('Subscriber profile · X-24', () => {
     expect(locationRef.current).toBe('/profile');
     expect(screen.getByRole('heading', { name: 'Ama Koffi' })).toBeVisible();
     expect(screen.getByText('ama@email.com')).toBeVisible();
+  });
+
+  it('routes a missing verified phone through SMS entry instead of leaving a dead field', () => {
+    const { locationRef } = renderAt('/profile/edit', <ProfileEditX24E />, ['/profile/edit'], {
+      ...PROFILE_SIGNUP_STATE,
+      phone: '',
+    });
+
+    const phoneAction = screen.getByRole('button', { name: /TÉLÉPHONE À compléter/u });
+    expect(phoneAction).toHaveClass('profile-static-field');
+    expect(screen.queryByDisplayValue('')).not.toBeInTheDocument();
+
+    fireEvent.click(phoneAction);
+
+    expect(locationRef.current).toBe('/signup/phone');
   });
 
   it('hydrates a restored-session edit screen before showing the fixed phone value', async () => {

@@ -248,36 +248,36 @@ export function ProfileX24(): ReactElement {
           </dl>
         </section>
 
-        <ul className="profile-menu" aria-label={translate('subscriber.profile.menu.label')}>
-          <ProfileMenuItem
-            label={translate('subscriber.profile.menu.personal_info')}
-            value={translate('subscriber.profile.menu.personal_info_sub')}
-            onClick={() => navigate('/profile/edit')}
-          />
-          <ProfileMenuItem
-            label={translate('subscriber.profile.menu.address')}
-            value={addressNeighborhood}
-            onClick={() => navigate('/profile/address')}
-          />
-          <ProfileMenuItem
-            label={translate('subscriber.profile.menu.notifications')}
-            onClick={() => navigate('/profile/notifications')}
-          />
-          <ProfileMenuItem
-            label={translate('subscriber.profile.menu.language')}
-            badge={translate(languageOptionLabelKey(locale))}
-            onClick={() => navigate('/profile/language')}
-          />
-          <ProfileMenuItem
-            label={translate('subscriber.profile.menu.appearance')}
-            badge={translate(appearanceOptionLabelKey(preference))}
-            onClick={() => navigate('/profile/appearance')}
-          />
-          <ProfileMenuItem
-            label={translate('subscriber.profile.menu.privacy')}
-            onClick={() => navigate('/profile/privacy')}
-          />
-        </ul>
+        <section className="profile-menu-section" aria-labelledby="x24-settings-title">
+          <h2 className="profile-menu-title" id="x24-settings-title">
+            {translate('subscriber.profile.menu.personal_info')}
+          </h2>
+          <ul className="profile-menu" aria-label={translate('subscriber.profile.menu.label')}>
+            <ProfileMenuItem
+              label={translate('subscriber.profile.menu.address')}
+              value={addressNeighborhood}
+              onClick={() => navigate('/profile/address')}
+            />
+            <ProfileMenuItem
+              label={translate('subscriber.profile.menu.notifications')}
+              onClick={() => navigate('/profile/notifications')}
+            />
+            <ProfileMenuItem
+              label={translate('subscriber.profile.menu.language')}
+              badge={translate(languageOptionLabelKey(locale))}
+              onClick={() => navigate('/profile/language')}
+            />
+            <ProfileMenuItem
+              label={translate('subscriber.profile.menu.appearance')}
+              badge={translate(appearanceOptionLabelKey(preference))}
+              onClick={() => navigate('/profile/appearance')}
+            />
+            <ProfileMenuItem
+              label={translate('subscriber.profile.menu.privacy')}
+              onClick={() => navigate('/profile/privacy')}
+            />
+          </ul>
+        </section>
 
         <div className="profile-grow" />
 
@@ -350,8 +350,9 @@ export function ProfileEditX24E(): ReactElement {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmissionError, setHasSubmissionError] = useState(false);
   const phoneValue = signup.phone.trim();
+  const isPhoneMissing = phoneValue === '';
   const phoneDisplay =
-    phoneValue === '' ? translate('subscriber.profile.detail.missing') : signup.phone;
+    isPhoneMissing ? translate('subscriber.profile.detail.missing') : signup.phone;
 
   const normalizedEmail = email.trim();
   const isEmailValid =
@@ -498,14 +499,36 @@ export function ProfileEditX24E(): ReactElement {
           <span className="profile-field-label" id="x24e-phone-label">
             {translate('subscriber.profile.detail.phone').toUpperCase()}
           </span>
-          <div
-            aria-labelledby="x24e-phone-label"
-            className={`profile-static-field${phoneValue === '' ? ' is-missing' : ''}`}
-            id="x24e-phone"
-          >
-            {phoneDisplay}
-          </div>
-          <p className="profile-field-note">{translate('subscriber.profile.edit.phone_note')}</p>
+          {isPhoneMissing ? (
+            <button
+              aria-describedby="x24e-phone-note"
+              aria-labelledby="x24e-phone-label x24e-phone"
+              className="profile-static-field is-missing is-action"
+              id="x24e-phone"
+              onClick={() => {
+                signup.setMode('existing');
+                navigate('/signup/phone');
+              }}
+              type="button"
+            >
+              <span>{phoneDisplay}</span>
+              <span aria-hidden="true" className="profile-static-chevron">
+                ›
+              </span>
+            </button>
+          ) : (
+            <div
+              aria-describedby="x24e-phone-note"
+              aria-labelledby="x24e-phone-label"
+              className="profile-static-field"
+              id="x24e-phone"
+            >
+              {phoneDisplay}
+            </div>
+          )}
+          <p className="profile-field-note" id="x24e-phone-note">
+            {translate('subscriber.profile.edit.phone_note')}
+          </p>
         </div>
 
         <label className={`profile-check-row${isAdult ? ' is-checked' : ''}`}>

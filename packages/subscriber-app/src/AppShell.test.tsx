@@ -12,6 +12,7 @@ import {
 } from './AppShell.js';
 import { SUBSCRIBER_AUTH_STORAGE_KEY } from './api/SubscriberApiContext.js';
 import { SUBSCRIBER_LANGUAGE_STORAGE_KEY } from './language/languageOptions.js';
+import { SUBSCRIBER_SIGNUP_STORAGE_KEY } from './screens/onboarding/SignupContext.js';
 import { TOUR_STORAGE_KEY } from './screens/hub/useTourState.js';
 import { SUBSCRIBER_SUBSCRIPTION_STORAGE_KEY } from './subscription/SubscriberSubscriptionContext.js';
 
@@ -51,6 +52,7 @@ describe('Subscriber app shell · launch preferences', () => {
     window.localStorage.removeItem(SUBSCRIBER_APPEARANCE_STORAGE_KEY);
     window.localStorage.removeItem(SUBSCRIBER_AUTH_STORAGE_KEY);
     window.localStorage.removeItem(SUBSCRIBER_LANGUAGE_STORAGE_KEY);
+    window.localStorage.removeItem(SUBSCRIBER_SIGNUP_STORAGE_KEY);
     window.localStorage.removeItem(SUBSCRIBER_SUBSCRIPTION_STORAGE_KEY);
     window.localStorage.setItem(TOUR_STORAGE_KEY, '1');
     setActiveLocale('fr');
@@ -61,6 +63,7 @@ describe('Subscriber app shell · launch preferences', () => {
     window.localStorage.removeItem(SUBSCRIBER_APPEARANCE_STORAGE_KEY);
     window.localStorage.removeItem(SUBSCRIBER_AUTH_STORAGE_KEY);
     window.localStorage.removeItem(SUBSCRIBER_LANGUAGE_STORAGE_KEY);
+    window.localStorage.removeItem(SUBSCRIBER_SIGNUP_STORAGE_KEY);
     window.localStorage.removeItem(SUBSCRIBER_SUBSCRIPTION_STORAGE_KEY);
     window.localStorage.removeItem(TOUR_STORAGE_KEY);
     setActiveLocale('fr');

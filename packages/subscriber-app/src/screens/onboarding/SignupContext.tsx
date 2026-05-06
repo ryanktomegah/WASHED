@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactElement,
@@ -65,27 +66,30 @@ const defaultSignupState: SignupState = {
   paymentProvider: null,
 };
 
+export const SUBSCRIBER_SIGNUP_STORAGE_KEY = 'washed.subscriber.signup-state';
+
 const SignupContext = createContext<SignupContextValue | null>(null);
 
 export function SignupProvider({
   children,
   initialState,
+  storageKey = null,
 }: {
   readonly children: ReactNode;
   readonly initialState?: SignupInitialState;
+  readonly storageKey?: string | null;
 }): ReactElement {
-  const [state, setState] = useState<SignupState>(() => ({
-    ...defaultSignupState,
-    ...initialState,
-    identity: {
-      ...defaultSignupState.identity,
-      ...initialState?.identity,
-    },
-    address: {
-      ...defaultSignupState.address,
-      ...initialState?.address,
-    },
-  }));
+  const [state, setState] = useState<SignupState>(() =>
+    mergeSignupState(
+      initialState === undefined && storageKey !== null ? readStoredSignupState(storageKey) : null,
+      initialState,
+    ),
+  );
+
+  useEffect(() => {
+    if (storageKey === null) return;
+    window.localStorage.setItem(storageKey, JSON.stringify(state));
+  }, [state, storageKey]);
 
   const setPhone = useCallback((phone: string) => {
     setState((current) => ({ ...current, phone }));
@@ -120,8 +124,9 @@ export function SignupProvider({
   }, []);
 
   const reset = useCallback(() => {
+    if (storageKey !== null) window.localStorage.removeItem(storageKey);
     setState(defaultSignupState);
-  }, []);
+  }, [storageKey]);
 
   const value = useMemo<SignupContextValue>(
     () => ({
@@ -183,4 +188,36 @@ export function hasSignupIdentity(identity: SignupIdentity): boolean {
 
 export function signupFullName(identity: SignupIdentity): string {
   return `${identity.firstName.trim()} ${identity.lastName.trim()}`.trim();
+}
+
+function mergeSignupState(
+  storedState: SignupInitialState | null,
+  initialState: SignupInitialState | undefined,
+): SignupState {
+  return {
+    ...defaultSignupState,
+    ...storedState,
+    ...initialState,
+    identity: {
+      ...defaultSignupState.identity,
+      ...storedState?.identity,
+      ...initialState?.identity,
+    },
+    address: {
+      ...defaultSignupState.address,
+      ...storedState?.address,
+      ...initialState?.address,
+    },
+  };
+}
+
+function readStoredSignupState(storageKey: string): SignupInitialState | null {
+  const raw = window.localStorage.getItem(storageKey);
+  if (raw === null) return null;
+
+  try {
+    return JSON.parse(raw) as SignupInitialState;
+  } catch {
+    return null;
+  }
 }
