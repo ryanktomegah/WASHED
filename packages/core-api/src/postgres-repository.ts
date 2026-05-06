@@ -2687,8 +2687,8 @@ export class PostgresCoreRepository implements CoreRepository {
             INNER JOIN subscribers subscriber ON subscriber.id = subscription.subscriber_id
             WHERE subscription.country_code = $1
               AND (
-                $2::text IS NULL
-                OR subscriber.phone_number_lookup_hash = $2
+                $2::text[] IS NULL
+                OR subscriber.phone_number_lookup_hash = ANY($2::text[])
                 OR (
                   subscriber.phone_number_lookup_hash IS NULL
                   AND subscriber.phone_number ILIKE '%' || $3 || '%'
@@ -2701,7 +2701,7 @@ export class PostgresCoreRepository implements CoreRepository {
             input.countryCode,
             input.phoneNumber === undefined
               ? null
-              : phoneLookupHash(this.dataProtector, input.countryCode, input.phoneNumber),
+              : phoneLookupHashes(this.dataProtector, input.countryCode, input.phoneNumber),
             input.phoneNumber ?? null,
             input.limit,
           ],
@@ -2825,66 +2825,136 @@ export class PostgresCoreRepository implements CoreRepository {
     return withPgTransaction(this.pool, {
       countryCode: input.countryCode,
       run: async (client) => {
-        const result = await client.query<PushDeviceRow>(
-          `
-            INSERT INTO push_device_tokens (
-              id,
-              country_code,
-              user_id,
-              role,
-              app,
-              platform,
-              environment,
-              device_id,
-              device_id_lookup_hash,
-              token,
-              status,
-              last_registered_at
-            )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'active', $11)
-            ON CONFLICT (user_id, device_id_lookup_hash)
-              WHERE device_id_lookup_hash IS NOT NULL
-            DO UPDATE
-            SET
-              country_code = excluded.country_code,
-              role = excluded.role,
-              app = excluded.app,
-              platform = excluded.platform,
-              environment = excluded.environment,
-              device_id = excluded.device_id,
-              token = excluded.token,
-              status = 'active',
-              last_registered_at = excluded.last_registered_at,
-              updated_at = now()
-            RETURNING
-              id AS push_device_id,
-              country_code,
-              user_id,
-              role,
-              app,
-              platform,
-              environment,
-              device_id,
-              token,
-              status,
-              last_registered_at,
-              created_at,
-              updated_at
-          `,
-          [
-            randomUUID(),
-            input.countryCode,
-            input.userId,
-            input.role,
-            input.app,
-            input.platform,
-            input.environment,
-            this.dataProtector.protectText(input.deviceId, 'push_device_tokens.device_id'),
-            pushDeviceLookupHash(this.dataProtector, input.userId, input.deviceId),
-            this.dataProtector.protectText(input.token, 'push_device_tokens.token'),
-            input.registeredAt,
-          ],
+        const encryptedDeviceId = this.dataProtector.protectText(
+          input.deviceId,
+          'push_device_tokens.device_id',
         );
+        const deviceIdLookupHash = pushDeviceLookupHash(
+          this.dataProtector,
+          input.userId,
+          input.deviceId,
+        );
+        const encryptedToken = this.dataProtector.protectText(
+          input.token,
+          'push_device_tokens.token',
+        );
+        const existing = await client.query<{ readonly push_device_id: string }>(
+          `
+            SELECT id AS push_device_id
+            FROM push_device_tokens
+            WHERE user_id = $1
+              AND device_id_lookup_hash = ANY($2::text[])
+            FOR UPDATE
+          `,
+          [input.userId, pushDeviceLookupHashes(this.dataProtector, input.userId, input.deviceId)],
+        );
+        const existingDevice = existing.rows[0];
+        const result =
+          existingDevice === undefined
+            ? await client.query<PushDeviceRow>(
+                `
+                  INSERT INTO push_device_tokens (
+                    id,
+                    country_code,
+                    user_id,
+                    role,
+                    app,
+                    platform,
+                    environment,
+                    device_id,
+                    device_id_lookup_hash,
+                    token,
+                    status,
+                    last_registered_at
+                  )
+                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'active', $11)
+                  ON CONFLICT (user_id, device_id_lookup_hash)
+                    WHERE device_id_lookup_hash IS NOT NULL
+                  DO UPDATE
+                  SET
+                    country_code = excluded.country_code,
+                    role = excluded.role,
+                    app = excluded.app,
+                    platform = excluded.platform,
+                    environment = excluded.environment,
+                    device_id = excluded.device_id,
+                    token = excluded.token,
+                    status = 'active',
+                    last_registered_at = excluded.last_registered_at,
+                    updated_at = now()
+                  RETURNING
+                    id AS push_device_id,
+                    country_code,
+                    user_id,
+                    role,
+                    app,
+                    platform,
+                    environment,
+                    device_id,
+                    token,
+                    status,
+                    last_registered_at,
+                    created_at,
+                    updated_at
+                `,
+                [
+                  randomUUID(),
+                  input.countryCode,
+                  input.userId,
+                  input.role,
+                  input.app,
+                  input.platform,
+                  input.environment,
+                  encryptedDeviceId,
+                  deviceIdLookupHash,
+                  encryptedToken,
+                  input.registeredAt,
+                ],
+              )
+            : await client.query<PushDeviceRow>(
+                `
+                  UPDATE push_device_tokens
+                  SET
+                    country_code = $1,
+                    role = $2,
+                    app = $3,
+                    platform = $4,
+                    environment = $5,
+                    device_id = $6,
+                    device_id_lookup_hash = $7,
+                    token = $8,
+                    status = 'active',
+                    last_registered_at = $9,
+                    updated_at = now()
+                  WHERE id = $10
+                  RETURNING
+                    id AS push_device_id,
+                    country_code,
+                    user_id,
+                    role,
+                    app,
+                    platform,
+                    environment,
+                    device_id,
+                    token,
+                    status,
+                    last_registered_at,
+                    created_at,
+                    updated_at
+                `,
+                [
+                  input.countryCode,
+                  input.role,
+                  input.app,
+                  input.platform,
+                  input.environment,
+                  encryptedDeviceId,
+                  deviceIdLookupHash,
+                  encryptedToken,
+                  input.registeredAt,
+                  existingDevice.push_device_id,
+                ],
+              );
         const row = result.rows[0];
 
         if (row === undefined) {
@@ -3388,7 +3458,7 @@ async function selectCurrentSubscriberSubscription(
       INNER JOIN subscribers subscriber ON subscriber.id = subscription.subscriber_id
       WHERE subscriber.country_code = $1
         AND (
-          subscriber.phone_number_lookup_hash = $2
+          subscriber.phone_number_lookup_hash = ANY($2::text[])
           OR (
             subscriber.phone_number_lookup_hash IS NULL
             AND subscriber.phone_number = $3
@@ -3401,7 +3471,11 @@ async function selectCurrentSubscriberSubscription(
       LIMIT 1
       ${lock ? 'FOR UPDATE OF subscription' : ''}
     `,
-    [input.countryCode, phoneLookupHash(dataProtector, input.countryCode, input.phoneNumber), input.phoneNumber],
+    [
+      input.countryCode,
+      phoneLookupHashes(dataProtector, input.countryCode, input.phoneNumber),
+      input.phoneNumber,
+    ],
   );
 
   return result.rows[0];
@@ -3956,7 +4030,7 @@ async function upsertAuthUser(
       FROM auth_users
       WHERE country_code = $1
         AND (
-          phone_number_lookup_hash = $2
+          phone_number_lookup_hash = ANY($2::text[])
           OR (
             phone_number_lookup_hash IS NULL
             AND phone_number = $3
@@ -3964,7 +4038,11 @@ async function upsertAuthUser(
         )
       FOR UPDATE
     `,
-    [challenge.country_code, phoneNumberLookupHash, challenge.phone_number],
+    [
+      challenge.country_code,
+      phoneLookupHashes(dataProtector, challenge.country_code, challenge.phone_number),
+      challenge.phone_number,
+    ],
   );
   const existingUser = existing.rows[0];
   if (existingUser !== undefined) {
@@ -6927,6 +7005,14 @@ function phoneLookupHash(
   return dataProtector.lookupHash(`${countryCode}:${phoneNumber}`, 'phone_number');
 }
 
+function phoneLookupHashes(
+  dataProtector: DataProtector,
+  countryCode: CountryCode,
+  phoneNumber: string,
+): readonly string[] {
+  return dataProtector.lookupHashes(`${countryCode}:${phoneNumber}`, 'phone_number');
+}
+
 function emailLookupHash(
   dataProtector: DataProtector,
   countryCode: CountryCode,
@@ -6939,12 +7025,31 @@ function emailLookupHash(
   return dataProtector.lookupHash(`${countryCode}:${email.trim().toLocaleLowerCase('fr')}`, 'email');
 }
 
+function emailLookupHashes(
+  dataProtector: DataProtector,
+  countryCode: CountryCode,
+  email: string,
+): readonly string[] {
+  return dataProtector.lookupHashes(
+    `${countryCode}:${email.trim().toLocaleLowerCase('fr')}`,
+    'email',
+  );
+}
+
 function pushDeviceLookupHash(
   dataProtector: DataProtector,
   userId: string,
   deviceId: string,
 ): string {
   return dataProtector.lookupHash(`${userId}:${deviceId}`, 'push_device.device_id');
+}
+
+function pushDeviceLookupHashes(
+  dataProtector: DataProtector,
+  userId: string,
+  deviceId: string,
+): readonly string[] {
+  return dataProtector.lookupHashes(`${userId}:${deviceId}`, 'push_device.device_id');
 }
 
 function protectCoordinate(dataProtector: DataProtector, value: number, context: string): string {
@@ -7347,7 +7452,7 @@ async function selectSubscriberProfile(
           )
         )
     `,
-    [countryCode, phoneLookupHash(dataProtector, countryCode, phoneNumber), phoneNumber],
+    [countryCode, phoneLookupHashes(dataProtector, countryCode, phoneNumber), phoneNumber],
   );
 
   return result.rows[0];
@@ -7747,37 +7852,54 @@ async function selectPushTokensForNotificationMessage(
     return [];
   }
 
-  const result = await client.query<{ readonly token: string }>(
+  const subscriberResult = await client.query<{ readonly phone_number: string }>(
     `
-      SELECT push_device.token
+      SELECT subscriber.phone_number
       FROM subscriptions subscription
       INNER JOIN subscribers subscriber
         ON subscriber.id = subscription.subscriber_id
-      INNER JOIN auth_users auth_user
-        ON auth_user.country_code = subscriber.country_code
-        AND (
-          (
-            auth_user.phone_number_lookup_hash IS NOT NULL
-            AND subscriber.phone_number_lookup_hash IS NOT NULL
-            AND auth_user.phone_number_lookup_hash = subscriber.phone_number_lookup_hash
-          )
-          OR (
-            auth_user.phone_number_lookup_hash IS NULL
-            AND subscriber.phone_number_lookup_hash IS NULL
-            AND auth_user.phone_number = subscriber.phone_number
-          )
-        )
-        AND auth_user.role = $3
+      WHERE subscription.id = $1
+        AND subscription.country_code = $2
+      LIMIT 1
+    `,
+    [message.aggregateId, message.countryCode],
+  );
+  const subscriber = subscriberResult.rows[0];
+  if (subscriber === undefined) {
+    return [];
+  }
+
+  const subscriberPhoneNumber = dataProtector.revealText(
+    subscriber.phone_number,
+    'subscribers.phone_number',
+  );
+  const result = await client.query<{ readonly token: string }>(
+    `
+      SELECT push_device.token
+      FROM auth_users auth_user
       INNER JOIN push_device_tokens push_device
         ON push_device.user_id = auth_user.id
-      WHERE subscription.id = $1
-        AND push_device.country_code = $2
-        AND push_device.role = $3
+      WHERE auth_user.country_code = $1
+        AND auth_user.role = $2
+        AND (
+          auth_user.phone_number_lookup_hash = ANY($3::text[])
+          OR (
+            auth_user.phone_number_lookup_hash IS NULL
+            AND auth_user.phone_number = $4
+          )
+        )
+        AND push_device.country_code = $1
+        AND push_device.role = $2
         AND push_device.status = 'active'
       ORDER BY push_device.last_registered_at DESC, push_device.id ASC
       LIMIT 10
     `,
-    [message.aggregateId, message.countryCode, message.recipientRole],
+    [
+      message.countryCode,
+      message.recipientRole,
+      phoneLookupHashes(dataProtector, message.countryCode, subscriberPhoneNumber),
+      subscriberPhoneNumber,
+    ],
   );
 
   return result.rows.map((row) => dataProtector.revealText(row.token, 'push_device_tokens.token'));

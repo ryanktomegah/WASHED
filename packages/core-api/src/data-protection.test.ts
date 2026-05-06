@@ -60,6 +60,21 @@ describe('data protection', () => {
     expect(newProtector.revealText(encrypted, 'phone_number')).toBe('+22890123456');
   });
 
+  it('keeps lookup hashes queryable during key rotation', () => {
+    const previousKey = Buffer.alloc(32, 3);
+    const oldProtector = createDataProtector({ keyId: 'old', masterKey: previousKey });
+    const newProtector = createDataProtector({
+      keyId: 'new',
+      masterKey,
+      previousKeys: [{ keyId: 'old', masterKey: previousKey }],
+    });
+
+    expect(newProtector.lookupHashes('TG:+22890123456', 'phone_number')).toEqual([
+      newProtector.lookupHash('TG:+22890123456', 'phone_number'),
+      oldProtector.lookupHash('TG:+22890123456', 'phone_number'),
+    ]);
+  });
+
   it('requires an explicit key for production', () => {
     expect(() => createDataProtectorFromEnv({ NODE_ENV: 'production' })).toThrow(
       /WASHED_DATA_ENCRYPTION_KEY/,

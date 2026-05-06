@@ -17,6 +17,7 @@ const LOCAL_DEVELOPMENT_MASTER_KEY = createHash('sha256')
 export interface DataProtector {
   readonly keyId: string;
   lookupHash(value: string, context: string): string;
+  lookupHashes(value: string, context: string): readonly string[];
   protectJson(value: unknown, context: string): Record<string, unknown>;
   protectNullableText(value: string | null | undefined, context: string): string | null;
   protectText(value: string, context: string): string;
@@ -61,9 +62,11 @@ export function createDataProtector(input: {
   }[];
 }): DataProtector {
   const currentKey = buildKeyMaterial(input.keyId, input.masterKey);
+  const previousKeyMaterials = (input.previousKeys ?? []).map((previousKey) =>
+    buildKeyMaterial(previousKey.keyId, previousKey.masterKey),
+  );
   const keysById = new Map<string, KeyMaterial>([[currentKey.keyId, currentKey]]);
-  for (const previousKey of input.previousKeys ?? []) {
-    const keyMaterial = buildKeyMaterial(previousKey.keyId, previousKey.masterKey);
+  for (const keyMaterial of previousKeyMaterials) {
     if (keyMaterial.keyId === currentKey.keyId) {
       throw new Error('Previous data protection keys must not reuse the current key id.');
     }
@@ -73,11 +76,15 @@ export function createDataProtector(input: {
   return {
     keyId: input.keyId,
     lookupHash(value, context) {
-      return createHmac('sha256', currentKey.lookupKey)
-        .update(context)
-        .update('\0')
-        .update(value)
-        .digest('base64url');
+      return lookupHashForKey(currentKey, value, context);
+    },
+    lookupHashes(value, context) {
+      const hashes = [
+        lookupHashForKey(currentKey, value, context),
+        ...previousKeyMaterials.map((keyMaterial) => lookupHashForKey(keyMaterial, value, context)),
+      ];
+
+      return [...new Set(hashes)];
     },
     protectJson(value, context) {
       return {
@@ -114,7 +121,7 @@ export function createDataProtector(input: {
       return value === null ? null : this.revealText(value, context);
     },
     revealText(value, context) {
-      if (!value.startsWith(`${ENCRYPTED_TEXT_PREFIX}:`)) {
+      if (!isProtectedText(value)) {
         return value;
       }
 
@@ -149,6 +156,19 @@ export function createDataProtector(input: {
       ]).toString('utf8');
     },
   };
+}
+
+export function isProtectedText(value: string): boolean {
+  return value.startsWith(`${ENCRYPTED_TEXT_PREFIX}:`);
+}
+
+export function isProtectedJson(value: unknown): value is Record<string, unknown> {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    typeof (value as Record<string, unknown>)[ENCRYPTED_JSON_MARKER] === 'string'
+  );
 }
 
 interface KeyMaterial {
@@ -216,6 +236,14 @@ function deriveKey(masterKey: Buffer, purpose: string): Buffer {
   return Buffer.from(
     hkdfSync('sha256', masterKey, 'washed-core-api-data-protection-v1', purpose, 32),
   );
+}
+
+function lookupHashForKey(keyMaterial: KeyMaterial, value: string, context: string): string {
+  return createHmac('sha256', keyMaterial.lookupKey)
+    .update(context)
+    .update('\0')
+    .update(value)
+    .digest('base64url');
 }
 
 function stringifyJson(value: unknown): string {
