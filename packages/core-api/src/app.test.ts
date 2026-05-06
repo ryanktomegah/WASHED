@@ -301,6 +301,324 @@ describe('core api app', () => {
     expect(refreshResponse.json().refreshToken).not.toBe(verifyResponse.json().refreshToken);
   });
 
+  it('persists subscriber profile details and reuses that account for subscriptions', async () => {
+    const repository = new InMemoryCoreRepository();
+    const app = createCoreApiApp({ repository });
+    apps.add(app);
+
+    const missingAuth = await app.inject({
+      method: 'GET',
+      url: '/v1/subscriber/profile',
+    });
+    const savedProfile = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'PUT',
+      payload: {
+        email: 'Afi@Example.com',
+        firstName: 'Afi',
+        isAdultConfirmed: true,
+        lastName: 'Mensah',
+      },
+      url: '/v1/subscriber/profile',
+    });
+    const profile = savedProfile.json() as { subscriberId: string };
+    const subscriptionResponse = await app.inject({
+      method: 'POST',
+      payload: { ...validBody, tierCode: 'T2' },
+      url: '/v1/subscriptions',
+    });
+    const fetchedProfile = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'GET',
+      url: '/v1/subscriber/profile',
+    });
+
+    expect(missingAuth.statusCode).toBe(401);
+    expect(missingAuth.json()).toMatchObject({ code: 'core.subscriber_profile.unauthorized' });
+    expect(savedProfile.statusCode).toBe(200);
+    expect(savedProfile.json()).toMatchObject({
+      avatarObjectKey: null,
+      countryCode: 'TG',
+      email: 'afi@example.com',
+      firstName: 'Afi',
+      isAdultConfirmed: true,
+      lastName: 'Mensah',
+      phoneNumber: '+22890123456',
+      subscriberId: '99999999-9999-4999-8999-999999999999',
+    });
+    expect(subscriptionResponse.statusCode).toBe(201);
+    expect(subscriptionResponse.json()).toMatchObject({
+      subscriberId: profile.subscriberId,
+      subscriptionId: expect.any(String),
+    });
+    expect(fetchedProfile.json()).toMatchObject({
+      email: 'afi@example.com',
+      firstName: 'Afi',
+      lastName: 'Mensah',
+      subscriberId: profile.subscriberId,
+    });
+  });
+
+  it('keeps current subscriber subscriptions out of matching until the first visit is requested', async () => {
+    const repository = new InMemoryCoreRepository();
+    const app = createCoreApiApp({ repository });
+    apps.add(app);
+
+    const emptyCurrent = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'GET',
+      url: '/v1/subscriber/subscription',
+    });
+    const created = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'POST',
+      payload: {
+        address: validBody.address,
+        paymentMethod: {
+          phoneNumber: '+22890123456',
+          provider: 'mixx',
+        },
+        tierCode: 'T1',
+      },
+      url: '/v1/subscriber/subscription',
+    });
+    const subscription = created.json() as { subscriptionId: string };
+    const duplicate = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'POST',
+      payload: {
+        address: validBody.address,
+        paymentMethod: {
+          phoneNumber: '+22890123456',
+          provider: 'mixx',
+        },
+        tierCode: 'T1',
+      },
+      url: '/v1/subscriber/subscription',
+    });
+    const currentBeforeVisit = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'GET',
+      url: '/v1/subscriber/subscription',
+    });
+    const queueBeforeVisit = await app.inject({
+      method: 'GET',
+      url: '/v1/operator/matching-queue',
+    });
+    const assignBeforeVisit = await app.inject({
+      method: 'POST',
+      payload: {
+        anchorDate: '2026-05-05',
+        operatorUserId: '11111111-1111-4111-8111-111111111111',
+        workerId: '22222222-2222-4222-8222-222222222222',
+      },
+      url: `/v1/subscriptions/${subscription.subscriptionId}/assignment`,
+    });
+    const firstVisit = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'POST',
+      payload: {
+        requestedAt: '2026-05-05T09:00:00.000Z',
+        schedulePreference: {
+          dayOfWeek: 'thursday',
+          timeWindow: 'afternoon',
+        },
+      },
+      url: '/v1/subscriber/subscription/first-visit-request',
+    });
+    const queueAfterVisit = await app.inject({
+      method: 'GET',
+      url: '/v1/operator/matching-queue',
+    });
+
+    expect(emptyCurrent.statusCode).toBe(200);
+    expect(emptyCurrent.json()).toEqual({ subscription: null });
+    expect(created.statusCode).toBe(201);
+    expect(created.json()).toMatchObject({
+      assignmentSlaHours: null,
+      paymentMethod: {
+        phoneNumber: '+22890123456',
+        provider: 'mixx',
+      },
+      status: 'ready_no_visit',
+      subscriberId: '99999999-9999-4999-8999-999999999999',
+      tierCode: 'T1',
+    });
+    expect(duplicate.statusCode).toBe(409);
+    expect(currentBeforeVisit.json()).toMatchObject({
+      subscription: {
+        paymentMethod: {
+          phoneNumber: '+22890123456',
+          provider: 'mixx',
+        },
+        schedulePreference: null,
+        status: 'ready_no_visit',
+        subscriptionId: subscription.subscriptionId,
+        upcomingVisits: [],
+      },
+    });
+    expect(queueBeforeVisit.json()).toMatchObject({ items: [] });
+    expect(assignBeforeVisit.statusCode).toBe(400);
+    expect(assignBeforeVisit.json()).toMatchObject({
+      message: 'First visit must be requested before worker assignment.',
+    });
+    expect(firstVisit.statusCode).toBe(200);
+    expect(firstVisit.json()).toMatchObject({
+      schedulePreference: {
+        dayOfWeek: 'thursday',
+        timeWindow: 'afternoon',
+      },
+      status: 'pending_match',
+      subscriptionId: subscription.subscriptionId,
+    });
+    expect(queueAfterVisit.json()).toMatchObject({
+      items: [
+        {
+          schedulePreference: {
+            dayOfWeek: 'thursday',
+            timeWindow: 'afternoon',
+          },
+          status: 'pending_match',
+          subscriptionId: subscription.subscriptionId,
+        },
+      ],
+    });
+    expect(repository.firstVisitRequests[0]?.events[0]?.eventType).toBe('FirstVisitRequested');
+  });
+
+  it('lets the current subscriber change tier, pause, resume, and read real billing', async () => {
+    const repository = new InMemoryCoreRepository();
+    const app = createCoreApiApp({ repository });
+    apps.add(app);
+
+    await app.inject({
+      method: 'PUT',
+      payload: {
+        countryCode: 'TG',
+        displayName: 'Akouvi K.',
+        maxActiveSubscriptions: 10,
+        serviceNeighborhoods: ['Tokoin'],
+        status: 'active',
+      },
+      url: '/v1/operator/workers/22222222-2222-4222-8222-222222222222/profile',
+    });
+    const created = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'POST',
+      payload: {
+        address: validBody.address,
+        paymentMethod: {
+          phoneNumber: '+22890123456',
+          provider: 'mixx',
+        },
+        schedulePreference: validBody.schedulePreference,
+        tierCode: 'T1',
+      },
+      url: '/v1/subscriber/subscription',
+    });
+    const subscription = created.json() as { subscriptionId: string };
+    await app.inject({
+      method: 'POST',
+      payload: {
+        anchorDate: '2026-05-05',
+        operatorUserId: '11111111-1111-4111-8111-111111111111',
+        workerId: '22222222-2222-4222-8222-222222222222',
+      },
+      url: `/v1/subscriptions/${subscription.subscriptionId}/assignment`,
+    });
+    const changedTier = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'POST',
+      payload: {
+        effectiveAt: '2026-05-02T08:00:00.000Z',
+        tierCode: 'T2',
+      },
+      url: '/v1/subscriber/subscription/tier',
+    });
+    await app.inject({
+      method: 'POST',
+      payload: {
+        chargedAt: '2026-05-02T08:05:00.000Z',
+        idempotencyKey: 'billing-current-subscriber-1',
+        mockOutcome: 'succeeded',
+        operatorUserId: '11111111-1111-4111-8111-111111111111',
+      },
+      url: `/v1/subscriptions/${subscription.subscriptionId}/mock-charge`,
+    });
+    const billing = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'GET',
+      url: '/v1/subscriber/subscription/billing-history?limit=5',
+    });
+    const changedPaymentMethod = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'PUT',
+      payload: {
+        paymentMethod: {
+          phoneNumber: '+22890123456',
+          provider: 'flooz',
+        },
+        updatedAt: '2026-05-02T09:00:00.000Z',
+      },
+      url: '/v1/subscriber/subscription/payment-method',
+    });
+    const paused = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'POST',
+      payload: {
+        pausedAt: '2026-05-03T08:00:00.000Z',
+      },
+      url: '/v1/subscriber/subscription/pause',
+    });
+    const resumed = await app.inject({
+      headers: authHeader('subscriber'),
+      method: 'POST',
+      payload: {
+        resumedAt: '2026-05-04T08:00:00.000Z',
+      },
+      url: '/v1/subscriber/subscription/resume',
+    });
+
+    expect(changedTier.statusCode).toBe(200);
+    expect(changedTier.json()).toMatchObject({
+      monthlyPriceMinor: '4500',
+      status: 'active',
+      subscriptionId: subscription.subscriptionId,
+      tierCode: 'T2',
+      visitsPerCycle: 2,
+    });
+    expect(billing.statusCode).toBe(200);
+    expect(billing.json()).toMatchObject({
+      items: [
+        {
+          amount: { amountMinor: '4500', currencyCode: 'XOF' },
+          status: 'succeeded',
+          subscriptionId: subscription.subscriptionId,
+        },
+      ],
+      limit: 5,
+      subscriptionId: subscription.subscriptionId,
+    });
+    expect(changedPaymentMethod.statusCode).toBe(200);
+    expect(changedPaymentMethod.json()).toMatchObject({
+      paymentMethod: {
+        phoneNumber: '+22890123456',
+        provider: 'flooz',
+      },
+      subscriptionId: subscription.subscriptionId,
+    });
+    expect(paused.statusCode).toBe(200);
+    expect(paused.json()).toMatchObject({
+      status: 'paused',
+      subscriptionId: subscription.subscriptionId,
+    });
+    expect(resumed.statusCode).toBe(200);
+    expect(resumed.json()).toMatchObject({
+      status: 'active',
+      subscriptionId: subscription.subscriptionId,
+    });
+  });
+
   it('registers app push device tokens for authenticated simulators', async () => {
     const repository = new InMemoryCoreRepository();
     const app = createCoreApiApp({ repository });
@@ -623,7 +941,7 @@ describe('core api app', () => {
     expect(repository.subscriptions[0]?.events[0]?.eventType).toBe('SubscriptionCreated');
   });
 
-  it('assigns a worker and generates the first four visits', async () => {
+  it('assigns a worker and generates visits for the subscription tier', async () => {
     const repository = new InMemoryCoreRepository();
     const app = createCoreApiApp({ repository });
     apps.add(app);
@@ -655,9 +973,6 @@ describe('core api app', () => {
     });
     expect(response.json().visits).toMatchObject([
       { scheduledDate: '2026-05-05', scheduledTimeWindow: 'morning', status: 'scheduled' },
-      { scheduledDate: '2026-05-12', scheduledTimeWindow: 'morning', status: 'scheduled' },
-      { scheduledDate: '2026-05-19', scheduledTimeWindow: 'morning', status: 'scheduled' },
-      { scheduledDate: '2026-05-26', scheduledTimeWindow: 'morning', status: 'scheduled' },
     ]);
     expect(repository.assignments[0]?.events[0]?.eventType).toBe('SubscriberAssigned');
     expect(repository.assignmentDecisions[0]).toMatchObject({
@@ -677,6 +992,35 @@ describe('core api app', () => {
         workerId: '22222222-2222-4222-8222-222222222222',
       },
     });
+  });
+
+  it('generates two scheduled visits for the two-visit monthly tier', async () => {
+    const repository = new InMemoryCoreRepository();
+    const app = createCoreApiApp({ repository });
+    apps.add(app);
+
+    const subscriptionResponse = await app.inject({
+      method: 'POST',
+      payload: { ...validBody, tierCode: 'T2' },
+      url: '/v1/subscriptions',
+    });
+    const subscription = subscriptionResponse.json() as { subscriptionId: string };
+
+    const response = await app.inject({
+      method: 'POST',
+      payload: {
+        anchorDate: '2026-05-05',
+        operatorUserId: '11111111-1111-4111-8111-111111111111',
+        workerId: '22222222-2222-4222-8222-222222222222',
+      },
+      url: `/v1/subscriptions/${subscription.subscriptionId}/assignment`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json().visits).toMatchObject([
+      { scheduledDate: '2026-05-05', scheduledTimeWindow: 'morning', status: 'scheduled' },
+      { scheduledDate: '2026-05-12', scheduledTimeWindow: 'morning', status: 'scheduled' },
+    ]);
   });
 
   it('records an operator-declined matching candidate without assigning', async () => {
@@ -888,6 +1232,7 @@ describe('core api app', () => {
     const repository = new InMemoryCoreRepository();
     const app = createCoreApiApp({ repository });
     apps.add(app);
+    const deliveredAt = '2030-05-05T10:00:00.000Z';
 
     const subscriptionResponse = await app.inject({
       method: 'POST',
@@ -920,7 +1265,7 @@ describe('core api app', () => {
       method: 'POST',
       payload: {
         countryCode: 'TG',
-        deliveredAt: '2026-05-05T10:00:00.000Z',
+        deliveredAt,
         limit: 10,
       },
       url: '/v1/operator/notifications/deliver-due',
@@ -929,7 +1274,7 @@ describe('core api app', () => {
     expect(response.statusCode).toBe(200);
     expect(response.json()).toMatchObject({
       countryCode: 'TG',
-      deliveredAt: '2026-05-05T10:00:00.000Z',
+      deliveredAt,
       items: [
         {
           aggregateId: subscription.subscriptionId,
@@ -938,7 +1283,7 @@ describe('core api app', () => {
           failureReason: null,
           provider: 'local_push_simulator',
           recipientRole: 'subscriber',
-          sentAt: '2026-05-05T10:00:00.000Z',
+          sentAt: deliveredAt,
           status: 'sent',
           templateKey: 'subscriber.assignment.confirmed.v1',
         },
@@ -1105,24 +1450,6 @@ describe('core api app', () => {
           status: 'scheduled',
           workerId: '22222222-2222-4222-8222-222222222222',
         },
-        {
-          scheduledDate: '2026-05-12',
-          scheduledTimeWindow: 'morning',
-          status: 'scheduled',
-          workerId: '22222222-2222-4222-8222-222222222222',
-        },
-        {
-          scheduledDate: '2026-05-19',
-          scheduledTimeWindow: 'morning',
-          status: 'scheduled',
-          workerId: '22222222-2222-4222-8222-222222222222',
-        },
-        {
-          scheduledDate: '2026-05-26',
-          scheduledTimeWindow: 'morning',
-          status: 'scheduled',
-          workerId: '22222222-2222-4222-8222-222222222222',
-        },
       ],
       visitsPerCycle: 1,
     });
@@ -1137,7 +1464,7 @@ describe('core api app', () => {
 
     const subscriptionResponse = await app.inject({
       method: 'POST',
-      payload: validBody,
+      payload: { ...validBody, tierCode: 'T2' },
       url: '/v1/subscriptions',
     });
     const subscription = subscriptionResponse.json() as {
@@ -1198,14 +1525,6 @@ describe('core api app', () => {
         scheduledTimeWindow: 'afternoon',
         visitId: firstVisit?.visitId,
       },
-      {
-        scheduledDate: '2026-05-19',
-        scheduledTimeWindow: 'morning',
-      },
-      {
-        scheduledDate: '2026-05-26',
-        scheduledTimeWindow: 'morning',
-      },
     ]);
   });
 
@@ -1249,7 +1568,7 @@ describe('core api app', () => {
     expect(cancelResponse.statusCode).toBe(200);
     expect(cancelResponse.json()).toMatchObject({
       cancelledAt: '2026-05-02T08:00:00.000Z',
-      cancelledScheduledVisits: 4,
+      cancelledScheduledVisits: 1,
       status: 'cancelled',
       subscriptionId: subscription.subscriptionId,
     });

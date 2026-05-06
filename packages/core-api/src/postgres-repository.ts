@@ -11,7 +11,13 @@ import {
   type TimeWindow,
   type VisitStatus,
 } from '@washed/core-domain';
-import { createDomainEvent, money, type DomainEvent, type Money } from '@washed/shared';
+import {
+  createDomainEvent,
+  money,
+  type CountryCode,
+  type DomainEvent,
+  type Money,
+} from '@washed/shared';
 
 import { hashOtpCode, hashRefreshToken, safeHashEqual } from './auth-crypto.js';
 import { issueAuthTokens } from './auth-tokens.js';
@@ -51,11 +57,14 @@ import type {
   DisputeRecord,
   DisputeStatus,
   GetSupportContactInput,
+  GetCurrentSubscriberSubscriptionInput,
   ListSupportContactsInput,
+  ResolveSupportContactInput,
   SupportContactCategory,
   SupportContactRecord,
   SupportContactStatus,
   GetWorkerMonthlyEarningsInput,
+  GetSubscriberProfileInput,
   GetWorkerRouteInput,
   GetSubscriptionDetailInput,
   IngestPaymentWebhookInput,
@@ -83,7 +92,10 @@ import type {
   PaymentAttemptSummaryRecord,
   PaymentRefundRecord,
   PaymentReconciliationRunRecord,
+  PausedSubscriptionRecord,
+  PauseSubscriptionInput,
   SubscriberPrivacyRequestRecord,
+  SubscriptionPaymentMethod,
   SubscriptionBillingItemRecord,
   SubscriberSupportMatchRecord,
   NotificationMessageRecord,
@@ -93,6 +105,9 @@ import type {
   RefreshAuthSessionInput,
   RegisterPushDeviceInput,
   ReportWorkerIssueInput,
+  RequestFirstVisitInput,
+  ResumedSubscriptionRecord,
+  ResumeSubscriptionInput,
   AdvanceWorkerOnboardingCaseInput,
   ResolveDisputeInput,
   ResolveWorkerAdvanceRequestInput,
@@ -105,9 +120,13 @@ import type {
   StartedOtpChallengeRecord,
   StartOtpChallengeInput,
   ServiceCellCapacityRecord,
+  SubscriberProfileRecord,
   SupportCreditRecord,
   UploadVisitPhotoInput,
   UpdateOperatorVisitStatusInput,
+  UpsertSubscriberProfileInput,
+  UpdateSubscriptionPaymentMethodInput,
+  UpdatedSubscriptionPaymentMethodRecord,
   UpsertWorkerProfileInput,
   VerifyOtpChallengeInput,
   VisitLocationInput,
@@ -134,9 +153,12 @@ import type {
 import {
   buildCancelledSubscriptionRecord,
   buildChangedSubscriptionTierRecord,
+  buildPausedSubscriptionRecord,
+  buildResumedSubscriptionRecord,
   buildAdvancedWorkerOnboardingCaseRecord,
   buildCreatedDisputeRecord,
   buildCreatedSupportContactRecord,
+  buildResolvedSupportContactRecord,
   buildCreatedWorkerOnboardingCaseRecord,
   buildCreatedWorkerAdvanceRequestRecord,
   buildCreatedWorkerSwapRequestRecord,
@@ -155,8 +177,14 @@ import {
   buildPaymentRefundRecord,
   buildPaymentReconciliationRunRecord,
   buildSubscriberPrivacyRequestRecord,
+  buildUpdatedSubscriptionPaymentMethodRecord,
 } from './repository.js';
-import type { PgClient, PgPoolLike } from './postgres-client.js';
+import {
+  setPgLocalCountryCode,
+  withPgTransaction,
+  type PgClient,
+  type PgPoolLike,
+} from './postgres-client.js';
 import { buildAssignedSubscriptionRecord } from './subscription-assignment.js';
 import { buildCreatedSubscriptionRecord } from './subscription-record.js';
 
@@ -179,23 +207,158 @@ export class PostgresCoreRepository implements CoreRepository {
   public async createSubscription(
     input: CreateSubscriptionInput,
   ): Promise<CreatedSubscriptionRecord> {
-    const record = buildCreatedSubscriptionRecord(input);
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: async (client) => {
+        const subscriberId = await upsertSubscriber(client, input);
+        const record = buildCreatedSubscriptionRecord(input, subscriberId);
+        await insertSubscriberAddress(client, input, record);
+        await insertSubscription(client, input, record);
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
+  }
 
-    try {
-      await client.query('BEGIN');
-      await insertSubscriber(client, input, record);
-      await insertSubscriberAddress(client, input, record);
-      await insertSubscription(client, input, record);
-      await insertOutboxEvents(client, record.events);
-      await client.query('COMMIT');
-      return record;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
+  public async getSubscriberProfile(
+    input: GetSubscriberProfileInput,
+  ): Promise<SubscriberProfileRecord> {
+    return withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: async (client) => {
+        await ensureSubscriberProfile(client, input);
+        const profile = await selectSubscriberProfile(client, input.countryCode, input.phoneNumber);
+
+        if (profile === undefined) {
+          throw new Error('Subscriber profile was not found.');
+        }
+
+        return mapSubscriberProfileRow(profile);
+      },
+    });
+  }
+
+  public async upsertSubscriberProfile(
+    input: UpsertSubscriberProfileInput,
+  ): Promise<SubscriberProfileRecord> {
+    return withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: async (client) => {
+        const result = await client.query<SubscriberProfileRow>(
+          `
+            INSERT INTO subscribers (
+              id,
+              country_code,
+              locale,
+              phone_number,
+              first_name,
+              last_name,
+              email,
+              avatar_object_key,
+              is_adult_confirmed
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            ON CONFLICT (country_code, phone_number) DO UPDATE
+            SET
+              first_name = EXCLUDED.first_name,
+              last_name = EXCLUDED.last_name,
+              email = EXCLUDED.email,
+              avatar_object_key = EXCLUDED.avatar_object_key,
+              is_adult_confirmed = EXCLUDED.is_adult_confirmed,
+              updated_at = now()
+            RETURNING
+              id AS subscriber_id,
+              country_code,
+              phone_number,
+              first_name,
+              last_name,
+              email,
+              avatar_object_key,
+              is_adult_confirmed,
+              created_at,
+              updated_at
+          `,
+          [
+            input.subscriberUserId,
+            input.countryCode,
+            'fr',
+            input.phoneNumber,
+            input.firstName,
+            input.lastName,
+            input.email ?? null,
+            input.avatarObjectKey ?? null,
+            input.isAdultConfirmed,
+          ],
+        );
+        const profile = result.rows[0];
+
+        if (profile === undefined) {
+          throw new Error('Subscriber profile could not be saved.');
+        }
+
+        return mapSubscriberProfileRow(profile);
+      },
+    });
+  }
+
+  public async getCurrentSubscriberSubscription(
+    input: GetCurrentSubscriberSubscriptionInput,
+  ): Promise<SubscriptionDetailRecord | null> {
+    const current = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: (client) => selectCurrentSubscriberSubscription(client, input),
+    });
+
+    if (current === undefined) {
+      return null;
     }
+
+    return this.getSubscriptionDetail({ subscriptionId: current.subscription_id });
+  }
+
+  public async requestFirstVisit(input: RequestFirstVisitInput): Promise<SubscriptionDetailRecord> {
+    const subscriptionId = await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: async (client) => {
+        const current = await selectCurrentSubscriberSubscription(client, input, true);
+
+        if (current === undefined) {
+          throw new Error('Subscription was not found.');
+        }
+
+        const status = transitionSubscription(current.status, 'request_first_visit');
+        if (status !== 'pending_match') {
+          throw new Error(`Expected pending first visit status, received ${status}.`);
+        }
+        const event = createDomainEvent({
+          actor: { role: 'subscriber', userId: current.subscriber_id },
+          aggregateId: current.subscription_id,
+          aggregateType: 'subscription',
+          countryCode: current.country_code,
+          eventType: 'FirstVisitRequested',
+          payload: {
+            preferredDayOfWeek: input.schedulePreference.dayOfWeek,
+            preferredTimeWindow: input.schedulePreference.timeWindow,
+            requestedAt: input.requestedAt.toISOString(),
+            status,
+            subscriberId: current.subscriber_id,
+            subscriptionId: current.subscription_id,
+          },
+          traceId: input.traceId,
+        });
+        assertCoreDomainEventContract(event);
+
+        await updateSubscriptionFirstVisitRequest(client, current.subscription_id, {
+          dayOfWeek: input.schedulePreference.dayOfWeek,
+          status,
+          timeWindow: input.schedulePreference.timeWindow,
+        });
+        await insertOutboxEvents(client, [event]);
+        return current.subscription_id;
+      },
+    });
+
+    return this.getSubscriptionDetail({ subscriptionId });
   }
 
   public async startOtpChallenge(
@@ -205,25 +368,30 @@ export class PostgresCoreRepository implements CoreRepository {
     const delivery = await this.otpProvider.startChallenge(input);
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-    await this.pool.query(
-      `
-        INSERT INTO auth_otp_challenges (
-          id,
-          country_code,
-          phone_number,
-          code_hash,
-          expires_at
-        )
-        VALUES ($1, $2, $3, $4, $5)
-      `,
-      [
-        challengeId,
-        input.countryCode,
-        input.phoneNumber,
-        hashOtpCode(challengeId, delivery.code),
-        expiresAt,
-      ],
-    );
+    await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: async (client) => {
+        await client.query(
+          `
+            INSERT INTO auth_otp_challenges (
+              id,
+              country_code,
+              phone_number,
+              code_hash,
+              expires_at
+            )
+            VALUES ($1, $2, $3, $4, $5)
+          `,
+          [
+            challengeId,
+            input.countryCode,
+            input.phoneNumber,
+            hashOtpCode(challengeId, delivery.code),
+            expiresAt,
+          ],
+        );
+      },
+    });
 
     return {
       challengeId,
@@ -235,401 +403,385 @@ export class PostgresCoreRepository implements CoreRepository {
   }
 
   public async verifyOtpChallenge(input: VerifyOtpChallengeInput): Promise<AuthSessionRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const challenge = await selectOtpChallengeForVerification(client, input.challengeId);
 
-    try {
-      await client.query('BEGIN');
-      const challenge = await selectOtpChallengeForVerification(client, input.challengeId);
+        if (challenge === undefined) {
+          throw new Error('OTP challenge was not found.');
+        }
 
-      if (challenge === undefined) {
-        throw new Error('OTP challenge was not found.');
-      }
+        await setPgLocalCountryCode(client, challenge.country_code);
 
-      if (challenge.consumed_at !== null) {
-        throw new Error('OTP challenge was already used.');
-      }
+        if (challenge.consumed_at !== null) {
+          throw new Error('OTP challenge was already used.');
+        }
 
-      if (challenge.expires_at.getTime() <= Date.now()) {
-        throw new Error('OTP challenge has expired.');
-      }
+        if (challenge.expires_at.getTime() <= Date.now()) {
+          throw new Error('OTP challenge has expired.');
+        }
 
-      if (challenge.attempts >= 5) {
-        throw new Error('OTP challenge has too many failed attempts.');
-      }
+        if (challenge.attempts >= 5) {
+          throw new Error('OTP challenge has too many failed attempts.');
+        }
 
-      if (!safeHashEqual(challenge.code_hash, hashOtpCode(input.challengeId, input.code))) {
-        await incrementOtpChallengeAttempts(client, input.challengeId);
-        throw new Error('OTP code is invalid.');
-      }
+        if (!safeHashEqual(challenge.code_hash, hashOtpCode(input.challengeId, input.code))) {
+          await incrementOtpChallengeAttempts(client, input.challengeId);
+          throw new Error('OTP code is invalid.');
+        }
 
-      await consumeOtpChallenge(client, input.challengeId);
-      const user = await upsertAuthUser(client, challenge, input.role);
-      const session = await insertAuthSession(client, user, input.deviceId);
-      await client.query('COMMIT');
-      return session;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        await consumeOtpChallenge(client, input.challengeId);
+        const user = await upsertAuthUser(client, challenge, input.role);
+        const session = await insertAuthSession(client, user, input.deviceId);
+        return session;
+      },
+    });
   }
 
   public async refreshAuthSession(input: RefreshAuthSessionInput): Promise<AuthSessionRecord> {
-    const client = await this.pool.connect();
     const refreshTokenHash = hashRefreshToken(input.refreshToken);
 
-    try {
-      await client.query('BEGIN');
-      const currentSession = await selectAuthSessionForRefresh(client, refreshTokenHash);
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const currentSession = await selectAuthSessionForRefresh(client, refreshTokenHash);
 
-      if (currentSession === undefined) {
-        throw new Error('Refresh token is invalid.');
-      }
+        if (currentSession === undefined) {
+          throw new Error('Refresh token is invalid.');
+        }
 
-      if (currentSession.revoked_at !== null) {
-        throw new Error('Refresh token is invalid.');
-      }
+        await setPgLocalCountryCode(client, currentSession.country_code);
 
-      if (currentSession.session_expires_at.getTime() <= Date.now()) {
-        throw new Error('Refresh token has expired.');
-      }
+        if (currentSession.revoked_at !== null) {
+          throw new Error('Refresh token is invalid.');
+        }
 
-      await revokeAuthSession(client, currentSession.session_id);
-      const session = await insertAuthSession(
-        client,
-        {
-          phone_number: currentSession.phone_number,
-          role: currentSession.role,
-          user_id: currentSession.user_id,
-        },
-        currentSession.device_id,
-      );
-      await client.query('COMMIT');
-      return session;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        if (currentSession.session_expires_at.getTime() <= Date.now()) {
+          throw new Error('Refresh token has expired.');
+        }
+
+        await revokeAuthSession(client, currentSession.session_id);
+        const session = await insertAuthSession(
+          client,
+          {
+            country_code: currentSession.country_code,
+            phone_number: currentSession.phone_number,
+            role: currentSession.role,
+            user_id: currentSession.user_id,
+          },
+          currentSession.device_id,
+        );
+        return session;
+      },
+    });
   }
 
   public async chargeSubscription(input: ChargeSubscriptionInput): Promise<PaymentAttemptRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const existingAttempt = await selectPaymentAttemptByIdempotencyKey(
+          client,
+          input.idempotencyKey,
+        );
 
-    try {
-      await client.query('BEGIN');
-      const existingAttempt = await selectPaymentAttemptByIdempotencyKey(
-        client,
-        input.idempotencyKey,
-      );
+        if (existingAttempt !== undefined) {
+          return mapPaymentAttemptRow(existingAttempt);
+        }
 
-      if (existingAttempt !== undefined) {
-        await client.query('COMMIT');
-        return mapPaymentAttemptRow(existingAttempt);
-      }
+        const subscription = await selectSubscriptionForPayment(client, input.subscriptionId);
 
-      const subscription = await selectSubscriptionForPayment(client, input.subscriptionId);
+        if (subscription === undefined) {
+          throw new Error('Subscription was not found.');
+        }
 
-      if (subscription === undefined) {
-        throw new Error('Subscription was not found.');
-      }
+        await setPgLocalCountryCode(client, subscription.country_code);
 
-      if (subscription.status !== 'active' && subscription.status !== 'payment_overdue') {
-        throw new Error(`Subscription cannot be charged from status ${subscription.status}.`);
-      }
+        if (subscription.status !== 'active' && subscription.status !== 'payment_overdue') {
+          throw new Error(`Subscription cannot be charged from status ${subscription.status}.`);
+        }
 
-      const amount = money(BigInt(subscription.monthly_price_minor), subscription.currency_code);
-      const charge = await this.paymentProvider.chargeSubscription({
-        amount,
-        chargedAt: input.chargedAt,
-        idempotencyKey: input.idempotencyKey,
-        mockOutcome: input.mockOutcome,
-        operatorUserId: input.operatorUserId,
-        subscriptionId: input.subscriptionId,
-        traceId: input.traceId,
-      });
-      const subscriptionStatus = nextPaymentSubscriptionStatus(subscription.status, charge.status);
-      const attempt = buildPaymentAttemptRecord({
-        actor: { role: 'operator', userId: input.operatorUserId },
-        amount,
-        charge,
-        chargedAt: input.chargedAt,
-        countryCode: subscription.country_code,
-        idempotencyKey: input.idempotencyKey,
-        subscriptionId: input.subscriptionId,
-        subscriptionStatus,
-        traceId: input.traceId,
-      });
+        const amount = money(BigInt(subscription.monthly_price_minor), subscription.currency_code);
+        const charge = await this.paymentProvider.chargeSubscription({
+          amount,
+          chargedAt: input.chargedAt,
+          idempotencyKey: input.idempotencyKey,
+          mockOutcome: input.mockOutcome,
+          operatorUserId: input.operatorUserId,
+          subscriptionId: input.subscriptionId,
+          traceId: input.traceId,
+        });
+        const subscriptionStatus = nextPaymentSubscriptionStatus(
+          subscription.status,
+          charge.status,
+        );
+        const attempt = buildPaymentAttemptRecord({
+          actor: { role: 'operator', userId: input.operatorUserId },
+          amount,
+          charge,
+          chargedAt: input.chargedAt,
+          countryCode: subscription.country_code,
+          idempotencyKey: input.idempotencyKey,
+          subscriptionId: input.subscriptionId,
+          subscriptionStatus,
+          traceId: input.traceId,
+        });
 
-      await insertPaymentAttempt(client, attempt);
+        await insertPaymentAttempt(client, subscription.country_code, attempt);
 
-      if (subscriptionStatus !== subscription.status) {
-        await updateSubscriptionPaymentStatus(client, input.subscriptionId, subscriptionStatus);
-      }
+        if (subscriptionStatus !== subscription.status) {
+          await updateSubscriptionPaymentStatus(client, input.subscriptionId, subscriptionStatus);
+        }
 
-      await insertOutboxEvents(client, attempt.events);
-      await client.query('COMMIT');
-      return attempt;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        await insertOutboxEvents(client, attempt.events);
+        return attempt;
+      },
+    });
   }
 
   public async ingestPaymentWebhook(
     input: IngestPaymentWebhookInput,
   ): Promise<PaymentAttemptRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const existingAttempt =
+          (await selectPaymentAttemptByIdempotencyKey(client, input.idempotencyKey)) ??
+          (await selectPaymentAttemptByProviderReference(
+            client,
+            input.provider,
+            input.providerReference,
+          ));
 
-    try {
-      await client.query('BEGIN');
-      const existingAttempt =
-        (await selectPaymentAttemptByIdempotencyKey(client, input.idempotencyKey)) ??
-        (await selectPaymentAttemptByProviderReference(
-          client,
-          input.provider,
-          input.providerReference,
-        ));
+        if (existingAttempt !== undefined) {
+          return mapPaymentAttemptRow(existingAttempt);
+        }
 
-      if (existingAttempt !== undefined) {
-        await client.query('COMMIT');
-        return mapPaymentAttemptRow(existingAttempt);
-      }
+        const subscription = await selectSubscriptionForPayment(client, input.subscriptionId);
 
-      const subscription = await selectSubscriptionForPayment(client, input.subscriptionId);
+        if (subscription === undefined) {
+          throw new Error('Subscription was not found.');
+        }
 
-      if (subscription === undefined) {
-        throw new Error('Subscription was not found.');
-      }
+        await setPgLocalCountryCode(client, subscription.country_code);
 
-      if (subscription.status !== 'active' && subscription.status !== 'payment_overdue') {
-        throw new Error(`Subscription cannot be charged from status ${subscription.status}.`);
-      }
+        if (subscription.status !== 'active' && subscription.status !== 'payment_overdue') {
+          throw new Error(`Subscription cannot be charged from status ${subscription.status}.`);
+        }
 
-      const amount = money(BigInt(subscription.monthly_price_minor), subscription.currency_code);
-      const subscriptionStatus = nextPaymentSubscriptionStatus(subscription.status, input.status);
-      const attempt = buildPaymentAttemptRecord({
-        actor: { role: 'system', userId: null },
-        amount,
-        charge: {
-          provider: input.provider,
-          providerReference: input.providerReference,
-          status: input.status,
-        },
-        chargedAt: input.receivedAt,
-        countryCode: subscription.country_code,
-        idempotencyKey: input.idempotencyKey,
-        subscriptionId: input.subscriptionId,
-        subscriptionStatus,
-        traceId: input.traceId,
-      });
+        const amount = money(BigInt(subscription.monthly_price_minor), subscription.currency_code);
+        const subscriptionStatus = nextPaymentSubscriptionStatus(subscription.status, input.status);
+        const attempt = buildPaymentAttemptRecord({
+          actor: { role: 'system', userId: null },
+          amount,
+          charge: {
+            provider: input.provider,
+            providerReference: input.providerReference,
+            status: input.status,
+          },
+          chargedAt: input.receivedAt,
+          countryCode: subscription.country_code,
+          idempotencyKey: input.idempotencyKey,
+          subscriptionId: input.subscriptionId,
+          subscriptionStatus,
+          traceId: input.traceId,
+        });
 
-      await insertPaymentAttempt(client, attempt);
+        await insertPaymentAttempt(client, subscription.country_code, attempt);
 
-      if (subscriptionStatus !== subscription.status) {
-        await updateSubscriptionPaymentStatus(client, input.subscriptionId, subscriptionStatus);
-      }
+        if (subscriptionStatus !== subscription.status) {
+          await updateSubscriptionPaymentStatus(client, input.subscriptionId, subscriptionStatus);
+        }
 
-      await insertOutboxEvents(client, attempt.events);
-      await client.query('COMMIT');
-      return attempt;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        await insertOutboxEvents(client, attempt.events);
+        return attempt;
+      },
+    });
   }
 
   public async assignWorker(input: AssignWorkerInput): Promise<AssignedSubscriptionRecord> {
-    const client = await this.pool.connect();
     let rejectedDecision:
       | {
-          readonly countryCode: 'TG';
+          readonly countryCode: CountryCode;
           readonly reason: AssignmentDecisionRecord['reason'];
         }
       | undefined;
 
     try {
-      await client.query('BEGIN');
-      const subscription = await selectSubscriptionForAssignment(client, input.subscriptionId);
+      return await withPgTransaction(this.pool, {
+        run: async (client) => {
+          const subscription = await selectSubscriptionForAssignment(client, input.subscriptionId);
 
-      if (subscription === undefined) {
-        throw new Error('Subscription was not found.');
-      }
+          if (subscription === undefined) {
+            throw new Error('Subscription was not found.');
+          }
 
-      if (subscription.status !== 'pending_match') {
-        throw new Error(`Subscription cannot be assigned from status ${subscription.status}.`);
-      }
+          if (
+            subscription.status !== 'pending_match' ||
+            subscription.preferred_day_of_week === null ||
+            subscription.preferred_time_window === null
+          ) {
+            throw new Error('First visit must be requested before worker assignment.');
+          }
 
-      if (await isWorkerUnavailableOnDate(client, input.workerId, input.anchorDate)) {
-        rejectedDecision = {
-          countryCode: subscription.country_code,
-          reason: 'worker_unavailable',
-        };
-        throw new Error('Worker is unavailable on the assignment anchor date.');
-      }
+          await setPgLocalCountryCode(client, subscription.country_code);
 
-      const worker = await selectWorkerForAssignment(client, input.workerId);
+          if (subscription.status !== 'pending_match') {
+            throw new Error(`Subscription cannot be assigned from status ${subscription.status}.`);
+          }
 
-      if (worker !== undefined) {
-        try {
-          assertWorkerCanTakeAssignment({
-            activeSubscriptionCount: worker.active_subscription_count,
-            subscriptionNeighborhood: subscription.neighborhood,
-            worker: {
+          if (await isWorkerUnavailableOnDate(client, input.workerId, input.anchorDate)) {
+            rejectedDecision = {
               countryCode: subscription.country_code,
-              displayName: worker.display_name,
-              maxActiveSubscriptions: worker.max_active_subscriptions,
-              serviceNeighborhoods: worker.service_neighborhoods,
-              status: worker.status,
-              workerId: input.workerId,
-            },
-          });
-        } catch (error) {
-          rejectedDecision = {
+              reason: 'worker_unavailable',
+            };
+            throw new Error('Worker is unavailable on the assignment anchor date.');
+          }
+
+          const worker = await selectWorkerForAssignment(client, input.workerId);
+
+          if (worker !== undefined) {
+            try {
+              assertWorkerCanTakeAssignment({
+                activeSubscriptionCount: worker.active_subscription_count,
+                subscriptionNeighborhood: subscription.neighborhood,
+                worker: {
+                  countryCode: subscription.country_code,
+                  displayName: worker.display_name,
+                  maxActiveSubscriptions: worker.max_active_subscriptions,
+                  serviceNeighborhoods: worker.service_neighborhoods,
+                  status: worker.status,
+                  workerId: input.workerId,
+                },
+              });
+            } catch (error) {
+              rejectedDecision = {
+                countryCode: subscription.country_code,
+                reason: assignmentRejectionReason(error),
+              };
+              throw error;
+            }
+          }
+
+          const assignment = buildAssignedSubscriptionRecord({
+            ...input,
             countryCode: subscription.country_code,
-            reason: assignmentRejectionReason(error),
-          };
-          throw error;
-        }
-      }
+            schedulePreference: {
+              dayOfWeek: subscription.preferred_day_of_week,
+              timeWindow: subscription.preferred_time_window,
+            },
+            visitsPerCycle: subscription.visits_per_cycle,
+          });
 
-      const assignment = buildAssignedSubscriptionRecord({
-        ...input,
-        countryCode: subscription.country_code,
-        schedulePreference: {
-          dayOfWeek: subscription.preferred_day_of_week,
-          timeWindow: subscription.preferred_time_window,
-        },
-      });
-
-      await upsertWorkerPlaceholder(client, subscription.country_code, input.workerId);
-      await updateSubscriptionAssignment(client, input);
-      const decision = await insertAssignmentDecision(client, subscription.country_code, input, {
-        decision: 'assigned',
-        reason: 'operator_selected_worker',
-      });
-      await insertVisits(client, subscription.country_code, input.subscriptionId, assignment);
-      await insertOutboxEvents(client, [...decision.events, ...assignment.events]);
-      await client.query('COMMIT');
-      return assignment;
-    } catch (error) {
-      await client.query('ROLLBACK');
-
-      if (rejectedDecision !== undefined) {
-        try {
-          await client.query('BEGIN');
+          await upsertWorkerPlaceholder(client, subscription.country_code, input.workerId);
+          await updateSubscriptionAssignment(client, input);
           const decision = await insertAssignmentDecision(
             client,
-            rejectedDecision.countryCode,
+            subscription.country_code,
             input,
             {
-              decision: 'rejected',
-              reason: rejectedDecision.reason,
+              decision: 'assigned',
+              reason: 'operator_selected_worker',
             },
           );
-          await insertOutboxEvents(client, decision.events);
-          await client.query('COMMIT');
+          await insertVisits(client, subscription.country_code, input.subscriptionId, assignment);
+          await insertOutboxEvents(client, [...decision.events, ...assignment.events]);
+          return assignment;
+        },
+      });
+    } catch (error) {
+      if (rejectedDecision !== undefined) {
+        const rejection = rejectedDecision;
+        try {
+          await withPgTransaction(this.pool, {
+            countryCode: rejection.countryCode,
+            run: async (client) => {
+              const decision = await insertAssignmentDecision(
+                client,
+                rejection.countryCode,
+                input,
+                {
+                  decision: 'rejected',
+                  reason: rejection.reason,
+                },
+              );
+              await insertOutboxEvents(client, decision.events);
+            },
+          });
         } catch {
-          try {
-            await client.query('ROLLBACK');
-          } catch {
-            // Preserve the assignment failure as the caller-visible error.
-          }
           // Assignment failure should remain the caller-visible error.
         }
       }
 
       throw error;
-    } finally {
-      client.release();
     }
   }
 
   public async declineAssignmentCandidate(
     input: DeclineAssignmentCandidateInput,
   ): Promise<AssignmentDecisionRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const subscription = await selectSubscriptionForAssignment(client, input.subscriptionId);
 
-    try {
-      await client.query('BEGIN');
-      const subscription = await selectSubscriptionForAssignment(client, input.subscriptionId);
+        if (subscription === undefined) {
+          throw new Error('Subscription was not found.');
+        }
 
-      if (subscription === undefined) {
-        throw new Error('Subscription was not found.');
-      }
+        await setPgLocalCountryCode(client, subscription.country_code);
 
-      if (subscription.status !== 'pending_match') {
-        throw new Error(
-          `Subscription cannot record assignment decisions from status ${subscription.status}.`,
-        );
-      }
+        if (subscription.status !== 'pending_match') {
+          throw new Error(
+            `Subscription cannot record assignment decisions from status ${subscription.status}.`,
+          );
+        }
 
-      if (!(await workerExists(client, input.workerId))) {
-        throw new Error('Worker was not found.');
-      }
+        if (!(await workerExists(client, input.workerId))) {
+          throw new Error('Worker was not found.');
+        }
 
-      const decision = await insertAssignmentDecision(client, subscription.country_code, input, {
-        decision: 'declined',
-        reason: 'operator_declined_candidate',
-      });
-      await insertOutboxEvents(client, decision.events);
-      await client.query('COMMIT');
-      return decision;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        const decision = await insertAssignmentDecision(client, subscription.country_code, input, {
+          decision: 'declined',
+          reason: 'operator_declined_candidate',
+        });
+        await insertOutboxEvents(client, decision.events);
+        return decision;
+      },
+    });
   }
 
   public async createWorkerAdvanceRequest(
     input: CreateWorkerAdvanceRequestInput,
   ): Promise<WorkerAdvanceRequestRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const worker = await selectWorkerForAdvanceRequest(client, input.workerId);
 
-    try {
-      await client.query('BEGIN');
-      const worker = await selectWorkerForAdvanceRequest(client, input.workerId);
+        if (worker === undefined) {
+          throw new Error('Worker was not found.');
+        }
 
-      if (worker === undefined) {
-        throw new Error('Worker was not found.');
-      }
+        await setPgLocalCountryCode(client, worker.country_code);
+        assertWorkerAdvanceAmountAllowed(input.amountMinor);
 
-      assertWorkerAdvanceAmountAllowed(input.amountMinor);
+        const requestCount = await countWorkerAdvanceRequestsForMonth(
+          client,
+          input.workerId,
+          input.month,
+        );
 
-      const requestCount = await countWorkerAdvanceRequestsForMonth(
-        client,
-        input.workerId,
-        input.month,
-      );
+        if (requestCount > 0) {
+          throw new Error('Worker advance limit reached for this month.');
+        }
 
-      if (requestCount > 0) {
-        throw new Error('Worker advance limit reached for this month.');
-      }
+        const record = buildCreatedWorkerAdvanceRequestRecord({
+          countryCode: worker.country_code,
+          input,
+          workerName: worker.display_name,
+        });
 
-      const record = buildCreatedWorkerAdvanceRequestRecord({
-        countryCode: worker.country_code,
-        input,
-        workerName: worker.display_name,
-      });
-
-      await insertWorkerAdvanceRequest(client, record);
-      await insertOutboxEvents(client, record.events);
-      await client.query('COMMIT');
-      return record;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        await insertWorkerAdvanceRequest(client, record);
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
   }
 
   public async listWorkerAdvanceRequests(
@@ -643,46 +795,40 @@ export class PostgresCoreRepository implements CoreRepository {
   public async createWorkerMonthlyPayout(
     input: CreateWorkerMonthlyPayoutInput,
   ): Promise<WorkerPayoutRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const worker = await selectWorkerForPayout(client, input.workerId);
 
-    try {
-      await client.query('BEGIN');
-      const worker = await selectWorkerForPayout(client, input.workerId);
+        if (worker === undefined) {
+          throw new Error('Worker was not found.');
+        }
 
-      if (worker === undefined) {
-        throw new Error('Worker was not found.');
-      }
+        await setPgLocalCountryCode(client, worker.country_code);
+        const earnings = await this.getWorkerMonthlyEarnings(input);
 
-      const earnings = await this.getWorkerMonthlyEarnings(input);
+        if (earnings.netDue.amountMinor < 1n) {
+          throw new Error('Worker monthly payout has no remaining balance.');
+        }
 
-      if (earnings.netDue.amountMinor < 1n) {
-        throw new Error('Worker monthly payout has no remaining balance.');
-      }
+        const payoutProviderResult = await this.createMonthlyPayoutProviderResult(
+          input,
+          earnings.netDue,
+        );
 
-      const payoutProviderResult = await this.createMonthlyPayoutProviderResult(
-        input,
-        earnings.netDue,
-      );
+        const record = buildWorkerPayoutRecord({
+          amount: earnings.netDue,
+          countryCode: worker.country_code,
+          input,
+          payoutType: 'monthly_settlement',
+          providerResult: payoutProviderResult,
+          workerName: worker.display_name,
+        });
 
-      const record = buildWorkerPayoutRecord({
-        amount: earnings.netDue,
-        countryCode: worker.country_code,
-        input,
-        payoutType: 'monthly_settlement',
-        providerResult: payoutProviderResult,
-        workerName: worker.display_name,
-      });
-
-      await insertWorkerPayout(client, record);
-      await insertOutboxEvents(client, record.events);
-      await client.query('COMMIT');
-      return record;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        await insertWorkerPayout(client, record);
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
   }
 
   public async listWorkerPayouts(
@@ -732,226 +878,207 @@ export class PostgresCoreRepository implements CoreRepository {
   }
 
   public async issuePaymentRefund(input: IssuePaymentRefundInput): Promise<PaymentRefundRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const existingRefund = await selectPaymentRefundByPaymentAttemptId(
+          client,
+          input.paymentAttemptId,
+        );
 
-    try {
-      await client.query('BEGIN');
-      const existingRefund = await selectPaymentRefundByPaymentAttemptId(
-        client,
-        input.paymentAttemptId,
-      );
+        if (existingRefund !== undefined) {
+          throw new Error('Payment attempt already has a refund.');
+        }
 
-      if (existingRefund !== undefined) {
-        throw new Error('Payment attempt already has a refund.');
-      }
+        const attempt = await selectPaymentAttemptById(client, input.paymentAttemptId);
 
-      const attempt = await selectPaymentAttemptById(client, input.paymentAttemptId);
+        if (attempt === undefined) {
+          throw new Error('Payment attempt was not found.');
+        }
 
-      if (attempt === undefined) {
-        throw new Error('Payment attempt was not found.');
-      }
+        await setPgLocalCountryCode(client, attempt.country_code);
 
-      if (attempt.status !== 'succeeded') {
-        throw new Error('Only successful payment attempts can be refunded.');
-      }
+        if (attempt.status !== 'succeeded') {
+          throw new Error('Only successful payment attempts can be refunded.');
+        }
 
-      if (input.amountMinor <= 0n || input.amountMinor > BigInt(attempt.amount_minor)) {
-        throw new Error('Refund amount must be positive and no greater than the payment amount.');
-      }
+        if (input.amountMinor <= 0n || input.amountMinor > BigInt(attempt.amount_minor)) {
+          throw new Error('Refund amount must be positive and no greater than the payment amount.');
+        }
 
-      const amount = money(input.amountMinor, attempt.currency_code);
-      const refundResult = await this.paymentProvider.refundPayment({
-        amount,
-        issuedAt: input.issuedAt,
-        operatorUserId: input.operatorUserId,
-        paymentAttemptId: input.paymentAttemptId,
-        paymentProvider: attempt.provider,
-        paymentProviderReference: attempt.provider_reference,
-        reason: input.reason,
-        subscriptionId: attempt.subscription_id,
-        traceId: input.traceId,
-      });
-      const refund = buildPaymentRefundRecord({
-        countryCode: attempt.country_code,
-        input,
-        paymentAttempt: mapPaymentAttemptRow(attempt),
-        refund: refundResult,
-      });
+        const amount = money(input.amountMinor, attempt.currency_code);
+        const refundResult = await this.paymentProvider.refundPayment({
+          amount,
+          issuedAt: input.issuedAt,
+          operatorUserId: input.operatorUserId,
+          paymentAttemptId: input.paymentAttemptId,
+          paymentProvider: attempt.provider,
+          paymentProviderReference: attempt.provider_reference,
+          reason: input.reason,
+          subscriptionId: attempt.subscription_id,
+          traceId: input.traceId,
+        });
+        const refund = buildPaymentRefundRecord({
+          countryCode: attempt.country_code,
+          input,
+          paymentAttempt: mapPaymentAttemptRow(attempt),
+          refund: refundResult,
+        });
 
-      await insertPaymentRefund(client, refund);
-      await insertOutboxEvents(client, refund.events);
-      await client.query('COMMIT');
-      return refund;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        await insertPaymentRefund(client, refund);
+        await insertOutboxEvents(client, refund.events);
+        return refund;
+      },
+    });
   }
 
   public async runPaymentReconciliation(
     input: RunPaymentReconciliationInput,
   ): Promise<PaymentReconciliationRunRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: async (client) => {
+        const rows = await selectPaymentReconciliationRows(client, input);
+        const paymentAttempts = rows.map((row) => ({
+          ...mapPaymentAttemptRow(row),
+          countryCode: row.country_code,
+        }));
+        const refundTotals = new Map(
+          rows.map((row) => [
+            row.payment_attempt_id,
+            money(BigInt(row.refunded_amount_minor), row.currency_code),
+          ]),
+        );
+        const run = buildPaymentReconciliationRunRecord({
+          input,
+          paymentAttempts,
+          refundTotals,
+        });
 
-    try {
-      await client.query('BEGIN');
-      const rows = await selectPaymentReconciliationRows(client, input);
-      const paymentAttempts = rows.map((row) => ({
-        ...mapPaymentAttemptRow(row),
-        countryCode: row.country_code,
-      }));
-      const refundTotals = new Map(
-        rows.map((row) => [
-          row.payment_attempt_id,
-          money(BigInt(row.refunded_amount_minor), row.currency_code),
-        ]),
-      );
-      const run = buildPaymentReconciliationRunRecord({
-        input,
-        paymentAttempts,
-        refundTotals,
-      });
-
-      await insertPaymentReconciliationRun(client, run);
-      await insertOutboxEvents(client, run.events);
-      await client.query('COMMIT');
-      return run;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        await insertPaymentReconciliationRun(client, run);
+        await insertOutboxEvents(client, run.events);
+        return run;
+      },
+    });
   }
 
   public async resolveWorkerAdvanceRequest(
     input: ResolveWorkerAdvanceRequestInput,
   ): Promise<WorkerAdvanceRequestRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const request = await selectWorkerAdvanceRequestForResolution(client, input.requestId);
 
-    try {
-      await client.query('BEGIN');
-      const request = await selectWorkerAdvanceRequestForResolution(client, input.requestId);
+        if (request === undefined) {
+          throw new Error('Worker advance request was not found.');
+        }
 
-      if (request === undefined) {
-        throw new Error('Worker advance request was not found.');
-      }
+        await setPgLocalCountryCode(client, request.country_code);
 
-      if (request.status !== 'open') {
-        throw new Error(`Worker advance request cannot be resolved from status ${request.status}.`);
-      }
+        if (request.status !== 'open') {
+          throw new Error(
+            `Worker advance request cannot be resolved from status ${request.status}.`,
+          );
+        }
 
-      const record = buildResolvedWorkerAdvanceRequestRecord({
-        input,
-        request: mapWorkerAdvanceRequestRow(request),
-      });
-
-      await updateWorkerAdvanceRequestResolution(client, input);
-      if (input.resolution === 'approved') {
-        const payoutProviderResult = await this.paymentProvider.payoutWorker({
-          amount: record.amount,
-          operatorUserId: input.operatorUserId,
-          paidAt: input.resolvedAt,
-          payoutType: 'advance',
-          periodMonth: record.month,
-          traceId: input.traceId,
-          workerId: record.workerId,
+        const record = buildResolvedWorkerAdvanceRequestRecord({
+          input,
+          request: mapWorkerAdvanceRequestRow(request),
         });
-        const payout = buildWorkerPayoutRecord({
-          advanceRequestId: record.requestId,
-          amount: record.amount,
-          countryCode: record.countryCode,
-          input: {
-            month: record.month,
-            note: input.resolutionNote,
+
+        await updateWorkerAdvanceRequestResolution(client, input);
+        if (input.resolution === 'approved') {
+          const payoutProviderResult = await this.paymentProvider.payoutWorker({
+            amount: record.amount,
             operatorUserId: input.operatorUserId,
             paidAt: input.resolvedAt,
+            payoutType: 'advance',
+            periodMonth: record.month,
             traceId: input.traceId,
             workerId: record.workerId,
-          },
-          payoutType: 'advance',
-          providerResult: payoutProviderResult,
-          ...(record.workerName === undefined ? {} : { workerName: record.workerName }),
-        });
-        await insertWorkerPayout(client, payout);
-        await insertOutboxEvents(client, [...record.events, ...payout.events]);
-      } else {
-        await insertOutboxEvents(client, record.events);
-      }
-      await client.query('COMMIT');
-      return record;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+          });
+          const payout = buildWorkerPayoutRecord({
+            advanceRequestId: record.requestId,
+            amount: record.amount,
+            countryCode: record.countryCode,
+            input: {
+              month: record.month,
+              note: input.resolutionNote,
+              operatorUserId: input.operatorUserId,
+              paidAt: input.resolvedAt,
+              traceId: input.traceId,
+              workerId: record.workerId,
+            },
+            payoutType: 'advance',
+            providerResult: payoutProviderResult,
+            ...(record.workerName === undefined ? {} : { workerName: record.workerName }),
+          });
+          await insertWorkerPayout(client, payout);
+          await insertOutboxEvents(client, [...record.events, ...payout.events]);
+        } else {
+          await insertOutboxEvents(client, record.events);
+        }
+        return record;
+      },
+    });
   }
 
   public async createWorkerSwapRequest(
     input: CreateWorkerSwapRequestInput,
   ): Promise<WorkerSwapRequestRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const subscription = await selectSubscriptionForWorkerSwapRequest(
+          client,
+          input.subscriptionId,
+        );
 
-    try {
-      await client.query('BEGIN');
-      const subscription = await selectSubscriptionForWorkerSwapRequest(
-        client,
-        input.subscriptionId,
-      );
+        if (subscription === undefined) {
+          throw new Error('Subscription was not found.');
+        }
 
-      if (subscription === undefined) {
-        throw new Error('Subscription was not found.');
-      }
+        await setPgLocalCountryCode(client, subscription.country_code);
 
-      if (subscription.status !== 'active') {
-        throw new Error(`Worker swap cannot be requested from status ${subscription.status}.`);
-      }
+        if (subscription.status !== 'active') {
+          throw new Error(`Worker swap cannot be requested from status ${subscription.status}.`);
+        }
 
-      if (subscription.assigned_worker_id === null) {
-        throw new Error('Subscription does not have an assigned worker.');
-      }
+        if (subscription.assigned_worker_id === null) {
+          throw new Error('Subscription does not have an assigned worker.');
+        }
 
-      const quarterStart = getUtcQuarterStart(input.requestedAt);
-      const requestCount = await countWorkerSwapRequestsSince(
-        client,
-        input.subscriptionId,
-        quarterStart,
-      );
+        const quarterStart = getUtcQuarterStart(input.requestedAt);
+        const requestCount = await countWorkerSwapRequestsSince(
+          client,
+          input.subscriptionId,
+          quarterStart,
+        );
 
-      if (requestCount >= 2) {
-        throw new Error('Worker swap limit reached for this quarter.');
-      }
+        if (requestCount >= 2) {
+          throw new Error('Worker swap limit reached for this quarter.');
+        }
 
-      const hasOpenRequest = await hasOpenWorkerSwapRequest(client, input.subscriptionId);
+        const hasOpenRequest = await hasOpenWorkerSwapRequest(client, input.subscriptionId);
 
-      if (hasOpenRequest) {
-        throw new Error('A worker swap request is already open.');
-      }
+        if (hasOpenRequest) {
+          throw new Error('A worker swap request is already open.');
+        }
 
-      const record = buildCreatedWorkerSwapRequestRecord({
-        countryCode: subscription.country_code,
-        currentWorkerId: subscription.assigned_worker_id,
-        input,
-        subscriberId: subscription.subscriber_id,
-        subscriberPhoneNumber: subscription.phone_number,
-        ...(subscription.assigned_worker_display_name === null
-          ? {}
-          : { currentWorkerName: subscription.assigned_worker_display_name }),
-      });
+        const record = buildCreatedWorkerSwapRequestRecord({
+          countryCode: subscription.country_code,
+          currentWorkerId: subscription.assigned_worker_id,
+          input,
+          subscriberId: subscription.subscriber_id,
+          subscriberPhoneNumber: subscription.phone_number,
+          ...(subscription.assigned_worker_display_name === null
+            ? {}
+            : { currentWorkerName: subscription.assigned_worker_display_name }),
+        });
 
-      await insertWorkerSwapRequest(client, record);
-      await insertOutboxEvents(client, record.events);
-      await client.query('COMMIT');
-      return record;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        await insertWorkerSwapRequest(client, record);
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
   }
 
   public async listWorkerSwapRequests(
@@ -964,450 +1091,486 @@ export class PostgresCoreRepository implements CoreRepository {
   public async resolveWorkerSwapRequest(
     input: ResolveWorkerSwapRequestInput,
   ): Promise<WorkerSwapRequestRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const request = await selectWorkerSwapRequestForResolution(client, input.requestId);
 
-    try {
-      await client.query('BEGIN');
-      const request = await selectWorkerSwapRequestForResolution(client, input.requestId);
+        if (request === undefined) {
+          throw new Error('Worker swap request was not found.');
+        }
 
-      if (request === undefined) {
-        throw new Error('Worker swap request was not found.');
-      }
+        await setPgLocalCountryCode(client, request.country_code);
 
-      if (request.status !== 'open') {
-        throw new Error(`Worker swap request cannot be resolved from status ${request.status}.`);
-      }
+        if (request.status !== 'open') {
+          throw new Error(`Worker swap request cannot be resolved from status ${request.status}.`);
+        }
 
-      if (input.resolution === 'approved' && input.replacementWorkerId === undefined) {
-        throw new Error('replacementWorkerId is required when approving a worker swap.');
-      }
+        if (input.resolution === 'approved' && input.replacementWorkerId === undefined) {
+          throw new Error('replacementWorkerId is required when approving a worker swap.');
+        }
 
-      const replacementWorker =
-        input.replacementWorkerId === undefined
-          ? undefined
-          : await selectWorkerForSwapReplacement(client, input.replacementWorkerId);
+        const replacementWorker =
+          input.replacementWorkerId === undefined
+            ? undefined
+            : await selectWorkerForSwapReplacement(client, input.replacementWorkerId);
 
-      if (input.resolution === 'approved' && replacementWorker === undefined) {
-        throw new Error('Replacement worker was not found.');
-      }
+        if (input.resolution === 'approved' && replacementWorker === undefined) {
+          throw new Error('Replacement worker was not found.');
+        }
 
-      const record = buildResolvedWorkerSwapRequestRecord({
-        input,
-        request: mapWorkerSwapRequestRow(request),
-        ...(replacementWorker === undefined
-          ? {}
-          : { replacementWorkerName: replacementWorker.display_name }),
-      });
+        const record = buildResolvedWorkerSwapRequestRecord({
+          input,
+          request: mapWorkerSwapRequestRow(request),
+          ...(replacementWorker === undefined
+            ? {}
+            : { replacementWorkerName: replacementWorker.display_name }),
+        });
 
-      await updateWorkerSwapRequestResolution(client, input);
-      if (input.resolution === 'approved' && input.replacementWorkerId !== undefined) {
-        await updateSubscriptionWorkerSwap(
-          client,
-          request.subscription_id,
-          input.replacementWorkerId,
-        );
-        await updateScheduledVisitsWorkerSwap(
-          client,
-          request.subscription_id,
-          input.replacementWorkerId,
-        );
-      }
-      await insertOutboxEvents(client, record.events);
-      await client.query('COMMIT');
-      return record;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        await updateWorkerSwapRequestResolution(client, input);
+        if (input.resolution === 'approved' && input.replacementWorkerId !== undefined) {
+          await updateSubscriptionWorkerSwap(
+            client,
+            request.subscription_id,
+            input.replacementWorkerId,
+          );
+          await updateScheduledVisitsWorkerSwap(
+            client,
+            request.subscription_id,
+            input.replacementWorkerId,
+          );
+        }
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
   }
 
   public async cancelSubscription(
     input: CancelSubscriptionInput,
   ): Promise<CancelledSubscriptionRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const subscription = await selectSubscriptionForStatusChange(client, input.subscriptionId);
 
-    try {
-      await client.query('BEGIN');
-      const subscription = await selectSubscriptionForCancellation(client, input.subscriptionId);
+        if (subscription === undefined) {
+          throw new Error('Subscription was not found.');
+        }
 
-      if (subscription === undefined) {
-        throw new Error('Subscription was not found.');
-      }
+        await setPgLocalCountryCode(client, subscription.country_code);
+        const status = transitionSubscription(subscription.status, 'cancel');
+        if (status !== 'cancelled') {
+          throw new Error(`Expected cancelled subscription status, received ${status}.`);
+        }
 
-      const status = transitionSubscription(subscription.status, 'cancel');
-      if (status !== 'cancelled') {
-        throw new Error(`Expected cancelled subscription status, received ${status}.`);
-      }
+        const cancelledScheduledVisits = await cancelScheduledSubscriptionVisits(
+          client,
+          input.subscriptionId,
+        );
+        const record = buildCancelledSubscriptionRecord({
+          cancelledScheduledVisits,
+          countryCode: subscription.country_code,
+          input,
+          status,
+        });
 
-      const cancelledScheduledVisits = await cancelScheduledSubscriptionVisits(
-        client,
-        input.subscriptionId,
-      );
-      const record = buildCancelledSubscriptionRecord({
-        cancelledScheduledVisits,
-        countryCode: subscription.country_code,
-        input,
-        status,
-      });
+        await updateSubscriptionStatus(client, input.subscriptionId, status);
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
+  }
 
-      await updateSubscriptionCancellationStatus(client, input.subscriptionId, status);
-      await insertOutboxEvents(client, record.events);
-      await client.query('COMMIT');
-      return record;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+  public async pauseSubscription(input: PauseSubscriptionInput): Promise<PausedSubscriptionRecord> {
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const subscription = await selectSubscriptionForStatusChange(client, input.subscriptionId);
+
+        if (subscription === undefined) {
+          throw new Error('Subscription was not found.');
+        }
+
+        await setPgLocalCountryCode(client, subscription.country_code);
+        const status = transitionSubscription(subscription.status, 'pause');
+        if (status !== 'paused') {
+          throw new Error(`Expected paused subscription status, received ${status}.`);
+        }
+
+        const pausedScheduledVisits = await cancelScheduledSubscriptionVisits(
+          client,
+          input.subscriptionId,
+        );
+        const record = buildPausedSubscriptionRecord({
+          countryCode: subscription.country_code,
+          input,
+          pausedScheduledVisits,
+          status,
+        });
+
+        await updateSubscriptionStatus(client, input.subscriptionId, status);
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
+  }
+
+  public async resumeSubscription(
+    input: ResumeSubscriptionInput,
+  ): Promise<ResumedSubscriptionRecord> {
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const subscription = await selectSubscriptionForStatusChange(client, input.subscriptionId);
+
+        if (subscription === undefined) {
+          throw new Error('Subscription was not found.');
+        }
+
+        await setPgLocalCountryCode(client, subscription.country_code);
+        const status = transitionSubscription(subscription.status, 'resume');
+        if (status !== 'active') {
+          throw new Error(`Expected active subscription status, received ${status}.`);
+        }
+        const record = buildResumedSubscriptionRecord({
+          countryCode: subscription.country_code,
+          input,
+          status,
+        });
+
+        await updateSubscriptionStatus(client, input.subscriptionId, status);
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
   }
 
   public async changeSubscriptionTier(
     input: ChangeSubscriptionTierInput,
   ): Promise<ChangedSubscriptionTierRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const subscription = await selectSubscriptionForTierChange(client, input.subscriptionId);
 
-    try {
-      await client.query('BEGIN');
-      const subscription = await selectSubscriptionForTierChange(client, input.subscriptionId);
+        if (subscription === undefined) {
+          throw new Error('Subscription was not found.');
+        }
 
-      if (subscription === undefined) {
-        throw new Error('Subscription was not found.');
-      }
+        await setPgLocalCountryCode(client, subscription.country_code);
+        assertSubscriptionCanChangeTier(subscription.status);
+        const record = buildChangedSubscriptionTierRecord({
+          countryCode: subscription.country_code,
+          input,
+          previousTierCode: subscription.tier_code,
+          status: subscription.status,
+        });
 
-      assertSubscriptionCanChangeTier(subscription.status);
-      const record = buildChangedSubscriptionTierRecord({
-        countryCode: subscription.country_code,
-        input,
-        previousTierCode: subscription.tier_code,
-        status: subscription.status,
-      });
+        await updateSubscriptionTier(client, record);
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
+  }
 
-      await updateSubscriptionTier(client, record);
-      await insertOutboxEvents(client, record.events);
-      await client.query('COMMIT');
-      return record;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+  public async updateSubscriptionPaymentMethod(
+    input: UpdateSubscriptionPaymentMethodInput,
+  ): Promise<UpdatedSubscriptionPaymentMethodRecord> {
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const subscription = await selectSubscriptionForPaymentMethodUpdate(
+          client,
+          input.subscriptionId,
+        );
+
+        if (subscription === undefined) {
+          throw new Error('Subscription was not found.');
+        }
+
+        if (subscription.status === 'cancelled') {
+          throw new Error('Cancelled subscriptions cannot change payment method.');
+        }
+
+        await setPgLocalCountryCode(client, subscription.country_code);
+        const record = buildUpdatedSubscriptionPaymentMethodRecord({
+          countryCode: subscription.country_code,
+          input,
+        });
+
+        await updateSubscriptionPaymentMethod(client, record);
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
   }
 
   public async checkInVisit(input: CheckInVisitInput): Promise<CheckedInVisitRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const visit = await selectVisitForLifecycle(client, input.visitId);
 
-    try {
-      await client.query('BEGIN');
-      const visit = await selectVisitForLifecycle(client, input.visitId);
+        if (visit === undefined) {
+          throw new Error('Visit was not found.');
+        }
 
-      if (visit === undefined) {
-        throw new Error('Visit was not found.');
-      }
+        await setPgLocalCountryCode(client, visit.country_code);
+        assertVisitWorker(visit.worker_id, input.workerId);
+        assertVisitLocationVerified({
+          fallbackCode: input.fallbackCode,
+          location: input.location,
+          target: {
+            latitude: Number(visit.gps_latitude),
+            longitude: Number(visit.gps_longitude),
+          },
+          visitFallbackCode: visit.fallback_code,
+        });
+        transitionVisit(visit.status, 'check_in');
+        await updateVisitCheckIn(client, input, visit.fallback_code);
 
-      assertVisitWorker(visit.worker_id, input.workerId);
-      assertVisitLocationVerified({
-        fallbackCode: input.fallbackCode,
-        location: input.location,
-        target: {
-          latitude: Number(visit.gps_latitude),
-          longitude: Number(visit.gps_longitude),
-        },
-        visitFallbackCode: visit.fallback_code,
-      });
-      transitionVisit(visit.status, 'check_in');
-      await updateVisitCheckIn(client, input, visit.fallback_code);
-      await client.query('COMMIT');
-
-      return {
-        checkedInAt: input.checkedInAt,
-        status: 'in_progress',
-        visitId: input.visitId,
-        workerId: input.workerId,
-      };
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        return {
+          checkedInAt: input.checkedInAt,
+          status: 'in_progress',
+          visitId: input.visitId,
+          workerId: input.workerId,
+        };
+      },
+    });
   }
 
   public async uploadVisitPhoto(input: UploadVisitPhotoInput): Promise<VisitPhotoRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const visit = await selectVisitForLifecycle(client, input.visitId);
 
-    try {
-      await client.query('BEGIN');
-      const visit = await selectVisitForLifecycle(client, input.visitId);
+        if (visit === undefined) {
+          throw new Error('Visit was not found.');
+        }
 
-      if (visit === undefined) {
-        throw new Error('Visit was not found.');
-      }
+        await setPgLocalCountryCode(client, visit.country_code);
+        assertVisitWorker(visit.worker_id, input.workerId);
 
-      assertVisitWorker(visit.worker_id, input.workerId);
+        const event = createDomainEvent({
+          actor: { role: 'worker', userId: input.workerId },
+          aggregateId: input.visitId,
+          aggregateType: 'visit',
+          countryCode: visit.country_code,
+          eventType: 'VisitPhotoUploaded',
+          payload: {
+            byteSize: input.byteSize,
+            contentType: input.contentType,
+            objectKey: input.objectKey,
+            photoType: input.photoType,
+            workerId: input.workerId,
+          },
+          traceId: input.traceId,
+        });
+        const photo = await upsertVisitPhoto(client, input, visit.country_code);
+        await insertOutboxEvents(client, [event]);
 
-      const event = createDomainEvent({
-        actor: { role: 'worker', userId: input.workerId },
-        aggregateId: input.visitId,
-        aggregateType: 'visit',
-        countryCode: visit.country_code,
-        eventType: 'VisitPhotoUploaded',
-        payload: {
-          byteSize: input.byteSize,
-          contentType: input.contentType,
-          objectKey: input.objectKey,
-          photoType: input.photoType,
-          workerId: input.workerId,
-        },
-        traceId: input.traceId,
-      });
-      const photo = await upsertVisitPhoto(client, input, visit.country_code);
-      await insertOutboxEvents(client, [event]);
-      await client.query('COMMIT');
-
-      return {
-        ...photo,
-        events: [event],
-      };
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        return {
+          ...photo,
+          events: [event],
+        };
+      },
+    });
   }
 
   public async checkOutVisit(input: CheckOutVisitInput): Promise<CompletedVisitRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const visit = await selectVisitForLifecycle(client, input.visitId);
 
-    try {
-      await client.query('BEGIN');
-      const visit = await selectVisitForLifecycle(client, input.visitId);
+        if (visit === undefined) {
+          throw new Error('Visit was not found.');
+        }
 
-      if (visit === undefined) {
-        throw new Error('Visit was not found.');
-      }
+        await setPgLocalCountryCode(client, visit.country_code);
 
-      if (visit.check_in_at === null) {
-        throw new Error('Visit has not been checked in.');
-      }
+        if (visit.check_in_at === null) {
+          throw new Error('Visit has not been checked in.');
+        }
 
-      assertVisitWorker(visit.worker_id, input.workerId);
-      transitionVisit(visit.status, 'check_out');
-      assertVisitLocationVerified({
-        fallbackCode: input.fallbackCode,
-        location: input.location,
-        target: {
-          latitude: Number(visit.gps_latitude),
-          longitude: Number(visit.gps_longitude),
-        },
-        visitFallbackCode: visit.fallback_code,
-      });
-      assertVisitCompletionAllowed({
-        checkedInAt: visit.check_in_at,
-        checkedOutAt: input.checkedOutAt,
-      });
-      await assertVisitPhotosReady(client, input.visitId);
+        assertVisitWorker(visit.worker_id, input.workerId);
+        transitionVisit(visit.status, 'check_out');
+        assertVisitLocationVerified({
+          fallbackCode: input.fallbackCode,
+          location: input.location,
+          target: {
+            latitude: Number(visit.gps_latitude),
+            longitude: Number(visit.gps_longitude),
+          },
+          visitFallbackCode: visit.fallback_code,
+        });
+        assertVisitCompletionAllowed({
+          checkedInAt: visit.check_in_at,
+          checkedOutAt: input.checkedOutAt,
+        });
+        await assertVisitPhotosReady(client, input.visitId);
 
-      const bonus = completedVisitBonus();
-      const event = createDomainEvent({
-        actor: { role: 'worker', userId: input.workerId },
-        aggregateId: input.visitId,
-        aggregateType: 'visit',
-        countryCode: visit.country_code,
-        eventType: 'VisitCompleted',
-        payload: {
-          bonusAmountMinor: bonus.amountMinor.toString(),
-          bonusCurrencyCode: bonus.currencyCode,
-          checkedInAt: visit.check_in_at.toISOString(),
-          checkedOutAt: input.checkedOutAt.toISOString(),
+        const bonus = completedVisitBonus();
+        const event = createDomainEvent({
+          actor: { role: 'worker', userId: input.workerId },
+          aggregateId: input.visitId,
+          aggregateType: 'visit',
+          countryCode: visit.country_code,
+          eventType: 'VisitCompleted',
+          payload: {
+            bonusAmountMinor: bonus.amountMinor.toString(),
+            bonusCurrencyCode: bonus.currencyCode,
+            checkedInAt: visit.check_in_at.toISOString(),
+            checkedOutAt: input.checkedOutAt.toISOString(),
+            durationMinutes: durationMinutes(visit.check_in_at, input.checkedOutAt),
+            workerId: input.workerId,
+          },
+          traceId: input.traceId,
+        });
+
+        await updateVisitCheckOut(client, input, visit.fallback_code);
+        await insertWorkerCompletedVisitBonus(client, visit.country_code, input, event.eventId);
+        await insertOutboxEvents(client, [event]);
+
+        return {
+          bonus,
+          checkedInAt: visit.check_in_at,
+          checkedOutAt: input.checkedOutAt,
           durationMinutes: durationMinutes(visit.check_in_at, input.checkedOutAt),
+          events: [event],
+          status: 'completed',
+          visitId: input.visitId,
           workerId: input.workerId,
-        },
-        traceId: input.traceId,
-      });
-
-      await updateVisitCheckOut(client, input, visit.fallback_code);
-      await insertWorkerCompletedVisitBonus(client, visit.country_code, input, event.eventId);
-      await insertOutboxEvents(client, [event]);
-      await client.query('COMMIT');
-
-      return {
-        bonus,
-        checkedInAt: visit.check_in_at,
-        checkedOutAt: input.checkedOutAt,
-        durationMinutes: durationMinutes(visit.check_in_at, input.checkedOutAt),
-        events: [event],
-        status: 'completed',
-        visitId: input.visitId,
-        workerId: input.workerId,
-      };
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        };
+      },
+    });
   }
 
   public async rescheduleVisit(input: RescheduleVisitInput): Promise<RescheduledVisitRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const visit = await selectVisitForSubscriberChange(
+          client,
+          input.subscriptionId,
+          input.visitId,
+        );
 
-    try {
-      await client.query('BEGIN');
-      const visit = await selectVisitForSubscriberChange(
-        client,
-        input.subscriptionId,
-        input.visitId,
-      );
+        if (visit === undefined) {
+          throw new Error('Visit was not found.');
+        }
 
-      if (visit === undefined) {
-        throw new Error('Visit was not found.');
-      }
+        await setPgLocalCountryCode(client, visit.country_code);
 
-      if (visit.status !== 'scheduled') {
-        throw new Error(`Visit cannot be rescheduled from status ${visit.status}.`);
-      }
+        if (visit.status !== 'scheduled') {
+          throw new Error(`Visit cannot be rescheduled from status ${visit.status}.`);
+        }
 
-      const record = buildRescheduledVisitRecord({
-        countryCode: visit.country_code,
-        currentScheduledDate: visit.scheduled_date,
-        currentScheduledTimeWindow: visit.scheduled_time_window,
-        input,
-        workerId: visit.worker_id,
-      });
+        const record = buildRescheduledVisitRecord({
+          countryCode: visit.country_code,
+          currentScheduledDate: visit.scheduled_date,
+          currentScheduledTimeWindow: visit.scheduled_time_window,
+          input,
+          workerId: visit.worker_id,
+        });
 
-      await updateVisitSchedule(client, input);
-      await insertOutboxEvents(client, record.events);
-      await client.query('COMMIT');
-      return record;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        await updateVisitSchedule(client, input);
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
   }
 
   public async skipVisit(input: SkipVisitInput): Promise<SkippedVisitRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const visit = await selectVisitForSubscriberChange(
+          client,
+          input.subscriptionId,
+          input.visitId,
+        );
 
-    try {
-      await client.query('BEGIN');
-      const visit = await selectVisitForSubscriberChange(
-        client,
-        input.subscriptionId,
-        input.visitId,
-      );
+        if (visit === undefined) {
+          throw new Error('Visit was not found.');
+        }
 
-      if (visit === undefined) {
-        throw new Error('Visit was not found.');
-      }
+        await setPgLocalCountryCode(client, visit.country_code);
+        const status = transitionVisit(visit.status, 'cancel');
+        if (status !== 'cancelled') {
+          throw new Error(`Expected cancelled visit status, received ${status}.`);
+        }
+        const record = buildSkippedVisitRecord({
+          countryCode: visit.country_code,
+          input,
+          scheduledDate: visit.scheduled_date,
+          scheduledTimeWindow: visit.scheduled_time_window,
+          status,
+          workerId: visit.worker_id,
+        });
 
-      const status = transitionVisit(visit.status, 'cancel');
-      if (status !== 'cancelled') {
-        throw new Error(`Expected cancelled visit status, received ${status}.`);
-      }
-      const record = buildSkippedVisitRecord({
-        countryCode: visit.country_code,
-        input,
-        scheduledDate: visit.scheduled_date,
-        scheduledTimeWindow: visit.scheduled_time_window,
-        status,
-        workerId: visit.worker_id,
-      });
-
-      await updateVisitStatus(client, input.visitId, status);
-      await insertOutboxEvents(client, record.events);
-      await client.query('COMMIT');
-      return record;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        await updateVisitStatus(client, input.visitId, status);
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
   }
 
   public async updateOperatorVisitStatus(
     input: UpdateOperatorVisitStatusInput,
   ): Promise<OperatorVisitStatusRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const visit = await selectVisitForOperatorStatusUpdate(client, input.visitId);
 
-    try {
-      await client.query('BEGIN');
-      const visit = await selectVisitForOperatorStatusUpdate(client, input.visitId);
+        if (visit === undefined) {
+          throw new Error('Visit was not found.');
+        }
 
-      if (visit === undefined) {
-        throw new Error('Visit was not found.');
-      }
+        await setPgLocalCountryCode(client, visit.country_code);
+        const previousStatus = visit.status;
+        const status = transitionVisit(
+          previousStatus,
+          input.status === 'no_show' ? 'mark_no_show' : 'cancel',
+        );
 
-      const previousStatus = visit.status;
-      const status = transitionVisit(
-        previousStatus,
-        input.status === 'no_show' ? 'mark_no_show' : 'cancel',
-      );
+        if (status !== input.status) {
+          throw new Error(`Expected ${input.status} visit status, received ${status}.`);
+        }
 
-      if (status !== input.status) {
-        throw new Error(`Expected ${input.status} visit status, received ${status}.`);
-      }
+        const record = buildOperatorVisitStatusRecord({
+          countryCode: visit.country_code,
+          input,
+          previousStatus,
+          scheduledDate: visit.scheduled_date,
+          scheduledTimeWindow: visit.scheduled_time_window,
+          status,
+          subscriptionId: visit.subscription_id,
+          workerId: visit.worker_id,
+        });
 
-      const record = buildOperatorVisitStatusRecord({
-        countryCode: visit.country_code,
-        input,
-        previousStatus,
-        scheduledDate: visit.scheduled_date,
-        scheduledTimeWindow: visit.scheduled_time_window,
-        status,
-        subscriptionId: visit.subscription_id,
-        workerId: visit.worker_id,
-      });
-
-      await updateVisitStatus(client, input.visitId, status);
-      await insertOutboxEvents(client, record.events);
-      await client.query('COMMIT');
-      return record;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        await updateVisitStatus(client, input.visitId, status);
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
   }
 
   public async createDispute(input: CreateDisputeInput): Promise<DisputeRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const visit = await selectVisitForDispute(client, input.subscriptionId, input.visitId);
 
-    try {
-      await client.query('BEGIN');
-      const visit = await selectVisitForDispute(client, input.subscriptionId, input.visitId);
+        if (visit === undefined) {
+          throw new Error('Visit was not found.');
+        }
 
-      if (visit === undefined) {
-        throw new Error('Visit was not found.');
-      }
+        await setPgLocalCountryCode(client, visit.country_code);
+        const status = transitionVisit(visit.status, 'dispute');
+        const record = buildCreatedDisputeRecord({
+          countryCode: visit.country_code,
+          input,
+          subscriberPhoneNumber: visit.subscriber_phone_number,
+          workerId: visit.worker_id,
+        });
 
-      const status = transitionVisit(visit.status, 'dispute');
-      const record = buildCreatedDisputeRecord({
-        countryCode: visit.country_code,
-        input,
-        subscriberPhoneNumber: visit.subscriber_phone_number,
-        workerId: visit.worker_id,
-      });
-
-      await insertSupportDispute(client, record);
-      await updateVisitStatus(client, input.visitId, status);
-      await insertOutboxEvents(client, record.events);
-      await client.query('COMMIT');
-      return record;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        await insertSupportDispute(client, record);
+        await updateVisitStatus(client, input.visitId, status);
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
   }
 
   public async listOperatorDisputes(
@@ -1418,72 +1581,61 @@ export class PostgresCoreRepository implements CoreRepository {
   }
 
   public async resolveDispute(input: ResolveDisputeInput): Promise<DisputeRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const dispute = await selectDisputeForResolution(client, input.disputeId);
 
-    try {
-      await client.query('BEGIN');
-      const dispute = await selectDisputeForResolution(client, input.disputeId);
+        if (dispute === undefined) {
+          throw new Error('Dispute was not found.');
+        }
 
-      if (dispute === undefined) {
-        throw new Error('Dispute was not found.');
-      }
+        await setPgLocalCountryCode(client, dispute.country_code);
 
-      if (dispute.status !== 'open') {
-        throw new Error(`Dispute cannot be resolved from status ${dispute.status}.`);
-      }
+        if (dispute.status !== 'open') {
+          throw new Error(`Dispute cannot be resolved from status ${dispute.status}.`);
+        }
 
-      const record = buildResolvedDisputeRecord({
-        dispute: mapDisputeRow(dispute),
-        input,
-      });
-      const credit = buildSupportCreditRecord(record, input);
+        const record = buildResolvedDisputeRecord({
+          dispute: mapDisputeRow(dispute),
+          input,
+        });
+        const credit = buildSupportCreditRecord(record, input);
 
-      await updateSupportDisputeResolution(client, input);
-      if (credit !== null) {
-        await insertSupportCredit(client, credit, record.countryCode);
-      }
-      await insertOutboxEvents(client, record.events);
-      await client.query('COMMIT');
-      return record;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        await updateSupportDisputeResolution(client, input);
+        if (credit !== null) {
+          await insertSupportCredit(client, credit, record.countryCode);
+        }
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
   }
 
   public async createSupportContact(
     input: CreateSupportContactInput,
   ): Promise<SupportContactRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const subscription = await selectSubscriptionCountryCodeForUpdate(
+          client,
+          input.subscriptionId,
+        );
 
-    try {
-      await client.query('BEGIN');
-      const subscription = await selectSubscriptionCountryCodeForUpdate(
-        client,
-        input.subscriptionId,
-      );
+        if (subscription === undefined) {
+          throw new Error('Subscription was not found.');
+        }
 
-      if (subscription === undefined) {
-        throw new Error('Subscription was not found.');
-      }
+        await setPgLocalCountryCode(client, subscription.country_code);
+        const record = buildCreatedSupportContactRecord({
+          countryCode: subscription.country_code,
+          input,
+        });
 
-      const record = buildCreatedSupportContactRecord({
-        countryCode: subscription.country_code,
-        input,
-      });
-
-      await insertSupportContact(client, record);
-      await insertOutboxEvents(client, record.events);
-      await client.query('COMMIT');
-      return record;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        await insertSupportContact(client, record);
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
   }
 
   public async listSupportContactsForSubscription(
@@ -1500,28 +1652,26 @@ export class PostgresCoreRepository implements CoreRepository {
     return row === undefined ? null : mapSupportContactRow(row);
   }
 
-  public async rateVisit(input: RateVisitInput): Promise<VisitRatingRecord> {
+  public async resolveSupportContact(
+    input: ResolveSupportContactInput,
+  ): Promise<SupportContactRecord> {
     const client = await this.pool.connect();
 
     try {
       await client.query('BEGIN');
-      const visit = await selectVisitForRating(client, input.subscriptionId, input.visitId);
+      const row = await selectSupportContactForResolution(client, input.contactId);
 
-      if (visit === undefined) {
-        throw new Error('Visit was not found.');
+      if (row === undefined) {
+        throw new Error('Support contact was not found.');
       }
 
-      if (visit.status !== 'completed' && visit.status !== 'disputed') {
-        throw new Error(`Visit cannot be rated from status ${visit.status}.`);
+      const contact = mapSupportContactRow(row);
+      if (contact.status !== 'open') {
+        throw new Error(`Support contact cannot be resolved from status ${contact.status}.`);
       }
 
-      const record = buildVisitRatingRecord({
-        countryCode: visit.country_code,
-        input,
-        workerId: visit.worker_id,
-      });
-
-      await insertVisitRating(client, record);
+      const record = buildResolvedSupportContactRecord({ contact, input });
+      await updateSupportContactResolution(client, record);
       await insertOutboxEvents(client, record.events);
       await client.query('COMMIT');
       return record;
@@ -1533,43 +1683,65 @@ export class PostgresCoreRepository implements CoreRepository {
     }
   }
 
+  public async rateVisit(input: RateVisitInput): Promise<VisitRatingRecord> {
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const visit = await selectVisitForRating(client, input.subscriptionId, input.visitId);
+
+        if (visit === undefined) {
+          throw new Error('Visit was not found.');
+        }
+
+        await setPgLocalCountryCode(client, visit.country_code);
+
+        if (visit.status !== 'completed' && visit.status !== 'disputed') {
+          throw new Error(`Visit cannot be rated from status ${visit.status}.`);
+        }
+
+        const record = buildVisitRatingRecord({
+          countryCode: visit.country_code,
+          input,
+          workerId: visit.worker_id,
+        });
+
+        await insertVisitRating(client, record);
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
+  }
+
   public async reportWorkerIssue(input: ReportWorkerIssueInput): Promise<WorkerIssueReportRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const visit = await selectVisitForWorkerIssue(client, input.visitId);
 
-    try {
-      await client.query('BEGIN');
-      const visit = await selectVisitForWorkerIssue(client, input.visitId);
+        if (visit === undefined) {
+          throw new Error('Visit was not found.');
+        }
 
-      if (visit === undefined) {
-        throw new Error('Visit was not found.');
-      }
+        await setPgLocalCountryCode(client, visit.country_code);
+        assertVisitWorker(visit.worker_id, input.workerId);
+        const record = buildWorkerIssueReportRecord({
+          address: {
+            gpsLatitude: Number(visit.gps_latitude),
+            gpsLongitude: Number(visit.gps_longitude),
+            landmark: visit.landmark,
+            neighborhood: visit.neighborhood,
+          },
+          countryCode: visit.country_code,
+          input,
+          scheduledDate: visit.scheduled_date,
+          scheduledTimeWindow: visit.scheduled_time_window,
+          subscriberPhoneNumber: visit.subscriber_phone_number,
+          subscriptionId: visit.subscription_id,
+        });
 
-      assertVisitWorker(visit.worker_id, input.workerId);
-      const record = buildWorkerIssueReportRecord({
-        address: {
-          gpsLatitude: Number(visit.gps_latitude),
-          gpsLongitude: Number(visit.gps_longitude),
-          landmark: visit.landmark,
-          neighborhood: visit.neighborhood,
-        },
-        countryCode: visit.country_code,
-        input,
-        scheduledDate: visit.scheduled_date,
-        scheduledTimeWindow: visit.scheduled_time_window,
-        subscriberPhoneNumber: visit.subscriber_phone_number,
-        subscriptionId: visit.subscription_id,
-      });
-
-      await insertWorkerIssueReport(client, record);
-      await insertOutboxEvents(client, record.events);
-      await client.query('COMMIT');
-      return record;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        await insertWorkerIssueReport(client, record);
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
   }
 
   public async listWorkerIssues(
@@ -1582,35 +1754,30 @@ export class PostgresCoreRepository implements CoreRepository {
   public async resolveWorkerIssue(
     input: ResolveWorkerIssueInput,
   ): Promise<WorkerIssueReportRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const issue = await selectWorkerIssueForResolution(client, input.issueId);
 
-    try {
-      await client.query('BEGIN');
-      const issue = await selectWorkerIssueForResolution(client, input.issueId);
+        if (issue === undefined) {
+          throw new Error('Worker issue was not found.');
+        }
 
-      if (issue === undefined) {
-        throw new Error('Worker issue was not found.');
-      }
+        await setPgLocalCountryCode(client, issue.country_code);
 
-      if (issue.status === 'resolved') {
-        throw new Error('Worker issue is already resolved.');
-      }
+        if (issue.status === 'resolved') {
+          throw new Error('Worker issue is already resolved.');
+        }
 
-      const record = buildResolvedWorkerIssueRecord({
-        input,
-        issue: mapWorkerIssueRow(issue),
-      });
+        const record = buildResolvedWorkerIssueRecord({
+          input,
+          issue: mapWorkerIssueRow(issue),
+        });
 
-      await updateWorkerIssueResolution(client, input);
-      await insertOutboxEvents(client, record.events);
-      await client.query('COMMIT');
-      return record;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        await updateWorkerIssueResolution(client, input);
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
   }
 
   public async getWorkerMonthlyEarnings(
@@ -1745,11 +1912,21 @@ export class PostgresCoreRepository implements CoreRepository {
             },
       countryCode: detail.country_code,
       monthlyPriceMinor: BigInt(detail.monthly_price_minor),
+      paymentMethod:
+        detail.payment_method_provider === null || detail.payment_method_phone_number === null
+          ? null
+          : {
+              phoneNumber: detail.payment_method_phone_number,
+              provider: detail.payment_method_provider,
+            },
       phoneNumber: detail.phone_number,
-      schedulePreference: {
-        dayOfWeek: detail.preferred_day_of_week,
-        timeWindow: detail.preferred_time_window,
-      },
+      schedulePreference:
+        detail.preferred_day_of_week === null || detail.preferred_time_window === null
+          ? null
+          : {
+              dayOfWeek: detail.preferred_day_of_week,
+              timeWindow: detail.preferred_time_window,
+            },
       status: detail.status,
       subscriberId: detail.subscriber_id,
       subscriptionId: detail.subscription_id,
@@ -1779,35 +1956,18 @@ export class PostgresCoreRepository implements CoreRepository {
   }
 
   public async upsertWorkerProfile(input: UpsertWorkerProfileInput): Promise<WorkerProfileRecord> {
-    await this.pool.query(
-      `
-        INSERT INTO workers (
-          id,
-          country_code,
-          display_name,
-          status,
-          service_neighborhoods,
-          max_active_subscriptions
-        )
-        VALUES ($1, $2, $3, $4, $5, $6)
-        ON CONFLICT (id) DO UPDATE
-        SET
-          country_code = excluded.country_code,
-          display_name = excluded.display_name,
-          status = excluded.status,
-          service_neighborhoods = excluded.service_neighborhoods,
-          max_active_subscriptions = excluded.max_active_subscriptions,
-          updated_at = now()
-      `,
-      [
-        input.workerId,
-        input.countryCode,
-        input.displayName,
-        input.status,
-        input.serviceNeighborhoods,
-        input.maxActiveSubscriptions,
-      ],
-    );
+    await withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: async (client) => {
+        await upsertWorkerProfileRow(client, input);
+        await replaceWorkerServiceCells(client, {
+          countryCode: input.countryCode,
+          maxActiveSubscriptions: input.maxActiveSubscriptions,
+          serviceNeighborhoods: input.serviceNeighborhoods,
+          workerId: input.workerId,
+        });
+      },
+    });
 
     return {
       countryCode: input.countryCode,
@@ -1832,23 +1992,17 @@ export class PostgresCoreRepository implements CoreRepository {
   public async createWorkerOnboardingCase(
     input: CreateWorkerOnboardingCaseInput,
   ): Promise<WorkerOnboardingCaseRecord> {
-    const client = await this.pool.connect();
-
-    try {
-      await client.query('BEGIN');
-      await upsertWorkerForOnboarding(client, input);
-      const record = buildCreatedWorkerOnboardingCaseRecord(input);
-      await insertWorkerOnboardingCase(client, record);
-      await insertWorkerOnboardingNotes(client, record.caseId, record.notes);
-      await insertOutboxEvents(client, record.events);
-      await client.query('COMMIT');
-      return record;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+    return withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: async (client) => {
+        await upsertWorkerForOnboarding(client, input);
+        const record = buildCreatedWorkerOnboardingCaseRecord(input);
+        await insertWorkerOnboardingCase(client, record);
+        await insertWorkerOnboardingNotes(client, record.countryCode, record.caseId, record.notes);
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
   }
 
   public async listWorkerOnboardingCases(
@@ -1862,64 +2016,57 @@ export class PostgresCoreRepository implements CoreRepository {
   public async advanceWorkerOnboardingCase(
     input: AdvanceWorkerOnboardingCaseInput,
   ): Promise<WorkerOnboardingCaseRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const row = await selectWorkerOnboardingCaseForUpdate(client, input.caseId);
 
-    try {
-      await client.query('BEGIN');
-      const row = await selectWorkerOnboardingCaseForUpdate(client, input.caseId);
+        if (row === undefined) {
+          throw new Error('Worker onboarding case was not found.');
+        }
 
-      if (row === undefined) {
-        throw new Error('Worker onboarding case was not found.');
-      }
-
-      const current = await mapWorkerOnboardingCaseRow(client, row);
-      const record = buildAdvancedWorkerOnboardingCaseRecord({ input, record: current });
-      await updateWorkerOnboardingCaseStage(client, record);
-      await insertWorkerOnboardingNotes(client, record.caseId, [record.notes.at(-1)!]);
-      if (record.stage === 'activated') {
-        await updateWorkerStatus(client, record.workerId, 'active');
-      } else if (record.stage === 'rejected') {
-        await updateWorkerStatus(client, record.workerId, 'inactive');
-      } else {
-        await updateWorkerStatus(client, record.workerId, 'onboarding');
-      }
-      await insertOutboxEvents(client, record.events);
-      await client.query('COMMIT');
-      return record;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        await setPgLocalCountryCode(client, row.country_code);
+        const current = await mapWorkerOnboardingCaseRow(client, row);
+        const record = buildAdvancedWorkerOnboardingCaseRecord({ input, record: current });
+        await updateWorkerOnboardingCaseStage(client, record);
+        await insertWorkerOnboardingNotes(client, record.countryCode, record.caseId, [
+          record.notes.at(-1)!,
+        ]);
+        if (record.stage === 'activated') {
+          await updateWorkerStatus(client, record.workerId, 'active');
+        } else if (record.stage === 'rejected') {
+          await updateWorkerStatus(client, record.workerId, 'inactive');
+        } else {
+          await updateWorkerStatus(client, record.workerId, 'onboarding');
+        }
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
   }
 
   public async createWorkerUnavailability(
     input: CreateWorkerUnavailabilityInput,
   ): Promise<WorkerUnavailabilityRecord> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      run: async (client) => {
+        const worker = await selectWorkerProfile(client, input.workerId);
 
-    try {
-      await client.query('BEGIN');
-      if (!(await workerExists(client, input.workerId))) {
-        throw new Error('Worker was not found.');
-      }
+        if (worker === undefined) {
+          throw new Error('Worker was not found.');
+        }
 
-      if (await isWorkerUnavailableOnDate(client, input.workerId, input.date)) {
-        throw new Error('Worker unavailability already exists for this date.');
-      }
+        await setPgLocalCountryCode(client, worker.countryCode);
 
-      const record = buildWorkerUnavailabilityRecord(input);
-      await insertWorkerUnavailability(client, record);
-      await insertOutboxEvents(client, record.events);
-      await client.query('COMMIT');
-      return record;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        if (await isWorkerUnavailableOnDate(client, input.workerId, input.date)) {
+          throw new Error('Worker unavailability already exists for this date.');
+        }
+
+        const record = buildWorkerUnavailabilityRecord(input);
+        await insertWorkerUnavailability(client, record);
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
   }
 
   public async listWorkerUnavailability(
@@ -1957,6 +2104,8 @@ export class PostgresCoreRepository implements CoreRepository {
         INNER JOIN subscriber_addresses address ON address.id = subscription.address_id
         WHERE subscription.country_code = $1
           AND subscription.status = 'pending_match'
+          AND subscription.preferred_day_of_week IS NOT NULL
+          AND subscription.preferred_time_window IS NOT NULL
         ORDER BY subscription.created_at ASC
         LIMIT $2
       `,
@@ -2001,10 +2150,19 @@ export class PostgresCoreRepository implements CoreRepository {
         SELECT
           worker.id AS worker_id,
           worker.display_name,
-          worker.service_neighborhoods,
+          COALESCE(
+            array_agg(DISTINCT service_cell.display_name)
+              FILTER (WHERE service_cell.display_name IS NOT NULL),
+            worker.service_neighborhoods
+          ) AS service_neighborhoods,
           worker.max_active_subscriptions,
-          COUNT(active_subscription.id)::int AS active_subscription_count
+          COUNT(DISTINCT active_subscription.id)::int AS active_subscription_count
         FROM workers worker
+        LEFT JOIN worker_service_cells worker_cell
+          ON worker_cell.worker_id = worker.id
+        LEFT JOIN service_cells service_cell
+          ON service_cell.country_code = worker_cell.country_code
+          AND service_cell.cell_key = worker_cell.cell_key
         LEFT JOIN subscriptions active_subscription
           ON active_subscription.assigned_worker_id = worker.id
           AND active_subscription.status = 'active'
@@ -2028,17 +2186,27 @@ export class PostgresCoreRepository implements CoreRepository {
           )
           AND EXISTS (
             SELECT 1
+            FROM worker_service_cells matching_worker_cell
+            WHERE matching_worker_cell.worker_id = worker.id
+              AND matching_worker_cell.cell_key = lower($2)
+            UNION ALL
+            SELECT 1
             FROM unnest(worker.service_neighborhoods) service_neighborhood
-            WHERE lower(service_neighborhood) = lower($2)
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM worker_service_cells existing_worker_cell
+                WHERE existing_worker_cell.worker_id = worker.id
+              )
+              AND lower(service_neighborhood) = lower($2)
           )
         GROUP BY
           worker.id,
           worker.display_name,
           worker.service_neighborhoods,
           worker.max_active_subscriptions
-        HAVING COUNT(active_subscription.id) < worker.max_active_subscriptions
+        HAVING COUNT(DISTINCT active_subscription.id) < worker.max_active_subscriptions
         ORDER BY
-          COUNT(active_subscription.id) ASC,
+          COUNT(DISTINCT active_subscription.id) ASC,
           worker.display_name ASC
       `,
       [
@@ -2072,29 +2240,55 @@ export class PostgresCoreRepository implements CoreRepository {
   ): Promise<readonly ServiceCellCapacityRecord[]> {
     const result = await this.pool.query<ServiceCellCapacityRow>(
       `
-        WITH worker_cells AS (
+        WITH worker_cell_source AS (
           SELECT
+            worker.id AS worker_id,
+            service_cell.cell_key,
+            service_cell.display_name AS service_cell,
+            worker_cell.max_active_subscriptions
+          FROM worker_service_cells worker_cell
+          INNER JOIN workers worker ON worker.id = worker_cell.worker_id
+          INNER JOIN service_cells service_cell
+            ON service_cell.country_code = worker_cell.country_code
+            AND service_cell.cell_key = worker_cell.cell_key
+          WHERE worker.status = 'active'
+            AND service_cell.status = 'active'
+          UNION ALL
+          SELECT
+            worker.id AS worker_id,
             lower(service_cell) AS cell_key,
-            min(service_cell) AS service_cell,
-            COUNT(worker.id)::int AS active_workers,
-            COALESCE(SUM(worker.max_active_subscriptions), 0)::int AS total_capacity
+            service_cell,
+            worker.max_active_subscriptions
           FROM workers worker
           CROSS JOIN LATERAL unnest(worker.service_neighborhoods) AS service_cell
           WHERE worker.status = 'active'
-          GROUP BY lower(service_cell)
+            AND NOT EXISTS (
+              SELECT 1
+              FROM worker_service_cells existing_worker_cell
+              WHERE existing_worker_cell.worker_id = worker.id
+            )
+        ),
+        worker_cells AS (
+          SELECT
+            cell_key,
+            min(service_cell) AS service_cell,
+            COUNT(worker_id)::int AS active_workers,
+            COALESCE(SUM(max_active_subscriptions), 0)::int AS total_capacity
+          FROM worker_cell_source
+          GROUP BY cell_key
         ),
         subscription_cells AS (
           SELECT
-            lower(address.neighborhood) AS cell_key,
+            address.service_cell_key AS cell_key,
             COUNT(subscription.id)::int AS active_subscriptions
           FROM subscriptions subscription
           INNER JOIN subscriber_addresses address ON address.id = subscription.address_id
           WHERE subscription.status = 'active'
-          GROUP BY lower(address.neighborhood)
+          GROUP BY address.service_cell_key
         ),
         visit_cells AS (
           SELECT
-            lower(address.neighborhood) AS cell_key,
+            address.service_cell_key AS cell_key,
             COUNT(*) FILTER (WHERE visit.status = 'scheduled')::int AS scheduled_visits,
             COUNT(*) FILTER (WHERE visit.status = 'in_progress')::int AS in_progress_visits,
             COUNT(*) FILTER (WHERE visit.status = 'completed')::int AS completed_visits
@@ -2102,7 +2296,7 @@ export class PostgresCoreRepository implements CoreRepository {
           INNER JOIN subscriptions subscription ON subscription.id = visit.subscription_id
           INNER JOIN subscriber_addresses address ON address.id = subscription.address_id
           WHERE visit.scheduled_date = $1
-          GROUP BY lower(address.neighborhood)
+          GROUP BY address.service_cell_key
         ),
         all_cells AS (
           SELECT cell_key FROM worker_cells
@@ -2211,19 +2405,15 @@ export class PostgresCoreRepository implements CoreRepository {
       input,
       notifications,
     });
-    const client = await this.pool.connect();
 
-    try {
-      await client.query('BEGIN');
-      await insertOutboxEvents(client, record.events);
-      await client.query('COMMIT');
-      return record;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+    return withPgTransaction(this.pool, {
+      countryCode: detail.countryCode,
+      run: async (client) => {
+        await insertSubscriberPrivacyRequest(client, record);
+        await insertOutboxEvents(client, record.events);
+        return record;
+      },
+    });
   }
 
   public async listPaymentAttempts(
@@ -2234,7 +2424,7 @@ export class PostgresCoreRepository implements CoreRepository {
         SELECT
           attempt.id AS payment_attempt_id,
           attempt.subscription_id,
-          subscription.country_code,
+          attempt.country_code,
           attempt.amount_minor,
           attempt.currency_code,
           attempt.status,
@@ -2245,7 +2435,7 @@ export class PostgresCoreRepository implements CoreRepository {
           subscription.status AS subscription_status
         FROM payment_attempts attempt
         INNER JOIN subscriptions subscription ON subscription.id = attempt.subscription_id
-        WHERE subscription.country_code = $1
+        WHERE attempt.country_code = $1
           AND ($2::text IS NULL OR attempt.provider = $2)
           AND ($3::text IS NULL OR attempt.status = $3)
         ORDER BY attempt.charged_at DESC, attempt.id DESC
@@ -2389,68 +2579,73 @@ export class PostgresCoreRepository implements CoreRepository {
   }
 
   public async registerPushDevice(input: RegisterPushDeviceInput): Promise<PushDeviceRecord> {
-    const result = await this.pool.query<PushDeviceRow>(
-      `
-        INSERT INTO push_device_tokens (
-          id,
-          country_code,
-          user_id,
-          role,
-          app,
-          platform,
-          environment,
-          device_id,
-          token,
-          status,
-          last_registered_at
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'active', $10)
-        ON CONFLICT (user_id, device_id) DO UPDATE
-        SET
-          country_code = excluded.country_code,
-          role = excluded.role,
-          app = excluded.app,
-          platform = excluded.platform,
-          environment = excluded.environment,
-          token = excluded.token,
-          status = 'active',
-          last_registered_at = excluded.last_registered_at,
-          updated_at = now()
-        RETURNING
-          id AS push_device_id,
-          country_code,
-          user_id,
-          role,
-          app,
-          platform,
-          environment,
-          device_id,
-          token,
-          status,
-          last_registered_at,
-          created_at,
-          updated_at
-      `,
-      [
-        randomUUID(),
-        input.countryCode,
-        input.userId,
-        input.role,
-        input.app,
-        input.platform,
-        input.environment,
-        input.deviceId,
-        input.token,
-        input.registeredAt,
-      ],
-    );
-    const row = result.rows[0];
+    return withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: async (client) => {
+        const result = await client.query<PushDeviceRow>(
+          `
+            INSERT INTO push_device_tokens (
+              id,
+              country_code,
+              user_id,
+              role,
+              app,
+              platform,
+              environment,
+              device_id,
+              token,
+              status,
+              last_registered_at
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'active', $10)
+            ON CONFLICT (user_id, device_id) DO UPDATE
+            SET
+              country_code = excluded.country_code,
+              role = excluded.role,
+              app = excluded.app,
+              platform = excluded.platform,
+              environment = excluded.environment,
+              token = excluded.token,
+              status = 'active',
+              last_registered_at = excluded.last_registered_at,
+              updated_at = now()
+            RETURNING
+              id AS push_device_id,
+              country_code,
+              user_id,
+              role,
+              app,
+              platform,
+              environment,
+              device_id,
+              token,
+              status,
+              last_registered_at,
+              created_at,
+              updated_at
+          `,
+          [
+            randomUUID(),
+            input.countryCode,
+            input.userId,
+            input.role,
+            input.app,
+            input.platform,
+            input.environment,
+            input.deviceId,
+            input.token,
+            input.registeredAt,
+          ],
+        );
+        const row = result.rows[0];
 
-    if (row === undefined) {
-      throw new Error('Push device could not be registered.');
-    }
+        if (row === undefined) {
+          throw new Error('Push device could not be registered.');
+        }
 
-    return mapPushDeviceRow(row);
+        return mapPushDeviceRow(row);
+      },
+    });
   }
 
   public async listPushDevices(input: ListPushDevicesInput): Promise<readonly PushDeviceRecord[]> {
@@ -2486,62 +2681,56 @@ export class PostgresCoreRepository implements CoreRepository {
   public async deliverDueNotificationMessages(
     input: DeliverDueNotificationMessagesInput,
   ): Promise<readonly NotificationMessageRecord[]> {
-    const client = await this.pool.connect();
+    return withPgTransaction(this.pool, {
+      countryCode: input.countryCode,
+      run: async (client) => {
+        const result = await client.query<NotificationMessageRow>(
+          `
+            SELECT
+              id AS message_id,
+              country_code,
+              channel,
+              template_key,
+              recipient_role,
+              recipient_user_id,
+              aggregate_type,
+              aggregate_id,
+              event_id,
+              payload,
+              status,
+              provider,
+              provider_reference,
+              attempt_count,
+              available_at,
+              created_at,
+              last_attempt_at,
+              sent_at,
+              failure_reason
+            FROM notification_messages
+            WHERE country_code = $1
+              AND status = 'pending'
+              AND available_at <= $2
+            ORDER BY available_at ASC, id ASC
+            LIMIT $3
+            FOR UPDATE SKIP LOCKED
+          `,
+          [input.countryCode, input.deliveredAt, input.limit],
+        );
+        const delivered: NotificationMessageRecord[] = [];
 
-    try {
-      await client.query('BEGIN');
-      const result = await client.query<NotificationMessageRow>(
-        `
-          SELECT
-            id AS message_id,
-            country_code,
-            channel,
-            template_key,
-            recipient_role,
-            recipient_user_id,
-            aggregate_type,
-            aggregate_id,
-            event_id,
-            payload,
-            status,
-            provider,
-            provider_reference,
-            attempt_count,
-            available_at,
-            created_at,
-            last_attempt_at,
-            sent_at,
-            failure_reason
-          FROM notification_messages
-          WHERE country_code = $1
-            AND status = 'pending'
-            AND available_at <= $2
-          ORDER BY available_at ASC, id ASC
-          LIMIT $3
-          FOR UPDATE SKIP LOCKED
-        `,
-        [input.countryCode, input.deliveredAt, input.limit],
-      );
-      const delivered: NotificationMessageRecord[] = [];
+        for (const row of result.rows) {
+          const message = mapNotificationMessageRow(row);
+          const updated = await deliverNotificationMessageLocally({
+            deliveredAt: input.deliveredAt,
+            message,
+            pushTokens: await selectPushTokensForNotificationMessage(client, message),
+          });
+          delivered.push(await updateNotificationDelivery(client, updated));
+        }
 
-      for (const row of result.rows) {
-        const message = mapNotificationMessageRow(row);
-        const updated = await deliverNotificationMessageLocally({
-          deliveredAt: input.deliveredAt,
-          message,
-          pushTokens: await selectPushTokensForNotificationMessage(client, message),
-        });
-        delivered.push(await updateNotificationDelivery(client, updated));
-      }
-
-      await client.query('COMMIT');
-      return delivered;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+        return delivered;
+      },
+    });
   }
 }
 
@@ -2567,18 +2756,20 @@ interface OtpChallengeRow {
   readonly attempts: number;
   readonly code_hash: string;
   readonly consumed_at: Date | null;
-  readonly country_code: 'TG';
+  readonly country_code: CountryCode;
   readonly expires_at: Date;
   readonly phone_number: string;
 }
 
 interface AuthUserRow {
+  readonly country_code: CountryCode;
   readonly phone_number: string;
   readonly role: 'operator' | 'subscriber' | 'worker';
   readonly user_id: string;
 }
 
 interface AuthRefreshSessionRow {
+  readonly country_code: CountryCode;
   readonly device_id: string;
   readonly phone_number: string;
   readonly revoked_at: Date | null;
@@ -2588,8 +2779,21 @@ interface AuthRefreshSessionRow {
   readonly user_id: string;
 }
 
+interface SubscriberProfileRow {
+  readonly avatar_object_key: string | null;
+  readonly country_code: CountryCode;
+  readonly created_at: Date;
+  readonly email: string | null;
+  readonly first_name: string | null;
+  readonly is_adult_confirmed: boolean;
+  readonly last_name: string | null;
+  readonly phone_number: string;
+  readonly subscriber_id: string;
+  readonly updated_at: Date;
+}
+
 interface PaymentSubscriptionRow {
-  readonly country_code: 'TG';
+  readonly country_code: CountryCode;
   readonly currency_code: 'XOF';
   readonly monthly_price_minor: string;
   readonly status: SubscriptionStatus;
@@ -2598,6 +2802,7 @@ interface PaymentSubscriptionRow {
 interface PaymentAttemptRow {
   readonly amount_minor: string;
   readonly charged_at: Date;
+  readonly country_code: CountryCode;
   readonly currency_code: 'XOF';
   readonly idempotency_key: string;
   readonly payment_attempt_id: string;
@@ -2772,6 +2977,8 @@ interface SubscriptionDetailRow {
   readonly landmark: string;
   readonly monthly_price_minor: string;
   readonly neighborhood: string;
+  readonly payment_method_phone_number: string | null;
+  readonly payment_method_provider: SubscriptionPaymentMethod['provider'] | null;
   readonly phone_number: string;
   readonly preferred_day_of_week:
     | 'friday'
@@ -2780,13 +2987,21 @@ interface SubscriptionDetailRow {
     | 'sunday'
     | 'thursday'
     | 'tuesday'
-    | 'wednesday';
-  readonly preferred_time_window: 'afternoon' | 'morning';
+    | 'wednesday'
+    | null;
+  readonly preferred_time_window: 'afternoon' | 'morning' | null;
   readonly status: SubscriptionStatus;
   readonly subscriber_id: string;
   readonly subscription_id: string;
   readonly tier_code: 'T1' | 'T2';
   readonly visits_per_cycle: 1 | 2;
+}
+
+interface CurrentSubscriberSubscriptionRow {
+  readonly country_code: 'TG';
+  readonly status: SubscriptionStatus;
+  readonly subscriber_id: string;
+  readonly subscription_id: string;
 }
 
 interface WorkerSwapSubscriptionRow {
@@ -2853,6 +3068,8 @@ async function selectSubscriptionDetail(
         subscription.monthly_price_minor,
         subscription.preferred_day_of_week,
         subscription.preferred_time_window,
+        subscription.payment_method_provider,
+        subscription.payment_method_phone_number,
         subscriber.phone_number,
         address.neighborhood,
         address.landmark,
@@ -2888,6 +3105,58 @@ async function selectSubscriptionDetail(
   );
 
   return result.rows[0];
+}
+
+async function selectCurrentSubscriberSubscription(
+  client: PgClient,
+  input: GetCurrentSubscriberSubscriptionInput,
+  lock = false,
+): Promise<CurrentSubscriberSubscriptionRow | undefined> {
+  const result = await client.query<CurrentSubscriberSubscriptionRow>(
+    `
+      SELECT
+        subscription.id AS subscription_id,
+        subscription.subscriber_id,
+        subscription.country_code,
+        subscription.status
+      FROM subscriptions subscription
+      INNER JOIN subscribers subscriber ON subscriber.id = subscription.subscriber_id
+      WHERE subscriber.country_code = $1
+        AND subscriber.phone_number = $2
+      ORDER BY
+        CASE WHEN subscription.status = 'cancelled' THEN 1 ELSE 0 END ASC,
+        subscription.created_at DESC,
+        subscription.id ASC
+      LIMIT 1
+      ${lock ? 'FOR UPDATE OF subscription' : ''}
+    `,
+    [input.countryCode, input.phoneNumber],
+  );
+
+  return result.rows[0];
+}
+
+async function updateSubscriptionFirstVisitRequest(
+  client: PgClient,
+  subscriptionId: string,
+  input: {
+    readonly dayOfWeek: RequestFirstVisitInput['schedulePreference']['dayOfWeek'];
+    readonly status: 'pending_match';
+    readonly timeWindow: RequestFirstVisitInput['schedulePreference']['timeWindow'];
+  },
+): Promise<void> {
+  await client.query(
+    `
+      UPDATE subscriptions
+      SET
+        preferred_day_of_week = $1,
+        preferred_time_window = $2,
+        status = $3,
+        updated_at = now()
+      WHERE id = $4
+    `,
+    [input.dayOfWeek, input.timeWindow, input.status, subscriptionId],
+  );
 }
 
 async function selectSubscriptionUpcomingVisits(
@@ -3091,9 +3360,11 @@ interface SubscriptionAssignmentRow {
     | 'sunday'
     | 'thursday'
     | 'tuesday'
-    | 'wednesday';
-  readonly preferred_time_window: 'afternoon' | 'morning';
-  readonly status: string;
+    | 'wednesday'
+    | null;
+  readonly preferred_time_window: 'afternoon' | 'morning' | null;
+  readonly status: SubscriptionStatus;
+  readonly visits_per_cycle: 1 | 2;
 }
 
 interface SubscriptionCancellationRow {
@@ -3190,7 +3461,8 @@ async function selectSubscriptionForAssignment(
         address.neighborhood,
         subscription.preferred_day_of_week,
         subscription.preferred_time_window,
-        subscription.status
+        subscription.status,
+        subscription.visits_per_cycle
       FROM subscriptions subscription
       INNER JOIN subscriber_addresses address ON address.id = subscription.address_id
       WHERE subscription.id = $1
@@ -3271,7 +3543,7 @@ async function selectWorkerProfile(
       };
 }
 
-async function selectSubscriptionForCancellation(
+async function selectSubscriptionForStatusChange(
   client: PgClient,
   subscriptionId: string,
 ): Promise<SubscriptionCancellationRow | undefined> {
@@ -3300,6 +3572,25 @@ async function selectSubscriptionForTierChange(
         country_code,
         status,
         tier_code
+      FROM subscriptions
+      WHERE id = $1
+      FOR UPDATE
+    `,
+    [subscriptionId],
+  );
+
+  return result.rows[0];
+}
+
+async function selectSubscriptionForPaymentMethodUpdate(
+  client: PgClient,
+  subscriptionId: string,
+): Promise<SubscriptionCancellationRow | undefined> {
+  const result = await client.query<SubscriptionCancellationRow>(
+    `
+      SELECT
+        country_code,
+        status
       FROM subscriptions
       WHERE id = $1
       FOR UPDATE
@@ -3373,6 +3664,7 @@ async function upsertAuthUser(
       SET updated_at = now()
       RETURNING
         id AS user_id,
+        country_code,
         phone_number,
         role
     `,
@@ -3406,15 +3698,17 @@ async function insertAuthSession(
     `
       INSERT INTO auth_sessions (
         id,
+        country_code,
         user_id,
         refresh_token_hash,
         device_id,
         expires_at
       )
-      VALUES ($1, $2, $3, $4, $5)
+      VALUES ($1, $2, $3, $4, $5, $6)
     `,
     [
       sessionId,
+      user.country_code,
       user.user_id,
       hashRefreshToken(tokens.refreshToken),
       deviceId,
@@ -3444,6 +3738,7 @@ async function selectAuthSessionForRefresh(
         session.expires_at AS session_expires_at,
         session.id AS session_id,
         session.revoked_at,
+        session.country_code,
         auth_user.id AS user_id,
         auth_user.phone_number,
         auth_user.role
@@ -3478,6 +3773,7 @@ async function selectPaymentAttemptByIdempotencyKey(
       SELECT
         attempt.id AS payment_attempt_id,
         attempt.subscription_id,
+        attempt.country_code,
         attempt.amount_minor,
         attempt.currency_code,
         attempt.status,
@@ -3507,6 +3803,7 @@ async function selectPaymentAttemptByProviderReference(
       SELECT
         attempt.id AS payment_attempt_id,
         attempt.subscription_id,
+        attempt.country_code,
         attempt.amount_minor,
         attempt.currency_code,
         attempt.status,
@@ -3536,7 +3833,7 @@ async function selectPaymentAttemptById(
       SELECT
         attempt.id AS payment_attempt_id,
         attempt.subscription_id,
-        subscription.country_code,
+        attempt.country_code,
         attempt.amount_minor,
         attempt.currency_code,
         attempt.status,
@@ -3565,6 +3862,7 @@ async function selectPaymentAttemptsForSubscription(
       SELECT
         attempt.id AS payment_attempt_id,
         attempt.subscription_id,
+        attempt.country_code,
         attempt.amount_minor,
         attempt.currency_code,
         attempt.status,
@@ -3639,7 +3937,7 @@ async function selectPaymentReconciliationRows(
       SELECT
         attempt.id AS payment_attempt_id,
         attempt.subscription_id,
-        subscription.country_code,
+        attempt.country_code,
         attempt.amount_minor,
         attempt.currency_code,
         attempt.status,
@@ -3652,11 +3950,11 @@ async function selectPaymentReconciliationRows(
       FROM payment_attempts attempt
       INNER JOIN subscriptions subscription ON subscription.id = attempt.subscription_id
       LEFT JOIN payment_refunds refund ON refund.payment_attempt_id = attempt.id
-      WHERE subscription.country_code = $1
+      WHERE attempt.country_code = $1
         AND ($2::text IS NULL OR attempt.provider = $2)
       GROUP BY
         attempt.id,
-        subscription.country_code,
+        attempt.country_code,
         subscription.status
       ORDER BY attempt.charged_at DESC, attempt.id DESC
     `,
@@ -3689,6 +3987,7 @@ async function selectSubscriptionForPayment(
 
 async function insertPaymentAttempt(
   client: PgClient,
+  countryCode: CountryCode,
   attempt: PaymentAttemptRecord,
 ): Promise<void> {
   await client.query(
@@ -3696,6 +3995,7 @@ async function insertPaymentAttempt(
       INSERT INTO payment_attempts (
         id,
         subscription_id,
+        country_code,
         amount_minor,
         currency_code,
         status,
@@ -3704,11 +4004,12 @@ async function insertPaymentAttempt(
         idempotency_key,
         charged_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     `,
     [
       attempt.paymentAttemptId,
       attempt.subscriptionId,
+      countryCode,
       attempt.amount.amountMinor.toString(),
       attempt.amount.currencyCode,
       attempt.status,
@@ -4268,6 +4569,33 @@ async function upsertWorkerForOnboarding(
   client: PgClient,
   input: CreateWorkerOnboardingCaseInput,
 ): Promise<void> {
+  await upsertWorkerProfileRow(client, {
+    countryCode: input.countryCode,
+    displayName: input.displayName,
+    maxActiveSubscriptions: input.maxActiveSubscriptions,
+    serviceNeighborhoods: input.serviceNeighborhoods,
+    status: 'applicant',
+    workerId: input.workerId,
+  });
+  await replaceWorkerServiceCells(client, {
+    countryCode: input.countryCode,
+    maxActiveSubscriptions: input.maxActiveSubscriptions,
+    serviceNeighborhoods: input.serviceNeighborhoods,
+    workerId: input.workerId,
+  });
+}
+
+async function upsertWorkerProfileRow(
+  client: PgClient,
+  input: {
+    readonly countryCode: CountryCode;
+    readonly displayName: string;
+    readonly maxActiveSubscriptions: number;
+    readonly serviceNeighborhoods: readonly string[];
+    readonly status: WorkerProfileRecord['status'];
+    readonly workerId: string;
+  },
+): Promise<void> {
   await client.query(
     `
       INSERT INTO workers (
@@ -4278,24 +4606,80 @@ async function upsertWorkerForOnboarding(
         service_neighborhoods,
         max_active_subscriptions
       )
-      VALUES ($1, $2, $3, 'applicant', $4, $5)
+      VALUES ($1, $2, $3, $4, $5, $6)
       ON CONFLICT (id) DO UPDATE
       SET
         country_code = excluded.country_code,
         display_name = excluded.display_name,
-        status = 'applicant',
+        status = excluded.status,
         service_neighborhoods = excluded.service_neighborhoods,
         max_active_subscriptions = excluded.max_active_subscriptions,
         updated_at = now()
-    `,
+      `,
     [
       input.workerId,
       input.countryCode,
       input.displayName,
+      input.status,
       input.serviceNeighborhoods,
       input.maxActiveSubscriptions,
     ],
   );
+}
+
+async function replaceWorkerServiceCells(
+  client: PgClient,
+  input: {
+    readonly countryCode: CountryCode;
+    readonly maxActiveSubscriptions: number;
+    readonly serviceNeighborhoods: readonly string[];
+    readonly workerId: string;
+  },
+): Promise<void> {
+  await client.query('DELETE FROM worker_service_cells WHERE worker_id = $1', [input.workerId]);
+
+  for (const serviceNeighborhood of input.serviceNeighborhoods) {
+    const serviceCell = normalizeServiceCell(serviceNeighborhood);
+
+    if (serviceCell === null) {
+      continue;
+    }
+
+    await client.query(
+      `
+        INSERT INTO service_cells (
+          country_code,
+          cell_key,
+          display_name
+        )
+        VALUES ($1, $2, $3)
+        ON CONFLICT (country_code, cell_key) DO UPDATE
+        SET
+          display_name = EXCLUDED.display_name,
+          status = 'active',
+          updated_at = now()
+      `,
+      [input.countryCode, serviceCell.cellKey, serviceCell.displayName],
+    );
+
+    await client.query(
+      `
+        INSERT INTO worker_service_cells (
+          worker_id,
+          country_code,
+          cell_key,
+          max_active_subscriptions
+        )
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (worker_id, cell_key) DO UPDATE
+        SET
+          country_code = EXCLUDED.country_code,
+          max_active_subscriptions = EXCLUDED.max_active_subscriptions,
+          updated_at = now()
+      `,
+      [input.workerId, input.countryCode, serviceCell.cellKey, input.maxActiveSubscriptions],
+    );
+  }
 }
 
 async function insertWorkerOnboardingCase(
@@ -4329,6 +4713,7 @@ async function insertWorkerOnboardingCase(
 
 async function insertWorkerOnboardingNotes(
   client: PgClient,
+  countryCode: CountryCode,
   caseId: string,
   notes: readonly WorkerOnboardingNoteRecord[],
 ): Promise<void> {
@@ -4337,15 +4722,24 @@ async function insertWorkerOnboardingNotes(
       `
         INSERT INTO worker_onboarding_notes (
           id,
+          country_code,
           case_id,
           stage,
           note,
           operator_user_id,
           created_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
       `,
-      [randomUUID(), caseId, note.stage, note.note, note.operatorUserId, note.createdAt],
+      [
+        randomUUID(),
+        countryCode,
+        caseId,
+        note.stage,
+        note.note,
+        note.operatorUserId,
+        note.createdAt,
+      ],
     );
   }
 }
@@ -4496,12 +4890,15 @@ async function insertWorkerUnavailability(
     `
       INSERT INTO worker_unavailability (
         id,
+        country_code,
         worker_id,
         unavailable_date,
         reason,
         created_at
       )
-      VALUES ($1, $2, $3, $4, $5)
+      SELECT $1, worker.country_code, $2, $3, $4, $5
+      FROM workers worker
+      WHERE worker.id = $2
     `,
     [record.unavailabilityId, record.workerId, record.date, record.reason, record.createdAt],
   );
@@ -4612,10 +5009,10 @@ async function updateScheduledVisitsWorkerSwap(
   );
 }
 
-async function updateSubscriptionCancellationStatus(
+async function updateSubscriptionStatus(
   client: PgClient,
   subscriptionId: string,
-  status: 'cancelled',
+  status: 'active' | 'cancelled' | 'paused',
 ): Promise<void> {
   await client.query(
     `
@@ -4647,6 +5044,23 @@ async function updateSubscriptionTier(
       record.monthlyPriceMinor.toString(),
       record.subscriptionId,
     ],
+  );
+}
+
+async function updateSubscriptionPaymentMethod(
+  client: PgClient,
+  record: UpdatedSubscriptionPaymentMethodRecord,
+): Promise<void> {
+  await client.query(
+    `
+      UPDATE subscriptions
+      SET
+        payment_method_provider = $1,
+        payment_method_phone_number = $2,
+        updated_at = now()
+      WHERE id = $3
+    `,
+    [record.paymentMethod.provider, record.paymentMethod.phoneNumber, record.subscriptionId],
   );
 }
 
@@ -5263,10 +5677,7 @@ async function selectSubscriptionCountryCodeForUpdate(
   return result.rows[0];
 }
 
-async function insertSupportContact(
-  client: PgClient,
-  record: SupportContactRecord,
-): Promise<void> {
+async function insertSupportContact(client: PgClient, record: SupportContactRecord): Promise<void> {
   await client.query(
     `
       INSERT INTO support_contacts (
@@ -5377,6 +5788,60 @@ function mapSupportContactRow(row: SupportContactRow): SupportContactRecord {
     subject: row.subject,
     subscriptionId: row.subscription_id,
   };
+}
+
+async function selectSupportContactForResolution(
+  client: PgClient,
+  contactId: string,
+): Promise<SupportContactRow | undefined> {
+  const result = await client.query<SupportContactRow>(
+    `
+      SELECT
+        id,
+        subscription_id,
+        country_code,
+        category,
+        status,
+        subject,
+        body,
+        opened_by_user_id,
+        resolved_by_operator_user_id,
+        resolution_note,
+        created_at,
+        resolved_at
+      FROM support_contacts
+      WHERE id = $1
+      FOR UPDATE
+    `,
+    [contactId],
+  );
+
+  return result.rows[0];
+}
+
+async function updateSupportContactResolution(
+  client: PgClient,
+  record: SupportContactRecord,
+): Promise<void> {
+  await client.query(
+    `
+      UPDATE support_contacts
+      SET
+        status = $1,
+        resolved_by_operator_user_id = $2,
+        resolution_note = $3,
+        resolved_at = $4,
+        updated_at = now()
+      WHERE id = $5
+    `,
+    [
+      record.status,
+      record.resolvedByOperatorUserId,
+      record.resolutionNote,
+      record.resolvedAt,
+      record.contactId,
+    ],
+  );
 }
 
 function mapWorkerIssueRow(row: WorkerIssueRow): WorkerIssueReportRecord {
@@ -5840,7 +6305,7 @@ function buildPaymentAttemptRecord(input: {
     readonly status: 'failed' | 'succeeded';
   };
   readonly chargedAt: Date;
-  readonly countryCode: 'TG';
+  readonly countryCode: CountryCode;
   readonly idempotencyKey: string;
   readonly subscriptionId: string;
   readonly subscriptionStatus: SubscriptionStatus;
@@ -5965,6 +6430,21 @@ function compareMatchingCandidates(
 
 function normalizeNeighborhood(value: string): string {
   return value.trim().toLocaleLowerCase('fr');
+}
+
+function normalizeServiceCell(
+  value: string,
+): { readonly cellKey: string; readonly displayName: string } | null {
+  const displayName = value.trim();
+
+  if (displayName.length === 0) {
+    return null;
+  }
+
+  return {
+    cellKey: displayName.toLocaleLowerCase('fr'),
+    displayName,
+  };
 }
 
 function toServiceCellCapacityRecord(row: ServiceCellCapacityRow): ServiceCellCapacityRecord {
@@ -6165,18 +6645,80 @@ async function insertVisits(
   }
 }
 
-async function insertSubscriber(
+async function upsertSubscriber(client: PgClient, input: CreateSubscriptionInput): Promise<string> {
+  const result = await client.query<{ readonly subscriber_id: string }>(
+    `
+      INSERT INTO subscribers (id, country_code, locale, phone_number)
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT (country_code, phone_number) DO UPDATE
+      SET updated_at = now()
+      RETURNING id AS subscriber_id
+    `,
+    [input.subscriberUserId ?? randomUUID(), input.countryCode, 'fr', input.phoneNumber],
+  );
+  const row = result.rows[0];
+
+  if (row === undefined) {
+    throw new Error('Subscriber could not be saved.');
+  }
+
+  return row.subscriber_id;
+}
+
+async function ensureSubscriberProfile(
   client: PgClient,
-  input: CreateSubscriptionInput,
-  record: CreatedSubscriptionRecord,
+  input: GetSubscriberProfileInput,
 ): Promise<void> {
   await client.query(
     `
       INSERT INTO subscribers (id, country_code, locale, phone_number)
       VALUES ($1, $2, $3, $4)
+      ON CONFLICT (country_code, phone_number) DO NOTHING
     `,
-    [record.subscriberId, record.countryCode, 'fr', input.phoneNumber],
+    [input.subscriberUserId, input.countryCode, 'fr', input.phoneNumber],
   );
+}
+
+async function selectSubscriberProfile(
+  client: PgClient,
+  countryCode: CountryCode,
+  phoneNumber: string,
+): Promise<SubscriberProfileRow | undefined> {
+  const result = await client.query<SubscriberProfileRow>(
+    `
+      SELECT
+        id AS subscriber_id,
+        country_code,
+        phone_number,
+        first_name,
+        last_name,
+        email,
+        avatar_object_key,
+        is_adult_confirmed,
+        created_at,
+        updated_at
+      FROM subscribers
+      WHERE country_code = $1 AND phone_number = $2
+    `,
+    [countryCode, phoneNumber],
+  );
+
+  return result.rows[0];
+}
+
+function mapSubscriberProfileRow(row: SubscriberProfileRow): SubscriberProfileRecord {
+  return {
+    avatarObjectKey: row.avatar_object_key,
+    countryCode: row.country_code,
+    createdAt: row.created_at,
+    email: row.email,
+    firstName: row.first_name,
+    isAdultConfirmed: row.is_adult_confirmed,
+    lastName: row.last_name,
+    phoneNumber: row.phone_number,
+    subscriberId: row.subscriber_id,
+    updatedAt: row.updated_at,
+  };
 }
 
 async function insertSubscriberAddress(
@@ -6191,17 +6733,19 @@ async function insertSubscriberAddress(
         subscriber_id,
         country_code,
         neighborhood,
+        service_cell_key,
         landmark,
         gps_latitude,
         gps_longitude
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     `,
     [
       record.addressId,
       record.subscriberId,
       record.countryCode,
       input.address.neighborhood,
+      normalizeNeighborhood(input.address.neighborhood),
       input.address.landmark,
       input.address.gpsLatitude,
       input.address.gpsLongitude,
@@ -6227,9 +6771,11 @@ async function insertSubscription(
         visits_per_cycle,
         monthly_price_minor,
         preferred_day_of_week,
-        preferred_time_window
+        preferred_time_window,
+        payment_method_provider,
+        payment_method_phone_number
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
     `,
     [
       record.subscriptionId,
@@ -6241,8 +6787,48 @@ async function insertSubscription(
       record.status,
       record.visitsPerCycle,
       record.monthlyPriceMinor.toString(),
-      input.schedulePreference.dayOfWeek,
-      input.schedulePreference.timeWindow,
+      input.schedulePreference?.dayOfWeek ?? null,
+      input.schedulePreference?.timeWindow ?? null,
+      input.paymentMethod?.provider ?? null,
+      input.paymentMethod?.phoneNumber ?? null,
+    ],
+  );
+}
+
+async function insertSubscriberPrivacyRequest(
+  client: PgClient,
+  record: SubscriberPrivacyRequestRecord,
+): Promise<void> {
+  const detail = record.exportBundle.subscription;
+
+  await client.query(
+    `
+      INSERT INTO subscriber_privacy_requests (
+        id,
+        subscription_id,
+        subscriber_id,
+        country_code,
+        request_type,
+        status,
+        reason,
+        requested_by_operator_user_id,
+        requested_at,
+        export_bundle,
+        erasure_plan
+      )
+      VALUES ($1, $2, $3, $4, $5, 'recorded', $6, $7, $8, $9::jsonb, $10::jsonb)
+    `,
+    [
+      record.requestId,
+      record.subscriptionId,
+      detail.subscriberId,
+      detail.countryCode,
+      record.requestType,
+      record.reason,
+      record.operatorUserId,
+      record.requestedAt,
+      stringifyJsonForPostgres(record.exportBundle),
+      stringifyJsonForPostgres(record.erasurePlan),
     ],
   );
 }
@@ -6321,6 +6907,12 @@ async function insertOutboxEvents(client: PgClient, events: readonly DomainEvent
       ],
     );
   }
+}
+
+function stringifyJsonForPostgres(value: unknown): string {
+  return JSON.stringify(value, (_key, nestedValue: unknown) =>
+    typeof nestedValue === 'bigint' ? nestedValue.toString() : nestedValue,
+  );
 }
 
 async function insertNotificationMessage(

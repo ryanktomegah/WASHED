@@ -357,6 +357,436 @@
         }
       }
     },
+    "/v1/subscriber/profile": {
+      "get": {
+        "operationId": "getSubscriberProfile",
+        "tags": [
+          "subscriber"
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated subscriber profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "upsertSubscriberProfile",
+        "tags": [
+          "subscriber"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Subscriber profile saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/subscriber/subscription": {
+      "get": {
+        "operationId": "getCurrentSubscriberSubscription",
+        "tags": [
+          "subscriber"
+        ],
+        "responses": {
+          "200": {
+            "description": "Current authenticated subscriber subscription",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentSubscriberSubscriptionDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createCurrentSubscriberSubscription",
+        "tags": [
+          "subscriber"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCurrentSubscriberSubscriptionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Current subscriber subscription created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedSubscriptionDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Current subscriber subscription already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/subscriber/subscription/billing-history": {
+      "get": {
+        "operationId": "listCurrentSubscriberSubscriptionBillingHistory",
+        "tags": [
+          "subscriber"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current subscriber billing history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionBillingHistoryDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/subscriber/subscription/cancel": {
+      "post": {
+        "operationId": "cancelCurrentSubscriberSubscription",
+        "tags": [
+          "subscriber"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelCurrentSubscriberSubscriptionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current subscriber subscription cancelled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionDetailDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/subscriber/subscription/first-visit-request": {
+      "post": {
+        "operationId": "requestCurrentSubscriberFirstVisit",
+        "tags": [
+          "subscriber"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestFirstVisitRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "First visit preference saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionDetailDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/subscriber/subscription/pause": {
+      "post": {
+        "operationId": "pauseCurrentSubscriberSubscription",
+        "tags": [
+          "subscriber"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PauseCurrentSubscriberSubscriptionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current subscriber subscription paused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionDetailDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/subscriber/subscription/resume": {
+      "post": {
+        "operationId": "resumeCurrentSubscriberSubscription",
+        "tags": [
+          "subscriber"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResumeCurrentSubscriberSubscriptionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current subscriber subscription resumed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionDetailDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/subscriber/subscription/payment-method": {
+      "put": {
+        "operationId": "updateCurrentSubscriberPaymentMethod",
+        "tags": [
+          "subscriber"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCurrentSubscriberPaymentMethodRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current subscriber payment method updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionDetailDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/subscriber/subscription/tier": {
+      "post": {
+        "operationId": "changeCurrentSubscriberSubscriptionTier",
+        "tags": [
+          "subscriber"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeCurrentSubscriberSubscriptionTierRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current subscriber subscription tier changed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionDetailDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/subscriptions": {
       "post": {
         "operationId": "createSubscription",
@@ -3358,6 +3788,151 @@
         ],
         "type": "object"
       },
+      "SubscriptionPaymentProvider": {
+        "enum": [
+          "flooz",
+          "mixx"
+        ],
+        "type": "string"
+      },
+      "SubscriptionPaymentMethodDto": {
+        "additionalProperties": false,
+        "properties": {
+          "phoneNumber": {
+            "pattern": "^\\+[1-9]\\d{7,14}$",
+            "type": "string"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/SubscriptionPaymentProvider"
+          }
+        },
+        "required": [
+          "phoneNumber",
+          "provider"
+        ],
+        "type": "object"
+      },
+      "CreateCurrentSubscriberSubscriptionRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/AddressDto"
+          },
+          "paymentMethod": {
+            "$ref": "#/components/schemas/SubscriptionPaymentMethodDto"
+          },
+          "schedulePreference": {
+            "$ref": "#/components/schemas/SchedulePreferenceDto"
+          },
+          "tierCode": {
+            "enum": [
+              "T1",
+              "T2"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "address",
+          "paymentMethod",
+          "tierCode"
+        ],
+        "type": "object"
+      },
+      "CancelCurrentSubscriberSubscriptionRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "cancelledAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cancelledAt"
+        ],
+        "type": "object"
+      },
+      "ChangeCurrentSubscriberSubscriptionTierRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "effectiveAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "tierCode": {
+            "enum": [
+              "T1",
+              "T2"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "effectiveAt",
+          "tierCode"
+        ],
+        "type": "object"
+      },
+      "PauseCurrentSubscriberSubscriptionRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "pausedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "pausedAt"
+        ],
+        "type": "object"
+      },
+      "ResumeCurrentSubscriberSubscriptionRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "resumedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resumedAt"
+        ],
+        "type": "object"
+      },
+      "UpdateCurrentSubscriberPaymentMethodRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "paymentMethod": {
+            "$ref": "#/components/schemas/SubscriptionPaymentMethodDto"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paymentMethod",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "RequestFirstVisitRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "requestedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "schedulePreference": {
+            "$ref": "#/components/schemas/SchedulePreferenceDto"
+          }
+        },
+        "required": [
+          "requestedAt",
+          "schedulePreference"
+        ],
+        "type": "object"
+      },
       "LocationDto": {
         "additionalProperties": false,
         "properties": {
@@ -3692,6 +4267,109 @@
         ],
         "type": "object"
       },
+      "CreatedSubscriptionDto": {
+        "additionalProperties": false,
+        "properties": {
+          "assignmentSlaHours": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "countryCode": {
+            "enum": [
+              "TG"
+            ],
+            "type": "string"
+          },
+          "currencyCode": {
+            "enum": [
+              "XOF"
+            ],
+            "type": "string"
+          },
+          "monthlyPriceMinor": {
+            "pattern": "^\\d+$",
+            "type": "string"
+          },
+          "paymentMethod": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubscriptionPaymentMethodDto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "pending_match",
+              "ready_no_visit"
+            ],
+            "type": "string"
+          },
+          "subscriberId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "subscriptionId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "tierCode": {
+            "enum": [
+              "T1",
+              "T2"
+            ],
+            "type": "string"
+          },
+          "visitsPerCycle": {
+            "enum": [
+              1,
+              2
+            ],
+            "type": "integer"
+          }
+        },
+        "required": [
+          "assignmentSlaHours",
+          "countryCode",
+          "currencyCode",
+          "monthlyPriceMinor",
+          "paymentMethod",
+          "status",
+          "subscriberId",
+          "subscriptionId",
+          "tierCode",
+          "visitsPerCycle"
+        ],
+        "type": "object"
+      },
+      "CurrentSubscriberSubscriptionDto": {
+        "additionalProperties": false,
+        "properties": {
+          "subscription": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubscriptionDetailDto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "subscription"
+        ],
+        "type": "object"
+      },
       "SubscriptionDetailDto": {
         "additionalProperties": false,
         "properties": {
@@ -3718,6 +4396,16 @@
             "pattern": "^\\d+$",
             "type": "string"
           },
+          "paymentMethod": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubscriptionPaymentMethodDto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "phoneNumber": {
             "type": "string"
           },
@@ -3728,7 +4416,14 @@
             "type": "array"
           },
           "schedulePreference": {
-            "$ref": "#/components/schemas/SchedulePreferenceDto"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SchedulePreferenceDto"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "status": {
             "enum": [
@@ -3736,7 +4431,8 @@
               "cancelled",
               "paused",
               "payment_overdue",
-              "pending_match"
+              "pending_match",
+              "ready_no_visit"
             ],
             "type": "string"
           },
@@ -3780,6 +4476,7 @@
           "assignedWorker",
           "countryCode",
           "monthlyPriceMinor",
+          "paymentMethod",
           "phoneNumber",
           "recentVisits",
           "schedulePreference",

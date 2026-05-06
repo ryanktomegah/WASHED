@@ -856,7 +856,7 @@
               id: 'X-02',
               name: 'Téléphone',
               step: 1,
-              kicker: 'étape 1 / 4',
+              kicker: 'étape 1 / 5',
               title: 'Votre numéro de téléphone',
               copy: 'On vous envoie un code à 6 chiffres pour confirmer.',
               blocks: [
@@ -869,7 +869,7 @@
               id: 'X-03',
               name: 'Code SMS',
               step: 2,
-              kicker: 'étape 2 / 4',
+              kicker: 'étape 2 / 5',
               title: 'Le code reçu par SMS',
               copy: 'Six chiffres envoyés au +228 90 •••• 56.',
               blocks: [
@@ -878,10 +878,25 @@
               ],
             },
             {
+              id: 'X-03I',
+              name: 'Identité',
+              step: 3,
+              kicker: 'étape 3 / 5',
+              title: 'Vos informations',
+              copy: 'Le bureau utilise ces informations pour votre compte et vos reçus.',
+              blocks: [
+                { type: 'field', label: 'prénom', value: 'Afi' },
+                { type: 'field', label: 'nom', value: 'Mensah' },
+                { type: 'field', label: 'email (facultatif)', value: 'afi@email.com' },
+                { type: 'muted', text: 'Je confirme avoir 18 ans ou plus.' },
+              ],
+              actions: ['Continuer'],
+            },
+            {
               id: 'X-04',
               name: 'Adresse',
-              step: 3,
-              kicker: 'étape 3 / 4',
+              step: 4,
+              kicker: 'étape 4 / 5',
               title: 'Où passe la laveuse ?',
               copy: 'Quartier puis détail. Le bureau valide avec vous au téléphone.',
               blocks: [
@@ -894,8 +909,8 @@
             {
               id: 'X-05',
               name: 'Choix de plan',
-              step: 4,
-              kicker: 'étape 4 / 4',
+              step: 5,
+              kicker: 'étape 5 / 5',
               title: 'Choisissez votre rythme',
               copy: 'Un forfait simple, sans surprise. Vous pouvez changer plus tard.',
               blocks: [
@@ -955,7 +970,7 @@
               kind: 'welcome',
               title: 'Bienvenue chez Washed.',
               copy: 'Votre abonnement est prêt. Choisissez maintenant le jour et le moment de votre première visite.',
-              actions: ['Planifier ma première visite'],
+              actions: ['Planifier ma première visite', 'Passer pour le moment'],
             },
           ],
         },
@@ -982,7 +997,7 @@
             {
               id: 'X-10',
               name: 'Hub · première visite à planifier',
-              header: 'bonjour Mariam',
+              header: 'Bonjour',
               title: 'Accueil',
               blocks: [
                 {
@@ -1360,13 +1375,19 @@
               id: 'X-24',
               name: 'Profil & paramètres',
               kicker: 'profil',
-              title: 'Mariam A.',
+              title: 'Afi Mensah',
               blocks: [
                 {
                   type: 'list',
                   rows: [
-                    ['Téléphone', '+228 90 •••• 56'],
+                    ['Modifier la photo', ''],
+                    ['Prénom', 'Afi'],
+                    ['Nom', 'Mensah'],
+                    ['Email', 'afi@email.com'],
+                    ['Téléphone', '+228 90 12 34 56'],
                     ['Adresse', 'Tokoin Casablanca'],
+                    ['Âge', '18 ans ou plus confirmé'],
+                    ['Informations personnelles', 'Nom, email, photo'],
                     ['Notifications', 'activées'],
                     ['Langue', 'Français'],
                     ['Apparence', 'Système'],
@@ -1374,6 +1395,21 @@
                   ],
                 },
               ],
+            },
+            {
+              id: 'X-24E',
+              name: 'Modifier profil',
+              kicker: 'profil',
+              title: 'Modifier vos informations',
+              copy: "Mettez à jour le nom affiché et l'email de votre compte.",
+              blocks: [
+                { type: 'field', label: 'prénom', value: 'Afi' },
+                { type: 'field', label: 'nom', value: 'Mensah' },
+                { type: 'field', label: 'email (facultatif)', value: 'afi@email.com' },
+                { type: 'field', label: 'téléphone', value: '+228 90 12 34 56' },
+                { type: 'muted', text: 'Le téléphone se modifie par vérification SMS.' },
+              ],
+              actions: ['Enregistrer'],
             },
             {
               id: 'X-24L',

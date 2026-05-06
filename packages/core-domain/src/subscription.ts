@@ -3,7 +3,8 @@ export type SubscriptionStatus =
   | 'cancelled'
   | 'paused'
   | 'payment_overdue'
-  | 'pending_match';
+  | 'pending_match'
+  | 'ready_no_visit';
 
 export type SubscriptionEvent =
   | 'assign_worker'
@@ -11,6 +12,7 @@ export type SubscriptionEvent =
   | 'pause'
   | 'payment_failed'
   | 'payment_recovered'
+  | 'request_first_visit'
   | 'resume';
 
 const TRANSITIONS: Record<
@@ -35,6 +37,11 @@ const TRANSITIONS: Record<
   pending_match: {
     assign_worker: 'active',
     cancel: 'cancelled',
+    request_first_visit: 'pending_match',
+  },
+  ready_no_visit: {
+    cancel: 'cancelled',
+    request_first_visit: 'pending_match',
   },
 };
 

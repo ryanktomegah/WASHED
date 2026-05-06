@@ -4,37 +4,63 @@ import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
 
+import { useSubscriberSubscription } from '../../subscription/SubscriberSubscriptionContext.js';
 import { HubTabBar } from './HubTabBar.js';
 import { TourX09 } from './TourX09.js';
+import { useSignup } from '../onboarding/SignupContext.js';
 import {
-  SUBSCRIBER_FIRST_VISIT_REQUEST_STORAGE_KEY,
+  SUBSCRIBER_BOOKING_DAYS,
+  SUBSCRIBER_BOOKING_TIME_WINDOWS,
   SUBSCRIBER_HUB_DEMO,
 } from './subscriberHubData.js';
 import { useTourState } from './useTourState.js';
 
 export function HubX10(): ReactElement {
   const navigate = useNavigate();
+  const signup = useSignup();
+  const subscription = useSubscriberSubscription();
   const hub = SUBSCRIBER_HUB_DEMO;
   const tour = useTourState();
-  const hasScheduledVisit = hub.visit !== null && hub.worker !== null;
-  const hasRequestedFirstVisit =
-    window.localStorage.getItem(SUBSCRIBER_FIRST_VISIT_REQUEST_STORAGE_KEY) === '1';
+  const hasScheduledVisit =
+    subscription.state.status === 'active' && hub.visit !== null && hub.worker !== null;
+  const hasRequestedFirstVisit = subscription.state.status === 'visit_request_pending';
+  const requestedDay = SUBSCRIBER_BOOKING_DAYS.find(
+    (day) => day.id === subscription.state.firstVisitRequest?.dayId,
+  );
+  const requestedTimeWindow = SUBSCRIBER_BOOKING_TIME_WINDOWS.find(
+    (timeWindow) => timeWindow.id === subscription.state.firstVisitRequest?.timeWindowId,
+  );
+  const firstName = signup.identity.firstName.trim();
+  const subscriberFirstName = firstName === '' ? hub.subscriberFirstName : firstName;
+  const greeting =
+    subscriberFirstName === null
+      ? translate('subscriber.dashboard.greeting.generic')
+      : translate('subscriber.dashboard.greeting.morning', {
+          name: subscriberFirstName,
+        });
 
   return (
     <main aria-labelledby="x10-headline" className="hub-screen" data-screen-id="X-10">
       <div className="hub-body">
         <header className="hub-header">
           <div>
-            <span className="hub-greeting">
-              {translate('subscriber.dashboard.greeting.morning', {
-                name: hub.subscriberFirstName,
-              })}
-            </span>
+            <span className="hub-greeting">{greeting}</span>
             <h1 className="hub-title" id="x10-headline">
               {translate('subscriber.dashboard.tab.home')}
             </h1>
           </div>
-          <span aria-hidden="true" className="hub-avatar hub-avatar-lg" />
+          <button
+            aria-label={translate('subscriber.dashboard.profile_shortcut.label')}
+            className="hub-profile-shortcut"
+            onClick={() => navigate('/profile')}
+            type="button"
+          >
+            {signup.avatarDataUrl === '' ? (
+              <span aria-hidden="true" className="hub-avatar hub-avatar-lg" />
+            ) : (
+              <img alt="" className="hub-avatar-image hub-avatar-lg" src={signup.avatarDataUrl} />
+            )}
+          </button>
         </header>
 
         {hasScheduledVisit ? (
@@ -104,6 +130,11 @@ export function HubX10(): ReactElement {
                 {translate('subscriber.dashboard.pending_visit.title')}
               </h2>
               <p>{translate('subscriber.dashboard.pending_visit.body')}</p>
+              {requestedDay !== undefined && requestedTimeWindow !== undefined ? (
+                <p className="hub-booking-choice">
+                  {translate(requestedDay.labelKey)} · {translate(requestedTimeWindow.labelKey)}
+                </p>
+              ) : null}
             </div>
             <button
               className="hub-action secondary hub-booking-action"

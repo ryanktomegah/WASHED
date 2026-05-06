@@ -1,5 +1,5 @@
-import { useState, type ChangeEvent, type FormEvent, type ReactElement } from 'react';
-import { ChevronLeft } from 'lucide-react';
+import { useRef, useState, type ChangeEvent, type FormEvent, type ReactElement } from 'react';
+import { Camera, ChevronLeft, Pencil } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { translate, type WashedLocale } from '@washed/i18n';
@@ -17,6 +17,12 @@ import {
   languageOptionLabelKey,
 } from '../../language/languageOptions.js';
 import { useSafeBack } from '../../navigation/useSafeBack.js';
+import {
+  hasSignupIdentity,
+  signupFullName,
+  useOptionalSignup,
+  useSignup,
+} from '../onboarding/SignupContext.js';
 import { ProfileTabBar } from './ProfileTabBar.js';
 import {
   LOME_NEIGHBORHOODS,
@@ -45,13 +51,6 @@ function formatDayMonth(dateIso: string, locale: WashedLocale): string {
   }).format(dateFromIso(dateIso));
 }
 
-function formatShortMonthYear(dateIso: string, locale: WashedLocale): string {
-  return new Intl.DateTimeFormat(localeTag(locale), {
-    month: 'short',
-    year: 'numeric',
-  }).format(dateFromIso(dateIso));
-}
-
 function formatSentenceWeekday(dateIso: string, locale: WashedLocale): string {
   const weekday = capitalizeFirst(
     new Intl.DateTimeFormat(localeTag(locale), {
@@ -71,11 +70,64 @@ function formatClockHour(time24h: string, locale: WashedLocale): string {
   return `${hour12} ${period}`;
 }
 
+function initialsForName(firstName: string, lastName: string): string {
+  return `${firstName.trim().charAt(0)}${lastName.trim().charAt(0)}`.toUpperCase();
+}
+
 export function ProfileX24(): ReactElement {
   const navigate = useNavigate();
   const locale = useActiveLocale();
   const { preference } = useSubscriberAppearance();
-  const profile = SUBSCRIBER_PROFILE_DEMO;
+  const signup = useOptionalSignup();
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const hasIdentity = signup !== null && hasSignupIdentity(signup.identity);
+  const displayName = hasIdentity
+    ? signupFullName(signup.identity)
+    : translate('subscriber.profile.identity.pending_name');
+  const displayInitials = hasIdentity
+    ? initialsForName(signup.identity.firstName, signup.identity.lastName)
+    : 'W';
+  const phoneDisplay = signup?.phone.trim() === '' ? null : (signup?.phone ?? null);
+  const addressNeighborhood =
+    signup?.address.neighborhood.trim() === '' ? undefined : signup?.address.neighborhood;
+  const missing = translate('subscriber.profile.detail.missing');
+  const emailDisplay =
+    hasIdentity && signup.identity.email.trim() !== ''
+      ? signup.identity.email.trim()
+      : translate('subscriber.profile.detail.email_missing');
+  const detailRows = [
+    {
+      label: translate('subscriber.profile.detail.first_name'),
+      value: hasIdentity ? signup.identity.firstName : missing,
+    },
+    {
+      label: translate('subscriber.profile.detail.last_name'),
+      value: hasIdentity ? signup.identity.lastName : missing,
+    },
+    { label: translate('subscriber.profile.detail.email'), value: emailDisplay },
+    { label: translate('subscriber.profile.detail.phone'), value: phoneDisplay ?? missing },
+    {
+      label: translate('subscriber.profile.detail.address'),
+      value: addressNeighborhood ?? translate('subscriber.profile.detail.address_missing'),
+    },
+    {
+      label: translate('subscriber.profile.detail.adult'),
+      value:
+        hasIdentity && signup.identity.isAdult
+          ? translate('subscriber.profile.detail.adult_confirmed')
+          : missing,
+    },
+  ] as const;
+
+  const onPhotoChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    const file = event.target.files?.[0];
+    if (file === undefined || signup === null) return;
+    const reader = new FileReader();
+    reader.addEventListener('load', () => {
+      if (typeof reader.result === 'string') signup.setAvatarDataUrl(reader.result);
+    });
+    reader.readAsDataURL(file);
+  };
 
   return (
     <main aria-labelledby="x24-headline" className="profile-screen" data-screen-id="X-24">
@@ -85,26 +137,80 @@ export function ProfileX24(): ReactElement {
         </header>
 
         <section className="profile-identity">
-          <span aria-hidden="true" className="profile-avatar">
-            {profile.initials}
-          </span>
+          <div className="profile-avatar-stack">
+            <button
+              aria-label={translate('subscriber.profile.photo.change')}
+              className="profile-avatar-button"
+              onClick={() => avatarInputRef.current?.click()}
+              type="button"
+            >
+              {signup?.avatarDataUrl === undefined || signup.avatarDataUrl === '' ? (
+                <span aria-hidden="true" className="profile-avatar">
+                  {displayInitials}
+                </span>
+              ) : (
+                <img alt="" className="profile-avatar-image" src={signup.avatarDataUrl} />
+              )}
+              <span aria-hidden="true" className="profile-avatar-camera">
+                <Camera />
+              </span>
+            </button>
+            <input
+              accept="image/*"
+              aria-label={translate('subscriber.profile.photo.input_label')}
+              className="profile-visually-hidden"
+              onChange={onPhotoChange}
+              ref={avatarInputRef}
+              type="file"
+            />
+          </div>
           <div className="profile-identity-meta">
             <h1 className="profile-name" id="x24-headline">
-              {profile.fullName}
+              {displayName}
             </h1>
-            <span>{profile.phoneDisplay}</span>
-            <span>
-              {translate('subscriber.profile.member_since', {
-                date: formatShortMonthYear(profile.memberSinceIso, locale),
-              })}
-            </span>
+            {phoneDisplay !== null ? <span>{phoneDisplay}</span> : null}
+            <span>{translate('subscriber.profile.account_ready')}</span>
+            <button
+              className="profile-photo-action"
+              onClick={() => avatarInputRef.current?.click()}
+              type="button"
+            >
+              {translate('subscriber.profile.photo.change')}
+            </button>
           </div>
+        </section>
+
+        <section className="profile-detail-card" aria-labelledby="x24-detail-title">
+          <div className="profile-section-head">
+            <h2 id="x24-detail-title">{translate('subscriber.profile.details.title')}</h2>
+            <button
+              aria-label={translate('subscriber.profile.edit.cta')}
+              className="profile-icon-button"
+              onClick={() => navigate('/profile/edit')}
+              type="button"
+            >
+              <Pencil aria-hidden="true" />
+            </button>
+          </div>
+          <dl className="profile-detail-list">
+            {detailRows.map((row) => (
+              <div className="profile-detail-row" key={row.label}>
+                <dt>{row.label}</dt>
+                <dd>{row.value}</dd>
+              </div>
+            ))}
+          </dl>
         </section>
 
         <ul className="profile-menu" aria-label={translate('subscriber.profile.menu.label')}>
           <ProfileMenuItem
+            label={translate('subscriber.profile.menu.personal_info')}
+            value={translate('subscriber.profile.menu.personal_info_sub')}
+            onClick={() => navigate('/profile/edit')}
+          />
+          <ProfileMenuItem
             label={translate('subscriber.profile.menu.address')}
-            value={profile.addressNeighborhood}
+            value={addressNeighborhood}
             onClick={() => navigate('/profile/address')}
           />
           <ProfileMenuItem
@@ -139,9 +245,8 @@ export function ProfileX24(): ReactElement {
         <button className="profile-button danger-outline full" type="button">
           {translate('subscriber.profile.cta_signout')}
         </button>
-
-        <ProfileTabBar />
       </div>
+      <ProfileTabBar />
     </main>
   );
 }
@@ -153,8 +258,8 @@ function ProfileMenuItem({
   onClick,
 }: {
   readonly label: string;
-  readonly value?: string;
-  readonly badge?: string;
+  readonly value?: string | undefined;
+  readonly badge?: string | undefined;
   readonly onClick?: () => void;
 }): ReactElement {
   const isInteractive = onClick !== undefined;
@@ -180,6 +285,130 @@ function ProfileMenuItem({
         ) : null}
       </Tag>
     </li>
+  );
+}
+
+export function ProfileEditX24E(): ReactElement {
+  const navigate = useNavigate();
+  const goBack = useSafeBack('/profile');
+  const signup = useSignup();
+  const [firstName, setFirstName] = useState(signup.identity.firstName);
+  const [lastName, setLastName] = useState(signup.identity.lastName);
+  const [email, setEmail] = useState(signup.identity.email);
+  const [isAdult, setIsAdult] = useState(signup.identity.isAdult);
+
+  const normalizedEmail = email.trim();
+  const isEmailValid =
+    normalizedEmail === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(normalizedEmail);
+  const isValid =
+    firstName.trim().length >= 2 && lastName.trim().length >= 2 && isEmailValid && isAdult;
+
+  const onSubmit = (event: FormEvent<HTMLFormElement>): void => {
+    event.preventDefault();
+    if (!isValid) return;
+    signup.setIdentity({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: normalizedEmail,
+      isAdult,
+    });
+    navigate('/profile');
+  };
+
+  return (
+    <main aria-labelledby="x24e-headline" className="profile-screen" data-screen-id="X-24E">
+      <form className="profile-body profile-body-flow" onSubmit={onSubmit}>
+        <BackHeader label={translate('subscriber.profile.edit.header')} onBack={goBack} />
+
+        <h1 className="profile-title" id="x24e-headline">
+          {translate('subscriber.profile.edit.title')}
+        </h1>
+
+        <p className="profile-copy">{translate('subscriber.profile.edit.body')}</p>
+
+        <div className="profile-field">
+          <label className="profile-field-label" htmlFor="x24e-first-name">
+            {translate('subscriber.signup.identity.field.first_name').toUpperCase()}
+          </label>
+          <input
+            autoComplete="given-name"
+            className="profile-input"
+            id="x24e-first-name"
+            name="firstName"
+            onChange={(event) => setFirstName(event.target.value)}
+            placeholder={translate('subscriber.signup.identity.first_name.placeholder')}
+            type="text"
+            value={firstName}
+          />
+        </div>
+
+        <div className="profile-field">
+          <label className="profile-field-label" htmlFor="x24e-last-name">
+            {translate('subscriber.signup.identity.field.last_name').toUpperCase()}
+          </label>
+          <input
+            autoComplete="family-name"
+            className="profile-input"
+            id="x24e-last-name"
+            name="lastName"
+            onChange={(event) => setLastName(event.target.value)}
+            placeholder={translate('subscriber.signup.identity.last_name.placeholder')}
+            type="text"
+            value={lastName}
+          />
+        </div>
+
+        <div className="profile-field">
+          <label className="profile-field-label" htmlFor="x24e-email">
+            {translate('subscriber.signup.identity.field.email').toUpperCase()}
+          </label>
+          <input
+            autoComplete="email"
+            className="profile-input"
+            id="x24e-email"
+            inputMode="email"
+            name="email"
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder={translate('subscriber.signup.identity.email.placeholder')}
+            type="email"
+            value={email}
+          />
+        </div>
+
+        <div className="profile-field">
+          <label className="profile-field-label" htmlFor="x24e-phone">
+            {translate('subscriber.profile.detail.phone').toUpperCase()}
+          </label>
+          <input
+            className="profile-input"
+            id="x24e-phone"
+            readOnly
+            type="tel"
+            value={signup.phone}
+          />
+          <p className="profile-field-note">{translate('subscriber.profile.edit.phone_note')}</p>
+        </div>
+
+        <label className={`profile-check-row${isAdult ? ' is-checked' : ''}`}>
+          <input
+            checked={isAdult}
+            className="profile-visually-hidden"
+            onChange={(event) => setIsAdult(event.target.checked)}
+            type="checkbox"
+          />
+          <span aria-hidden="true" className="profile-check-box">
+            {isAdult ? '✓' : ''}
+          </span>
+          <span>{translate('subscriber.signup.identity.adult')}</span>
+        </label>
+
+        <div className="profile-grow" />
+
+        <button className="profile-button primary full lg" disabled={!isValid} type="submit">
+          {translate('subscriber.profile.edit.save_cta')}
+        </button>
+      </form>
+    </main>
   );
 }
 

@@ -24,10 +24,31 @@ export const CORE_API_OPERATIONS = [
   },
   {
     method: 'POST',
+    operationId: 'cancelCurrentSubscriberSubscription',
+    path: '/v1/subscriber/subscription/cancel',
+    pathParameters: [],
+    tags: ['subscriber'],
+  },
+  {
+    method: 'POST',
     operationId: 'changeSubscriptionTier',
     path: '/v1/subscriptions/{subscriptionId}/tier',
     pathParameters: ['subscriptionId'],
     tags: ['subscriptions'],
+  },
+  {
+    method: 'POST',
+    operationId: 'changeCurrentSubscriberSubscriptionTier',
+    path: '/v1/subscriber/subscription/tier',
+    pathParameters: [],
+    tags: ['subscriber'],
+  },
+  {
+    method: 'PUT',
+    operationId: 'updateCurrentSubscriberPaymentMethod',
+    path: '/v1/subscriber/subscription/payment-method',
+    pathParameters: [],
+    tags: ['subscriber'],
   },
   {
     method: 'POST',
@@ -56,6 +77,13 @@ export const CORE_API_OPERATIONS = [
     path: '/v1/operator/subscriptions/{subscriptionId}/privacy-requests',
     pathParameters: ['subscriptionId'],
     tags: ['operator'],
+  },
+  {
+    method: 'POST',
+    operationId: 'createCurrentSubscriberSubscription',
+    path: '/v1/subscriber/subscription',
+    pathParameters: [],
+    tags: ['subscriber'],
   },
   {
     method: 'POST',
@@ -129,6 +157,20 @@ export const CORE_API_OPERATIONS = [
   },
   {
     method: 'GET',
+    operationId: 'getCurrentSubscriberSubscription',
+    path: '/v1/subscriber/subscription',
+    pathParameters: [],
+    tags: ['subscriber'],
+  },
+  {
+    method: 'GET',
+    operationId: 'listCurrentSubscriberSubscriptionBillingHistory',
+    path: '/v1/subscriber/subscription/billing-history',
+    pathParameters: [],
+    tags: ['subscriber'],
+  },
+  {
+    method: 'GET',
     operationId: 'getHealth',
     path: '/health',
     pathParameters: [],
@@ -168,6 +210,13 @@ export const CORE_API_OPERATIONS = [
     path: '/ready',
     pathParameters: [],
     tags: ['system'],
+  },
+  {
+    method: 'GET',
+    operationId: 'getSubscriberProfile',
+    path: '/v1/subscriber/profile',
+    pathParameters: [],
+    tags: ['subscriber'],
   },
   {
     method: 'GET',
@@ -303,6 +352,13 @@ export const CORE_API_OPERATIONS = [
     tags: ['subscriptions'],
   },
   {
+    method: 'POST',
+    operationId: 'pauseCurrentSubscriberSubscription',
+    path: '/v1/subscriber/subscription/pause',
+    pathParameters: [],
+    tags: ['subscriber'],
+  },
+  {
     method: 'GET',
     operationId: 'listSubscriptionMatchingCandidates',
     path: '/v1/operator/subscriptions/{subscriptionId}/matching-candidates',
@@ -388,6 +444,20 @@ export const CORE_API_OPERATIONS = [
   },
   {
     method: 'POST',
+    operationId: 'requestCurrentSubscriberFirstVisit',
+    path: '/v1/subscriber/subscription/first-visit-request',
+    pathParameters: [],
+    tags: ['subscriber'],
+  },
+  {
+    method: 'POST',
+    operationId: 'resumeCurrentSubscriberSubscription',
+    path: '/v1/subscriber/subscription/resume',
+    pathParameters: [],
+    tags: ['subscriber'],
+  },
+  {
+    method: 'POST',
     operationId: 'resolveOperatorDispute',
     path: '/v1/operator/disputes/{disputeId}/resolve',
     pathParameters: ['disputeId'],
@@ -448,6 +518,13 @@ export const CORE_API_OPERATIONS = [
     path: '/v1/operator/workers/{workerId}/profile',
     pathParameters: ['workerId'],
     tags: ['operator'],
+  },
+  {
+    method: 'PUT',
+    operationId: 'upsertSubscriberProfile',
+    path: '/v1/subscriber/profile',
+    pathParameters: [],
+    tags: ['subscriber'],
   },
   {
     method: 'POST',

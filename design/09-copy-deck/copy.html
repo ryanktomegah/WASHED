@@ -583,6 +583,66 @@
               <td><span class="lim">22 ch</span></td>
             </tr>
             <tr>
+              <td><span class="key">subscriber.signup.identity.title</span></td>
+              <td><span class="fr">Vos informations</span></td>
+              <td><span class="ctx">X-03I · identité compte abonné</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.signup.identity.body</span></td>
+              <td>
+                <span class="fr body"
+                  >Le bureau utilise ces informations pour votre compte et vos reçus.</span
+                >
+              </td>
+              <td><span class="ctx">X-03I aide sous titre</span></td>
+              <td><span class="lim">78 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.signup.identity.field.first_name</span></td>
+              <td><span class="fr body">Prénom</span></td>
+              <td><span class="ctx">X-03I label champ prénom</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td>
+                <span class="key">subscriber.signup.identity.first_name.placeholder</span>
+              </td>
+              <td><span class="fr body">Afi</span></td>
+              <td><span class="ctx">X-03I exemple prénom</span></td>
+              <td><span class="lim">14 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.signup.identity.field.last_name</span></td>
+              <td><span class="fr body">Nom</span></td>
+              <td><span class="ctx">X-03I label champ nom</span></td>
+              <td><span class="lim">10 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.signup.identity.last_name.placeholder</span></td>
+              <td><span class="fr body">Mensah</span></td>
+              <td><span class="ctx">X-03I exemple nom</span></td>
+              <td><span class="lim">18 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.signup.identity.field.email</span></td>
+              <td><span class="fr body">Email (facultatif)</span></td>
+              <td><span class="ctx">X-03I label champ email optionnel</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.signup.identity.email.placeholder</span></td>
+              <td><span class="fr body">afi@email.com</span></td>
+              <td><span class="ctx">X-03I exemple email</span></td>
+              <td><span class="lim">28 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.signup.identity.adult</span></td>
+              <td><span class="fr body">Je confirme avoir 18 ans ou plus.</span></td>
+              <td><span class="ctx">X-03I confirmation majorité sans date de naissance</span></td>
+              <td><span class="lim">42 ch</span></td>
+            </tr>
+            <tr>
               <td><span class="key">subscriber.signup.address.title</span></td>
               <td><span class="fr">Où passe la laveuse ?</span></td>
               <td><span class="ctx">X-04</span></td>
@@ -753,6 +813,12 @@
               <td><span class="lim">12 ch</span></td>
             </tr>
             <tr>
+              <td><span class="key">subscriber.signup.review.field.identity</span></td>
+              <td><span class="fr body">Compte</span></td>
+              <td><span class="ctx">X-07 ligne récap identité</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
               <td><span class="key">subscriber.signup.review.field.address</span></td>
               <td><span class="fr body">Adresse</span></td>
               <td><span class="ctx">X-07 ligne récap</span></td>
@@ -836,6 +902,12 @@
               <td><span class="ctx">X-08 CTA vers réservation X-10B</span></td>
               <td><span class="lim">32 ch</span></td>
             </tr>
+            <tr>
+              <td><span class="key">subscriber.signup.welcome.skip_cta</span></td>
+              <td><span class="fr body">Passer pour le moment</span></td>
+              <td><span class="ctx">X-08 CTA secondaire vers hub sans réservation</span></td>
+              <td><span class="lim">28 ch</span></td>
+            </tr>
           </tbody>
         </table>
       </section>
@@ -859,6 +931,12 @@
             </tr>
           </thead>
           <tbody>
+            <tr>
+              <td><span class="key">subscriber.dashboard.greeting.generic</span></td>
+              <td><span class="fr">Bonjour</span></td>
+              <td><span class="ctx">X-10 header before identity is collected</span></td>
+              <td><span class="lim">8 ch</span></td>
+            </tr>
             <tr>
               <td><span class="key">subscriber.dashboard.greeting.morning</span></td>
               <td><span class="fr">bonjour {name}</span></td>
@@ -1256,6 +1334,12 @@
               <td><span class="lim">10 ch</span></td>
             </tr>
             <tr>
+              <td><span class="key">subscriber.dashboard.profile_shortcut.label</span></td>
+              <td><span class="fr body">Ouvrir le profil</span></td>
+              <td><span class="ctx">X-10 aria-label raccourci photo profil</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
               <td><span class="key">subscriber.dashboard.tab.history</span></td>
               <td><span class="fr body">Historique</span></td>
               <td><span class="ctx">Nav (deprecated — gardé pour rétro-compat tests)</span></td>
@@ -1650,6 +1734,35 @@
               <td><span class="lim">42 ch</span></td>
             </tr>
             <tr>
+              <td><span class="key">subscriber.plan.pending.title</span></td>
+              <td><span class="fr">Votre forfait est prêt.</span></td>
+              <td><span class="ctx">X-19 nouvel abonné · sans première visite</span></td>
+              <td><span class="lim">34 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.plan.pending.request_title</span></td>
+              <td><span class="fr">Votre première visite est en confirmation.</span></td>
+              <td><span class="ctx">X-19 nouvel abonné · demande envoyée</span></td>
+              <td><span class="lim">52 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.plan.pending.card_eyebrow</span></td>
+              <td><span class="fr body">Forfait prêt</span></td>
+              <td><span class="ctx">X-19 carte forfait avant première visite</span></td>
+              <td><span class="lim">18 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.plan.pending.request_body</span></td>
+              <td>
+                <span class="fr body"
+                  >Le bureau confirme votre créneau par appel ou SMS avant d'assigner votre
+                  laveuse.</span
+                >
+              </td>
+              <td><span class="ctx">X-19 aide demande premier créneau</span></td>
+              <td><span class="lim">104 ch</span></td>
+            </tr>
+            <tr>
               <td><span class="key">subscriber.plan.active_card.eyebrow</span></td>
               <td><span class="fr body">Forfait actif</span></td>
               <td><span class="ctx">X-19 carte sombre</span></td>
@@ -2030,6 +2143,136 @@
               <td><span class="lim">10 ch</span></td>
             </tr>
             <tr>
+              <td><span class="key">subscriber.profile.identity.pending_name</span></td>
+              <td><span class="fr body">Compte Washed</span></td>
+              <td><span class="ctx">X-24 fallback sans identité collectée</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.account_ready</span></td>
+              <td><span class="fr body">Compte actif</span></td>
+              <td><span class="ctx">X-24 statut compte sans date inventée</span></td>
+              <td><span class="lim">20 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.photo.change</span></td>
+              <td><span class="fr body">Modifier la photo</span></td>
+              <td><span class="ctx">X-24 action photo profil</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.photo.input_label</span></td>
+              <td><span class="fr body">Photo de profil</span></td>
+              <td><span class="ctx">X-24 label accessible input fichier</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.details.title</span></td>
+              <td><span class="fr body">Informations du compte</span></td>
+              <td><span class="ctx">X-24 section détails identité</span></td>
+              <td><span class="lim">30 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.detail.first_name</span></td>
+              <td><span class="fr body">Prénom</span></td>
+              <td><span class="ctx">X-24 détail compte</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.detail.last_name</span></td>
+              <td><span class="fr body">Nom</span></td>
+              <td><span class="ctx">X-24 détail compte</span></td>
+              <td><span class="lim">10 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.detail.email</span></td>
+              <td><span class="fr body">Email</span></td>
+              <td><span class="ctx">X-24 détail compte</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.detail.phone</span></td>
+              <td><span class="fr body">Téléphone</span></td>
+              <td><span class="ctx">X-24 détail compte</span></td>
+              <td><span class="lim">14 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.detail.address</span></td>
+              <td><span class="fr body">Adresse</span></td>
+              <td><span class="ctx">X-24 détail compte</span></td>
+              <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.detail.adult</span></td>
+              <td><span class="fr body">Âge</span></td>
+              <td><span class="ctx">X-24 détail majorité</span></td>
+              <td><span class="lim">8 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.detail.adult_confirmed</span></td>
+              <td><span class="fr body">18 ans ou plus confirmé</span></td>
+              <td><span class="ctx">X-24 valeur majorité sans date de naissance</span></td>
+              <td><span class="lim">32 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.detail.missing</span></td>
+              <td><span class="fr body">À compléter</span></td>
+              <td><span class="ctx">X-24 valeur manquante</span></td>
+              <td><span class="lim">18 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.detail.email_missing</span></td>
+              <td><span class="fr body">Non renseigné</span></td>
+              <td><span class="ctx">X-24 email optionnel vide</span></td>
+              <td><span class="lim">18 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.detail.address_missing</span></td>
+              <td><span class="fr body">Adresse à compléter</span></td>
+              <td><span class="ctx">X-24 adresse vide</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.edit.cta</span></td>
+              <td><span class="fr body">Modifier le profil</span></td>
+              <td><span class="ctx">X-24 action vers X-24E</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.edit.header</span></td>
+              <td><span class="fr body">Profil</span></td>
+              <td><span class="ctx">X-24E header</span></td>
+              <td><span class="lim">10 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.edit.title</span></td>
+              <td><span class="fr body">Modifier vos informations</span></td>
+              <td><span class="ctx">X-24E titre</span></td>
+              <td><span class="lim">34 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.edit.body</span></td>
+              <td>
+                <span class="fr body"
+                  >Mettez à jour le nom affiché et l'email de votre compte.</span
+                >
+              </td>
+              <td><span class="ctx">X-24E aide sous titre</span></td>
+              <td><span class="lim">76 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.edit.phone_note</span></td>
+              <td><span class="fr body">Le téléphone se modifie par vérification SMS.</span></td>
+              <td><span class="ctx">X-24E note champ téléphone</span></td>
+              <td><span class="lim">58 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.edit.save_cta</span></td>
+              <td><span class="fr body">Enregistrer</span></td>
+              <td><span class="ctx">X-24E CTA</span></td>
+              <td><span class="lim">16 ch</span></td>
+            </tr>
+            <tr>
               <td><span class="key">subscriber.profile.member_since</span></td>
               <td><span class="fr body">Abonnée depuis {date}</span></td>
               <td><span class="ctx">X-24 sous-ligne · vouvoiement féminin</span></td>
@@ -2040,6 +2283,18 @@
               <td><span class="fr body">Adresse</span></td>
               <td><span class="ctx">X-24 ligne menu</span></td>
               <td><span class="lim">12 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.menu.personal_info</span></td>
+              <td><span class="fr body">Informations personnelles</span></td>
+              <td><span class="ctx">X-24 ligne menu vers X-24E</span></td>
+              <td><span class="lim">32 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.profile.menu.personal_info_sub</span></td>
+              <td><span class="fr body">Nom, email, photo</span></td>
+              <td><span class="ctx">X-24 sous-ligne informations personnelles</span></td>
+              <td><span class="lim">28 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.profile.menu.label</span></td>

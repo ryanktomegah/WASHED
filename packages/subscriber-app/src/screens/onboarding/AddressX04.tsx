@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { translate } from '@washed/i18n';
 
 import { OnboardingBackButton } from './OnboardingBackButton.js';
-import { useSignup } from './SignupContext.js';
+import { hasSignupIdentity, useSignup } from './SignupContext.js';
 
 const LOME_NEIGHBORHOODS = [
   'Adidogomé',
@@ -27,8 +27,14 @@ export function AddressX04(): ReactElement {
   const [street, setStreet] = useState(signup.address.street);
 
   useEffect(() => {
-    if (signup.phone === '') navigate('/signup/phone', { replace: true });
-  }, [signup.phone, navigate]);
+    if (signup.phone === '') {
+      navigate('/signup/phone', { replace: true });
+      return;
+    }
+    if (!hasSignupIdentity(signup.identity)) {
+      navigate('/signup/identity', { replace: true });
+    }
+  }, [signup.phone, signup.identity, navigate]);
 
   const isValid = neighborhood !== '' && street.trim().length >= 3;
 
@@ -36,28 +42,31 @@ export function AddressX04(): ReactElement {
     event.preventDefault();
     if (!isValid) return;
     signup.setAddress({
+      gpsLatitude: signup.address.gpsLatitude,
+      gpsLongitude: signup.address.gpsLongitude,
+      landmark: '',
       neighborhood,
       street: street.trim(),
-      landmark: '',
     });
     navigate('/signup/tier');
   };
 
-  if (signup.phone === '') return <></>;
+  if (signup.phone === '' || !hasSignupIdentity(signup.identity)) return <></>;
 
   return (
     <main aria-labelledby="x04-headline" className="onboarding-screen" data-screen-id="X-04">
       <form className="body tight" onSubmit={onSubmit}>
-        <OnboardingBackButton to="/signup/otp" />
+        <OnboardingBackButton to="/signup/identity" />
         <div className="title-stack no-progress">
           <div aria-hidden="true" className="steps">
+            <i className="on" />
             <i className="on" />
             <i className="on" />
             <i className="on" />
             <i />
           </div>
           <span className="h-sm">
-            {translate('subscriber.signup.step_indicator', { current: 3, total: 4 })}
+            {translate('subscriber.signup.step_indicator', { current: 4, total: 5 })}
           </span>
           <h1 className="h-md" id="x04-headline">
             {translate('subscriber.signup.address.title')}

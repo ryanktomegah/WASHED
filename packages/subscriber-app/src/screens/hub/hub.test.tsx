@@ -1,14 +1,29 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { BookingSubmittedX10C, BookingX10B } from './BookingScreens.js';
 import { HubX10 } from './HubX10.js';
-import { SUBSCRIBER_FIRST_VISIT_REQUEST_STORAGE_KEY } from './subscriberHubData.js';
+import { SubscriberApiProvider } from '../../api/SubscriberApiContext.js';
+import { SignupProvider, type SignupInitialState } from '../onboarding/SignupContext.js';
+import {
+  DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE,
+  SUBSCRIBER_SUBSCRIPTION_STORAGE_KEY,
+  SubscriberSubscriptionProvider,
+  type SubscriberSubscriptionState,
+} from '../../subscription/SubscriberSubscriptionContext.js';
 import { TOUR_STORAGE_KEY } from './useTourState.js';
 
-function renderAt(path: string, element: ReactElement): { locationRef: { current: string } } {
+function renderAt(
+  path: string,
+  element: ReactElement,
+  initialSignupState: SignupInitialState = {},
+  initialSubscriptionState: SubscriberSubscriptionState = DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE,
+  apiOptions: { readonly baseUrl?: string | null; readonly fetch?: typeof fetch } = {
+    baseUrl: null,
+  },
+): { locationRef: { current: string } } {
   const locationRef = { current: path };
 
   function Spy(): ReactElement {
@@ -16,22 +31,32 @@ function renderAt(path: string, element: ReactElement): { locationRef: { current
     locationRef.current = `${location.pathname}${location.search}${location.hash}`;
     return null as unknown as ReactElement;
   }
+  const apiProviderProps = {
+    ...(apiOptions.baseUrl === undefined ? {} : { baseUrl: apiOptions.baseUrl }),
+    ...(apiOptions.fetch === undefined ? {} : { fetch: apiOptions.fetch }),
+  };
 
   render(
-    <MemoryRouter initialEntries={[path]}>
-      <Routes>
-        <Route
-          element={
-            <>
-              {element}
-              <Spy />
-            </>
-          }
-          path={path}
-        />
-        <Route element={<Spy />} path="*" />
-      </Routes>
-    </MemoryRouter>,
+    <SubscriberApiProvider {...apiProviderProps}>
+      <SignupProvider initialState={initialSignupState}>
+        <SubscriberSubscriptionProvider initialState={initialSubscriptionState}>
+          <MemoryRouter initialEntries={[path]}>
+            <Routes>
+              <Route
+                element={
+                  <>
+                    {element}
+                    <Spy />
+                  </>
+                }
+                path={path}
+              />
+              <Route element={<Spy />} path="*" />
+            </Routes>
+          </MemoryRouter>
+        </SubscriberSubscriptionProvider>
+      </SignupProvider>
+    </SubscriberApiProvider>,
   );
 
   return { locationRef };
@@ -40,18 +65,29 @@ function renderAt(path: string, element: ReactElement): { locationRef: { current
 describe('Subscriber hub · X-10', () => {
   beforeEach(() => {
     window.localStorage.setItem(TOUR_STORAGE_KEY, '1');
-    window.localStorage.removeItem(SUBSCRIBER_FIRST_VISIT_REQUEST_STORAGE_KEY);
+    window.localStorage.removeItem(SUBSCRIBER_SUBSCRIPTION_STORAGE_KEY);
   });
   afterEach(() => {
     window.localStorage.removeItem(TOUR_STORAGE_KEY);
-    window.localStorage.removeItem(SUBSCRIBER_FIRST_VISIT_REQUEST_STORAGE_KEY);
+    window.localStorage.removeItem(SUBSCRIBER_SUBSCRIPTION_STORAGE_KEY);
+  });
+
+  it('personalizes the greeting only after the first name has been collected', () => {
+    renderAt('/hub', <HubX10 />, {
+      identity: { firstName: 'Afi', lastName: 'Mensah', email: '', isAdult: true },
+    });
+
+    expect(screen.getByText('bonjour Afi')).toBeVisible();
+    expect(screen.queryByText('Bonjour')).not.toBeInTheDocument();
+    expect(screen.queryByText('bonjour Mariam')).not.toBeInTheDocument();
   });
 
   it('renders the first-time home state without a fake scheduled visit', () => {
     renderAt('/hub', <HubX10 />);
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-10');
-    expect(screen.getByText('bonjour Mariam')).toBeVisible();
+    expect(screen.getByText('Bonjour')).toBeVisible();
+    expect(screen.queryByText('bonjour Mariam')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Accueil' })).toBeVisible();
     expect(screen.queryByText('Prochaine visite')).not.toBeInTheDocument();
     expect(screen.queryByText('confirmée')).not.toBeInTheDocument();
@@ -69,11 +105,19 @@ describe('Subscriber hub · X-10', () => {
   });
 
   it('renders the pending first-visit request state after a booking request', () => {
-    window.localStorage.setItem(SUBSCRIBER_FIRST_VISIT_REQUEST_STORAGE_KEY, '1');
-    renderAt('/hub', <HubX10 />);
+    renderAt('/hub', <HubX10 />, {}, {
+      ...DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE,
+      firstVisitRequest: {
+        dayId: 'saturday',
+        requestedAtIso: '2026-05-05T10:00:00.000Z',
+        timeWindowId: 'morning',
+      },
+      status: 'visit_request_pending',
+    });
 
     expect(screen.getByRole('heading', { name: 'Première visite en confirmation' })).toBeVisible();
     expect(screen.getByText(/Le bureau confirme votre créneau/u)).toBeVisible();
+    expect(screen.getByText('Samedi · Matin')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Modifier ma demande' })).toBeEnabled();
     expect(screen.queryByRole('button', { name: /Planifier ma première visite/u })).toBeNull();
     expect(
@@ -85,6 +129,12 @@ describe('Subscriber hub · X-10', () => {
     const { locationRef } = renderAt('/hub', <HubX10 />);
     fireEvent.click(screen.getByRole('button', { name: /Planifier ma première visite/u }));
     expect(locationRef.current).toBe('/booking');
+  });
+
+  it('routes the home profile picture to the profile screen', () => {
+    const { locationRef } = renderAt('/hub', <HubX10 />);
+    fireEvent.click(screen.getByRole('button', { name: 'Ouvrir le profil' }));
+    expect(locationRef.current).toBe('/profile');
   });
 });
 
@@ -117,7 +167,66 @@ describe('Subscriber booking · X-10B and X-10C', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Envoyer la demande/u }));
     expect(locationRef.current).toBe('/booking/submitted');
-    expect(window.localStorage.getItem(SUBSCRIBER_FIRST_VISIT_REQUEST_STORAGE_KEY)).toBe('1');
+    expect(window.localStorage.getItem(SUBSCRIBER_SUBSCRIPTION_STORAGE_KEY)).toContain(
+      '"status":"visit_request_pending"',
+    );
+  });
+
+  it('sends the first visit request to the backend when configured', async () => {
+    const requests: Request[] = [];
+    const fetchStub = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      const request = new Request(input, init);
+      requests.push(request);
+      return Response.json({
+        address: {
+          gpsLatitude: 6.1319,
+          gpsLongitude: 1.2228,
+          landmark: 'rue 254',
+          neighborhood: 'Tokoin',
+        },
+        assignedWorker: null,
+        countryCode: 'TG',
+        monthlyPriceMinor: '2500',
+        phoneNumber: '+22890123456',
+        recentVisits: [],
+        schedulePreference: {
+          dayOfWeek: 'saturday',
+          timeWindow: 'morning',
+        },
+        status: 'pending_match',
+        subscriberId: '99999999-9999-4999-8999-999999999999',
+        subscriptionId: '33333333-3333-4333-8333-333333333333',
+        supportCredits: [],
+        tierCode: 'T1',
+        upcomingVisits: [],
+        visitsPerCycle: 1,
+      });
+    };
+    const { locationRef } = renderAt(
+      '/booking',
+      <BookingX10B />,
+      {},
+      {
+        ...DEFAULT_SUBSCRIBER_SUBSCRIPTION_STATE,
+        subscriptionId: '33333333-3333-4333-8333-333333333333',
+      },
+      { baseUrl: 'http://api.test', fetch: fetchStub as typeof fetch },
+    );
+
+    fireEvent.click(screen.getByText('Samedi'));
+    fireEvent.click(screen.getByText('Matin'));
+    fireEvent.click(screen.getByRole('button', { name: /Envoyer la demande/u }));
+
+    await waitFor(() => expect(locationRef.current).toBe('/booking/submitted'));
+    expect(requests[0]?.url).toBe(
+      'http://api.test/v1/subscriber/subscription/first-visit-request',
+    );
+    await expect(requests[0]?.json()).resolves.toMatchObject({
+      schedulePreference: {
+        dayOfWeek: 'saturday',
+        timeWindow: 'morning',
+      },
+    });
   });
 
   it('returns from booking to the hub', () => {

@@ -160,6 +160,12 @@
   padding: 12px 22px 18px;
 }
 
+.onboarding-screen[data-screen-id='X-03I'] .body {
+  gap: 12px;
+  overflow: hidden;
+  padding: 12px 22px 18px;
+}
+
 .onboarding-screen[data-screen-id='X-04'] .body {
   gap: 12px;
   overflow: hidden;
@@ -189,6 +195,7 @@
 }
 
 .onboarding-screen[data-screen-id='X-04'] .input-shell,
+.onboarding-screen[data-screen-id='X-03I'] .input-shell,
 .onboarding-screen[data-screen-id='X-04'] .select-shell,
 .onboarding-screen[data-screen-id='X-06'] .input-shell {
   min-height: 0;
@@ -203,17 +210,22 @@
 
 .onboarding-screen[data-screen-id='X-02'] .title-stack,
 .onboarding-screen[data-screen-id='X-03'] .title-stack,
+.onboarding-screen[data-screen-id='X-03I'] .title-stack,
 .onboarding-screen[data-screen-id='X-04'] .title-stack,
 .onboarding-screen[data-screen-id='X-05'] .title-stack {
-  --step-progress: 25%;
+  --step-progress: 20%;
 }
 
 .onboarding-screen[data-screen-id='X-03'] .title-stack {
-  --step-progress: 50%;
+  --step-progress: 40%;
+}
+
+.onboarding-screen[data-screen-id='X-03I'] .title-stack {
+  --step-progress: 60%;
 }
 
 .onboarding-screen[data-screen-id='X-04'] .title-stack {
-  --step-progress: 75%;
+  --step-progress: 80%;
 }
 
 .onboarding-screen[data-screen-id='X-05'] .title-stack {
@@ -222,6 +234,7 @@
 
 .onboarding-screen[data-screen-id='X-02'] .title-stack::before,
 .onboarding-screen[data-screen-id='X-03'] .title-stack::before,
+.onboarding-screen[data-screen-id='X-03I'] .title-stack::before,
 .onboarding-screen[data-screen-id='X-04'] .title-stack::before,
 .onboarding-screen[data-screen-id='X-05'] .title-stack::before {
   display: block;
@@ -864,6 +877,9 @@
 }
 
 .onboarding-screen .welcome-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   padding: 0 22px 28px;
 }
 

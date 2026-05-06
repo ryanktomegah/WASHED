@@ -36,9 +36,12 @@ import {
   parseCreateDisputeBody,
   parseCreateSubscriptionBody,
   parseCreateSupportContactBody,
+  parseCancelCurrentSubscriberSubscriptionBody,
+  parseChangeCurrentSubscriberSubscriptionTierBody,
   parseGetSupportContactParams,
   parseListSupportContactsRequest,
   parseCreateSubscriberPrivacyRequestBody,
+  parseCreateSubscriberSubscriptionBody,
   parseCreateWorkerSwapRequestBody,
   parseDeclineAssignmentCandidateBody,
   parseDeliverDueNotificationMessagesBody,
@@ -48,6 +51,7 @@ import {
   parseGetSubscriptionDetailRequest,
   parseIngestPaymentWebhookBody,
   parseIssuePaymentRefundBody,
+  parsePauseCurrentSubscriberSubscriptionBody,
   parseListWorkerPayoutsRequest,
   parseListWorkerOnboardingCasesRequest,
   parseListWorkerUnavailabilityRequest,
@@ -67,16 +71,20 @@ import {
   parseRateVisitBody,
   parseRefreshAuthSessionBody,
   parseRegisterPushDeviceBody,
+  parseRequestFirstVisitBody,
   parseReportWorkerIssueBody,
   parseResolveDisputeBody,
   parseResolveWorkerAdvanceRequestBody,
   parseResolveWorkerSwapRequestBody,
   parseResolveWorkerIssueBody,
+  parseResumeCurrentSubscriberSubscriptionBody,
   parseRescheduleVisitBody,
   parseRunPaymentReconciliationBody,
   parseSkipVisitBody,
   parseStartOtpChallengeBody,
   parseUploadVisitPhotoBody,
+  parseUpsertSubscriberProfileBody,
+  parseUpdateCurrentSubscriberPaymentMethodBody,
   parseUpdateOperatorVisitStatusBody,
   parseUpsertWorkerProfileBody,
   parseVerifyOtpChallengeBody,
@@ -287,6 +295,554 @@ export function createCoreApiApp(options: CoreApiOptions = {}): FastifyInstance 
     }
   });
 
+  app.get('/v1/subscriber/profile', async (request, reply) => {
+    const traceId = request.headers['x-trace-id'];
+    const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
+
+    let claims: AuthAccessTokenClaims;
+
+    try {
+      claims = readSubscriberClaims(request.headers['authorization']);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Authentication is required.';
+
+      return reply.code(401).send({
+        code: 'core.subscriber_profile.unauthorized',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+
+    try {
+      const profile = await repository.getSubscriberProfile({
+        countryCode: 'TG',
+        phoneNumber: claims.phoneNumber,
+        subscriberUserId: claims.sub,
+      });
+
+      return reply.code(200).send(toSubscriberProfileDto(profile));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Invalid request.';
+
+      return reply.code(400).send({
+        code: 'core.subscriber_profile.invalid_request',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+  });
+
+  app.put('/v1/subscriber/profile', async (request, reply) => {
+    const traceId = request.headers['x-trace-id'];
+    const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
+
+    let claims: AuthAccessTokenClaims;
+
+    try {
+      claims = readSubscriberClaims(request.headers['authorization']);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Authentication is required.';
+
+      return reply.code(401).send({
+        code: 'core.subscriber_profile.unauthorized',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+
+    try {
+      const input = parseUpsertSubscriberProfileBody(
+        request.body,
+        {
+          countryCode: 'TG',
+          phoneNumber: claims.phoneNumber,
+          subscriberUserId: claims.sub,
+        },
+        parsedTraceId,
+      );
+      const profile = await repository.upsertSubscriberProfile(input);
+
+      return reply.code(200).send(toSubscriberProfileDto(profile));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Invalid request.';
+
+      return reply.code(400).send({
+        code: 'core.subscriber_profile.invalid_request',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+  });
+
+  app.get('/v1/subscriber/subscription', async (request, reply) => {
+    const traceId = request.headers['x-trace-id'];
+    const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
+
+    let claims: AuthAccessTokenClaims;
+
+    try {
+      claims = readSubscriberClaims(request.headers['authorization']);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Authentication is required.';
+
+      return reply.code(401).send({
+        code: 'core.subscriber_subscription.unauthorized',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+
+    try {
+      const subscription = await repository.getCurrentSubscriberSubscription({
+        countryCode: 'TG',
+        phoneNumber: claims.phoneNumber,
+        subscriberUserId: claims.sub,
+      });
+
+      return reply.code(200).send({
+        subscription: subscription === null ? null : toSubscriptionDetailDto(subscription),
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Invalid request.';
+
+      return reply.code(400).send({
+        code: 'core.subscriber_subscription.invalid_request',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+  });
+
+  app.post('/v1/subscriber/subscription', async (request, reply) => {
+    const traceId = request.headers['x-trace-id'];
+    const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
+
+    let claims: AuthAccessTokenClaims;
+
+    try {
+      claims = readSubscriberClaims(request.headers['authorization']);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Authentication is required.';
+
+      return reply.code(401).send({
+        code: 'core.subscriber_subscription.unauthorized',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+
+    try {
+      const current = await repository.getCurrentSubscriberSubscription({
+        countryCode: 'TG',
+        phoneNumber: claims.phoneNumber,
+        subscriberUserId: claims.sub,
+      });
+
+      if (current !== null && current.status !== 'cancelled') {
+        return reply.code(409).send({
+          code: 'core.subscriber_subscription.already_exists',
+          message: 'Subscriber already has a current subscription.',
+          traceId: parsedTraceId,
+        });
+      }
+
+      const input = parseCreateSubscriberSubscriptionBody(
+        request.body,
+        {
+          countryCode: 'TG',
+          phoneNumber: claims.phoneNumber,
+          subscriberUserId: claims.sub,
+        },
+        parsedTraceId,
+      );
+      const subscription = await repository.createSubscription(input);
+
+      return reply.code(201).send(toCreatedSubscriptionDto(subscription));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Invalid request.';
+
+      return reply.code(400).send({
+        code: 'core.subscriber_subscription.invalid_request',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+  });
+
+  app.post('/v1/subscriber/subscription/first-visit-request', async (request, reply) => {
+    const traceId = request.headers['x-trace-id'];
+    const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
+
+    let claims: AuthAccessTokenClaims;
+
+    try {
+      claims = readSubscriberClaims(request.headers['authorization']);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Authentication is required.';
+
+      return reply.code(401).send({
+        code: 'core.subscriber_subscription.unauthorized',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+
+    try {
+      const input = parseRequestFirstVisitBody(
+        request.body,
+        {
+          countryCode: 'TG',
+          phoneNumber: claims.phoneNumber,
+          subscriberUserId: claims.sub,
+        },
+        parsedTraceId,
+      );
+      const subscription = await repository.requestFirstVisit(input);
+
+      return reply.code(200).send(toSubscriptionDetailDto(subscription));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Invalid request.';
+
+      return reply.code(400).send({
+        code: 'core.subscriber_first_visit.invalid_request',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+  });
+
+  app.get('/v1/subscriber/subscription/billing-history', async (request, reply) => {
+    const traceId = request.headers['x-trace-id'];
+    const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
+
+    let claims: AuthAccessTokenClaims;
+
+    try {
+      claims = readSubscriberClaims(request.headers['authorization']);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Authentication is required.';
+
+      return reply.code(401).send({
+        code: 'core.subscriber_subscription.unauthorized',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+
+    try {
+      const current = await repository.getCurrentSubscriberSubscription({
+        countryCode: 'TG',
+        phoneNumber: claims.phoneNumber,
+        subscriberUserId: claims.sub,
+      });
+
+      if (current === null) {
+        return reply.code(404).send({
+          code: 'core.subscriber_subscription.not_found',
+          message: 'Subscription was not found.',
+          traceId: parsedTraceId,
+        });
+      }
+
+      const input = parseListSubscriptionBillingRequest(current.subscriptionId, request.query);
+      const items = await repository.listSubscriptionBilling(input);
+
+      return reply.code(200).send({
+        items: items.map(toSubscriptionBillingItemDto),
+        limit: input.limit,
+        subscriptionId: input.subscriptionId,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Invalid request.';
+
+      return reply.code(400).send({
+        code: 'core.subscriber_billing.invalid_request',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+  });
+
+  app.post('/v1/subscriber/subscription/tier', async (request, reply) => {
+    const traceId = request.headers['x-trace-id'];
+    const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
+
+    let claims: AuthAccessTokenClaims;
+
+    try {
+      claims = readSubscriberClaims(request.headers['authorization']);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Authentication is required.';
+
+      return reply.code(401).send({
+        code: 'core.subscriber_subscription.unauthorized',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+
+    try {
+      const current = await repository.getCurrentSubscriberSubscription({
+        countryCode: 'TG',
+        phoneNumber: claims.phoneNumber,
+        subscriberUserId: claims.sub,
+      });
+
+      if (current === null) {
+        return reply.code(404).send({
+          code: 'core.subscriber_subscription.not_found',
+          message: 'Subscription was not found.',
+          traceId: parsedTraceId,
+        });
+      }
+
+      const input = parseChangeCurrentSubscriberSubscriptionTierBody(
+        current.subscriptionId,
+        request.body,
+        { subscriberUserId: claims.sub },
+        parsedTraceId,
+      );
+      await repository.changeSubscriptionTier(input);
+      const detail = await repository.getSubscriptionDetail({
+        subscriptionId: current.subscriptionId,
+      });
+
+      return reply.code(200).send(toSubscriptionDetailDto(detail));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Invalid request.';
+
+      return reply.code(400).send({
+        code: 'core.subscriber_tier.invalid_request',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+  });
+
+  app.post('/v1/subscriber/subscription/pause', async (request, reply) => {
+    const traceId = request.headers['x-trace-id'];
+    const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
+
+    let claims: AuthAccessTokenClaims;
+
+    try {
+      claims = readSubscriberClaims(request.headers['authorization']);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Authentication is required.';
+
+      return reply.code(401).send({
+        code: 'core.subscriber_subscription.unauthorized',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+
+    try {
+      const current = await repository.getCurrentSubscriberSubscription({
+        countryCode: 'TG',
+        phoneNumber: claims.phoneNumber,
+        subscriberUserId: claims.sub,
+      });
+
+      if (current === null) {
+        return reply.code(404).send({
+          code: 'core.subscriber_subscription.not_found',
+          message: 'Subscription was not found.',
+          traceId: parsedTraceId,
+        });
+      }
+
+      const input = parsePauseCurrentSubscriberSubscriptionBody(
+        current.subscriptionId,
+        request.body,
+        { subscriberUserId: claims.sub },
+        parsedTraceId,
+      );
+      await repository.pauseSubscription(input);
+      const detail = await repository.getSubscriptionDetail({
+        subscriptionId: current.subscriptionId,
+      });
+
+      return reply.code(200).send(toSubscriptionDetailDto(detail));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Invalid request.';
+
+      return reply.code(400).send({
+        code: 'core.subscriber_pause.invalid_request',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+  });
+
+  app.post('/v1/subscriber/subscription/resume', async (request, reply) => {
+    const traceId = request.headers['x-trace-id'];
+    const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
+
+    let claims: AuthAccessTokenClaims;
+
+    try {
+      claims = readSubscriberClaims(request.headers['authorization']);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Authentication is required.';
+
+      return reply.code(401).send({
+        code: 'core.subscriber_subscription.unauthorized',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+
+    try {
+      const current = await repository.getCurrentSubscriberSubscription({
+        countryCode: 'TG',
+        phoneNumber: claims.phoneNumber,
+        subscriberUserId: claims.sub,
+      });
+
+      if (current === null) {
+        return reply.code(404).send({
+          code: 'core.subscriber_subscription.not_found',
+          message: 'Subscription was not found.',
+          traceId: parsedTraceId,
+        });
+      }
+
+      const input = parseResumeCurrentSubscriberSubscriptionBody(
+        current.subscriptionId,
+        request.body,
+        { subscriberUserId: claims.sub },
+        parsedTraceId,
+      );
+      await repository.resumeSubscription(input);
+      const detail = await repository.getSubscriptionDetail({
+        subscriptionId: current.subscriptionId,
+      });
+
+      return reply.code(200).send(toSubscriptionDetailDto(detail));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Invalid request.';
+
+      return reply.code(400).send({
+        code: 'core.subscriber_resume.invalid_request',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+  });
+
+  app.put('/v1/subscriber/subscription/payment-method', async (request, reply) => {
+    const traceId = request.headers['x-trace-id'];
+    const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
+
+    let claims: AuthAccessTokenClaims;
+
+    try {
+      claims = readSubscriberClaims(request.headers['authorization']);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Authentication is required.';
+
+      return reply.code(401).send({
+        code: 'core.subscriber_subscription.unauthorized',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+
+    try {
+      const current = await repository.getCurrentSubscriberSubscription({
+        countryCode: 'TG',
+        phoneNumber: claims.phoneNumber,
+        subscriberUserId: claims.sub,
+      });
+
+      if (current === null) {
+        return reply.code(404).send({
+          code: 'core.subscriber_subscription.not_found',
+          message: 'Subscription was not found.',
+          traceId: parsedTraceId,
+        });
+      }
+
+      const input = parseUpdateCurrentSubscriberPaymentMethodBody(
+        current.subscriptionId,
+        request.body,
+        { subscriberUserId: claims.sub },
+        parsedTraceId,
+      );
+      await repository.updateSubscriptionPaymentMethod(input);
+      const detail = await repository.getSubscriptionDetail({
+        subscriptionId: current.subscriptionId,
+      });
+
+      return reply.code(200).send(toSubscriptionDetailDto(detail));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Invalid request.';
+
+      return reply.code(400).send({
+        code: 'core.subscriber_payment_method.invalid_request',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+  });
+
+  app.post('/v1/subscriber/subscription/cancel', async (request, reply) => {
+    const traceId = request.headers['x-trace-id'];
+    const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
+
+    let claims: AuthAccessTokenClaims;
+
+    try {
+      claims = readSubscriberClaims(request.headers['authorization']);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Authentication is required.';
+
+      return reply.code(401).send({
+        code: 'core.subscriber_subscription.unauthorized',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+
+    try {
+      const current = await repository.getCurrentSubscriberSubscription({
+        countryCode: 'TG',
+        phoneNumber: claims.phoneNumber,
+        subscriberUserId: claims.sub,
+      });
+
+      if (current === null) {
+        return reply.code(404).send({
+          code: 'core.subscriber_subscription.not_found',
+          message: 'Subscription was not found.',
+          traceId: parsedTraceId,
+        });
+      }
+
+      const input = parseCancelCurrentSubscriberSubscriptionBody(
+        current.subscriptionId,
+        request.body,
+        { subscriberUserId: claims.sub },
+        parsedTraceId,
+      );
+      await repository.cancelSubscription(input);
+      const detail = await repository.getSubscriptionDetail({
+        subscriptionId: current.subscriptionId,
+      });
+
+      return reply.code(200).send(toSubscriptionDetailDto(detail));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Invalid request.';
+
+      return reply.code(400).send({
+        code: 'core.subscriber_cancel.invalid_request',
+        message,
+        traceId: parsedTraceId,
+      });
+    }
+  });
+
   app.post('/v1/devices/push-token', async (request, reply) => {
     const traceId = request.headers['x-trace-id'];
     const parsedTraceId = typeof traceId === 'string' ? traceId : randomUUID();
@@ -320,17 +876,7 @@ export function createCoreApiApp(options: CoreApiOptions = {}): FastifyInstance 
       const input = parseCreateSubscriptionBody(request.body, parsedTraceId);
       const subscription = await repository.createSubscription(input);
 
-      return reply.code(201).send({
-        assignmentSlaHours: 4,
-        countryCode: subscription.countryCode,
-        currencyCode: subscription.currencyCode,
-        monthlyPriceMinor: subscription.monthlyPriceMinor.toString(),
-        status: subscription.status,
-        subscriberId: subscription.subscriberId,
-        subscriptionId: subscription.subscriptionId,
-        tierCode: subscription.tierCode,
-        visitsPerCycle: subscription.visitsPerCycle,
-      });
+      return reply.code(201).send(toCreatedSubscriptionDto(subscription));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Invalid request.';
 
@@ -1964,6 +2510,67 @@ function toPushDeviceDto(device: {
   };
 }
 
+function toSubscriberProfileDto(profile: {
+  readonly avatarObjectKey: string | null;
+  readonly countryCode: string;
+  readonly createdAt: Date;
+  readonly email: string | null;
+  readonly firstName: string | null;
+  readonly isAdultConfirmed: boolean;
+  readonly lastName: string | null;
+  readonly phoneNumber: string;
+  readonly subscriberId: string;
+  readonly updatedAt: Date;
+}): Record<string, unknown> {
+  return {
+    avatarObjectKey: profile.avatarObjectKey,
+    countryCode: profile.countryCode,
+    createdAt: toIsoString(profile.createdAt),
+    email: profile.email,
+    firstName: profile.firstName,
+    isAdultConfirmed: profile.isAdultConfirmed,
+    lastName: profile.lastName,
+    phoneNumber: profile.phoneNumber,
+    subscriberId: profile.subscriberId,
+    updatedAt: toIsoString(profile.updatedAt),
+  };
+}
+
+function toCreatedSubscriptionDto(subscription: {
+  readonly countryCode: string;
+  readonly currencyCode: string;
+  readonly monthlyPriceMinor: bigint;
+  readonly paymentMethod: unknown;
+  readonly status: string;
+  readonly subscriberId: string;
+  readonly subscriptionId: string;
+  readonly tierCode: string;
+  readonly visitsPerCycle: number;
+}): Record<string, unknown> {
+  return {
+    assignmentSlaHours: subscription.status === 'pending_match' ? 4 : null,
+    countryCode: subscription.countryCode,
+    currencyCode: subscription.currencyCode,
+    monthlyPriceMinor: subscription.monthlyPriceMinor.toString(),
+    paymentMethod: subscription.paymentMethod,
+    status: subscription.status,
+    subscriberId: subscription.subscriberId,
+    subscriptionId: subscription.subscriptionId,
+    tierCode: subscription.tierCode,
+    visitsPerCycle: subscription.visitsPerCycle,
+  };
+}
+
+function readSubscriberClaims(header: unknown): AuthAccessTokenClaims {
+  const claims = verifyAccessToken(readBearerToken(header));
+
+  if (claims.role !== 'subscriber') {
+    throw new Error('Subscriber access is required.');
+  }
+
+  return claims;
+}
+
 function readBearerToken(header: unknown): string {
   if (typeof header !== 'string' || !header.startsWith('Bearer ')) {
     throw new Error('Authorization bearer token is required.');
@@ -1987,6 +2594,10 @@ function requiredRoleForRequest(method: string, rawUrl: string): AuthRole | null
 
   if (pathname.startsWith('/v1/operator/')) {
     return 'operator';
+  }
+
+  if (pathname.startsWith('/v1/subscriber/')) {
+    return 'subscriber';
   }
 
   if (pathname.startsWith('/v1/workers/') || pathname.startsWith('/v1/visits/')) {
@@ -2082,6 +2693,7 @@ function toSubscriptionDetailDto(detail: {
   readonly assignedWorker: unknown;
   readonly countryCode: string;
   readonly monthlyPriceMinor: bigint;
+  readonly paymentMethod: unknown;
   readonly phoneNumber: string;
   readonly recentVisits: unknown;
   readonly schedulePreference: unknown;
@@ -2103,6 +2715,7 @@ function toSubscriptionDetailDto(detail: {
     assignedWorker: detail.assignedWorker,
     countryCode: detail.countryCode,
     monthlyPriceMinor: detail.monthlyPriceMinor.toString(),
+    paymentMethod: detail.paymentMethod,
     phoneNumber: detail.phoneNumber,
     recentVisits: detail.recentVisits,
     schedulePreference: detail.schedulePreference,

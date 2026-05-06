@@ -3,38 +3,46 @@ import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
 
+import { useSubscriberApi } from '../../api/SubscriberApiContext.js';
 import { OnboardingBackButton } from './OnboardingBackButton.js';
 import { useSignup } from './SignupContext.js';
-
-const TOGO_PHONE_LENGTH = 8;
-
-function formatTogoPhone(digits: string): string {
-  const cleaned = digits.replace(/\D/g, '').slice(0, TOGO_PHONE_LENGTH);
-  return cleaned.replace(/(\d{2})(?=\d)/g, '$1 ').trim();
-}
-
-function digitsOf(value: string): string {
-  return value.replace(/\D/g, '').slice(0, TOGO_PHONE_LENGTH);
-}
+import { TOGO_PHONE_LENGTH, digitsOfTogoPhone, formatTogoPhone } from './phoneNumber.js';
 
 export function PhoneX02(): ReactElement {
   const navigate = useNavigate();
+  const subscriberApi = useSubscriberApi();
   const signup = useSignup();
-  const initialDigits = digitsOf(signup.phone.replace(/^\+228\s*/u, ''));
+  const initialDigits = digitsOfTogoPhone(signup.phone);
   const [phone, setPhone] = useState(formatTogoPhone(initialDigits));
-  const digits = digitsOf(phone);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const digits = digitsOfTogoPhone(phone);
   const isValid = digits.length === TOGO_PHONE_LENGTH;
 
   const onChange = (event: ChangeEvent<HTMLInputElement>): void => {
     setPhone(formatTogoPhone(event.target.value));
   };
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>): void => {
+  const onSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
-    if (!isValid) return;
+    if (!isValid || isSubmitting) return;
     const fullPhone = `+228 ${formatTogoPhone(digits)}`;
-    signup.setPhone(fullPhone);
-    navigate('/signup/otp');
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      if (subscriberApi.isConfigured) {
+        const challenge = await subscriberApi.startOtp(`+228${digits}`);
+        signup.setOtpChallengeId(challenge.challengeId);
+      }
+
+      signup.setPhone(fullPhone);
+      navigate('/signup/otp');
+    } catch {
+      setError(translate('error.server.body'));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -47,9 +55,10 @@ export function PhoneX02(): ReactElement {
             <i />
             <i />
             <i />
+            <i />
           </div>
           <span className="h-sm">
-            {translate('subscriber.signup.step_indicator', { current: 1, total: 4 })}
+            {translate('subscriber.signup.step_indicator', { current: 1, total: 5 })}
           </span>
           <h1 className="h-md" id="x02-headline">
             {translate('subscriber.signup.phone.title')}
@@ -80,11 +89,16 @@ export function PhoneX02(): ReactElement {
           <p className="p-sm" id="x02-privacy">
             {translate('subscriber.signup.phone.privacy_note')}
           </p>
+          {error === null ? null : (
+            <p className="notice" role="alert">
+              {error}
+            </p>
+          )}
         </div>
 
         <div className="grow" />
 
-        <button className="btn full primary" disabled={!isValid} type="submit">
+        <button className="btn full primary" disabled={!isValid || isSubmitting} type="submit">
           {translate('subscriber.signup.phone.cta')}
         </button>
       </form>

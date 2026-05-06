@@ -125,20 +125,27 @@
   line-height: 1.5;
 }
 
-/* Active forfait card — dark/ink background per design contract. */
+.plan-pending-choice {
+  display: block;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+/* Active forfait card — primary status surface. */
 .plan-active-card {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  border: 0;
+  border: 1px solid var(--primary);
   border-radius: 16px;
-  background: var(--ink);
-  color: var(--surface);
+  background: var(--primary);
+  color: var(--primary-on);
   padding: 14px;
 }
 
 .plan-active-card-eyebrow {
-  color: color-mix(in srgb, var(--surface) 60%, transparent);
+  color: color-mix(in srgb, var(--primary-on) 68%, transparent);
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 500;
@@ -161,12 +168,12 @@
 }
 
 .plan-active-card-row-label {
-  color: color-mix(in srgb, var(--surface) 60%, transparent);
+  color: color-mix(in srgb, var(--primary-on) 68%, transparent);
   font-size: 11px;
 }
 
 .plan-active-card-row-value {
-  color: var(--surface);
+  color: var(--primary-on);
   font-family: var(--font-mono);
   font-size: 11px;
 }
@@ -749,7 +756,6 @@
   font-style: normal;
 }
 
-.plan-active-card,
 .plan-next-visit-card,
 .plan-cream-card,
 .plan-warn-card,
@@ -762,18 +768,8 @@
 }
 
 .plan-active-card {
-  color: var(--ink);
+  border-radius: 10px;
   padding: 14px;
-}
-
-.plan-active-card-eyebrow,
-.plan-active-card-row-label {
-  color: var(--ink-3);
-}
-
-.plan-active-card-row-value,
-.plan-active-card-tier {
-  color: var(--ink);
 }
 
 .plan-next-visit-card,

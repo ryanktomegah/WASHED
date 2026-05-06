@@ -51,6 +51,7 @@ import type {
   NotificationChannel,
   NotificationStatus,
   OperatorVisitCloseoutStatus,
+  PauseSubscriptionInput,
   PushDeviceEnvironment,
   PushDevicePlatform,
   PushDeviceStatus,
@@ -58,7 +59,10 @@ import type {
   RefreshAuthSessionInput,
   RegisterPushDeviceInput,
   ReportWorkerIssueInput,
+  RequestFirstVisitInput,
+  ResumeSubscriptionInput,
   ResolveDisputeInput,
+  ResolveSupportContactInput,
   RunPaymentReconciliationInput,
   ResolveWorkerAdvanceRequestInput,
   ResolveWorkerSwapRequestInput,
@@ -66,6 +70,9 @@ import type {
   RescheduleVisitInput,
   SkipVisitInput,
   StartOtpChallengeInput,
+  SubscriptionPaymentProvider,
+  UpsertSubscriberProfileInput,
+  UpdateSubscriptionPaymentMethodInput,
   UploadVisitPhotoInput,
   UpdateOperatorVisitStatusInput,
   UpsertWorkerProfileInput,
@@ -89,6 +96,7 @@ const DAY_VALUES = new Set<DayOfWeek>([
 ]);
 const TIME_WINDOW_VALUES = new Set<TimeWindow>(['afternoon', 'morning']);
 const TIER_VALUES = new Set<SubscriptionTierCode>(['T1', 'T2']);
+const PAYMENT_METHOD_PROVIDER_VALUES = new Set<SubscriptionPaymentProvider>(['flooz', 'mixx']);
 const MOCK_PAYMENT_OUTCOME_VALUES = new Set<ChargeSubscriptionInput['mockOutcome']>([
   'failed',
   'succeeded',
@@ -220,7 +228,8 @@ export function parseCreateSubscriptionBody(
   }
 
   const address = readRecord(body, 'address');
-  const schedulePreference = readRecord(body, 'schedulePreference');
+  const schedulePreference = readOptionalSchedulePreference(body);
+  const paymentMethod = readOptionalSubscriptionPaymentMethod(body, 'paymentMethod');
   const countryCode = readLiteral<CountryCode>(body, 'countryCode', new Set(['TG']));
   const tierCode = readLiteral<SubscriptionTierCode>(body, 'tierCode', TIER_VALUES);
 
@@ -232,12 +241,69 @@ export function parseCreateSubscriptionBody(
       neighborhood: readString(address, 'neighborhood'),
     },
     countryCode,
+    ...(paymentMethod === undefined ? {} : { paymentMethod }),
     phoneNumber: readPhoneNumber(body, 'phoneNumber'),
-    schedulePreference: {
-      dayOfWeek: readLiteral<DayOfWeek>(schedulePreference, 'dayOfWeek', DAY_VALUES),
-      timeWindow: readLiteral<TimeWindow>(schedulePreference, 'timeWindow', TIME_WINDOW_VALUES),
-    },
+    ...(schedulePreference === undefined ? {} : { schedulePreference }),
     tierCode,
+    traceId,
+  };
+}
+
+export function parseCreateSubscriberSubscriptionBody(
+  body: unknown,
+  claims: {
+    readonly countryCode: CountryCode;
+    readonly phoneNumber: string;
+    readonly subscriberUserId: string;
+  },
+  traceId: string,
+): CreateSubscriptionInput {
+  if (!isRecord(body)) {
+    throw new Error('Request body must be an object.');
+  }
+
+  const address = readRecord(body, 'address');
+  const schedulePreference = readOptionalSchedulePreference(body);
+  const paymentMethod = readSubscriptionPaymentMethod(body, 'paymentMethod');
+
+  return {
+    address: {
+      gpsLatitude: readLatitude(address, 'gpsLatitude'),
+      gpsLongitude: readLongitude(address, 'gpsLongitude'),
+      landmark: readString(address, 'landmark'),
+      neighborhood: readString(address, 'neighborhood'),
+    },
+    countryCode: claims.countryCode,
+    paymentMethod,
+    phoneNumber: claims.phoneNumber,
+    ...(schedulePreference === undefined ? {} : { schedulePreference }),
+    subscriberUserId: claims.subscriberUserId,
+    tierCode: readLiteral<SubscriptionTierCode>(body, 'tierCode', TIER_VALUES),
+    traceId,
+  };
+}
+
+export function parseRequestFirstVisitBody(
+  body: unknown,
+  claims: {
+    readonly countryCode: CountryCode;
+    readonly phoneNumber: string;
+    readonly subscriberUserId: string;
+  },
+  traceId: string,
+): RequestFirstVisitInput {
+  if (!isRecord(body)) {
+    throw new Error('Request body must be an object.');
+  }
+
+  const schedulePreference = readRequiredSchedulePreference(body);
+
+  return {
+    countryCode: claims.countryCode,
+    phoneNumber: claims.phoneNumber,
+    requestedAt: readIsoDateTime(body, 'requestedAt'),
+    schedulePreference,
+    subscriberUserId: claims.subscriberUserId,
     traceId,
   };
 }
@@ -390,6 +456,28 @@ export function parseCancelSubscriptionBody(
   };
 }
 
+export function parseCancelCurrentSubscriberSubscriptionBody(
+  subscriptionId: string,
+  body: unknown,
+  claims: { readonly subscriberUserId: string },
+  traceId: string,
+): CancelSubscriptionInput {
+  if (!isUuid(subscriptionId)) {
+    throw new Error('subscriptionId must be a UUID.');
+  }
+
+  if (!isRecord(body)) {
+    throw new Error('Request body must be an object.');
+  }
+
+  return {
+    cancelledAt: readIsoDateTime(body, 'cancelledAt'),
+    subscriberUserId: claims.subscriberUserId,
+    subscriptionId,
+    traceId,
+  };
+}
+
 export function parseChangeSubscriptionTierBody(
   subscriptionId: string,
   body: unknown,
@@ -409,6 +497,96 @@ export function parseChangeSubscriptionTierBody(
     subscriptionId,
     tierCode: readLiteral<SubscriptionTierCode>(body, 'tierCode', TIER_VALUES),
     traceId,
+  };
+}
+
+export function parseChangeCurrentSubscriberSubscriptionTierBody(
+  subscriptionId: string,
+  body: unknown,
+  claims: { readonly subscriberUserId: string },
+  traceId: string,
+): ChangeSubscriptionTierInput {
+  if (!isUuid(subscriptionId)) {
+    throw new Error('subscriptionId must be a UUID.');
+  }
+
+  if (!isRecord(body)) {
+    throw new Error('Request body must be an object.');
+  }
+
+  return {
+    effectiveAt: readIsoDateTime(body, 'effectiveAt'),
+    subscriberUserId: claims.subscriberUserId,
+    subscriptionId,
+    tierCode: readLiteral<SubscriptionTierCode>(body, 'tierCode', TIER_VALUES),
+    traceId,
+  };
+}
+
+export function parsePauseCurrentSubscriberSubscriptionBody(
+  subscriptionId: string,
+  body: unknown,
+  claims: { readonly subscriberUserId: string },
+  traceId: string,
+): PauseSubscriptionInput {
+  if (!isUuid(subscriptionId)) {
+    throw new Error('subscriptionId must be a UUID.');
+  }
+
+  if (!isRecord(body)) {
+    throw new Error('Request body must be an object.');
+  }
+
+  return {
+    pausedAt: readIsoDateTime(body, 'pausedAt'),
+    subscriberUserId: claims.subscriberUserId,
+    subscriptionId,
+    traceId,
+  };
+}
+
+export function parseResumeCurrentSubscriberSubscriptionBody(
+  subscriptionId: string,
+  body: unknown,
+  claims: { readonly subscriberUserId: string },
+  traceId: string,
+): ResumeSubscriptionInput {
+  if (!isUuid(subscriptionId)) {
+    throw new Error('subscriptionId must be a UUID.');
+  }
+
+  if (!isRecord(body)) {
+    throw new Error('Request body must be an object.');
+  }
+
+  return {
+    resumedAt: readIsoDateTime(body, 'resumedAt'),
+    subscriberUserId: claims.subscriberUserId,
+    subscriptionId,
+    traceId,
+  };
+}
+
+export function parseUpdateCurrentSubscriberPaymentMethodBody(
+  subscriptionId: string,
+  body: unknown,
+  claims: { readonly subscriberUserId: string },
+  traceId: string,
+): UpdateSubscriptionPaymentMethodInput {
+  if (!isUuid(subscriptionId)) {
+    throw new Error('subscriptionId must be a UUID.');
+  }
+
+  if (!isRecord(body)) {
+    throw new Error('Request body must be an object.');
+  }
+
+  return {
+    paymentMethod: readSubscriptionPaymentMethod(body, 'paymentMethod'),
+    subscriberUserId: claims.subscriberUserId,
+    subscriptionId,
+    traceId,
+    updatedAt: readIsoDateTime(body, 'updatedAt'),
   };
 }
 
@@ -730,6 +908,32 @@ export function parseGetSupportContactParams(
     throw new Error('contactId must be a UUID.');
   }
   return { contactId, subscriptionId };
+}
+
+export function parseResolveSupportContactBody(
+  contactId: string,
+  body: unknown,
+  traceId: string,
+): ResolveSupportContactInput {
+  if (!isUuid(contactId)) {
+    throw new Error('contactId must be a UUID.');
+  }
+  if (!isRecord(body)) {
+    throw new Error('Request body must be an object.');
+  }
+
+  const note = readString(body, 'resolutionNote').trim();
+  if (note.length < 1 || note.length > 4000) {
+    throw new Error('resolutionNote must be between 1 and 4000 characters.');
+  }
+
+  return {
+    contactId,
+    operatorUserId: readUuid(body, 'operatorUserId'),
+    resolutionNote: note,
+    resolvedAt: readIsoDateTime(body, 'resolvedAt'),
+    traceId,
+  };
 }
 
 export function parseRateVisitBody(
@@ -1562,6 +1766,35 @@ export function parseRefreshAuthSessionBody(
   };
 }
 
+export function parseUpsertSubscriberProfileBody(
+  body: unknown,
+  claims: {
+    readonly countryCode: CountryCode;
+    readonly phoneNumber: string;
+    readonly subscriberUserId: string;
+  },
+  traceId: string,
+): UpsertSubscriberProfileInput {
+  if (!isRecord(body)) {
+    throw new Error('Request body must be an object.');
+  }
+
+  const email = readOptionalEmail(body, 'email');
+  const avatarObjectKey = readOptionalString(body, 'avatarObjectKey');
+
+  return {
+    ...(avatarObjectKey === undefined ? {} : { avatarObjectKey }),
+    countryCode: claims.countryCode,
+    ...(email === undefined ? {} : { email }),
+    firstName: readPersonName(body, 'firstName'),
+    isAdultConfirmed: readBoolean(body, 'isAdultConfirmed'),
+    lastName: readPersonName(body, 'lastName'),
+    phoneNumber: claims.phoneNumber,
+    subscriberUserId: claims.subscriberUserId,
+    traceId,
+  };
+}
+
 function readRecord(record: Record<string, unknown>, key: string): Record<string, unknown> {
   const value = record[key];
 
@@ -1572,6 +1805,89 @@ function readRecord(record: Record<string, unknown>, key: string): Record<string
   return value;
 }
 
+function readOptionalRecord(
+  record: Record<string, unknown>,
+  key: string,
+): Record<string, unknown> | undefined {
+  const value = record[key];
+
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+
+  if (!isRecord(value)) {
+    throw new Error(`${key} must be an object.`);
+  }
+
+  return value;
+}
+
+function readRequiredSchedulePreference(record: Record<string, unknown>): {
+  readonly dayOfWeek: DayOfWeek;
+  readonly timeWindow: TimeWindow;
+} {
+  const schedulePreference = readRecord(record, 'schedulePreference');
+
+  return {
+    dayOfWeek: readLiteral<DayOfWeek>(schedulePreference, 'dayOfWeek', DAY_VALUES),
+    timeWindow: readLiteral<TimeWindow>(schedulePreference, 'timeWindow', TIME_WINDOW_VALUES),
+  };
+}
+
+function readOptionalSchedulePreference(record: Record<string, unknown>):
+  | {
+      readonly dayOfWeek: DayOfWeek;
+      readonly timeWindow: TimeWindow;
+    }
+  | undefined {
+  const schedulePreference = readOptionalRecord(record, 'schedulePreference');
+
+  if (schedulePreference === undefined) {
+    return undefined;
+  }
+
+  return {
+    dayOfWeek: readLiteral<DayOfWeek>(schedulePreference, 'dayOfWeek', DAY_VALUES),
+    timeWindow: readLiteral<TimeWindow>(schedulePreference, 'timeWindow', TIME_WINDOW_VALUES),
+  };
+}
+
+function readSubscriptionPaymentMethod(
+  record: Record<string, unknown>,
+  key: string,
+): UpdateSubscriptionPaymentMethodInput['paymentMethod'] {
+  const paymentMethod = readRecord(record, key);
+
+  return {
+    phoneNumber: readPhoneNumber(paymentMethod, 'phoneNumber'),
+    provider: readLiteral<SubscriptionPaymentProvider>(
+      paymentMethod,
+      'provider',
+      PAYMENT_METHOD_PROVIDER_VALUES,
+    ),
+  };
+}
+
+function readOptionalSubscriptionPaymentMethod(
+  record: Record<string, unknown>,
+  key: string,
+): UpdateSubscriptionPaymentMethodInput['paymentMethod'] | undefined {
+  const paymentMethod = readOptionalRecord(record, key);
+
+  if (paymentMethod === undefined) {
+    return undefined;
+  }
+
+  return {
+    phoneNumber: readPhoneNumber(paymentMethod, 'phoneNumber'),
+    provider: readLiteral<SubscriptionPaymentProvider>(
+      paymentMethod,
+      'provider',
+      PAYMENT_METHOD_PROVIDER_VALUES,
+    ),
+  };
+}
+
 function readString(record: Record<string, unknown>, key: string): string {
   const value = record[key];
 
@@ -1580,6 +1896,26 @@ function readString(record: Record<string, unknown>, key: string): string {
   }
 
   return value.trim();
+}
+
+function readPersonName(record: Record<string, unknown>, key: string): string {
+  const value = readString(record, key);
+
+  if (value.length < 2 || value.length > 80) {
+    throw new Error(`${key} must be 2-80 characters.`);
+  }
+
+  return value;
+}
+
+function readBoolean(record: Record<string, unknown>, key: string): boolean {
+  const value = record[key];
+
+  if (typeof value !== 'boolean') {
+    throw new Error(`${key} must be a boolean.`);
+  }
+
+  return value;
 }
 
 function readOptionalString(record: Record<string, unknown>, key: string): string | undefined {
@@ -1595,6 +1931,20 @@ function readOptionalString(record: Record<string, unknown>, key: string): strin
 
   const trimmed = value.trim();
   return trimmed.length === 0 ? undefined : trimmed;
+}
+
+function readOptionalEmail(record: Record<string, unknown>, key: string): string | undefined {
+  const value = readOptionalString(record, key);
+
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(value)) {
+    throw new Error(`${key} must be a valid email address.`);
+  }
+
+  return value.toLowerCase();
 }
 
 function readPhoneNumber(record: Record<string, unknown>, key: string): string {

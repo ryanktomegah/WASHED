@@ -35,6 +35,18 @@ import {
 import { buildAssignedSubscriptionRecord } from './subscription-assignment.js';
 import { buildCreatedSubscriptionRecord } from './subscription-record.js';
 
+export interface SubscriptionSchedulePreference {
+  readonly dayOfWeek: DayOfWeek;
+  readonly timeWindow: TimeWindow;
+}
+
+export type SubscriptionPaymentProvider = 'flooz' | 'mixx';
+
+export interface SubscriptionPaymentMethod {
+  readonly phoneNumber: string;
+  readonly provider: SubscriptionPaymentProvider;
+}
+
 export interface CreateSubscriptionInput {
   readonly address: {
     readonly gpsLatitude: number;
@@ -43,11 +55,10 @@ export interface CreateSubscriptionInput {
     readonly neighborhood: string;
   };
   readonly countryCode: CountryCode;
+  readonly paymentMethod?: SubscriptionPaymentMethod;
   readonly phoneNumber: string;
-  readonly schedulePreference: {
-    readonly dayOfWeek: DayOfWeek;
-    readonly timeWindow: TimeWindow;
-  };
+  readonly schedulePreference?: SubscriptionSchedulePreference;
+  readonly subscriberUserId?: string;
   readonly tierCode: SubscriptionTierCode;
   readonly traceId: string;
 }
@@ -89,6 +100,34 @@ export interface RefreshAuthSessionInput {
   readonly traceId: string;
 }
 
+export interface GetSubscriberProfileInput {
+  readonly countryCode: CountryCode;
+  readonly phoneNumber: string;
+  readonly subscriberUserId: string;
+}
+
+export interface UpsertSubscriberProfileInput extends GetSubscriberProfileInput {
+  readonly avatarObjectKey?: string;
+  readonly email?: string;
+  readonly firstName: string;
+  readonly isAdultConfirmed: boolean;
+  readonly lastName: string;
+  readonly traceId: string;
+}
+
+export interface SubscriberProfileRecord {
+  readonly avatarObjectKey: string | null;
+  readonly countryCode: CountryCode;
+  readonly createdAt: Date;
+  readonly email: string | null;
+  readonly firstName: string | null;
+  readonly isAdultConfirmed: boolean;
+  readonly lastName: string | null;
+  readonly phoneNumber: string;
+  readonly subscriberId: string;
+  readonly updatedAt: Date;
+}
+
 export type MockPaymentOutcome = 'failed' | 'succeeded';
 
 export interface ChargeSubscriptionInput {
@@ -125,8 +164,42 @@ export interface ChangeSubscriptionTierInput {
   readonly traceId: string;
 }
 
+export interface PauseSubscriptionInput {
+  readonly pausedAt: Date;
+  readonly subscriberUserId: string;
+  readonly subscriptionId: string;
+  readonly traceId: string;
+}
+
+export interface ResumeSubscriptionInput {
+  readonly resumedAt: Date;
+  readonly subscriberUserId: string;
+  readonly subscriptionId: string;
+  readonly traceId: string;
+}
+
+export interface UpdateSubscriptionPaymentMethodInput {
+  readonly paymentMethod: SubscriptionPaymentMethod;
+  readonly subscriberUserId: string;
+  readonly subscriptionId: string;
+  readonly traceId: string;
+  readonly updatedAt: Date;
+}
+
 export interface GetSubscriptionDetailInput {
   readonly subscriptionId: string;
+}
+
+export interface GetCurrentSubscriberSubscriptionInput {
+  readonly countryCode: CountryCode;
+  readonly phoneNumber: string;
+  readonly subscriberUserId: string;
+}
+
+export interface RequestFirstVisitInput extends GetCurrentSubscriberSubscriptionInput {
+  readonly requestedAt: Date;
+  readonly schedulePreference: SubscriptionSchedulePreference;
+  readonly traceId: string;
 }
 
 export interface PaymentAttemptRecord {
@@ -268,6 +341,28 @@ export interface ChangedSubscriptionTierRecord {
   readonly visitsPerCycle: 1 | 2;
 }
 
+export interface PausedSubscriptionRecord {
+  readonly events: readonly DomainEvent[];
+  readonly pausedAt: Date;
+  readonly pausedScheduledVisits: number;
+  readonly status: 'paused';
+  readonly subscriptionId: string;
+}
+
+export interface ResumedSubscriptionRecord {
+  readonly events: readonly DomainEvent[];
+  readonly resumedAt: Date;
+  readonly status: 'active';
+  readonly subscriptionId: string;
+}
+
+export interface UpdatedSubscriptionPaymentMethodRecord {
+  readonly events: readonly DomainEvent[];
+  readonly paymentMethod: SubscriptionPaymentMethod;
+  readonly subscriptionId: string;
+  readonly updatedAt: Date;
+}
+
 export interface CreatedSubscriptionRecord {
   readonly addressId: string;
   readonly countryCode: CountryCode;
@@ -275,11 +370,22 @@ export interface CreatedSubscriptionRecord {
   readonly currencyCode: string;
   readonly events: readonly DomainEvent[];
   readonly monthlyPriceMinor: bigint;
-  readonly status: 'pending_match';
+  readonly paymentMethod: SubscriptionPaymentMethod | null;
+  readonly status: 'pending_match' | 'ready_no_visit';
   readonly subscriberId: string;
   readonly subscriptionId: string;
   readonly tierCode: SubscriptionTierCode;
   readonly visitsPerCycle: 1 | 2;
+}
+
+export interface FirstVisitRequestRecord {
+  readonly countryCode: CountryCode;
+  readonly events: readonly DomainEvent[];
+  readonly requestedAt: Date;
+  readonly schedulePreference: SubscriptionSchedulePreference;
+  readonly status: 'pending_match';
+  readonly subscriberId: string;
+  readonly subscriptionId: string;
 }
 
 export interface AssignWorkerInput {
@@ -862,6 +968,14 @@ export interface GetSupportContactInput {
   readonly subscriptionId: string;
 }
 
+export interface ResolveSupportContactInput {
+  readonly contactId: string;
+  readonly operatorUserId: string;
+  readonly resolutionNote: string;
+  readonly resolvedAt: Date;
+  readonly traceId: string;
+}
+
 export interface SupportCreditRecord {
   readonly amount: Money;
   readonly createdAt: Date;
@@ -1031,11 +1145,9 @@ export interface SubscriptionDetailRecord {
   } | null;
   readonly countryCode: CountryCode;
   readonly monthlyPriceMinor: bigint;
+  readonly paymentMethod: SubscriptionPaymentMethod | null;
   readonly phoneNumber: string;
-  readonly schedulePreference: {
-    readonly dayOfWeek: DayOfWeek;
-    readonly timeWindow: TimeWindow;
-  };
+  readonly schedulePreference: SubscriptionSchedulePreference | null;
   readonly status: SubscriptionStatus;
   readonly subscriberId: string;
   readonly subscriptionId: string;
@@ -1171,6 +1283,11 @@ export interface CoreRepository {
   changeSubscriptionTier(
     input: ChangeSubscriptionTierInput,
   ): Promise<ChangedSubscriptionTierRecord>;
+  pauseSubscription(input: PauseSubscriptionInput): Promise<PausedSubscriptionRecord>;
+  resumeSubscription(input: ResumeSubscriptionInput): Promise<ResumedSubscriptionRecord>;
+  updateSubscriptionPaymentMethod(
+    input: UpdateSubscriptionPaymentMethodInput,
+  ): Promise<UpdatedSubscriptionPaymentMethodRecord>;
   checkInVisit(input: CheckInVisitInput): Promise<CheckedInVisitRecord>;
   checkOutVisit(input: CheckOutVisitInput): Promise<CompletedVisitRecord>;
   chargeSubscription(input: ChargeSubscriptionInput): Promise<PaymentAttemptRecord>;
@@ -1205,6 +1322,7 @@ export interface CoreRepository {
     input: ListSupportContactsInput,
   ): Promise<readonly SupportContactRecord[]>;
   getSupportContact(input: GetSupportContactInput): Promise<SupportContactRecord | null>;
+  resolveSupportContact(input: ResolveSupportContactInput): Promise<SupportContactRecord>;
   rescheduleVisit(input: RescheduleVisitInput): Promise<RescheduledVisitRecord>;
   skipVisit(input: SkipVisitInput): Promise<SkippedVisitRecord>;
   updateOperatorVisitStatus(
@@ -1218,6 +1336,10 @@ export interface CoreRepository {
   ): Promise<WorkerMonthlyEarningsRecord>;
   getWorkerProfile(workerId: string): Promise<WorkerProfileRecord>;
   getWorkerRoute(input: GetWorkerRouteInput): Promise<WorkerRouteRecord>;
+  getSubscriberProfile(input: GetSubscriberProfileInput): Promise<SubscriberProfileRecord>;
+  getCurrentSubscriberSubscription(
+    input: GetCurrentSubscriberSubscriptionInput,
+  ): Promise<SubscriptionDetailRecord | null>;
   getSubscriptionDetail(input: GetSubscriptionDetailInput): Promise<SubscriptionDetailRecord>;
   health(): Promise<'ok'>;
   listMatchingCandidates(
@@ -1258,6 +1380,8 @@ export interface CoreRepository {
     input: ListWorkerSwapRequestsInput,
   ): Promise<readonly WorkerSwapRequestRecord[]>;
   upsertWorkerProfile(input: UpsertWorkerProfileInput): Promise<WorkerProfileRecord>;
+  upsertSubscriberProfile(input: UpsertSubscriberProfileInput): Promise<SubscriberProfileRecord>;
+  requestFirstVisit(input: RequestFirstVisitInput): Promise<SubscriptionDetailRecord>;
   advanceWorkerOnboardingCase(
     input: AdvanceWorkerOnboardingCaseInput,
   ): Promise<WorkerOnboardingCaseRecord>;
@@ -1274,12 +1398,10 @@ export interface CoreRepository {
 interface InMemorySubscriptionState {
   readonly address: CreateSubscriptionInput['address'];
   monthlyPriceMinor: bigint;
+  paymentMethod: SubscriptionPaymentMethod | null;
   readonly phoneNumber: string;
   readonly record: CreatedSubscriptionRecord;
-  readonly schedulePreference: {
-    readonly dayOfWeek: DayOfWeek;
-    readonly timeWindow: TimeWindow;
-  };
+  schedulePreference: SubscriptionSchedulePreference | null;
   status: SubscriptionStatus;
   tierCode: SubscriptionTierCode;
   visitsPerCycle: 1 | 2;
@@ -1340,6 +1462,7 @@ export class InMemoryCoreRepository implements CoreRepository {
   public readonly paymentReconciliationRuns: PaymentReconciliationRunRecord[] = [];
   public readonly supportContacts: SupportContactRecord[] = [];
   public readonly supportCredits: SupportCreditRecord[] = [];
+  public readonly firstVisitRequests: FirstVisitRequestRecord[] = [];
   public readonly supportDisputes: DisputeRecord[] = [];
   public readonly visitRatings: VisitRatingRecord[] = [];
   public readonly workerAdvanceRequests: WorkerAdvanceRequestRecord[] = [];
@@ -1360,6 +1483,8 @@ export class InMemoryCoreRepository implements CoreRepository {
   private readonly authSessionsByRefreshHash = new Map<string, InMemoryAuthSessionState>();
   private readonly authUsersByPhone = new Map<string, InMemoryAuthUserState>();
   private readonly otpChallenges = new Map<string, InMemoryOtpChallengeState>();
+  private readonly subscriberIdsByPhone = new Map<string, string>();
+  private readonly subscriberProfilesByPhone = new Map<string, SubscriberProfileRecord>();
 
   public async health(): Promise<'ok'> {
     return 'ok';
@@ -1368,19 +1493,137 @@ export class InMemoryCoreRepository implements CoreRepository {
   public async createSubscription(
     input: CreateSubscriptionInput,
   ): Promise<CreatedSubscriptionRecord> {
-    const record = buildCreatedSubscriptionRecord(input);
+    const record = buildCreatedSubscriptionRecord(
+      input,
+      this.resolveSubscriberId(input.countryCode, input.phoneNumber, input.subscriberUserId),
+    );
     this.subscriptions.push(record);
     this.subscriptionState.set(record.subscriptionId, {
       address: input.address,
       monthlyPriceMinor: record.monthlyPriceMinor,
+      paymentMethod: record.paymentMethod,
       phoneNumber: input.phoneNumber,
       record,
-      schedulePreference: input.schedulePreference,
+      schedulePreference: input.schedulePreference ?? null,
       status: record.status,
       tierCode: record.tierCode,
       visitsPerCycle: record.visitsPerCycle,
     });
     return record;
+  }
+
+  public async getSubscriberProfile(
+    input: GetSubscriberProfileInput,
+  ): Promise<SubscriberProfileRecord> {
+    const profileKey = subscriberPhoneKey(input.countryCode, input.phoneNumber);
+    const profile = this.subscriberProfilesByPhone.get(profileKey);
+
+    if (profile !== undefined) {
+      return profile;
+    }
+
+    const now = new Date();
+    const blankProfile: SubscriberProfileRecord = {
+      avatarObjectKey: null,
+      countryCode: input.countryCode,
+      createdAt: now,
+      email: null,
+      firstName: null,
+      isAdultConfirmed: false,
+      lastName: null,
+      phoneNumber: input.phoneNumber,
+      subscriberId: this.resolveSubscriberId(
+        input.countryCode,
+        input.phoneNumber,
+        input.subscriberUserId,
+      ),
+      updatedAt: now,
+    };
+    this.subscriberProfilesByPhone.set(profileKey, blankProfile);
+    return blankProfile;
+  }
+
+  public async upsertSubscriberProfile(
+    input: UpsertSubscriberProfileInput,
+  ): Promise<SubscriberProfileRecord> {
+    const profileKey = subscriberPhoneKey(input.countryCode, input.phoneNumber);
+    const existing = this.subscriberProfilesByPhone.get(profileKey);
+    const now = new Date();
+    const profile: SubscriberProfileRecord = {
+      avatarObjectKey: input.avatarObjectKey ?? existing?.avatarObjectKey ?? null,
+      countryCode: input.countryCode,
+      createdAt: existing?.createdAt ?? now,
+      email: input.email ?? null,
+      firstName: input.firstName,
+      isAdultConfirmed: input.isAdultConfirmed,
+      lastName: input.lastName,
+      phoneNumber: input.phoneNumber,
+      subscriberId: this.resolveSubscriberId(
+        input.countryCode,
+        input.phoneNumber,
+        input.subscriberUserId,
+      ),
+      updatedAt: now,
+    };
+    this.subscriberProfilesByPhone.set(profileKey, profile);
+    return profile;
+  }
+
+  public async getCurrentSubscriberSubscription(
+    input: GetCurrentSubscriberSubscriptionInput,
+  ): Promise<SubscriptionDetailRecord | null> {
+    const state = this.findCurrentSubscriberSubscription(input);
+
+    if (state === undefined) {
+      return null;
+    }
+
+    return this.getSubscriptionDetail({ subscriptionId: state.record.subscriptionId });
+  }
+
+  public async requestFirstVisit(input: RequestFirstVisitInput): Promise<SubscriptionDetailRecord> {
+    const state = this.findCurrentSubscriberSubscription(input);
+
+    if (state === undefined) {
+      throw new Error('Subscription was not found.');
+    }
+
+    const status = transitionSubscription(state.status, 'request_first_visit');
+    if (status !== 'pending_match') {
+      throw new Error(`Expected pending first visit status, received ${status}.`);
+    }
+    const event = createDomainEvent({
+      actor: { role: 'subscriber', userId: state.record.subscriberId },
+      aggregateId: state.record.subscriptionId,
+      aggregateType: 'subscription',
+      countryCode: state.record.countryCode,
+      eventType: 'FirstVisitRequested',
+      payload: {
+        preferredDayOfWeek: input.schedulePreference.dayOfWeek,
+        preferredTimeWindow: input.schedulePreference.timeWindow,
+        requestedAt: input.requestedAt.toISOString(),
+        status,
+        subscriberId: state.record.subscriberId,
+        subscriptionId: state.record.subscriptionId,
+      },
+      traceId: input.traceId,
+    });
+    assertCoreDomainEventContract(event);
+
+    state.schedulePreference = input.schedulePreference;
+    state.status = status;
+    this.firstVisitRequests.push({
+      countryCode: state.record.countryCode,
+      events: [event],
+      requestedAt: input.requestedAt,
+      schedulePreference: input.schedulePreference,
+      status,
+      subscriberId: state.record.subscriberId,
+      subscriptionId: state.record.subscriptionId,
+    });
+    this.recordNotificationMessages([event]);
+
+    return this.getSubscriptionDetail({ subscriptionId: state.record.subscriptionId });
   }
 
   public async startOtpChallenge(
@@ -1512,6 +1755,40 @@ export class InMemoryCoreRepository implements CoreRepository {
     };
     this.authUsersByPhone.set(`${countryCode}:${phoneNumber}`, user);
     return user;
+  }
+
+  private resolveSubscriberId(
+    countryCode: CountryCode,
+    phoneNumber: string,
+    preferredSubscriberId: string = randomUUID(),
+  ): string {
+    const key = subscriberPhoneKey(countryCode, phoneNumber);
+    const existing = this.subscriberIdsByPhone.get(key);
+
+    if (existing !== undefined) {
+      return existing;
+    }
+
+    this.subscriberIdsByPhone.set(key, preferredSubscriberId);
+    return preferredSubscriberId;
+  }
+
+  private findCurrentSubscriberSubscription(
+    input: GetCurrentSubscriberSubscriptionInput,
+  ): InMemorySubscriptionState | undefined {
+    const subscriberId = this.resolveSubscriberId(
+      input.countryCode,
+      input.phoneNumber,
+      input.subscriberUserId,
+    );
+
+    return [...this.subscriptionState.values()]
+      .filter((state) => state.record.subscriberId === subscriberId)
+      .sort((left, right) => {
+        if (left.status === 'cancelled' && right.status !== 'cancelled') return 1;
+        if (right.status === 'cancelled' && left.status !== 'cancelled') return -1;
+        return right.record.createdAt.getTime() - left.record.createdAt.getTime();
+      })[0];
   }
 
   private createAuthSession(user: InMemoryAuthUserState, deviceId: string): AuthSessionRecord {
@@ -1666,6 +1943,12 @@ export class InMemoryCoreRepository implements CoreRepository {
       throw new Error('Subscription was not found.');
     }
 
+    const schedulePreference = state.schedulePreference;
+
+    if (state.status !== 'pending_match' || schedulePreference === null) {
+      throw new Error('First visit must be requested before worker assignment.');
+    }
+
     if (isWorkerUnavailable(this.workerUnavailability, input.workerId, input.anchorDate)) {
       this.recordAssignmentDecision({
         countryCode: state.record.countryCode,
@@ -1701,7 +1984,8 @@ export class InMemoryCoreRepository implements CoreRepository {
     const assignment = buildAssignedSubscriptionRecord({
       ...input,
       countryCode: state.record.countryCode,
-      schedulePreference: state.schedulePreference,
+      schedulePreference,
+      visitsPerCycle: state.visitsPerCycle,
     });
 
     this.assignments.push(assignment);
@@ -1822,6 +2106,51 @@ export class InMemoryCoreRepository implements CoreRepository {
     });
   }
 
+  public async pauseSubscription(input: PauseSubscriptionInput): Promise<PausedSubscriptionRecord> {
+    const state = this.subscriptionState.get(input.subscriptionId);
+
+    if (state === undefined) {
+      throw new Error('Subscription was not found.');
+    }
+
+    const status = transitionSubscription(state.status, 'pause');
+    assertPausedSubscriptionStatus(status);
+    const pausedScheduledVisits = [...this.visitState.values()].filter(
+      (visit) => visit.subscriptionId === input.subscriptionId && visit.status === 'scheduled',
+    );
+
+    for (const visit of pausedScheduledVisits) {
+      visit.status = 'cancelled';
+    }
+
+    state.status = status;
+    return buildPausedSubscriptionRecord({
+      countryCode: state.record.countryCode,
+      input,
+      pausedScheduledVisits: pausedScheduledVisits.length,
+      status,
+    });
+  }
+
+  public async resumeSubscription(
+    input: ResumeSubscriptionInput,
+  ): Promise<ResumedSubscriptionRecord> {
+    const state = this.subscriptionState.get(input.subscriptionId);
+
+    if (state === undefined) {
+      throw new Error('Subscription was not found.');
+    }
+
+    const status = transitionSubscription(state.status, 'resume');
+    assertActiveSubscriptionStatus(status);
+    state.status = status;
+    return buildResumedSubscriptionRecord({
+      countryCode: state.record.countryCode,
+      input,
+      status,
+    });
+  }
+
   public async getWorkerRoute(input: GetWorkerRouteInput): Promise<WorkerRouteRecord> {
     const visits = [...this.visitState.values()]
       .filter((visit) => visit.workerId === input.workerId && visit.scheduledDate === input.date)
@@ -1929,6 +2258,7 @@ export class InMemoryCoreRepository implements CoreRepository {
       assignedWorker: worker,
       countryCode: state.record.countryCode,
       monthlyPriceMinor: state.monthlyPriceMinor,
+      paymentMethod: state.paymentMethod,
       phoneNumber: state.phoneNumber,
       schedulePreference: state.schedulePreference,
       status: state.status,
@@ -2238,6 +2568,28 @@ export class InMemoryCoreRepository implements CoreRepository {
     state.tierCode = record.tierCode;
     state.visitsPerCycle = record.visitsPerCycle;
     state.monthlyPriceMinor = record.monthlyPriceMinor;
+    return record;
+  }
+
+  public async updateSubscriptionPaymentMethod(
+    input: UpdateSubscriptionPaymentMethodInput,
+  ): Promise<UpdatedSubscriptionPaymentMethodRecord> {
+    const state = this.subscriptionState.get(input.subscriptionId);
+
+    if (state === undefined) {
+      throw new Error('Subscription was not found.');
+    }
+
+    if (state.status === 'cancelled') {
+      throw new Error('Cancelled subscriptions cannot change payment method.');
+    }
+
+    const record = buildUpdatedSubscriptionPaymentMethodRecord({
+      countryCode: state.record.countryCode,
+      input,
+    });
+
+    state.paymentMethod = record.paymentMethod;
     return record;
   }
 
@@ -2644,6 +2996,27 @@ export class InMemoryCoreRepository implements CoreRepository {
     return contact ?? null;
   }
 
+  public async resolveSupportContact(
+    input: ResolveSupportContactInput,
+  ): Promise<SupportContactRecord> {
+    const index = this.supportContacts.findIndex(
+      (candidate) => candidate.contactId === input.contactId,
+    );
+    const contact = this.supportContacts[index];
+
+    if (contact === undefined) {
+      throw new Error('Support contact was not found.');
+    }
+
+    if (contact.status !== 'open') {
+      throw new Error(`Support contact cannot be resolved from status ${contact.status}.`);
+    }
+
+    const record = buildResolvedSupportContactRecord({ contact, input });
+    this.supportContacts[index] = record;
+    return record;
+  }
+
   public async rateVisit(input: RateVisitInput): Promise<VisitRatingRecord> {
     const visit = this.visitState.get(input.visitId);
 
@@ -2727,24 +3100,31 @@ export class InMemoryCoreRepository implements CoreRepository {
         (state) =>
           state.record.countryCode === input.countryCode &&
           state.status === 'pending_match' &&
+          state.schedulePreference !== null &&
           !this.assignedSubscriptionIds.has(state.record.subscriptionId),
       )
       .sort((left, right) => left.record.createdAt.getTime() - right.record.createdAt.getTime())
       .slice(0, input.limit)
-      .map((state) => ({
-        address: state.address,
-        assignmentDueAt: addHours(state.record.createdAt, 4),
-        countryCode: state.record.countryCode,
-        monthlyPriceMinor: state.monthlyPriceMinor,
-        phoneNumber: state.phoneNumber,
-        queuedAt: state.record.createdAt,
-        schedulePreference: state.schedulePreference,
-        status: 'pending_match',
-        subscriberId: state.record.subscriberId,
-        subscriptionId: state.record.subscriptionId,
-        tierCode: state.tierCode,
-        visitsPerCycle: state.visitsPerCycle,
-      }));
+      .map((state) => {
+        if (state.schedulePreference === null) {
+          throw new Error('Pending-match subscription is missing a first visit request.');
+        }
+
+        return {
+          address: state.address,
+          assignmentDueAt: addHours(state.record.createdAt, 4),
+          countryCode: state.record.countryCode,
+          monthlyPriceMinor: state.monthlyPriceMinor,
+          phoneNumber: state.phoneNumber,
+          queuedAt: state.record.createdAt,
+          schedulePreference: state.schedulePreference,
+          status: 'pending_match',
+          subscriberId: state.record.subscriberId,
+          subscriptionId: state.record.subscriptionId,
+          tierCode: state.tierCode,
+          visitsPerCycle: state.visitsPerCycle,
+        };
+      });
   }
 
   public async listMatchingCandidates(
@@ -3140,6 +3520,7 @@ export class InMemoryCoreRepository implements CoreRepository {
       ...this.subscriptions.flatMap((record) => record.events),
       ...this.assignments.flatMap((record) => record.events),
       ...this.assignmentDecisions.flatMap((record) => record.events),
+      ...this.firstVisitRequests.flatMap((record) => record.events),
       ...this.paymentAttempts.flatMap((record) => record.events),
       ...this.workerOnboardingCases.flatMap((record) => record.events),
       ...this.workerUnavailability.flatMap((record) => record.events),
@@ -3270,6 +3651,10 @@ function assertVisitWorker(actualWorkerId: string, requestedWorkerId: string): v
   if (actualWorkerId !== requestedWorkerId) {
     throw new Error('Visit is not assigned to this worker.');
   }
+}
+
+function subscriberPhoneKey(countryCode: CountryCode, phoneNumber: string): string {
+  return `${countryCode}:${phoneNumber}`;
 }
 
 function formatYearMonth(value: Date): string {
@@ -3940,6 +4325,35 @@ export function buildCreatedSupportContactRecord(input: {
   };
 }
 
+export function buildResolvedSupportContactRecord(input: {
+  readonly contact: SupportContactRecord;
+  readonly input: ResolveSupportContactInput;
+}): SupportContactRecord {
+  const event = createDomainEvent({
+    actor: { role: 'operator', userId: input.input.operatorUserId },
+    aggregateId: input.contact.contactId,
+    aggregateType: 'support_contact',
+    countryCode: input.contact.countryCode,
+    eventType: 'SubscriberSupportContactResolved',
+    payload: {
+      contactId: input.contact.contactId,
+      operatorUserId: input.input.operatorUserId,
+      resolutionNote: input.input.resolutionNote,
+      subscriptionId: input.contact.subscriptionId,
+    },
+    traceId: input.input.traceId,
+  });
+
+  return {
+    ...input.contact,
+    events: [event],
+    resolutionNote: input.input.resolutionNote,
+    resolvedAt: input.input.resolvedAt,
+    resolvedByOperatorUserId: input.input.operatorUserId,
+    status: 'resolved',
+  };
+}
+
 export function buildCreatedWorkerAdvanceRequestRecord(input: {
   readonly countryCode: CountryCode;
   readonly input: CreateWorkerAdvanceRequestInput;
@@ -4420,6 +4834,90 @@ export function buildChangedSubscriptionTierRecord(input: {
   };
 }
 
+export function buildPausedSubscriptionRecord(input: {
+  readonly countryCode: CountryCode;
+  readonly input: PauseSubscriptionInput;
+  readonly pausedScheduledVisits: number;
+  readonly status: 'paused';
+}): PausedSubscriptionRecord {
+  const event = createDomainEvent({
+    actor: { role: 'subscriber', userId: input.input.subscriberUserId },
+    aggregateId: input.input.subscriptionId,
+    aggregateType: 'subscription',
+    countryCode: input.countryCode,
+    eventType: 'SubscriptionPaused',
+    payload: {
+      pausedAt: input.input.pausedAt.toISOString(),
+      pausedScheduledVisits: input.pausedScheduledVisits,
+      status: input.status,
+      subscriptionId: input.input.subscriptionId,
+    },
+    traceId: input.input.traceId,
+  });
+
+  return {
+    events: [event],
+    pausedAt: input.input.pausedAt,
+    pausedScheduledVisits: input.pausedScheduledVisits,
+    status: input.status,
+    subscriptionId: input.input.subscriptionId,
+  };
+}
+
+export function buildResumedSubscriptionRecord(input: {
+  readonly countryCode: CountryCode;
+  readonly input: ResumeSubscriptionInput;
+  readonly status: 'active';
+}): ResumedSubscriptionRecord {
+  const event = createDomainEvent({
+    actor: { role: 'subscriber', userId: input.input.subscriberUserId },
+    aggregateId: input.input.subscriptionId,
+    aggregateType: 'subscription',
+    countryCode: input.countryCode,
+    eventType: 'SubscriptionResumed',
+    payload: {
+      resumedAt: input.input.resumedAt.toISOString(),
+      status: input.status,
+      subscriptionId: input.input.subscriptionId,
+    },
+    traceId: input.input.traceId,
+  });
+
+  return {
+    events: [event],
+    resumedAt: input.input.resumedAt,
+    status: input.status,
+    subscriptionId: input.input.subscriptionId,
+  };
+}
+
+export function buildUpdatedSubscriptionPaymentMethodRecord(input: {
+  readonly countryCode: CountryCode;
+  readonly input: UpdateSubscriptionPaymentMethodInput;
+}): UpdatedSubscriptionPaymentMethodRecord {
+  const event = createDomainEvent({
+    actor: { role: 'subscriber', userId: input.input.subscriberUserId },
+    aggregateId: input.input.subscriptionId,
+    aggregateType: 'subscription',
+    countryCode: input.countryCode,
+    eventType: 'SubscriptionPaymentMethodUpdated',
+    occurredAt: input.input.updatedAt,
+    payload: {
+      paymentMethod: input.input.paymentMethod,
+      subscriptionId: input.input.subscriptionId,
+      updatedAt: input.input.updatedAt.toISOString(),
+    },
+    traceId: input.input.traceId,
+  });
+
+  return {
+    events: [event],
+    paymentMethod: input.input.paymentMethod,
+    subscriptionId: input.input.subscriptionId,
+    updatedAt: input.input.updatedAt,
+  };
+}
+
 export function buildSubscriberPrivacyRequestRecord(input: {
   readonly auditEvents: readonly AuditEventRecord[];
   readonly billingHistory: readonly SubscriptionBillingItemRecord[];
@@ -4519,6 +5017,18 @@ function assertCancelledSubscriptionStatus(
 ): asserts status is 'cancelled' {
   if (status !== 'cancelled') {
     throw new Error(`Expected cancelled subscription status, received ${status}.`);
+  }
+}
+
+function assertPausedSubscriptionStatus(status: SubscriptionStatus): asserts status is 'paused' {
+  if (status !== 'paused') {
+    throw new Error(`Expected paused subscription status, received ${status}.`);
+  }
+}
+
+function assertActiveSubscriptionStatus(status: SubscriptionStatus): asserts status is 'active' {
+  if (status !== 'active') {
+    throw new Error(`Expected active subscription status, received ${status}.`);
   }
 }
 

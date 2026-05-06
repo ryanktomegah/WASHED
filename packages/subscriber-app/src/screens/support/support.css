@@ -720,6 +720,27 @@
   background: var(--primary-soft);
 }
 
+.support-call-card {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-on);
+}
+
+.support-call-card .support-call-icon {
+  background: color-mix(in srgb, var(--primary-on) 14%, transparent);
+  color: var(--primary-on);
+}
+
+.support-call-card .support-call-copy strong,
+.support-call-card .support-call-copy small,
+.support-call-card .support-chevron {
+  color: var(--primary-on);
+}
+
+.support-call-card .support-call-copy small {
+  opacity: 0.78;
+}
+
 .support-call-icon,
 .support-button.primary,
 .support-button.dark,

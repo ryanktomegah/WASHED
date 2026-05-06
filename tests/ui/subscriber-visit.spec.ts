@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 const SUBSCRIBER_APPEARANCE_STORAGE_KEY = 'washed.subscriber.appearance';
 const SUBSCRIBER_LANGUAGE_STORAGE_KEY = 'washed.locale';
-const SUBSCRIBER_FIRST_VISIT_REQUEST_STORAGE_KEY = 'washed.subscriber.firstVisitRequested';
+const SUBSCRIBER_SUBSCRIPTION_STORAGE_KEY = 'washed.subscriber.subscription';
 
 const screenRoutes = [
   ['x-10-hub', '/#/hub', 'X-10'],
@@ -26,6 +26,7 @@ const screenRoutes = [
   ['x-22-plan-pause', '/#/plan/pause', 'X-22'],
   ['x-22a-plan-pause-submitted', '/#/plan/pause/submitted', 'X-22.A'],
   ['x-24-profile', '/#/profile', 'X-24'],
+  ['x-24e-profile-edit', '/#/profile/edit', 'X-24E'],
   ['x-24l-profile-language', '/#/profile/language', 'X-24L'],
   ['x-25-profile-address', '/#/profile/address', 'X-25'],
   ['x-26-profile-notifications', '/#/profile/notifications', 'X-26'],
@@ -43,15 +44,15 @@ const screenRoutes = [
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(
-    ([appearanceKey, languageKey, firstVisitRequestKey]) => {
+    ([appearanceKey, languageKey, subscriptionKey]) => {
       window.localStorage.setItem(appearanceKey, 'light');
       window.localStorage.removeItem(languageKey);
-      window.localStorage.removeItem(firstVisitRequestKey);
+      window.localStorage.removeItem(subscriptionKey);
     },
     [
       SUBSCRIBER_APPEARANCE_STORAGE_KEY,
       SUBSCRIBER_LANGUAGE_STORAGE_KEY,
-      SUBSCRIBER_FIRST_VISIT_REQUEST_STORAGE_KEY,
+      SUBSCRIBER_SUBSCRIPTION_STORAGE_KEY,
     ],
   );
 });
@@ -76,6 +77,23 @@ async function continueThroughAppearance(page: Page): Promise<void> {
 
   await page.getByRole('radio', { name: /Clair/u }).click();
   await page.getByRole('button', { name: 'Continuer' }).click();
+}
+
+async function bottomNavFrame(page: Page): Promise<{ height: number; width: number; y: number }> {
+  const nav = page.locator('.hub-nav');
+  await expect(nav).toBeVisible();
+  const box = await nav.boundingBox();
+  const viewport = page.viewportSize();
+  if (box === null || viewport === null) {
+    throw new Error('Bottom navigation frame is unavailable.');
+  }
+  expect(Math.round(box.width)).toBe(viewport.width);
+  expect(Math.round(box.y + box.height)).toBe(viewport.height);
+  return {
+    height: Math.round(box.height),
+    width: Math.round(box.width),
+    y: Math.round(box.y),
+  };
 }
 
 test.describe('Subscriber implemented hub, visit, relationship, forfait, and profile flows through X-28', () => {
@@ -108,7 +126,9 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
       }
 
       if (screenId === 'X-10') {
-        await expect(page.getByText('bonjour Mariam')).toBeVisible();
+        await expect(page.getByText('Bonjour')).toBeVisible();
+        await expect(page.getByText('bonjour Mariam')).not.toBeVisible();
+        await expect(page.getByRole('button', { name: 'Ouvrir le profil' })).toBeVisible();
         await expect(page.getByText('Prochaine visite')).not.toBeVisible();
         await expect(page.getByText('confirmée')).not.toBeVisible();
         await expect(page.getByText('9:00')).not.toBeVisible();
@@ -121,6 +141,10 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
         await expect(
           page.getByRole('button', { name: /Planifier ma première visite/u }),
         ).toBeVisible();
+        await expect(page.locator('.hub-booking-card.first')).toHaveCSS(
+          'background-color',
+          'rgb(10, 61, 31)',
+        );
         const plan = page.getByRole('region', { name: 'Forfait' });
         await expect(plan.getByText('Forfait')).toBeVisible();
         await expect(plan.getByText('Visite à planifier')).toBeVisible();
@@ -153,6 +177,10 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
         await expect(page.getByText('Akouvi')).toBeVisible();
         await expect(page.getByText('32')).toBeVisible();
         await expect(page.getByText(/80\s000/u)).toBeVisible();
+        await expect(page.locator('.history-stats-card')).toHaveCSS(
+          'background-color',
+          'rgb(10, 61, 31)',
+        );
         await expect(page.getByRole('button', { name: /28 avr · 9 h 02/u })).toBeVisible();
       }
 
@@ -172,6 +200,10 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
           page.getByText('Tokoin · vit avec sa famille à 800 m de chez vous'),
         ).toBeVisible();
         await expect(page.getByText('Votre relation')).toBeVisible();
+        await expect(page.locator('.worker-profile-relation-card')).toHaveCSS(
+          'background-color',
+          'rgb(10, 61, 31)',
+        );
         await expect(page.getByText('Son parcours')).toBeVisible();
         await expect(page.getByText('Fiabilité')).toBeVisible();
       }
@@ -193,12 +225,15 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
       }
 
       if (screenId === 'X-19') {
-        await expect(page.getByText('Votre forfait')).toBeVisible();
-        await expect(
-          page.getByRole('heading', { name: /Compte bon jusqu'au 31 mai/u }),
-        ).toBeVisible();
+        await expect(page.getByText('Votre forfait', { exact: true })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Votre forfait est prêt.' })).toBeVisible();
         await expect(page.getByText(/Une visite · 2\s500\s+XOF \/ mois/u)).toBeVisible();
-        await expect(page.getByText('Mardi 5 mai · 9 h 00')).toBeVisible();
+        await expect(page.locator('.plan-active-card')).toHaveCSS(
+          'background-color',
+          'rgb(10, 61, 31)',
+        );
+        await expect(page.getByText('Visite à planifier')).toBeVisible();
+        await expect(page.getByText('Mardi 5 mai · 9 h 00')).not.toBeVisible();
         await expect(page.getByRole('button', { name: 'Forfait' })).toHaveAttribute(
           'aria-current',
           'page',
@@ -235,15 +270,29 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
       }
 
       if (screenId === 'X-24') {
-        await expect(page.getByRole('heading', { name: 'Yawa Mensah' })).toBeVisible();
-        await expect(page.getByText('+228 90 12 34 56')).toBeVisible();
-        await expect(page.getByText('Abonnée depuis sept. 2025')).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Compte Washed' })).toBeVisible();
+        await expect(page.getByText('Compte actif')).toBeVisible();
+        await expect(page.getByText('Informations du compte')).toBeVisible();
+        await expect(
+          page.getByRole('button', { name: /Informations personnelles/u }),
+        ).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Modifier la photo' }).first()).toBeVisible();
+        await expect(page.getByText('Yawa Mensah')).not.toBeVisible();
+        await expect(page.getByText('+228 90 12 34 56')).not.toBeVisible();
         await expect(page.getByRole('button', { name: /Langue/u })).toBeVisible();
         await expect(page.getByRole('button', { name: /Apparence/u })).toBeVisible();
-        await expect(page.getByRole('button', { name: 'Profil' })).toHaveAttribute(
+        await expect(page.getByRole('button', { name: 'Profil', exact: true })).toHaveAttribute(
           'aria-current',
           'page',
         );
+      }
+
+      if (screenId === 'X-24E') {
+        await expect(
+          page.getByRole('heading', { name: 'Modifier vos informations' }),
+        ).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Enregistrer' })).toBeDisabled();
+        await expect(page.getByText('Le téléphone se modifie par vérification SMS.')).toBeVisible();
       }
 
       if (screenId === 'X-24L') {
@@ -290,6 +339,11 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
 
       if (screenId === 'X-29') {
         await expect(page.getByRole('heading', { name: 'On vous écoute.' })).toBeVisible();
+        await expect(page.getByText('Appeler le bureau')).toBeVisible();
+        await expect(page.locator('.support-call-card')).toHaveCSS(
+          'background-color',
+          'rgb(10, 61, 31)',
+        );
       }
 
       if (screenId === 'X-30') {
@@ -372,6 +426,69 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
       page.getByRole('heading', { name: 'Première visite en confirmation' }),
     ).toBeVisible();
     await expect(page.getByText('Demande en confirmation')).toBeVisible();
+  });
+
+  test('bottom navigation keeps the same frame while moving across tabs', async ({ page }) => {
+    await page.goto('/#/hub');
+    await continueThroughAppearance(page);
+    await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
+    const homeFrame = await bottomNavFrame(page);
+
+    await page.getByRole('button', { name: 'Visites' }).click();
+    await expect(page.locator('[data-screen-id="X-16"]')).toBeVisible();
+    expect(await bottomNavFrame(page)).toEqual(homeFrame);
+
+    await page.getByRole('button', { name: 'Forfait' }).click();
+    await expect(page.locator('[data-screen-id="X-19"]')).toBeVisible();
+    expect(await bottomNavFrame(page)).toEqual(homeFrame);
+
+    await page.getByRole('button', { name: 'Profil', exact: true }).click();
+    await expect(page.locator('[data-screen-id="X-24"]')).toBeVisible();
+    expect(await bottomNavFrame(page)).toEqual(homeFrame);
+
+    await page.getByRole('button', { name: 'Accueil' }).click();
+    await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
+    expect(await bottomNavFrame(page)).toEqual(homeFrame);
+  });
+
+  test('Profil tab opens account actions and lets the subscriber edit identity', async ({
+    page,
+  }) => {
+    await page.goto('/#/hub');
+    await continueThroughAppearance(page);
+    await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Profil', exact: true }).click();
+    await expect(page.locator('[data-screen-id="X-24"]')).toBeVisible();
+    await expect(page.getByText('Informations du compte')).toBeVisible();
+    await expect(page.getByRole('button', { name: /Informations personnelles/u })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Modifier la photo' }).first()).toBeVisible();
+
+    await page.getByRole('button', { name: /Informations personnelles/u }).click();
+    await expect(page.locator('[data-screen-id="X-24E"]')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Enregistrer' })).toBeDisabled();
+
+    await page.getByLabel('PRÉNOM').fill('Afi');
+    await page.getByLabel('NOM', { exact: true }).fill('Mensah');
+    await page.getByLabel('EMAIL (FACULTATIF)').fill('afi@email.com');
+    await page.locator('[data-screen-id="X-24E"] .profile-check-row').click();
+    await page.getByRole('button', { name: 'Enregistrer' }).click();
+
+    await expect(page.locator('[data-screen-id="X-24"]')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Afi Mensah' })).toBeVisible();
+    await expect(page.getByText('afi@email.com')).toBeVisible();
+  });
+
+  test('home profile picture opens the profile screen', async ({ page }) => {
+    await page.goto('/#/hub');
+    await continueThroughAppearance(page);
+    await expect(page.locator('[data-screen-id="X-10"]')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Ouvrir le profil' }).click();
+
+    await expect(page).toHaveURL(/#\/profile$/u);
+    await expect(page.locator('[data-screen-id="X-24"]')).toBeVisible();
+    await expect(page.getByText('Informations du compte')).toBeVisible();
   });
 
   test('X-18 change request selects a reason and submits to confirmation', async ({ page }) => {
@@ -480,7 +597,7 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
     await page.goto('/#/hub');
     await continueThroughAppearance(page);
 
-    await page.getByRole('button', { name: 'Profil' }).click();
+    await page.getByRole('button', { name: 'Profil', exact: true }).click();
     await expect(page).toHaveURL(/#\/profile$/u);
     await expect(page.locator('[data-screen-id="X-24"]')).toBeVisible();
 
@@ -531,7 +648,7 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
     await expect(page).toHaveURL(/#\/profile\/privacy/u);
   });
 
-  test('Forfait flow · hub → plan → upgrade → keep, plan → pause → submitted → paused → resume', async ({
+  test('Forfait flow · hub → plan → first visit request → pending plan', async ({
     page,
   }) => {
     await page.goto('/#/hub');
@@ -541,30 +658,23 @@ test.describe('Subscriber implemented hub, visit, relationship, forfait, and pro
     await page.getByRole('button', { name: 'Forfait' }).click();
     await expect(page).toHaveURL(/#\/plan$/u);
     await expect(page.locator('[data-screen-id="X-19"]')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Votre forfait est prêt.' })).toBeVisible();
 
-    // Upgrade flow.
-    await page.getByRole('button', { name: 'Passer à 2 visites' }).click();
-    await expect(page).toHaveURL(/#\/plan\/upgrade/u);
-    await expect(page.locator('[data-screen-id="X-19.U"]')).toBeVisible();
-    await page.getByRole('button', { name: 'Garder mon forfait' }).click();
-    await expect(page).toHaveURL(/#\/plan$/u);
+    await page.getByRole('button', { name: /Planifier ma première visite/u }).click();
+    await expect(page).toHaveURL(/#\/booking$/u);
+    await page.getByText('Samedi').click();
+    await page.getByText('Matin').click();
+    await page.getByRole('button', { name: /Envoyer la demande/u }).click();
+    await expect(page).toHaveURL(/#\/booking\/submitted/u);
 
-    // Pause flow.
-    await page.getByRole('button', { name: 'Mettre en pause' }).click();
-    await expect(page).toHaveURL(/#\/plan\/pause$/u);
-    await expect(page.locator('[data-screen-id="X-22"]')).toBeVisible();
-    await page.locator('button.plan-button.danger').click();
-    await expect(page).toHaveURL(/#\/plan\/pause\/submitted/u);
-    await expect(page.locator('[data-screen-id="X-22.A"]')).toBeVisible();
-
-    await page.getByRole('button', { name: 'Compris' }).click();
-    await expect(page).toHaveURL(/#\/plan\/paused/u);
-    await expect(page.locator('[data-screen-id="X-19.R"]')).toBeVisible();
-
-    // Resume returns to active plan.
-    await page.getByRole('button', { name: 'Reprendre maintenant' }).click();
+    await page.getByRole('button', { name: "Retour à l'accueil" }).click();
+    await page.getByRole('button', { name: 'Forfait', exact: true }).click();
     await expect(page).toHaveURL(/#\/plan$/u);
     await expect(page.locator('[data-screen-id="X-19"]')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Votre première visite est en confirmation.' }),
+    ).toBeVisible();
+    await expect(page.getByText('Samedi · Matin')).toBeVisible();
   });
 
   test('Support flow · profile → help → contact form → submitted; help → tickets list → ticket detail', async ({

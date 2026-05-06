@@ -86,9 +86,21 @@ describe('createCoreApiClient', () => {
   });
 
   it('keeps generated operation ids complete', () => {
-    expect(CORE_API_OPERATIONS).toHaveLength(65);
+    expect(CORE_API_OPERATIONS).toHaveLength(76);
+    expect(CORE_API_OPERATIONS.map((operation) => operation.operationId)).toContain(
+      'getCurrentSubscriberSubscription',
+    );
+    expect(CORE_API_OPERATIONS.map((operation) => operation.operationId)).toContain(
+      'pauseCurrentSubscriberSubscription',
+    );
+    expect(CORE_API_OPERATIONS.map((operation) => operation.operationId)).toContain(
+      'updateCurrentSubscriberPaymentMethod',
+    );
     expect(CORE_API_OPERATIONS.map((operation) => operation.operationId)).toContain(
       'getOperatorSubscriptionSupportContext',
+    );
+    expect(CORE_API_OPERATIONS.map((operation) => operation.operationId)).toContain(
+      'upsertSubscriberProfile',
     );
   });
 

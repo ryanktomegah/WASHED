@@ -11,6 +11,7 @@ export interface BuildAssignedSubscriptionRecordInput extends AssignWorkerInput 
     readonly dayOfWeek: DayOfWeek;
     readonly timeWindow: TimeWindow;
   };
+  readonly visitsPerCycle: 1 | 2;
 }
 
 export function buildAssignedSubscriptionRecord(
@@ -18,7 +19,7 @@ export function buildAssignedSubscriptionRecord(
 ): AssignedSubscriptionRecord {
   const visits = generateScheduledVisits({
     anchorDate: input.anchorDate,
-    count: 4,
+    count: input.visitsPerCycle,
     dayOfWeek: input.schedulePreference.dayOfWeek,
     timeWindow: input.schedulePreference.timeWindow,
   }).map((visit) => ({

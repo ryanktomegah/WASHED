@@ -12,7 +12,12 @@ const ASSIGNMENT_DECISION_REASON_VALUES = new Set([
 ]);
 const PAYMENT_EVENT_TYPES = new Set(['SubscriptionPaymentFailed', 'SubscriptionPaymentSucceeded']);
 const PAYMENT_STATUS_VALUES = new Set(['failed', 'succeeded']);
-const SUBSCRIPTION_STATUS_VALUES = new Set(['active', 'payment_overdue', 'pending_match']);
+const SUBSCRIPTION_STATUS_VALUES = new Set([
+  'active',
+  'payment_overdue',
+  'pending_match',
+  'ready_no_visit',
+]);
 const TIER_VALUES = new Set(['T1', 'T2']);
 const REGISTERED_EVENT_CONTRACTS = new Map<
   string,
@@ -22,6 +27,21 @@ const REGISTERED_EVENT_CONTRACTS = new Map<
     readonly requiredPayloadKeys: readonly string[];
   }
 >([
+  [
+    'FirstVisitRequested',
+    {
+      actorRole: 'subscriber',
+      aggregateType: 'subscription',
+      requiredPayloadKeys: [
+        'preferredDayOfWeek',
+        'preferredTimeWindow',
+        'requestedAt',
+        'status',
+        'subscriberId',
+        'subscriptionId',
+      ],
+    },
+  ],
   [
     'SubscriberPrivacyRequestRecorded',
     {
@@ -137,6 +157,14 @@ const REGISTERED_EVENT_CONTRACTS = new Map<
       actorRole: 'subscriber',
       aggregateType: 'support_contact',
       requiredPayloadKeys: ['category', 'contactId', 'subject', 'subscriptionId'],
+    },
+  ],
+  [
+    'SubscriberSupportContactResolved',
+    {
+      actorRole: 'operator',
+      aggregateType: 'support_contact',
+      requiredPayloadKeys: ['contactId', 'operatorUserId', 'resolutionNote', 'subscriptionId'],
     },
   ],
   [
@@ -386,6 +414,30 @@ const REGISTERED_EVENT_CONTRACTS = new Map<
     },
   ],
   [
+    'SubscriptionPaused',
+    {
+      actorRole: 'subscriber',
+      aggregateType: 'subscription',
+      requiredPayloadKeys: ['pausedAt', 'pausedScheduledVisits', 'status', 'subscriptionId'],
+    },
+  ],
+  [
+    'SubscriptionResumed',
+    {
+      actorRole: 'subscriber',
+      aggregateType: 'subscription',
+      requiredPayloadKeys: ['resumedAt', 'status', 'subscriptionId'],
+    },
+  ],
+  [
+    'SubscriptionPaymentMethodUpdated',
+    {
+      actorRole: 'subscriber',
+      aggregateType: 'subscription',
+      requiredPayloadKeys: ['paymentMethod', 'subscriptionId', 'updatedAt'],
+    },
+  ],
+  [
     'SubscriptionTierChanged',
     {
       actorRole: 'subscriber',
@@ -476,8 +528,12 @@ function assertSubscriptionCreated(event: DomainEvent): void {
   const payload = event.payload;
   assertUuid(event.aggregateId, 'aggregateId');
   assertUuid(payload['addressId'], 'payload.addressId');
-  assertString(payload['preferredDayOfWeek'], 'payload.preferredDayOfWeek');
-  assertString(payload['preferredTimeWindow'], 'payload.preferredTimeWindow');
+  if (payload['preferredDayOfWeek'] !== undefined) {
+    assertString(payload['preferredDayOfWeek'], 'payload.preferredDayOfWeek');
+  }
+  if (payload['preferredTimeWindow'] !== undefined) {
+    assertString(payload['preferredTimeWindow'], 'payload.preferredTimeWindow');
+  }
   assertLiteral(payload['status'], SUBSCRIPTION_STATUS_VALUES, 'payload.status');
   assertUuid(payload['subscriberId'], 'payload.subscriberId');
   assertLiteral(payload['tierCode'], TIER_VALUES, 'payload.tierCode');

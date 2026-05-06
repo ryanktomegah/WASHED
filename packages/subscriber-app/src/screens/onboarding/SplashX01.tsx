@@ -3,14 +3,19 @@ import type { ReactElement } from 'react';
 
 import { translate } from '@washed/i18n';
 
+import { useSignup } from './SignupContext.js';
+
 export function SplashX01(): ReactElement {
   const navigate = useNavigate();
+  const signup = useSignup();
 
   const continueSignup = (): void => {
+    signup.setMode('signup');
     navigate('/signup/phone');
   };
 
   const continueExistingAccount = (): void => {
+    signup.setMode('existing');
     navigate('/signup/phone');
   };
 

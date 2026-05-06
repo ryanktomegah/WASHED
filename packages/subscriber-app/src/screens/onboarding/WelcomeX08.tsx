@@ -22,8 +22,15 @@ export function WelcomeX08(): ReactElement {
         <p className="p welcome-body">{translate('subscriber.signup.welcome.body')}</p>
       </div>
       <div className="welcome-actions">
-        <button className="btn full primary" onClick={() => navigate('/booking')} type="button">
+        <button
+          className="btn full primary"
+          onClick={() => navigate('/booking', { state: { returnTo: '/signup/welcome' } })}
+          type="button"
+        >
           {translate('subscriber.signup.welcome.cta')}
+        </button>
+        <button className="btn full ghost" onClick={() => navigate('/hub')} type="button">
+          {translate('subscriber.signup.welcome.skip_cta')}
         </button>
       </div>
     </main>

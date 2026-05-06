@@ -113,26 +113,25 @@ export function HistoryX16(): ReactElement {
         </ul>
 
         <div className="history-grow" />
-
-        <nav className="hub-nav" aria-label={translate('common.navigation.main')}>
-          <button className="hub-nav-item" type="button" onClick={() => navigate('/hub')}>
-            <Home aria-hidden="true" className="hub-nav-glyph" />
-            {translate('subscriber.dashboard.tab.home')}
-          </button>
-          <button className="hub-nav-item active" type="button" aria-current="page">
-            <CalendarDays aria-hidden="true" className="hub-nav-glyph" />
-            {translate('subscriber.dashboard.tab.visits')}
-          </button>
-          <button className="hub-nav-item" type="button" onClick={() => navigate('/plan')}>
-            <WalletCards aria-hidden="true" className="hub-nav-glyph" />
-            {translate('subscriber.dashboard.tab.plan')}
-          </button>
-          <button className="hub-nav-item" type="button" onClick={() => navigate('/profile')}>
-            <UserRound aria-hidden="true" className="hub-nav-glyph" />
-            {translate('subscriber.dashboard.tab.profile')}
-          </button>
-        </nav>
       </div>
+      <nav className="hub-nav" aria-label={translate('common.navigation.main')}>
+        <button className="hub-nav-item" type="button" onClick={() => navigate('/hub')}>
+          <Home aria-hidden="true" className="hub-nav-glyph" />
+          {translate('subscriber.dashboard.tab.home')}
+        </button>
+        <button className="hub-nav-item active" type="button" aria-current="page">
+          <CalendarDays aria-hidden="true" className="hub-nav-glyph" />
+          {translate('subscriber.dashboard.tab.visits')}
+        </button>
+        <button className="hub-nav-item" type="button" onClick={() => navigate('/plan')}>
+          <WalletCards aria-hidden="true" className="hub-nav-glyph" />
+          {translate('subscriber.dashboard.tab.plan')}
+        </button>
+        <button className="hub-nav-item" type="button" onClick={() => navigate('/profile')}>
+          <UserRound aria-hidden="true" className="hub-nav-glyph" />
+          {translate('subscriber.dashboard.tab.profile')}
+        </button>
+      </nav>
     </main>
   );
 }

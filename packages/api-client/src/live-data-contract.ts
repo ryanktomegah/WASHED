@@ -16,8 +16,10 @@ export type SubscriptionStatus =
   | 'cancelled'
   | 'paused'
   | 'payment_overdue'
-  | 'pending_match';
+  | 'pending_match'
+  | 'ready_no_visit';
 export type SubscriptionTierCode = 'T1' | 'T2';
+export type SubscriptionPaymentProvider = 'flooz' | 'mixx';
 export type VisitStatus =
   | 'cancelled'
   | 'completed'
@@ -58,6 +60,11 @@ export interface SchedulePreferenceDto {
   readonly timeWindow: TimeWindow;
 }
 
+export interface SubscriptionPaymentMethodDto {
+  readonly phoneNumber: string;
+  readonly provider: SubscriptionPaymentProvider;
+}
+
 export interface AuthSessionDto {
   readonly accessToken: string;
   readonly accessTokenExpiresAt: string;
@@ -74,6 +81,19 @@ export interface OtpChallengeDto {
   readonly phoneNumber: string;
   readonly provider: string;
   readonly testCode: string | null;
+}
+
+export interface SubscriberProfileDto {
+  readonly avatarObjectKey: string | null;
+  readonly countryCode: CountryCode;
+  readonly createdAt: string;
+  readonly email: string | null;
+  readonly firstName: string | null;
+  readonly isAdultConfirmed: boolean;
+  readonly lastName: string | null;
+  readonly phoneNumber: string;
+  readonly subscriberId: string;
+  readonly updatedAt: string;
 }
 
 export interface LomePricingDto {
@@ -105,9 +125,10 @@ export interface SubscriptionDetailDto {
   } | null;
   readonly countryCode: CountryCode;
   readonly monthlyPriceMinor: string;
+  readonly paymentMethod: SubscriptionPaymentMethodDto | null;
   readonly phoneNumber: string;
   readonly recentVisits: readonly VisitSummaryDto[];
-  readonly schedulePreference: SchedulePreferenceDto;
+  readonly schedulePreference: SchedulePreferenceDto | null;
   readonly status: SubscriptionStatus;
   readonly subscriberId: string;
   readonly subscriptionId: string;
@@ -134,6 +155,23 @@ export interface SubscriptionBillingItemDto {
   readonly refundId: string | null;
   readonly status: string;
   readonly subscriptionId: string;
+}
+
+export interface CurrentSubscriberSubscriptionDto {
+  readonly subscription: SubscriptionDetailDto | null;
+}
+
+export interface CreatedSubscriptionDto {
+  readonly assignmentSlaHours: number | null;
+  readonly countryCode: CountryCode;
+  readonly currencyCode: CurrencyCode;
+  readonly monthlyPriceMinor: string;
+  readonly paymentMethod: SubscriptionPaymentMethodDto | null;
+  readonly status: SubscriptionStatus;
+  readonly subscriberId: string;
+  readonly subscriptionId: string;
+  readonly tierCode: SubscriptionTierCode;
+  readonly visitsPerCycle: 1 | 2;
 }
 
 export interface WorkerRouteDto {
@@ -375,6 +413,36 @@ export interface CoreApiLiveOperationMap {
     readonly pathParams: { readonly workerId: string };
     readonly response: WorkerUnavailabilityDto;
   };
+  readonly createCurrentSubscriberSubscription: {
+    readonly body: {
+      readonly address: AddressDto;
+      readonly paymentMethod: SubscriptionPaymentMethodDto;
+      readonly schedulePreference?: SchedulePreferenceDto;
+      readonly tierCode: SubscriptionTierCode;
+    };
+    readonly response: CreatedSubscriptionDto;
+  };
+  readonly cancelCurrentSubscriberSubscription: {
+    readonly body: { readonly cancelledAt: string };
+    readonly response: SubscriptionDetailDto;
+  };
+  readonly changeCurrentSubscriberSubscriptionTier: {
+    readonly body: {
+      readonly effectiveAt: string;
+      readonly tierCode: SubscriptionTierCode;
+    };
+    readonly response: SubscriptionDetailDto;
+  };
+  readonly updateCurrentSubscriberPaymentMethod: {
+    readonly body: {
+      readonly paymentMethod: SubscriptionPaymentMethodDto;
+      readonly updatedAt: string;
+    };
+    readonly response: SubscriptionDetailDto;
+  };
+  readonly getCurrentSubscriberSubscription: {
+    readonly response: CurrentSubscriberSubscriptionDto;
+  };
   readonly getOperatorBetaMetrics: {
     readonly query?: { readonly countryCode?: CountryCode };
     readonly response: BetaMetricsDto;
@@ -396,6 +464,9 @@ export interface CoreApiLiveOperationMap {
     readonly pathParams: { readonly workerId: string };
     readonly query: { readonly date: string };
     readonly response: WorkerRouteDto;
+  };
+  readonly getSubscriberProfile: {
+    readonly response: SubscriberProfileDto;
   };
   readonly listLomePricing: { readonly response: LomePricingDto };
   readonly listOperatorDisputes: {
@@ -500,6 +571,18 @@ export interface CoreApiLiveOperationMap {
       readonly subscriptionId: string;
     };
   };
+  readonly listCurrentSubscriberSubscriptionBillingHistory: {
+    readonly query?: { readonly limit?: number };
+    readonly response: {
+      readonly items: readonly SubscriptionBillingItemDto[];
+      readonly limit: number;
+      readonly subscriptionId: string;
+    };
+  };
+  readonly pauseCurrentSubscriberSubscription: {
+    readonly body: { readonly pausedAt: string };
+    readonly response: SubscriptionDetailDto;
+  };
   readonly recordVisitPhoto: {
     readonly body: {
       readonly byteSize: number;
@@ -516,6 +599,17 @@ export interface CoreApiLiveOperationMap {
     readonly body: { readonly refreshToken: string };
     readonly response: AuthSessionDto;
   };
+  readonly requestCurrentSubscriberFirstVisit: {
+    readonly body: {
+      readonly requestedAt: string;
+      readonly schedulePreference: SchedulePreferenceDto;
+    };
+    readonly response: SubscriptionDetailDto;
+  };
+  readonly resumeCurrentSubscriberSubscription: {
+    readonly body: { readonly resumedAt: string };
+    readonly response: SubscriptionDetailDto;
+  };
   readonly reportWorkerIssue: {
     readonly body: {
       readonly createdAt: string;
@@ -529,6 +623,16 @@ export interface CoreApiLiveOperationMap {
   readonly startOtpChallenge: {
     readonly body: { readonly countryCode: CountryCode; readonly phoneNumber: string };
     readonly response: OtpChallengeDto;
+  };
+  readonly upsertSubscriberProfile: {
+    readonly body: {
+      readonly avatarObjectKey?: string;
+      readonly email?: string;
+      readonly firstName: string;
+      readonly isAdultConfirmed: boolean;
+      readonly lastName: string;
+    };
+    readonly response: SubscriberProfileDto;
   };
   readonly verifyOtpChallenge: {
     readonly body: {

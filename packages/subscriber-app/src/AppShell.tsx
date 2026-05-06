@@ -1,4 +1,4 @@
-import { useState, type ReactElement } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { LocaleProvider, WashedThemeProvider, useActiveLocale } from '@washed/ui';
@@ -12,11 +12,17 @@ import {
   SUBSCRIBER_LANGUAGE_OPTIONS,
   SUBSCRIBER_LANGUAGE_STORAGE_KEY,
 } from './language/languageOptions.js';
+import { SubscriberApiProvider, useSubscriberApi } from './api/SubscriberApiContext.js';
 import { BookingSubmittedX10C, BookingX10B } from './screens/hub/BookingScreens.js';
 import { SignupProvider } from './screens/onboarding/SignupContext.js';
+import {
+  SubscriberSubscriptionProvider,
+  useSubscriberSubscription,
+} from './subscription/SubscriberSubscriptionContext.js';
 import { SplashX01 } from './screens/onboarding/SplashX01.js';
 import { PhoneX02 } from './screens/onboarding/PhoneX02.js';
 import { OtpX03 } from './screens/onboarding/OtpX03.js';
+import { IdentityX03I } from './screens/onboarding/IdentityX03I.js';
 import { AddressX04 } from './screens/onboarding/AddressX04.js';
 import { TierX05 } from './screens/onboarding/TierX05.js';
 import { PaymentX06 } from './screens/onboarding/PaymentX06.js';
@@ -40,6 +46,7 @@ import {
   DeleteAccountX28,
   LanguageX24L,
   NotificationsX26,
+  ProfileEditX24E,
   PrivacyX27,
   ProfileX24,
 } from './screens/profile/ProfileScreens.js';
@@ -100,16 +107,44 @@ function SubscriberThemedShell(): ReactElement {
   return (
     <WashedThemeProvider colorMode={effectiveMode} theme="subscriber">
       {hasEnteredApp ? (
-        <SignupProvider>
-          <HashRouter>
-            <LocaleScopedRoutes />
-          </HashRouter>
-        </SignupProvider>
+        <SubscriberApiProvider>
+          <SignupProvider>
+            <SubscriberSubscriptionProvider>
+              <SubscriberSubscriptionHydrator />
+              <HashRouter>
+                <LocaleScopedRoutes />
+              </HashRouter>
+            </SubscriberSubscriptionProvider>
+          </SignupProvider>
+        </SubscriberApiProvider>
       ) : (
         <AppearanceLaunchGate onContinue={() => setHasEnteredApp(true)} />
       )}
     </WashedThemeProvider>
   );
+}
+
+function SubscriberSubscriptionHydrator(): null {
+  const subscriberApi = useSubscriberApi();
+  const { syncFromApi } = useSubscriberSubscription();
+
+  useEffect(() => {
+    if (!subscriberApi.isConfigured) return;
+
+    let cancelled = false;
+    void subscriberApi
+      .getCurrentSubscription()
+      .then((response) => {
+        if (!cancelled) syncFromApi(response.subscription);
+      })
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [subscriberApi, syncFromApi]);
+
+  return null;
 }
 
 function LocaleScopedRoutes(): ReactElement {
@@ -121,6 +156,7 @@ function LocaleScopedRoutes(): ReactElement {
       <Route element={<SplashX01 />} path="/welcome" />
       <Route element={<PhoneX02 />} path="/signup/phone" />
       <Route element={<OtpX03 />} path="/signup/otp" />
+      <Route element={<IdentityX03I />} path="/signup/identity" />
       <Route element={<AddressX04 />} path="/signup/address" />
       <Route element={<TierX05 />} path="/signup/tier" />
       <Route element={<PaymentX06 />} path="/signup/payment" />
@@ -140,6 +176,7 @@ function LocaleScopedRoutes(): ReactElement {
       <Route element={<PlanPausedSuccessX22A />} path="/plan/pause/submitted" />
       <Route element={<PlanPausedX19R />} path="/plan/paused" />
       <Route element={<ProfileX24 />} path="/profile" />
+      <Route element={<ProfileEditX24E />} path="/profile/edit" />
       <Route element={<AddressEditX25 />} path="/profile/address" />
       <Route element={<LanguageX24L />} path="/profile/language" />
       <Route element={<AppearanceX24A />} path="/profile/appearance" />

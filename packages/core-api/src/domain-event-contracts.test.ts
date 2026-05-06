@@ -279,4 +279,43 @@ describe('assertCoreDomainEventContract', () => {
       'SubscriberSupportContactOpened payload.category is required.',
     );
   });
+
+  it('accepts a well-formed SubscriberSupportContactResolved payload', () => {
+    const event = createDomainEvent({
+      actor: { role: 'operator', userId: '11111111-1111-4111-8111-111111111111' },
+      aggregateId: '22222222-2222-4222-8222-222222222222',
+      aggregateType: 'support_contact',
+      countryCode: 'TG',
+      eventType: 'SubscriberSupportContactResolved',
+      payload: {
+        contactId: '22222222-2222-4222-8222-222222222222',
+        operatorUserId: '11111111-1111-4111-8111-111111111111',
+        resolutionNote: 'Mixx by Yas activated. First charge on May 1.',
+        subscriptionId: '33333333-3333-4333-8333-333333333333',
+      },
+      traceId: 'trace_support_contact_resolved',
+    });
+
+    expect(() => assertCoreDomainEventContract(event)).not.toThrow();
+  });
+
+  it('rejects SubscriberSupportContactResolved with a missing payload key', () => {
+    const event = createDomainEvent({
+      actor: { role: 'operator', userId: '11111111-1111-4111-8111-111111111111' },
+      aggregateId: '22222222-2222-4222-8222-222222222222',
+      aggregateType: 'support_contact',
+      countryCode: 'TG',
+      eventType: 'SubscriberSupportContactResolved',
+      payload: {
+        contactId: '22222222-2222-4222-8222-222222222222',
+        operatorUserId: '11111111-1111-4111-8111-111111111111',
+        subscriptionId: '33333333-3333-4333-8333-333333333333',
+      },
+      traceId: 'trace_support_contact_resolved',
+    });
+
+    expect(() => assertCoreDomainEventContract(event)).toThrow(
+      'SubscriberSupportContactResolved payload.resolutionNote is required.',
+    );
+  });
 });

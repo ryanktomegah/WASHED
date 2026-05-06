@@ -14,6 +14,10 @@ const validInput: CreateSubscriptionInput = {
     neighborhood: 'Tokoin',
   },
   countryCode: 'TG',
+  paymentMethod: {
+    phoneNumber: '+22890123456',
+    provider: 'mixx',
+  },
   phoneNumber: '+22890123456',
   schedulePreference: {
     dayOfWeek: 'tuesday',
@@ -35,9 +39,10 @@ describe('PostgresCoreRepository', () => {
     expect(client.releaseCalled).toBe(true);
     expect(client.queries.map((query) => normalizeSql(query.text))).toEqual([
       'BEGIN',
-      'INSERT INTO subscribers (id, country_code, locale, phone_number) VALUES ($1, $2, $3, $4)',
-      'INSERT INTO subscriber_addresses ( id, subscriber_id, country_code, neighborhood, landmark, gps_latitude, gps_longitude ) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      'INSERT INTO subscriptions ( id, subscriber_id, address_id, country_code, currency_code, tier_code, status, visits_per_cycle, monthly_price_minor, preferred_day_of_week, preferred_time_window ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
+      'SELECT set_config($1, $2, true)',
+      'INSERT INTO subscribers (id, country_code, locale, phone_number) VALUES ($1, $2, $3, $4) ON CONFLICT (country_code, phone_number) DO UPDATE SET updated_at = now() RETURNING id AS subscriber_id',
+      'INSERT INTO subscriber_addresses ( id, subscriber_id, country_code, neighborhood, service_cell_key, landmark, gps_latitude, gps_longitude ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+      'INSERT INTO subscriptions ( id, subscriber_id, address_id, country_code, currency_code, tier_code, status, visits_per_cycle, monthly_price_minor, preferred_day_of_week, preferred_time_window, payment_method_provider, payment_method_phone_number ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)',
       'INSERT INTO audit_events ( id, country_code, aggregate_type, aggregate_id, event_type, payload, actor_role, actor_user_id, trace_id, occurred_at ) VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10)',
       'INSERT INTO outbox_events ( id, country_code, aggregate_type, aggregate_id, event_type, payload, actor_role, actor_user_id, trace_id, occurred_at ) VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10)',
       'COMMIT',
@@ -46,6 +51,10 @@ describe('PostgresCoreRepository', () => {
     const auditQuery = client.queries.at(-3);
     expect(auditQuery?.values?.[4]).toBe('SubscriptionCreated');
     expect(JSON.parse(String(auditQuery?.values?.[5]))).toMatchObject({
+      paymentMethod: {
+        phoneNumber: '+22890123456',
+        provider: 'mixx',
+      },
       status: 'pending_match',
       tierCode: 'T2',
     });
@@ -53,6 +62,10 @@ describe('PostgresCoreRepository', () => {
     const outboxQuery = client.queries.at(-2);
     expect(outboxQuery?.values?.[4]).toBe('SubscriptionCreated');
     expect(JSON.parse(String(outboxQuery?.values?.[5]))).toMatchObject({
+      paymentMethod: {
+        phoneNumber: '+22890123456',
+        provider: 'mixx',
+      },
       status: 'pending_match',
       tierCode: 'T2',
     });
@@ -87,9 +100,12 @@ describe('PostgresCoreRepository', () => {
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
       'INSERT INTO auth_otp_challenges ( id, country_code, phone_number, code_hash, expires_at ) VALUES ($1, $2, $3, $4, $5)',
     );
-    expect(client.queries[0]?.values?.[1]).toBe('TG');
-    expect(client.queries[0]?.values?.[2]).toBe('+22890123456');
-    expect(client.queries[0]?.values?.[3]).toBe(
+    const insertChallengeQuery = client.queries.find((query) =>
+      normalizeSql(query.text).startsWith('INSERT INTO auth_otp_challenges'),
+    );
+    expect(insertChallengeQuery?.values?.[1]).toBe('TG');
+    expect(insertChallengeQuery?.values?.[2]).toBe('+22890123456');
+    expect(insertChallengeQuery?.values?.[3]).toBe(
       hashOtpCode(String(challenge.challengeId), '123456'),
     );
   });
@@ -113,6 +129,7 @@ describe('PostgresCoreRepository', () => {
         phone_number: '+22890123456',
       },
       {
+        country_code: 'TG',
         phone_number: '+22890123456',
         role: 'subscriber',
         user_id: '77777777-7777-4777-8777-777777777777',
@@ -141,7 +158,7 @@ describe('PostgresCoreRepository', () => {
       'UPDATE auth_otp_challenges SET consumed_at = now() WHERE id = $1',
     );
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
-      'INSERT INTO auth_sessions ( id, user_id, refresh_token_hash, device_id, expires_at ) VALUES ($1, $2, $3, $4, $5)',
+      'INSERT INTO auth_sessions ( id, country_code, user_id, refresh_token_hash, device_id, expires_at ) VALUES ($1, $2, $3, $4, $5, $6)',
     );
   });
 
@@ -157,6 +174,7 @@ describe('PostgresCoreRepository', () => {
       undefined,
       undefined,
       {
+        country_code: 'TG',
         device_id: 'ios-device-1',
         phone_number: '+22890123456',
         revoked_at: null,
@@ -179,7 +197,10 @@ describe('PostgresCoreRepository', () => {
       role: 'subscriber',
       userId: '77777777-7777-4777-8777-777777777777',
     });
-    expect(client.queries[1]?.values).toEqual([hashRefreshToken('refresh_test_token')]);
+    const refreshSelectQuery = client.queries.find((query) =>
+      normalizeSql(query.text).startsWith('SELECT session.device_id'),
+    );
+    expect(refreshSelectQuery?.values).toEqual([hashRefreshToken('refresh_test_token')]);
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
       'UPDATE auth_sessions SET revoked_at = now() WHERE id = $1',
     );
@@ -224,7 +245,7 @@ describe('PostgresCoreRepository', () => {
       subscriptionStatus: 'payment_overdue',
     });
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
-      'INSERT INTO payment_attempts ( id, subscription_id, amount_minor, currency_code, status, provider, provider_reference, idempotency_key, charged_at ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+      'INSERT INTO payment_attempts ( id, subscription_id, country_code, amount_minor, currency_code, status, provider, provider_reference, idempotency_key, charged_at ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
     );
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
       'UPDATE subscriptions SET status = $1, updated_at = now() WHERE id = $2',
@@ -273,10 +294,10 @@ describe('PostgresCoreRepository', () => {
     });
     expect(attempt.events[0]?.actor).toEqual({ role: 'system', userId: null });
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
-      'SELECT attempt.id AS payment_attempt_id, attempt.subscription_id, attempt.amount_minor, attempt.currency_code, attempt.status, attempt.provider, attempt.provider_reference, attempt.idempotency_key, attempt.charged_at, subscription.status AS subscription_status FROM payment_attempts attempt INNER JOIN subscriptions subscription ON subscription.id = attempt.subscription_id WHERE attempt.provider = $1 AND attempt.provider_reference = $2 FOR UPDATE',
+      'SELECT attempt.id AS payment_attempt_id, attempt.subscription_id, attempt.country_code, attempt.amount_minor, attempt.currency_code, attempt.status, attempt.provider, attempt.provider_reference, attempt.idempotency_key, attempt.charged_at, subscription.status AS subscription_status FROM payment_attempts attempt INNER JOIN subscriptions subscription ON subscription.id = attempt.subscription_id WHERE attempt.provider = $1 AND attempt.provider_reference = $2 FOR UPDATE',
     );
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
-      'INSERT INTO payment_attempts ( id, subscription_id, amount_minor, currency_code, status, provider, provider_reference, idempotency_key, charged_at ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+      'INSERT INTO payment_attempts ( id, subscription_id, country_code, amount_minor, currency_code, status, provider, provider_reference, idempotency_key, charged_at ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
     );
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
       'UPDATE subscriptions SET status = $1, updated_at = now() WHERE id = $2',
@@ -427,6 +448,7 @@ describe('PostgresCoreRepository', () => {
       preferred_day_of_week: 'tuesday',
       preferred_time_window: 'morning',
       status: 'pending_match',
+      visits_per_cycle: 1,
     });
     const repository = new PostgresCoreRepository(new FakePgPool(client));
 
@@ -439,12 +461,7 @@ describe('PostgresCoreRepository', () => {
     });
 
     expect(assignment.status).toBe('active');
-    expect(assignment.visits.map((visit) => visit.scheduledDate)).toEqual([
-      '2026-05-05',
-      '2026-05-12',
-      '2026-05-19',
-      '2026-05-26',
-    ]);
+    expect(assignment.visits.map((visit) => visit.scheduledDate)).toEqual(['2026-05-05']);
     expect(client.releaseCalled).toBe(true);
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
       "UPDATE subscriptions SET assigned_worker_id = $1, assigned_at = now(), status = 'active', updated_at = now() WHERE id = $2",
@@ -454,7 +471,7 @@ describe('PostgresCoreRepository', () => {
     );
     expect(
       client.queries.filter((query) => normalizeSql(query.text).startsWith('INSERT INTO visits')),
-    ).toHaveLength(4);
+    ).toHaveLength(1);
 
     const outboxQuery = client.queries.at(-2);
     expect(outboxQuery?.values?.[4]).toBe('SubscriberAssigned');
@@ -1301,6 +1318,47 @@ describe('PostgresCoreRepository', () => {
     });
   });
 
+  it('updates subscription payment methods and writes an outbox event', async () => {
+    const client = new FakePgTransactionClient(undefined, {
+      country_code: 'TG',
+      status: 'active',
+    });
+    const repository = new PostgresCoreRepository(new FakePgPool(client));
+
+    const subscription = await repository.updateSubscriptionPaymentMethod({
+      paymentMethod: {
+        phoneNumber: '+22890123456',
+        provider: 'flooz',
+      },
+      subscriberUserId: '55555555-5555-4555-8555-555555555555',
+      subscriptionId: '33333333-3333-4333-8333-333333333333',
+      traceId: 'trace_payment_method',
+      updatedAt: new Date('2026-05-02T09:00:00.000Z'),
+    });
+
+    expect(subscription).toMatchObject({
+      paymentMethod: {
+        phoneNumber: '+22890123456',
+        provider: 'flooz',
+      },
+      subscriptionId: '33333333-3333-4333-8333-333333333333',
+      updatedAt: new Date('2026-05-02T09:00:00.000Z'),
+    });
+    expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
+      'UPDATE subscriptions SET payment_method_provider = $1, payment_method_phone_number = $2, updated_at = now() WHERE id = $3',
+    );
+    const outboxQuery = client.queries.at(-2);
+    expect(outboxQuery?.values?.[4]).toBe('SubscriptionPaymentMethodUpdated');
+    expect(JSON.parse(String(outboxQuery?.values?.[5]))).toMatchObject({
+      paymentMethod: {
+        phoneNumber: '+22890123456',
+        provider: 'flooz',
+      },
+      subscriptionId: '33333333-3333-4333-8333-333333333333',
+      updatedAt: '2026-05-02T09:00:00.000Z',
+    });
+  });
+
   it('reads monthly worker earnings from completed visit ledger rows', async () => {
     const client = new FakePgTransactionClient(undefined, undefined, undefined, {
       completed_visits: 3,
@@ -1419,6 +1477,8 @@ describe('PostgresCoreRepository', () => {
         landmark: 'Pres de la pharmacie du quartier',
         monthly_price_minor: '2500',
         neighborhood: 'Tokoin',
+        payment_method_phone_number: '+22890123456',
+        payment_method_provider: 'mixx',
         phone_number: '+22890123456',
         preferred_day_of_week: 'tuesday',
         preferred_time_window: 'morning',
@@ -1469,6 +1529,10 @@ describe('PostgresCoreRepository', () => {
       },
       countryCode: 'TG',
       monthlyPriceMinor: 2500n,
+      paymentMethod: {
+        phoneNumber: '+22890123456',
+        provider: 'mixx',
+      },
       phoneNumber: '+22890123456',
       recentVisits: [],
       schedulePreference: { dayOfWeek: 'tuesday', timeWindow: 'morning' },
@@ -1557,7 +1621,7 @@ describe('PostgresCoreRepository', () => {
       },
     ]);
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
-      "SELECT subscription.id AS subscription_id, subscription.subscriber_id, subscriber.phone_number, subscription.country_code, subscription.tier_code, subscription.visits_per_cycle, subscription.monthly_price_minor, subscription.preferred_day_of_week, subscription.preferred_time_window, subscription.status, subscription.created_at AS queued_at, subscription.created_at + interval '4 hours' AS assignment_due_at, address.neighborhood, address.landmark, address.gps_latitude, address.gps_longitude FROM subscriptions subscription INNER JOIN subscribers subscriber ON subscriber.id = subscription.subscriber_id INNER JOIN subscriber_addresses address ON address.id = subscription.address_id WHERE subscription.country_code = $1 AND subscription.status = 'pending_match' ORDER BY subscription.created_at ASC LIMIT $2",
+      "SELECT subscription.id AS subscription_id, subscription.subscriber_id, subscriber.phone_number, subscription.country_code, subscription.tier_code, subscription.visits_per_cycle, subscription.monthly_price_minor, subscription.preferred_day_of_week, subscription.preferred_time_window, subscription.status, subscription.created_at AS queued_at, subscription.created_at + interval '4 hours' AS assignment_due_at, address.neighborhood, address.landmark, address.gps_latitude, address.gps_longitude FROM subscriptions subscription INNER JOIN subscribers subscriber ON subscriber.id = subscription.subscriber_id INNER JOIN subscriber_addresses address ON address.id = subscription.address_id WHERE subscription.country_code = $1 AND subscription.status = 'pending_match' AND subscription.preferred_day_of_week IS NOT NULL AND subscription.preferred_time_window IS NOT NULL ORDER BY subscription.created_at ASC LIMIT $2",
     );
     expect(client.queries[0]?.values).toEqual(['TG', 25]);
   });
@@ -1867,7 +1931,10 @@ describe('PostgresCoreRepository', () => {
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
       'INSERT INTO workers ( id, country_code, display_name, status, service_neighborhoods, max_active_subscriptions ) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (id) DO UPDATE SET country_code = excluded.country_code, display_name = excluded.display_name, status = excluded.status, service_neighborhoods = excluded.service_neighborhoods, max_active_subscriptions = excluded.max_active_subscriptions, updated_at = now()',
     );
-    expect(client.queries[0]?.values).toEqual([
+    const upsertWorkerQuery = client.queries.find((query) =>
+      normalizeSql(query.text).startsWith('INSERT INTO workers'),
+    );
+    expect(upsertWorkerQuery?.values).toEqual([
       '22222222-2222-4222-8222-222222222222',
       'TG',
       'Akouvi',
@@ -1925,9 +1992,18 @@ describe('PostgresCoreRepository', () => {
     expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
       "SELECT subscription.country_code, address.neighborhood FROM subscriptions subscription INNER JOIN subscriber_addresses address ON address.id = subscription.address_id WHERE subscription.id = $1 AND subscription.status IN ('active', 'pending_match')",
     );
-    expect(client.queries.map((query) => normalizeSql(query.text))).toContain(
-      "SELECT worker.id AS worker_id, worker.display_name, worker.service_neighborhoods, worker.max_active_subscriptions, COUNT(active_subscription.id)::int AS active_subscription_count FROM workers worker LEFT JOIN subscriptions active_subscription ON active_subscription.assigned_worker_id = worker.id AND active_subscription.status = 'active' WHERE worker.country_code = $1 AND worker.status = 'active' AND NOT EXISTS ( SELECT 1 FROM assignment_decisions declined_decision WHERE declined_decision.subscription_id = $4 AND declined_decision.worker_id = worker.id AND declined_decision.decision = 'declined' ) AND ( $3::date IS NULL OR NOT EXISTS ( SELECT 1 FROM worker_unavailability unavailable WHERE unavailable.worker_id = worker.id AND unavailable.unavailable_date = $3 ) ) AND EXISTS ( SELECT 1 FROM unnest(worker.service_neighborhoods) service_neighborhood WHERE lower(service_neighborhood) = lower($2) ) GROUP BY worker.id, worker.display_name, worker.service_neighborhoods, worker.max_active_subscriptions HAVING COUNT(active_subscription.id) < worker.max_active_subscriptions ORDER BY COUNT(active_subscription.id) ASC, worker.display_name ASC",
-    );
+    expect(
+      client.queries
+        .map((query) => normalizeSql(query.text))
+        .some(
+          (query) =>
+            query.startsWith('SELECT worker.id AS worker_id') &&
+            query.includes('worker_service_cells') &&
+            query.includes(
+              'COUNT(DISTINCT active_subscription.id)::int AS active_subscription_count',
+            ),
+        ),
+    ).toBe(true);
   });
 });
 
@@ -2062,6 +2138,16 @@ class FakePgTransactionClient implements PgTransactionClient {
           this.configuredPaymentRefundRow === undefined
             ? []
             : [this.configuredPaymentRefundRow as T],
+      };
+    }
+
+    if (normalizeSql(text).startsWith('INSERT INTO subscribers')) {
+      return {
+        command: 'INSERT',
+        fields: [],
+        oid: 0,
+        rowCount: 1,
+        rows: [{ subscriber_id: values?.[0] } as T],
       };
     }
 

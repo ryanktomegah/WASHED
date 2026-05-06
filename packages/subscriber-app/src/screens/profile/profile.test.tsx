@@ -14,12 +14,14 @@ import {
   SUBSCRIBER_LANGUAGE_OPTIONS,
   SUBSCRIBER_LANGUAGE_STORAGE_KEY,
 } from '../../language/languageOptions.js';
+import { SignupProvider, type SignupInitialState } from '../onboarding/SignupContext.js';
 import {
   AddressEditX25,
   AppearanceX24A,
   DeleteAccountX28,
   LanguageX24L,
   NotificationsX26,
+  ProfileEditX24E,
   PrivacyX27,
   ProfileX24,
 } from './ProfileScreens.js';
@@ -28,6 +30,7 @@ function renderAt(
   path: string,
   element: ReactElement,
   initialEntries: readonly string[] = [path],
+  initialSignupState: SignupInitialState = {},
 ): { locationRef: { current: string } } {
   const locationRef = { current: initialEntries.at(-1) ?? path };
 
@@ -48,8 +51,10 @@ function renderAt(
               supportedLocales={SUBSCRIBER_LANGUAGE_OPTIONS}
             >
               <SubscriberAppearanceProvider>
-                {element}
-                <Spy />
+                <SignupProvider initialState={initialSignupState}>
+                  {element}
+                  <Spy />
+                </SignupProvider>
               </SubscriberAppearanceProvider>
             </LocaleProvider>
           }
@@ -63,24 +68,86 @@ function renderAt(
   return { locationRef };
 }
 
+function renderProfileRoutes(initialSignupState: SignupInitialState): {
+  locationRef: { current: string };
+} {
+  const locationRef = { current: '/profile' };
+
+  function Spy(): ReactElement {
+    const location = useLocation();
+    locationRef.current = `${location.pathname}${location.search}${location.hash}`;
+    return null as unknown as ReactElement;
+  }
+
+  render(
+    <MemoryRouter initialEntries={['/profile']}>
+      <LocaleProvider
+        defaultLocale="fr"
+        storageKey={SUBSCRIBER_LANGUAGE_STORAGE_KEY}
+        supportedLocales={SUBSCRIBER_LANGUAGE_OPTIONS}
+      >
+        <SubscriberAppearanceProvider>
+          <SignupProvider initialState={initialSignupState}>
+            <Routes>
+              <Route
+                element={
+                  <>
+                    <ProfileX24 />
+                    <Spy />
+                  </>
+                }
+                path="/profile"
+              />
+              <Route
+                element={
+                  <>
+                    <ProfileEditX24E />
+                    <Spy />
+                  </>
+                }
+                path="/profile/edit"
+              />
+            </Routes>
+          </SignupProvider>
+        </SubscriberAppearanceProvider>
+      </LocaleProvider>
+    </MemoryRouter>,
+  );
+
+  return { locationRef };
+}
+
 beforeEach(() => {
   setActiveLocale('fr');
   window.localStorage.removeItem(SUBSCRIBER_APPEARANCE_STORAGE_KEY);
   window.localStorage.removeItem(SUBSCRIBER_LANGUAGE_STORAGE_KEY);
 });
 
+const PROFILE_SIGNUP_STATE: SignupInitialState = {
+  phone: '+228 90 12 34 56',
+  identity: { firstName: 'Afi', lastName: 'Mensah', email: 'afi@email.com', isAdult: true },
+  address: { neighborhood: 'Tokoin Casablanca', street: 'rue 254' },
+};
+
 describe('Subscriber profile · X-24', () => {
   it('renders identity, settings list, action buttons, and Profil-active nav', () => {
     window.localStorage.setItem(SUBSCRIBER_APPEARANCE_STORAGE_KEY, 'dark');
-    renderAt('/profile', <ProfileX24 />);
+    renderAt('/profile', <ProfileX24 />, ['/profile'], PROFILE_SIGNUP_STATE);
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-24');
-    expect(screen.getByRole('heading', { name: 'Yawa Mensah' })).toBeVisible();
-    expect(screen.getByText('+228 90 12 34 56')).toBeVisible();
-    expect(screen.getByText('Abonnée depuis sept. 2025')).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Afi Mensah' })).toBeVisible();
+    expect(screen.getAllByText('+228 90 12 34 56')).toHaveLength(2);
+    expect(screen.getByText('Compte actif')).toBeVisible();
+    expect(screen.getAllByRole('button', { name: 'Modifier la photo' })).toHaveLength(2);
+    expect(screen.getByText('Informations du compte')).toBeVisible();
+    expect(screen.getByText('afi@email.com')).toBeVisible();
+    expect(screen.getByText('18 ans ou plus confirmé')).toBeVisible();
 
     // Menu rows.
+    expect(screen.getByRole('button', { name: /Informations personnelles/u })).toBeVisible();
+    expect(screen.getByText('Nom, email, photo')).toBeVisible();
     expect(screen.getByRole('button', { name: /Adresse/u })).toBeVisible();
+    expect(screen.getAllByText('Tokoin Casablanca')).toHaveLength(2);
     expect(screen.getByRole('button', { name: /Notifications/u })).toBeVisible();
     expect(screen.getByRole('button', { name: /Langue/u })).toBeVisible();
     expect(screen.getByText('Français')).toBeVisible();
@@ -92,7 +159,11 @@ describe('Subscriber profile · X-24', () => {
     expect(screen.getByRole('button', { name: 'Profil' })).toHaveAttribute('aria-current', 'page');
   });
 
-  it('routes Adresse, Notifications, Apparence, Vie privée, and Aide to their screens', () => {
+  it('routes profile actions, Adresse, Notifications, Apparence, Vie privée, and Aide', () => {
+    const edit = renderAt('/profile', <ProfileX24 />);
+    fireEvent.click(screen.getByRole('button', { name: /Informations personnelles/u }));
+    expect(edit.locationRef.current).toBe('/profile/edit');
+
     const a = renderAt('/profile', <ProfileX24 />);
     fireEvent.click(screen.getByRole('button', { name: /Adresse/u }));
     expect(a.locationRef.current).toBe('/profile/address');
@@ -116,6 +187,26 @@ describe('Subscriber profile · X-24', () => {
     const s = renderAt('/profile', <ProfileX24 />);
     fireEvent.click(screen.getByRole('button', { name: 'Aide & support' }));
     expect(s.locationRef.current).toBe('/support');
+  });
+
+  it('edits the account name and email, then reflects them on the profile page', () => {
+    const { locationRef } = renderProfileRoutes(PROFILE_SIGNUP_STATE);
+
+    fireEvent.click(screen.getByRole('button', { name: /Informations personnelles/u }));
+    expect(locationRef.current).toBe('/profile/edit');
+    expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-24E');
+    expect(screen.getByRole('heading', { name: 'Modifier vos informations' })).toBeVisible();
+
+    fireEvent.change(screen.getByLabelText('PRÉNOM'), { target: { value: 'Ama' } });
+    fireEvent.change(screen.getByLabelText('NOM'), { target: { value: 'Koffi' } });
+    fireEvent.change(screen.getByLabelText('EMAIL (FACULTATIF)'), {
+      target: { value: 'ama@email.com' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    expect(locationRef.current).toBe('/profile');
+    expect(screen.getByRole('heading', { name: 'Ama Koffi' })).toBeVisible();
+    expect(screen.getByText('ama@email.com')).toBeVisible();
   });
 });
 

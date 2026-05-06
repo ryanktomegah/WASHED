@@ -12,6 +12,8 @@ import { useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
 
+import { useSubscriberApi } from '../../api/SubscriberApiContext.js';
+import { useSubscriberSubscription } from '../../subscription/SubscriberSubscriptionContext.js';
 import { OnboardingBackButton } from './OnboardingBackButton.js';
 import { useSignup } from './SignupContext.js';
 
@@ -30,15 +32,22 @@ function formatTimer(seconds: number): string {
 
 export function OtpX03(): ReactElement {
   const navigate = useNavigate();
+  const subscriberApi = useSubscriberApi();
+  const { syncFromApi } = useSubscriberSubscription();
   const signup = useSignup();
 
   useEffect(() => {
     if (signup.phone === '') navigate('/signup/phone', { replace: true });
-  }, [signup.phone, navigate]);
+    if (subscriberApi.isConfigured && signup.otpChallengeId === '') {
+      navigate('/signup/phone', { replace: true });
+    }
+  }, [signup.phone, signup.otpChallengeId, subscriberApi.isConfigured, navigate]);
 
   const phone = signup.phone;
   const maskedPhone = useMemo(() => maskPhone(phone), [phone]);
   const [digits, setDigits] = useState<string[]>(() => Array<string>(OTP_LENGTH).fill(''));
+  const [error, setError] = useState<string | null>(null);
+  const isVerifyingRef = useRef(false);
   const [secondsRemaining, setSecondsRemaining] = useState(RESEND_SECONDS);
   const cellRefs = useRef<(HTMLInputElement | null)[]>(
     Array<HTMLInputElement | null>(OTP_LENGTH).fill(null),
@@ -56,10 +65,54 @@ export function OtpX03(): ReactElement {
 
   useEffect(() => {
     if (!allFilled) return;
-    // Verification stub — wire to API in next iteration.
-    const timeout = window.setTimeout(() => navigate('/signup/address'), 320);
+    if (subscriberApi.isConfigured) {
+      if (signup.otpChallengeId === '' || isVerifyingRef.current) return;
+
+      let cancelled = false;
+      setError(null);
+      isVerifyingRef.current = true;
+      void subscriberApi
+        .verifyOtp({
+          challengeId: signup.otpChallengeId,
+          code: digits.join(''),
+        })
+        .then(async () => {
+          if (signup.mode === 'existing') {
+            const current = await subscriberApi.getCurrentSubscription();
+            if (!cancelled) syncFromApi(current.subscription);
+          }
+          if (!cancelled) navigate(signup.mode === 'existing' ? '/hub' : '/signup/identity');
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setDigits(Array<string>(OTP_LENGTH).fill(''));
+            setError(translate('error.server.body'));
+          }
+        })
+        .finally(() => {
+          if (!cancelled) isVerifyingRef.current = false;
+        });
+
+      return () => {
+        cancelled = true;
+        isVerifyingRef.current = false;
+      };
+    }
+
+    const timeout = window.setTimeout(
+      () => navigate(signup.mode === 'existing' ? '/hub' : '/signup/identity'),
+      320,
+    );
     return () => window.clearTimeout(timeout);
-  }, [allFilled, navigate]);
+  }, [
+    allFilled,
+    digits,
+    navigate,
+    signup.mode,
+    signup.otpChallengeId,
+    subscriberApi,
+    syncFromApi,
+  ]);
 
   const focusCell = (index: number): void => {
     const target = cellRefs.current[index];
@@ -130,6 +183,7 @@ export function OtpX03(): ReactElement {
 
   const onResend = (): void => {
     setDigits(Array<string>(OTP_LENGTH).fill(''));
+    setError(null);
     setSecondsRemaining(RESEND_SECONDS);
     focusCell(0);
   };
@@ -146,9 +200,10 @@ export function OtpX03(): ReactElement {
             <i className="on" />
             <i />
             <i />
+            <i />
           </div>
           <span className="h-sm">
-            {translate('subscriber.signup.step_indicator', { current: 2, total: 4 })}
+            {translate('subscriber.signup.step_indicator', { current: 2, total: 5 })}
           </span>
           <h1 className="h-md" id="x03-headline">
             {translate('subscriber.signup.otp.title')}
@@ -194,6 +249,12 @@ export function OtpX03(): ReactElement {
             {translate('subscriber.signup.otp.call_office.cta')}
           </a>
         </p>
+
+        {error === null ? null : (
+          <p className="notice" role="alert">
+            {error}
+          </p>
+        )}
 
         <div className="grow" />
       </div>

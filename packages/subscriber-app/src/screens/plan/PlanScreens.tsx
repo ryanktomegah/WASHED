@@ -1,11 +1,25 @@
-import { type ReactElement, useState } from 'react';
+import { type ReactElement, useEffect, useState } from 'react';
 import { ChevronLeft, Pause } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+import type { SubscriptionBillingItemDto } from '@washed/api-client';
 import { formatXof, translate, type WashedLocale } from '@washed/i18n';
 import { useActiveLocale } from '@washed/ui';
 
+import { useSubscriberApi } from '../../api/SubscriberApiContext.js';
 import { useSafeBack } from '../../navigation/useSafeBack.js';
+import { useSubscriberSubscription } from '../../subscription/SubscriberSubscriptionContext.js';
+import {
+  SUBSCRIBER_BOOKING_DAYS,
+  SUBSCRIBER_BOOKING_TIME_WINDOWS,
+} from '../hub/subscriberHubData.js';
+import {
+  PAYMENT_PROVIDER_LABEL,
+  TIER_PRICE_XOF,
+  useOptionalSignup,
+  type SignupPaymentProvider,
+} from '../onboarding/SignupContext.js';
+import { formatTogoDisplayPhone, toTogoE164Phone } from '../onboarding/phoneNumber.js';
 import { SUBSCRIBER_PLAN_DEMO } from './subscriberPlanDemoData.js';
 import { PlanTabBar } from './PlanTabBar.js';
 
@@ -79,6 +93,31 @@ function formatPlanTime(time24h: string, locale: WashedLocale): string {
   return `${hour12}:${minute.padStart(2, '0')} ${period}`;
 }
 
+function formatBillingProvider(provider: string): string {
+  if (provider === 'mobile_money_http') return 'Mobile Money';
+  return provider.charAt(0).toUpperCase() + provider.slice(1).replace(/_/gu, ' ');
+}
+
+function billingAmountXof(item: SubscriptionBillingItemDto): number {
+  const amount = Number(item.amount.amountMinor);
+  return item.itemType === 'refund' ? -amount : amount;
+}
+
+function countBillingMonths(items: readonly SubscriptionBillingItemDto[]): number {
+  return new Set(
+    items
+      .filter((item) => item.itemType === 'charge' && item.status === 'succeeded')
+      .map((item) => item.occurredAt.slice(0, 7)),
+  ).size;
+}
+
+function billingSuccessRate(items: readonly SubscriptionBillingItemDto[]): string {
+  const charges = items.filter((item) => item.itemType === 'charge');
+  if (charges.length === 0) return '0 %';
+  const succeeded = charges.filter((item) => item.status === 'succeeded').length;
+  return `${Math.round((succeeded / charges.length) * 100)} %`;
+}
+
 function activePlanLabel(tier: 'T1' | 'T2'): string {
   return translate(
     tier === 'T1' ? 'subscriber.plan.tier.t1.label' : 'subscriber.plan.tier.t2.label',
@@ -88,7 +127,22 @@ function activePlanLabel(tier: 'T1' | 'T2'): string {
 export function PlanX19(): ReactElement {
   const navigate = useNavigate();
   const locale = useActiveLocale();
-  const { active } = SUBSCRIBER_PLAN_DEMO;
+  const subscription = useSubscriberSubscription();
+  if (subscription.state.status === 'paused') {
+    return <PlanPausedX19R />;
+  }
+  if (
+    subscription.state.status === 'ready_no_visit' ||
+    subscription.state.status === 'visit_request_pending'
+  ) {
+    return <PlanPendingX19 />;
+  }
+
+  const active = {
+    ...SUBSCRIBER_PLAN_DEMO.active,
+    amountXof: TIER_PRICE_XOF[subscription.state.tier],
+    tier: subscription.state.tier,
+  };
   const accountGoodUntil = formatDayMonth(active.accountGoodUntilIso, locale);
   const nextChargeDate = formatDayMonth(active.nextChargeDateIso, locale);
   const nextVisitWeekday = formatWeekday(active.nextVisit.dateIso, locale);
@@ -189,9 +243,97 @@ export function PlanX19(): ReactElement {
         </div>
 
         <div className="plan-grow" />
-
-        <PlanTabBar />
       </div>
+      <PlanTabBar />
+    </main>
+  );
+}
+
+function PlanPendingX19(): ReactElement {
+  const navigate = useNavigate();
+  const subscription = useSubscriberSubscription();
+  const requestedDay = SUBSCRIBER_BOOKING_DAYS.find(
+    (day) => day.id === subscription.state.firstVisitRequest?.dayId,
+  );
+  const requestedTimeWindow = SUBSCRIBER_BOOKING_TIME_WINDOWS.find(
+    (timeWindow) => timeWindow.id === subscription.state.firstVisitRequest?.timeWindowId,
+  );
+  const isPendingRequest = subscription.state.status === 'visit_request_pending';
+  const titleKey = isPendingRequest
+    ? 'subscriber.plan.pending.request_title'
+    : 'subscriber.plan.pending.title';
+  const statusKey = isPendingRequest
+    ? 'subscriber.dashboard.plan.first_visit_pending_status'
+    : 'subscriber.dashboard.plan.first_visit_status';
+  const actionKey = isPendingRequest
+    ? 'subscriber.dashboard.pending_visit.cta'
+    : 'subscriber.dashboard.empty_visit.cta';
+
+  return (
+    <main aria-labelledby="x19-headline" className="plan-screen" data-screen-id="X-19">
+      <div className="plan-body">
+        <header className="plan-header">
+          <span className="plan-eyebrow">{translate('subscriber.plan.eyebrow')}</span>
+        </header>
+
+        <h1 className="plan-title" id="x19-headline">
+          {translate(titleKey)}
+        </h1>
+
+        <section className="plan-active-card" aria-labelledby="x19-pending-card-eyebrow">
+          <span className="plan-active-card-eyebrow" id="x19-pending-card-eyebrow">
+            {translate('subscriber.plan.pending.card_eyebrow').toUpperCase()}
+          </span>
+          <span className="plan-active-card-tier">
+            {translate('subscriber.plan.active_card.tier', {
+              label: activePlanLabel(subscription.state.tier),
+              amount: formatXof(TIER_PRICE_XOF[subscription.state.tier]),
+            })}
+          </span>
+          <div className="plan-active-card-row">
+            <span className="plan-active-card-row-label">
+              {translate('subscriber.dashboard.empty_visit.eyebrow')}
+            </span>
+            <span className="plan-active-card-row-value">{translate(statusKey)}</span>
+          </div>
+        </section>
+
+        <section className="plan-list-card" aria-labelledby="x19-first-visit-eyebrow">
+          <span className="plan-eyebrow" id="x19-first-visit-eyebrow">
+            {translate('subscriber.dashboard.empty_visit.eyebrow')}
+          </span>
+          <p className="plan-copy">
+            {translate(
+              isPendingRequest
+                ? 'subscriber.plan.pending.request_body'
+                : 'subscriber.dashboard.empty_visit.body',
+            )}
+          </p>
+          {requestedDay !== undefined && requestedTimeWindow !== undefined ? (
+            <strong className="plan-pending-choice">
+              {translate(requestedDay.labelKey)} · {translate(requestedTimeWindow.labelKey)}
+            </strong>
+          ) : null}
+        </section>
+
+        <div className="plan-grow" />
+
+        <button
+          className="plan-button primary full lg"
+          onClick={() => navigate('/booking')}
+          type="button"
+        >
+          {translate(actionKey)}
+        </button>
+        <button
+          className="plan-button ghost full"
+          onClick={() => navigate('/plan/payment-method')}
+          type="button"
+        >
+          {translate('subscriber.payment.action.edit_method')}
+        </button>
+      </div>
+      <PlanTabBar />
     </main>
   );
 }
@@ -199,8 +341,78 @@ export function PlanX19(): ReactElement {
 export function PlanPaymentHistoryX20(): ReactElement {
   const goBack = useSafeBack('/plan');
   const locale = useActiveLocale();
+  const subscriberApi = useSubscriberApi();
+  const subscription = useSubscriberSubscription();
   const { payment } = SUBSCRIBER_PLAN_DEMO;
-  const totalXof = payment.receipts.reduce((sum, receipt) => sum + receipt.amountXof, 0);
+  const [billingItems, setBillingItems] = useState<readonly SubscriptionBillingItemDto[] | null>(
+    null,
+  );
+  const hasPaymentHistory =
+    subscription.state.status === 'active' ||
+    subscription.state.status === 'paused' ||
+    subscription.state.status === 'payment_overdue';
+
+  useEffect(() => {
+    if (!subscriberApi.isConfigured) return;
+
+    if (subscription.state.subscriptionId === null) {
+      setBillingItems([]);
+      return;
+    }
+
+    let cancelled = false;
+    void subscriberApi
+      .listBillingHistory({ limit: 25 })
+      .then((response) => {
+        if (!cancelled) setBillingItems(response.items);
+      })
+      .catch(() => {
+        if (!cancelled) setBillingItems([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [subscriberApi, subscription.state.subscriptionId]);
+
+  const demoRows = hasPaymentHistory
+    ? payment.receipts.map((receipt) => ({
+        amountXof: receipt.amountXof,
+        dateIso: receipt.dateIso,
+        key: receipt.reference,
+        providerLine: `${receipt.provider} · ${receipt.reference}`,
+      }))
+    : [];
+  const apiItems = billingItems ?? [];
+  const apiRows = apiItems.map((item) => ({
+    amountXof: billingAmountXof(item),
+    dateIso: item.occurredAt.slice(0, 10),
+    key: item.itemId,
+    providerLine: `${formatBillingProvider(item.provider)} · ${
+      item.providerReference ?? item.paymentAttemptId.slice(0, 8)
+    }`,
+  }));
+  const rows = subscriberApi.isConfigured ? apiRows : demoRows;
+  const historyMonths = subscriberApi.isConfigured
+    ? countBillingMonths(apiItems)
+    : hasPaymentHistory
+      ? payment.historyMonths
+      : 0;
+  const chargeCount = subscriberApi.isConfigured
+    ? apiItems.filter((item) => item.itemType === 'charge').length
+    : historyMonths;
+  const successRate = subscriberApi.isConfigured
+    ? billingSuccessRate(apiItems)
+    : translate('subscriber.payment.history.success_rate');
+  const totalXof = subscriberApi.isConfigured
+    ? apiItems
+        .filter(
+          (item) =>
+            (item.itemType === 'charge' && item.status === 'succeeded') ||
+            item.itemType === 'refund',
+        )
+        .reduce((sum, item) => sum + billingAmountXof(item), 0)
+    : rows.reduce((sum, receipt) => sum + receipt.amountXof, 0);
 
   return (
     <main aria-labelledby="x20-headline" className="plan-screen" data-screen-id="X-20">
@@ -209,7 +421,7 @@ export function PlanPaymentHistoryX20(): ReactElement {
 
         <h1 className="plan-title" id="x20-headline">
           {translate('subscriber.payment.history.title', {
-            months: payment.historyMonths,
+            months: historyMonths,
           })}
         </h1>
 
@@ -226,12 +438,10 @@ export function PlanPaymentHistoryX20(): ReactElement {
           <div className="plan-payment-summary-right">
             <span className="plan-cream-body">
               {translate('subscriber.payment.history.count_label', {
-                count: payment.historyMonths,
+                count: chargeCount,
               })}
             </span>
-            <strong className="plan-payment-total">
-              {translate('subscriber.payment.history.success_rate')}
-            </strong>
+            <strong className="plan-payment-total">{successRate}</strong>
           </div>
         </section>
 
@@ -243,18 +453,19 @@ export function PlanPaymentHistoryX20(): ReactElement {
           className="plan-payment-list"
           aria-label={translate('subscriber.payment.history.detail_eyebrow')}
         >
-          {payment.receipts.map((receipt) => (
-            <li className="plan-payment-row" key={receipt.reference}>
+          {rows.map((receipt) => (
+            <li className="plan-payment-row" key={receipt.key}>
               <div>
                 <strong>{formatFullDate(receipt.dateIso, locale)}</strong>
-                <span>
-                  {receipt.provider} · {receipt.reference}
-                </span>
+                <span>{receipt.providerLine}</span>
               </div>
               <strong className="plan-payment-amount">{formatXof(receipt.amountXof)}</strong>
             </li>
           ))}
         </ul>
+        {rows.length === 0 ? (
+          <p className="plan-copy">{translate('subscriber.payment.history.empty')}</p>
+        ) : null}
 
         <div className="plan-grow" />
 
@@ -269,12 +480,49 @@ export function PlanPaymentHistoryX20(): ReactElement {
 export function PlanPaymentMethodX21(): ReactElement {
   const navigate = useNavigate();
   const goBack = useSafeBack('/plan');
-  const { payment } = SUBSCRIBER_PLAN_DEMO;
-  const initialProvider =
-    payment.methods.find((method) => method.isActive)?.provider ??
-    payment.methods[0]?.provider ??
-    '';
+  const subscriberApi = useSubscriberApi();
+  const signup = useOptionalSignup();
+  const subscription = useSubscriberSubscription();
+  const providerOptions: readonly SignupPaymentProvider[] = ['mixx', 'flooz'];
+  const initialProvider = subscription.state.paymentProvider;
   const [selectedProvider, setSelectedProvider] = useState(initialProvider);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const paymentPhoneNumber = subscription.state.paymentPhoneNumber ?? signup?.phone ?? '';
+  const phoneDisplay =
+    paymentPhoneNumber.trim() === ''
+      ? translate('subscriber.profile.detail.missing')
+      : formatTogoDisplayPhone(paymentPhoneNumber);
+
+  const onSave = async (): Promise<void> => {
+    if (isSubmitting) return;
+
+    setError(null);
+
+    if (!subscriberApi.isConfigured) {
+      subscription.changePaymentProvider(selectedProvider);
+      navigate('/plan');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const detail = await subscriberApi.updatePaymentMethod({
+        paymentMethod: {
+          phoneNumber: toTogoE164Phone(paymentPhoneNumber),
+          provider: selectedProvider,
+        },
+        updatedAt: new Date().toISOString(),
+      });
+      subscription.syncFromApi(detail);
+      navigate('/plan');
+    } catch {
+      setError(translate('error.server.body'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <main aria-labelledby="x21-headline" className="plan-screen" data-screen-id="X-21">
@@ -287,14 +535,15 @@ export function PlanPaymentMethodX21(): ReactElement {
         <p className="plan-copy">{translate('subscriber.payment.method.body')}</p>
 
         <div className="plan-method-list" role="list">
-          {payment.methods.map((method) => {
-            const isSelected = selectedProvider === method.provider;
+          {providerOptions.map((provider) => {
+            const isSelected = selectedProvider === provider;
+            const isActive = subscription.state.paymentProvider === provider;
             return (
               <button
                 aria-pressed={isSelected}
                 className={isSelected ? 'plan-method-card active' : 'plan-method-card'}
-                key={method.provider}
-                onClick={() => setSelectedProvider(method.provider)}
+                key={provider}
+                onClick={() => setSelectedProvider(provider)}
                 type="button"
               >
                 <span
@@ -304,12 +553,10 @@ export function PlanPaymentMethodX21(): ReactElement {
                   {isSelected ? <span /> : null}
                 </span>
                 <span className="plan-method-meta">
-                  <strong>{method.provider}</strong>
+                  <strong>{PAYMENT_PROVIDER_LABEL[provider]}</strong>
                   <span>
-                    {method.phone}
-                    {method.isActive
-                      ? ` · ${translate('subscriber.payment.method.current_suffix')}`
-                      : ''}
+                    {phoneDisplay}
+                    {isActive ? ` · ${translate('subscriber.payment.method.current_suffix')}` : ''}
                   </span>
                 </span>
                 <span className={isSelected ? 'plan-method-badge active' : 'plan-method-badge'}>
@@ -327,11 +574,18 @@ export function PlanPaymentMethodX21(): ReactElement {
           </button>
         </div>
 
+        {error === null ? null : (
+          <p className="plan-copy" role="alert">
+            {error}
+          </p>
+        )}
+
         <div className="plan-grow" />
 
         <button
           className="plan-button primary full lg"
-          onClick={() => navigate('/plan')}
+          disabled={isSubmitting}
+          onClick={onSave}
           type="button"
         >
           {translate('subscriber.payment.method.save_cta')}
@@ -392,9 +646,8 @@ export function PlanOverdueX23(): ReactElement {
         </section>
 
         <div className="plan-grow" />
-
-        <PlanTabBar activeItem="home" />
       </div>
+      <PlanTabBar activeItem="home" />
     </main>
   );
 }
@@ -403,8 +656,36 @@ export function PlanUpgradeX19U(): ReactElement {
   const navigate = useNavigate();
   const goBack = useSafeBack('/plan');
   const locale = useActiveLocale();
+  const subscriberApi = useSubscriberApi();
+  const subscription = useSubscriberSubscription();
   const { upgrade } = SUBSCRIBER_PLAN_DEMO;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSubmissionError, setHasSubmissionError] = useState(false);
   const effectiveDate = formatDayMonth(upgrade.effectiveDateIso, locale);
+
+  async function confirmTierChange(): Promise<void> {
+    setHasSubmissionError(false);
+
+    if (!subscriberApi.isConfigured) {
+      subscription.changeTier('T2');
+      navigate('/plan');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const detail = await subscriberApi.changeSubscriptionTier({
+        effectiveAt: new Date().toISOString(),
+        tierCode: 'T2',
+      });
+      subscription.syncFromApi(detail);
+      navigate('/plan');
+    } catch {
+      setHasSubmissionError(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <main aria-labelledby="x19u-headline" className="plan-screen" data-screen-id="X-19.U">
@@ -466,13 +747,19 @@ export function PlanUpgradeX19U(): ReactElement {
 
         <button
           className="plan-button primary full lg"
-          onClick={() => navigate('/plan')}
+          disabled={isSubmitting}
+          onClick={() => void confirmTierChange()}
           type="button"
         >
           {translate('subscriber.plan.upgrade.confirm.cta', {
             amount: formatXof(upgrade.newAmountXof),
           })}
         </button>
+        {hasSubmissionError ? (
+          <p className="plan-copy" role="alert">
+            {translate('error.server.body')}
+          </p>
+        ) : null}
         <button className="plan-button ghost full" onClick={() => navigate('/plan')} type="button">
           {translate('subscriber.plan.upgrade.cancel.cta')}
         </button>
@@ -485,10 +772,37 @@ export function PlanPauseConfirmX22(): ReactElement {
   const navigate = useNavigate();
   const goBack = useSafeBack('/plan');
   const locale = useActiveLocale();
+  const subscriberApi = useSubscriberApi();
+  const subscription = useSubscriberSubscription();
   const { active, upgrade } = SUBSCRIBER_PLAN_DEMO;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSubmissionError, setHasSubmissionError] = useState(false);
   const nextChargeDate = formatDayMonth(active.nextChargeDateIso, locale);
   const nextVisitWeekday = formatSentenceWeekday(active.nextVisit.dateIso, locale);
   const nextVisitDate = formatDayMonth(active.nextVisit.dateIso, locale);
+
+  async function confirmPause(): Promise<void> {
+    setHasSubmissionError(false);
+
+    if (!subscriberApi.isConfigured) {
+      subscription.pauseSubscription();
+      navigate('/plan/pause/submitted');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const detail = await subscriberApi.pauseSubscription({
+        pausedAt: new Date().toISOString(),
+      });
+      subscription.syncFromApi(detail);
+      navigate('/plan/pause/submitted');
+    } catch {
+      setHasSubmissionError(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <main aria-labelledby="x22-headline" className="plan-screen" data-screen-id="X-22">
@@ -544,11 +858,17 @@ export function PlanPauseConfirmX22(): ReactElement {
         </button>
         <button
           className="plan-button danger full"
-          onClick={() => navigate('/plan/pause/submitted')}
+          disabled={isSubmitting}
+          onClick={() => void confirmPause()}
           type="button"
         >
           {translate('subscriber.plan.pause.confirm.cta')}
         </button>
+        {hasSubmissionError ? (
+          <p className="plan-copy" role="alert">
+            {translate('error.server.body')}
+          </p>
+        ) : null}
       </div>
     </main>
   );
@@ -638,9 +958,36 @@ export function PlanPausedSuccessX22A(): ReactElement {
 export function PlanPausedX19R(): ReactElement {
   const navigate = useNavigate();
   const locale = useActiveLocale();
+  const subscriberApi = useSubscriberApi();
+  const subscription = useSubscriberSubscription();
   const { paused } = SUBSCRIBER_PLAN_DEMO;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSubmissionError, setHasSubmissionError] = useState(false);
   const pauseStartDate = formatDayMonth(paused.pauseStartDateIso, locale);
   const autoCloseDate = formatDayMonth(paused.autoCloseDateIso, locale);
+
+  async function resumePlan(): Promise<void> {
+    setHasSubmissionError(false);
+
+    if (!subscriberApi.isConfigured) {
+      subscription.resumeSubscription();
+      navigate('/plan');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const detail = await subscriberApi.resumeSubscription({
+        resumedAt: new Date().toISOString(),
+      });
+      subscription.syncFromApi(detail);
+      navigate('/plan');
+    } catch {
+      setHasSubmissionError(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <main aria-labelledby="x19r-headline" className="plan-screen" data-screen-id="X-19.R">
@@ -707,11 +1054,17 @@ export function PlanPausedX19R(): ReactElement {
 
         <button
           className="plan-button primary full lg"
-          onClick={() => navigate('/plan')}
+          disabled={isSubmitting}
+          onClick={() => void resumePlan()}
           type="button"
         >
           {translate('subscriber.plan.paused.resume_cta')}
         </button>
+        {hasSubmissionError ? (
+          <p className="plan-copy" role="alert">
+            {translate('error.server.body')}
+          </p>
+        ) : null}
         <button
           className="plan-button ghost full plan-button-sm"
           onClick={() => navigate('/plan')}
@@ -719,9 +1072,8 @@ export function PlanPausedX19R(): ReactElement {
         >
           {translate('subscriber.plan.paused.extend_cta')}
         </button>
-
-        <PlanTabBar />
       </div>
+      <PlanTabBar />
     </main>
   );
 }

@@ -1,4 +1,8 @@
 import type { MessageKey } from '@washed/i18n';
+import type {
+  FirstVisitDayId,
+  FirstVisitTimeWindowId,
+} from '../../subscription/SubscriberSubscriptionContext.js';
 
 export interface SubscriberHubVisit {
   readonly status: string;
@@ -18,27 +22,25 @@ export interface SubscriberHubPlan {
 }
 
 export interface SubscriberHubDemo {
-  readonly subscriberFirstName: string;
+  readonly subscriberFirstName: string | null;
   readonly visit: SubscriberHubVisit | null;
   readonly worker: SubscriberHubWorker | null;
   readonly plan: SubscriberHubPlan;
 }
 
 export interface SubscriberBookingDay {
-  readonly id: string;
+  readonly id: FirstVisitDayId;
   readonly labelKey: MessageKey;
 }
 
 export interface SubscriberBookingTimeWindow {
-  readonly id: string;
+  readonly id: FirstVisitTimeWindowId;
   readonly labelKey: MessageKey;
   readonly detailKey: MessageKey;
 }
 
-export const SUBSCRIBER_FIRST_VISIT_REQUEST_STORAGE_KEY = 'washed.subscriber.firstVisitRequested';
-
 export const SUBSCRIBER_HUB_DEMO: SubscriberHubDemo = {
-  subscriberFirstName: 'Mariam',
+  subscriberFirstName: null,
   visit: null,
   worker: null,
   plan: {

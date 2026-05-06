@@ -4,7 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { translate } from '@washed/i18n';
 
 import { OnboardingBackButton } from './OnboardingBackButton.js';
-import { PAYMENT_PROVIDER_LABEL, useSignup, type SignupPaymentProvider } from './SignupContext.js';
+import {
+  PAYMENT_PROVIDER_LABEL,
+  hasSignupIdentity,
+  useSignup,
+  type SignupPaymentProvider,
+} from './SignupContext.js';
 
 const PROVIDERS: readonly SignupPaymentProvider[] = ['mixx', 'flooz'];
 
@@ -18,6 +23,10 @@ export function PaymentX06(): ReactElement {
       navigate('/signup/phone', { replace: true });
       return;
     }
+    if (!hasSignupIdentity(signup.identity)) {
+      navigate('/signup/identity', { replace: true });
+      return;
+    }
     if (signup.tier === null) {
       navigate('/welcome', { replace: true });
       return;
@@ -25,10 +34,18 @@ export function PaymentX06(): ReactElement {
     if (signup.address.neighborhood === '' || signup.address.street.trim() === '') {
       navigate('/signup/address', { replace: true });
     }
-  }, [signup.phone, signup.tier, signup.address.neighborhood, signup.address.street, navigate]);
+  }, [
+    signup.phone,
+    signup.identity,
+    signup.tier,
+    signup.address.neighborhood,
+    signup.address.street,
+    navigate,
+  ]);
 
   if (
     signup.phone === '' ||
+    !hasSignupIdentity(signup.identity) ||
     signup.tier === null ||
     signup.address.neighborhood === '' ||
     signup.address.street.trim() === ''

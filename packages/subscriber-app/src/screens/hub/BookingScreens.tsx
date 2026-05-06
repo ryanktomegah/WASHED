@@ -1,22 +1,50 @@
 import { CalendarCheck, CalendarPlus, ChevronLeft } from 'lucide-react';
 import { useState, type ReactElement } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { translate } from '@washed/i18n';
 
+import { useSubscriberApi } from '../../api/SubscriberApiContext.js';
+import {
+  useSubscriberSubscription,
+  type FirstVisitDayId,
+  type FirstVisitTimeWindowId,
+} from '../../subscription/SubscriberSubscriptionContext.js';
 import {
   SUBSCRIBER_BOOKING_DAYS,
   SUBSCRIBER_BOOKING_TIME_WINDOWS,
-  SUBSCRIBER_FIRST_VISIT_REQUEST_STORAGE_KEY,
 } from './subscriberHubData.js';
 
 type BookingStep = 'day' | 'time';
+type BookingReturnPath = '/hub' | '/signup/welcome';
+
+function bookingReturnPath(state: unknown): BookingReturnPath {
+  if (
+    typeof state === 'object' &&
+    state !== null &&
+    'returnTo' in state &&
+    state.returnTo === '/signup/welcome'
+  ) {
+    return '/signup/welcome';
+  }
+
+  return '/hub';
+}
 
 export function BookingX10B(): ReactElement {
   const navigate = useNavigate();
+  const location = useLocation();
+  const subscriberApi = useSubscriberApi();
+  const subscription = useSubscriberSubscription();
   const [bookingStep, setBookingStep] = useState<BookingStep>('day');
-  const [selectedDayId, setSelectedDayId] = useState('');
-  const [selectedTimeWindowId, setSelectedTimeWindowId] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedDayId, setSelectedDayId] = useState<FirstVisitDayId | ''>(
+    subscription.state.firstVisitRequest?.dayId ?? '',
+  );
+  const [selectedTimeWindowId, setSelectedTimeWindowId] = useState<FirstVisitTimeWindowId | ''>(
+    subscription.state.firstVisitRequest?.timeWindowId ?? '',
+  );
 
   const selectedDay = SUBSCRIBER_BOOKING_DAYS.find((day) => day.id === selectedDayId);
   const selectedDayLabel = selectedDay === undefined ? '' : translate(selectedDay.labelKey);
@@ -42,19 +70,46 @@ export function BookingX10B(): ReactElement {
       return;
     }
 
-    navigate('/hub');
+    navigate(bookingReturnPath(location.state), { replace: true });
   };
 
-  const chooseDay = (dayId: string): void => {
+  const chooseDay = (dayId: FirstVisitDayId): void => {
     setSelectedDayId(dayId);
     setSelectedTimeWindowId('');
+    setError(null);
     setBookingStep('time');
   };
 
-  const submitBookingRequest = (): void => {
-    if (!canSubmit) return;
-    window.localStorage.setItem(SUBSCRIBER_FIRST_VISIT_REQUEST_STORAGE_KEY, '1');
-    navigate('/booking/submitted');
+  const submitBookingRequest = async (): Promise<void> => {
+    if (selectedDayId === '' || selectedTimeWindowId === '' || isSubmitting) return;
+
+    const requestedAtIso = new Date().toISOString();
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      if (subscriberApi.isConfigured) {
+        const detail = await subscriberApi.requestFirstVisit({
+          requestedAt: requestedAtIso,
+          schedulePreference: {
+            dayOfWeek: selectedDayId,
+            timeWindow: selectedTimeWindowId,
+          },
+        });
+        subscription.syncFromApi(detail);
+      }
+
+      subscription.requestFirstVisit({
+        dayId: selectedDayId,
+        requestedAtIso,
+        timeWindowId: selectedTimeWindowId,
+      });
+      navigate('/booking/submitted');
+    } catch {
+      setError(translate('error.server.body'));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -164,6 +219,11 @@ export function BookingX10B(): ReactElement {
                 </fieldset>
 
                 <p className="booking-notice">{translate('subscriber.booking.notice')}</p>
+                {error === null ? null : (
+                  <p className="booking-notice" role="alert">
+                    {error}
+                  </p>
+                )}
               </>
             ) : null}
           </section>
@@ -173,9 +233,9 @@ export function BookingX10B(): ReactElement {
 
         {bookingStep === 'time' ? (
           <button
-            aria-disabled={!canSubmit}
+            aria-disabled={!canSubmit || isSubmitting}
             className="hub-action primary booking-submit"
-            disabled={!canSubmit}
+            disabled={!canSubmit || isSubmitting}
             onClick={submitBookingRequest}
             type="button"
           >

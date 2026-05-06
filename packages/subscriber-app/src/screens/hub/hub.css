@@ -26,10 +26,6 @@
   -webkit-overflow-scrolling: touch;
 }
 
-.hub-screen:not(.booking-screen) .hub-body {
-  padding-bottom: 104px;
-}
-
 .hub-header,
 .hub-card-head,
 .hub-worker-row,
@@ -82,6 +78,33 @@
 .hub-avatar-lg {
   width: 44px;
   height: 44px;
+}
+
+.hub-profile-shortcut {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.hub-profile-shortcut:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.hub-avatar-image {
+  display: block;
+  flex-shrink: 0;
+  border-radius: 999px;
+  object-fit: cover;
 }
 
 .hub-visit-card {
@@ -210,6 +233,39 @@
   padding: 18px;
 }
 
+.hub-screen:not(.booking-screen) .hub-booking-card.first {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-on);
+}
+
+.hub-screen:not(.booking-screen) .hub-booking-card.first .hub-eyebrow,
+.hub-screen:not(.booking-screen) .hub-booking-card.first .hub-booking-title,
+.hub-screen:not(.booking-screen) .hub-booking-card.first p {
+  color: var(--primary-on);
+}
+
+.hub-screen:not(.booking-screen) .hub-booking-card.first .hub-eyebrow,
+.hub-screen:not(.booking-screen) .hub-booking-card.first p {
+  opacity: 0.8;
+}
+
+.hub-screen:not(.booking-screen) .hub-booking-card.first .hub-first-icon {
+  background: color-mix(in srgb, var(--primary-on) 14%, transparent);
+  color: var(--primary-on);
+}
+
+.hub-screen:not(.booking-screen) .hub-booking-card.first .hub-action.primary {
+  background: var(--primary-on);
+  color: var(--primary);
+}
+
+.hub-screen:not(.booking-screen) .hub-booking-card.first .hub-action.secondary {
+  border-color: color-mix(in srgb, var(--primary-on) 42%, transparent);
+  background: color-mix(in srgb, var(--primary-on) 10%, transparent);
+  color: var(--primary-on);
+}
+
 .hub-first-icon {
   display: grid;
   width: 46px;
@@ -241,6 +297,16 @@
   color: var(--ink-2);
   font-size: 14px;
   line-height: 1.45;
+}
+
+.hub-booking-card .hub-booking-choice {
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.hub-screen:not(.booking-screen) .hub-booking-card.first .hub-booking-choice {
+  color: var(--primary-on);
+  opacity: 1;
 }
 
 .hub-action {
@@ -633,6 +699,8 @@
   bottom: 0;
   z-index: 10;
   display: grid;
+  width: 100%;
+  flex: 0 0 auto;
   grid-template-columns: repeat(4, 1fr);
   gap: 0;
   border-top: 1px solid var(--line);

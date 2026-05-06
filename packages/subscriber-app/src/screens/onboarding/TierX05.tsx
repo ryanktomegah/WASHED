@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { translate } from '@washed/i18n';
 
 import { OnboardingBackButton } from './OnboardingBackButton.js';
-import { useSignup, type SignupTier } from './SignupContext.js';
+import { hasSignupIdentity, useSignup, type SignupTier } from './SignupContext.js';
 
 interface TierOption {
   readonly tier: SignupTier;
@@ -40,13 +40,18 @@ export function TierX05(): ReactElement {
       navigate('/signup/phone', { replace: true });
       return;
     }
+    if (!hasSignupIdentity(signup.identity)) {
+      navigate('/signup/identity', { replace: true });
+      return;
+    }
     if (signup.address.neighborhood === '' || signup.address.street.trim() === '') {
       navigate('/signup/address', { replace: true });
     }
-  }, [signup.phone, signup.address.neighborhood, signup.address.street, navigate]);
+  }, [signup.phone, signup.identity, signup.address.neighborhood, signup.address.street, navigate]);
 
   if (
     signup.phone === '' ||
+    !hasSignupIdentity(signup.identity) ||
     signup.address.neighborhood === '' ||
     signup.address.street.trim() === ''
   ) {
@@ -72,9 +77,10 @@ export function TierX05(): ReactElement {
             <i className="on" />
             <i className="on" />
             <i className="on" />
+            <i className="on" />
           </div>
           <span className="h-sm">
-            {translate('subscriber.signup.step_indicator', { current: 4, total: 4 })}
+            {translate('subscriber.signup.step_indicator', { current: 5, total: 5 })}
           </span>
           <h1 className="h-md" id="x05-headline">
             {translate('subscriber.signup.tier.title')}
