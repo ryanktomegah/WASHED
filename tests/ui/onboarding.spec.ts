@@ -56,9 +56,8 @@ test('X-00L language choice can launch the subscriber app in English', async ({ 
   await page.getByRole('radio', { name: /English/u }).click();
   await page.getByRole('button', { name: 'Continue' }).click();
 
-  await expect(page.locator('[data-screen-id="X-00A"]')).toBeVisible();
-  await page.getByRole('radio', { name: /Light/u }).click();
-  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.locator('[data-screen-id="X-00A"]')).toHaveCount(0);
+  await expect(page.locator('[data-screen-id="X-01"]')).toBeVisible();
 
   await page.getByRole('button', { name: 'Continue' }).click();
 

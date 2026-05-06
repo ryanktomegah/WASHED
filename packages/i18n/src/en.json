@@ -311,6 +311,7 @@
   "subscriber.language.option.fr": "Français",
   "subscriber.language.option.fr.body": "Interface and messages in French.",
   "subscriber.language.title": "Choose language",
+  "subscriber.launch.restore.status": "Restoring your session…",
   "subscriber.signup.address.body": "Neighborhood, then details (street, landmark). The office will validate by phone.",
   "subscriber.signup.address.field.landmark": "Landmark (optional)",
   "subscriber.signup.address.field.neighborhood": "Neighborhood",

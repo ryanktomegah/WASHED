@@ -178,6 +178,7 @@
   "subscriber.language.option.fr": "Français",
   "subscriber.language.option.fr.body": "Interface et messages en français.",
   "subscriber.language.title": "Choisir la langue",
+  "subscriber.launch.restore.status": "Restauration de votre session…",
   "subscriber.notifications.body": "Vous pouvez tout désactiver. Le bureau vous appellera s'il y a urgence.",
   "subscriber.notifications.email_recap.sub": "Reçu et statistiques du mois",
   "subscriber.notifications.email_recap.title": "Email mensuel · récap",

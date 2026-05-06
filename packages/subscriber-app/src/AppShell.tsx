@@ -1,6 +1,7 @@
-import { useEffect, useState, type ReactElement } from 'react';
+import { useEffect, useState, type ReactElement, type ReactNode } from 'react';
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 
+import { translate } from '@washed/i18n';
 import { LocaleProvider, WashedThemeProvider, useActiveLocale } from '@washed/ui';
 
 import { AppearanceLaunchGate } from './appearance/AppearanceLaunchGate.js';
@@ -93,6 +94,9 @@ import './screens/support/support.css';
 import './screens/worker-profile/workerProfile.css';
 import './screens/visits/visit.css';
 
+export const SUBSCRIBER_RESTORE_MIN_MS = 650;
+export const SUBSCRIBER_RESTORE_FALLBACK_MS = 2000;
+
 export function AppShell(): ReactElement {
   return (
     <LocaleProvider
@@ -119,10 +123,11 @@ function SubscriberThemedShell(): ReactElement {
         <SubscriberApiProvider>
           <SignupProvider>
             <SubscriberSubscriptionProvider>
-              <SubscriberSubscriptionHydrator />
-              <HashRouter>
-                <LocaleScopedRoutes />
-              </HashRouter>
+              <SubscriberStartupGate>
+                <HashRouter>
+                  <LocaleScopedRoutes />
+                </HashRouter>
+              </SubscriberStartupGate>
             </SubscriberSubscriptionProvider>
           </SignupProvider>
         </SubscriberApiProvider>
@@ -141,27 +146,123 @@ function hasCompletedLaunchPreferences(): boolean {
   return hasStoredSubscriberLanguagePreference() && hasStoredSubscriberAppearancePreference();
 }
 
-function SubscriberSubscriptionHydrator(): null {
+function SubscriberStartupGate({ children }: { readonly children: ReactNode }): ReactElement {
   const subscriberApi = useSubscriberApi();
   const { syncFromApi } = useSubscriberSubscription();
+  const [minimumElapsed, setMinimumElapsed] = useState(false);
+  const [bootstrapComplete, setBootstrapComplete] = useState(!subscriberApi.isConfigured);
+  const [fallbackElapsed, setFallbackElapsed] = useState(false);
 
   useEffect(() => {
-    if (!subscriberApi.isConfigured) return;
+    const minimumTimer = window.setTimeout(
+      () => setMinimumElapsed(true),
+      SUBSCRIBER_RESTORE_MIN_MS,
+    );
+    const fallbackTimer = window.setTimeout(
+      () => setFallbackElapsed(true),
+      SUBSCRIBER_RESTORE_FALLBACK_MS,
+    );
+
+    return () => {
+      window.clearTimeout(minimumTimer);
+      window.clearTimeout(fallbackTimer);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!subscriberApi.isConfigured) {
+      setBootstrapComplete(true);
+      return;
+    }
 
     let cancelled = false;
+    setBootstrapComplete(false);
+
     void subscriberApi
       .getCurrentSubscription()
       .then((response) => {
         if (!cancelled) syncFromApi(response.subscription);
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setBootstrapComplete(true);
+      });
 
     return () => {
       cancelled = true;
     };
   }, [subscriberApi, syncFromApi]);
 
-  return null;
+  if (!minimumElapsed || (!bootstrapComplete && !fallbackElapsed)) {
+    return <SubscriberRestoreSkeleton />;
+  }
+
+  return <>{children}</>;
+}
+
+function SubscriberRestoreSkeleton(): ReactElement {
+  return (
+    <main
+      aria-busy="true"
+      className="hub-screen subscriber-tab-screen subscriber-restore-screen"
+      data-screen-id="X-00R"
+    >
+      <span
+        aria-label={translate('subscriber.launch.restore.status')}
+        className="subscriber-restore-status"
+        role="status"
+      >
+        {translate('subscriber.launch.restore.status')}
+      </span>
+
+      <div aria-hidden="true" className="hub-body subscriber-restore-body">
+        <header className="hub-header subscriber-restore-header">
+          <span className="subscriber-restore-heading">
+            <span className="subscriber-restore-line subscriber-restore-eyebrow" />
+            <span className="subscriber-restore-line subscriber-restore-title" />
+          </span>
+          <span className="subscriber-restore-avatar" />
+        </header>
+
+        <section className="hub-visit-card subscriber-restore-card">
+          <div className="hub-card-head">
+            <span className="subscriber-restore-line subscriber-restore-eyebrow" />
+            <span className="subscriber-restore-pill" />
+          </div>
+          <span className="subscriber-restore-line subscriber-restore-time" />
+          <span className="subscriber-restore-line subscriber-restore-date" />
+          <div className="hub-rule" />
+          <div className="hub-worker-row">
+            <span className="subscriber-restore-avatar worker" />
+            <span className="hub-worker-copy">
+              <span className="subscriber-restore-line subscriber-restore-worker-name" />
+              <span className="subscriber-restore-line subscriber-restore-worker-detail" />
+            </span>
+          </div>
+        </section>
+
+        <div className="hub-actions subscriber-restore-actions">
+          <span className="subscriber-restore-button" />
+          <span className="subscriber-restore-button primary" />
+        </div>
+
+        <section className="hub-plan subscriber-restore-plan">
+          <div className="hub-plan-row">
+            <span className="subscriber-restore-line subscriber-restore-eyebrow" />
+            <span className="subscriber-restore-line subscriber-restore-plan-date" />
+          </div>
+          <span className="subscriber-restore-progress" />
+        </section>
+      </div>
+
+      <div aria-hidden="true" className="hub-nav subscriber-restore-nav">
+        <span />
+        <span />
+        <span />
+        <span />
+      </div>
+    </main>
+  );
 }
 
 function LocaleScopedRoutes(): ReactElement {

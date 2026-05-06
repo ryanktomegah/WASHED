@@ -1,10 +1,10 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getActiveLocale, setActiveLocale } from '@washed/i18n';
 
 import { SUBSCRIBER_APPEARANCE_STORAGE_KEY } from './appearance/AppearanceContext.js';
-import { AppShell } from './AppShell.js';
+import { AppShell, SUBSCRIBER_RESTORE_MIN_MS } from './AppShell.js';
 import { SUBSCRIBER_AUTH_STORAGE_KEY } from './api/SubscriberApiContext.js';
 import { SUBSCRIBER_LANGUAGE_STORAGE_KEY } from './language/languageOptions.js';
 import { TOUR_STORAGE_KEY } from './screens/hub/useTourState.js';
@@ -29,6 +29,7 @@ describe('Subscriber app shell · launch preferences', () => {
     window.localStorage.removeItem(SUBSCRIBER_SUBSCRIPTION_STORAGE_KEY);
     window.localStorage.removeItem(TOUR_STORAGE_KEY);
     setActiveLocale('fr');
+    vi.useRealTimers();
   });
 
   it('blocks the app behind required language and appearance choices before entry', async () => {
@@ -69,10 +70,34 @@ describe('Subscriber app shell · launch preferences', () => {
 
     render(<AppShell />);
 
+    expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-00R');
+    expect(screen.getByRole('status', { name: 'Restoring your session…' })).toBeInTheDocument();
     expect(await screen.findByRole('heading', { name: 'Home' })).toBeVisible();
     expect(screen.queryByRole('heading', { name: 'Choose language' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Choose appearance' })).not.toBeInTheDocument();
     await waitFor(() => expect(document.body).toHaveAttribute('data-color-mode', 'dark'));
+  });
+
+  it('keeps the restore skeleton visible for the startup minimum', async () => {
+    vi.useFakeTimers();
+    window.localStorage.setItem(SUBSCRIBER_LANGUAGE_STORAGE_KEY, 'en');
+    window.localStorage.setItem(SUBSCRIBER_APPEARANCE_STORAGE_KEY, 'dark');
+
+    render(<AppShell />);
+
+    expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-00R');
+    expect(screen.getByRole('status', { name: 'Restoring your session…' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Home' })).not.toBeInTheDocument();
+
+    await act(async () => {
+      vi.advanceTimersByTime(SUBSCRIBER_RESTORE_MIN_MS - 1);
+    });
+    expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-00R');
+
+    await act(async () => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(screen.getByRole('heading', { name: 'Home' })).toBeVisible();
   });
 
   it('asks only for the missing appearance choice after language is saved', async () => {

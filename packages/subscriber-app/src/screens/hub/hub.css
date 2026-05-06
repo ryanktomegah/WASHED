@@ -55,6 +55,177 @@ body[data-runtime='native'] .subscriber-tab-screen {
   align-items: center;
 }
 
+.subscriber-restore-status {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.subscriber-restore-body {
+  gap: 16px;
+}
+
+.subscriber-restore-heading {
+  display: grid;
+  gap: 8px;
+  width: min(62%, 210px);
+}
+
+.subscriber-restore-line,
+.subscriber-restore-pill,
+.subscriber-restore-avatar,
+.subscriber-restore-button,
+.subscriber-restore-progress,
+.subscriber-restore-nav span {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--line) 54%, var(--surface-2));
+}
+
+.subscriber-restore-line::after,
+.subscriber-restore-pill::after,
+.subscriber-restore-avatar::after,
+.subscriber-restore-button::after,
+.subscriber-restore-progress::after,
+.subscriber-restore-nav span::after {
+  position: absolute;
+  inset: 0;
+  animation: subscriber-restore-sweep 1180ms var(--ease-standard) infinite;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--surface) 62%, transparent),
+    transparent
+  );
+  content: '';
+  transform: translateX(-120%);
+}
+
+.subscriber-restore-eyebrow {
+  width: 94px;
+  height: 11px;
+  border-radius: 999px;
+}
+
+.subscriber-restore-title {
+  width: 132px;
+  height: 31px;
+  border-radius: 8px;
+}
+
+.subscriber-restore-avatar {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 999px;
+}
+
+.subscriber-restore-avatar.worker {
+  width: 36px;
+  height: 36px;
+}
+
+.subscriber-restore-card {
+  display: grid;
+  gap: 10px;
+}
+
+.subscriber-restore-pill {
+  width: 86px;
+  height: 24px;
+  border-radius: 999px;
+}
+
+.subscriber-restore-time {
+  width: 168px;
+  height: 46px;
+  border-radius: 10px;
+}
+
+.subscriber-restore-date {
+  width: 126px;
+  height: 14px;
+  border-radius: 999px;
+}
+
+.subscriber-restore-worker-name {
+  width: 122px;
+  height: 16px;
+  border-radius: 999px;
+}
+
+.subscriber-restore-worker-detail {
+  width: 172px;
+  height: 11px;
+  border-radius: 999px;
+}
+
+.subscriber-restore-actions {
+  pointer-events: none;
+}
+
+.subscriber-restore-button {
+  display: block;
+  height: 45px;
+  border-radius: 999px;
+}
+
+.subscriber-restore-button.primary {
+  background: color-mix(in srgb, var(--primary) 24%, var(--line));
+}
+
+.subscriber-restore-plan {
+  display: grid;
+  gap: 12px;
+}
+
+.subscriber-restore-plan-date {
+  width: 132px;
+  height: 13px;
+  border-radius: 999px;
+}
+
+.subscriber-restore-progress {
+  display: block;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.subscriber-restore-nav {
+  pointer-events: none;
+}
+
+.subscriber-restore-nav span {
+  display: block;
+  place-self: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+}
+
+@keyframes subscriber-restore-sweep {
+  to {
+    transform: translateX(120%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subscriber-restore-line::after,
+  .subscriber-restore-pill::after,
+  .subscriber-restore-avatar::after,
+  .subscriber-restore-button::after,
+  .subscriber-restore-progress::after,
+  .subscriber-restore-nav span::after {
+    animation: none;
+  }
+}
+
 .hub-header,
 .hub-card-head,
 .hub-plan-row {
