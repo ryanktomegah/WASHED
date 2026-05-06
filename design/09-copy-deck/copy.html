@@ -1577,10 +1577,22 @@
               <td><span class="lim">70 ch</span></td>
             </tr>
             <tr>
+              <td><span class="key">subscriber.worker.profile.location_live</span></td>
+              <td><span class="fr body">{neighborhood} · laveuse assignée</span></td>
+              <td><span class="ctx">X-18 sous nom laveuse · données API</span></td>
+              <td><span class="lim">42 ch</span></td>
+            </tr>
+            <tr>
               <td><span class="key">subscriber.worker.profile.relation.title</span></td>
               <td><span class="fr body">Votre relation</span></td>
               <td><span class="ctx">X-18 carte relation</span></td>
               <td><span class="lim">18 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.worker.profile.relation.active</span></td>
+              <td><span class="fr body">en cours</span></td>
+              <td><span class="ctx">X-18 métrique relation · données API</span></td>
+              <td><span class="lim">12 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.worker.profile.relation.months</span></td>
@@ -1618,6 +1630,14 @@
               <td><span class="lim">96 ch</span></td>
             </tr>
             <tr>
+              <td><span class="key">subscriber.worker.profile.path.body_live</span></td>
+              <td>
+                <span class="fr body">{name} est votre laveuse assignée sur ce forfait.</span>
+              </td>
+              <td><span class="ctx">X-18 parcours laveuse · données API</span></td>
+              <td><span class="lim">72 ch</span></td>
+            </tr>
+            <tr>
               <td><span class="key">subscriber.worker.profile.reliability.title</span></td>
               <td><span class="fr body">Fiabilité</span></td>
               <td><span class="ctx">X-18 carte fiabilité</span></td>
@@ -1633,6 +1653,18 @@
               </td>
               <td><span class="ctx">X-18 fiabilité sans étoiles</span></td>
               <td><span class="lim">96 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.worker.profile.reliability.body_live</span></td>
+              <td><span class="fr body">{visits} visites terminées sur votre forfait.</span></td>
+              <td><span class="ctx">X-18 fiabilité · données API</span></td>
+              <td><span class="lim">64 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.worker.profile.reliability.rating_pending</span></td>
+              <td><span class="fr body">Note disponible après plus de visites</span></td>
+              <td><span class="ctx">X-18 note absente · données API</span></td>
+              <td><span class="lim">42 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.worker.profile.change.cta</span></td>
@@ -1746,6 +1778,12 @@
               <td><span class="lim">42 ch</span></td>
             </tr>
             <tr>
+              <td><span class="key">subscriber.plan.title.active_payment_setup</span></td>
+              <td><span class="fr">Forfait prêt, paiement à finaliser.</span></td>
+              <td><span class="ctx">X-19 titre quand autorisation paiement absente</span></td>
+              <td><span class="lim">46 ch</span></td>
+            </tr>
+            <tr>
               <td><span class="key">subscriber.plan.pending.title</span></td>
               <td><span class="fr">Votre forfait est prêt.</span></td>
               <td><span class="ctx">X-19 nouvel abonné · sans première visite</span></td>
@@ -1811,6 +1849,12 @@
               <td><span class="lim">22 ch</span></td>
             </tr>
             <tr>
+              <td><span class="key">subscriber.plan.active_card.payment_setup_pending</span></td>
+              <td><span class="fr body">Paiement à finaliser</span></td>
+              <td><span class="ctx">X-19 carte sombre quand prélèvement non prêt</span></td>
+              <td><span class="lim">24 ch</span></td>
+            </tr>
+            <tr>
               <td><span class="key">subscriber.plan.next_visit.eyebrow</span></td>
               <td><span class="fr body">Prochaine visite</span></td>
               <td><span class="ctx">X-19 mini-carte</span></td>
@@ -1827,6 +1871,12 @@
               <td><span class="fr body">avec {name}</span></td>
               <td><span class="ctx">X-19 sous-ligne</span></td>
               <td><span class="lim">22 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.plan.next_visit.empty</span></td>
+              <td><span class="fr body">Aucune visite confirmée</span></td>
+              <td><span class="ctx">X-19 mini-carte sans visite API</span></td>
+              <td><span class="lim">28 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.plan.cta_upgrade</span></td>
@@ -2554,6 +2604,29 @@
               <td><span class="lim">28 ch</span></td>
             </tr>
             <tr>
+              <td><span class="key">subscriber.address_edit.submitted.title</span></td>
+              <td><span class="fr">Demande envoyée.</span></td>
+              <td><span class="ctx">X-25 état succès demande adresse</span></td>
+              <td><span class="lim">28 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.address_edit.submitted.body</span></td>
+              <td>
+                <span class="fr body"
+                  >Le bureau valide votre nouvelle adresse avant de modifier vos prochaines
+                  visites.</span
+                >
+              </td>
+              <td><span class="ctx">X-25 état succès demande adresse</span></td>
+              <td><span class="lim">100 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.address_edit.submitted.cta</span></td>
+              <td><span class="fr body">Retour au profil</span></td>
+              <td><span class="ctx">X-25 bouton succès</span></td>
+              <td><span class="lim">22 ch</span></td>
+            </tr>
+            <tr>
               <td><span class="key">subscriber.notifications.header</span></td>
               <td><span class="fr body">Notifications</span></td>
               <td><span class="ctx">X-26 header mono — affiché en majuscules</span></td>
@@ -2634,6 +2707,12 @@
               <td><span class="fr body">Aucune notification marketing — promis.</span></td>
               <td><span class="ctx">X-26 footer rassurant</span></td>
               <td><span class="lim">52 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.notifications.no_visit</span></td>
+              <td><span class="fr body">Aucune visite confirmée</span></td>
+              <td><span class="ctx">X-26 exemple quand aucune visite API</span></td>
+              <td><span class="lim">28 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.privacy.header</span></td>
@@ -2720,6 +2799,18 @@
               <td><span class="fr body">Télécharger mes données</span></td>
               <td><span class="ctx">X-27 bouton ghost</span></td>
               <td><span class="lim">28 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.privacy.export.reason</span></td>
+              <td><span class="fr body">Demande d'export depuis l'application abonnée.</span></td>
+              <td><span class="ctx">X-27 raison envoyée API</span></td>
+              <td><span class="lim">64 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.privacy.export.submitted</span></td>
+              <td><span class="fr body">Demande reçue. Référence {requestId}.</span></td>
+              <td><span class="ctx">X-27 confirmation export</span></td>
+              <td><span class="lim">48 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.privacy.delete.cta</span></td>
@@ -2811,6 +2902,36 @@
               <td><span class="fr body">Supprimer définitivement</span></td>
               <td><span class="ctx">X-28 bouton danger</span></td>
               <td><span class="lim">28 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.delete.reason</span></td>
+              <td>
+                <span class="fr body">Demande de suppression depuis l'application abonnée.</span>
+              </td>
+              <td><span class="ctx">X-28 raison envoyée API</span></td>
+              <td><span class="lim">68 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.delete.submitted.title</span></td>
+              <td><span class="fr">Demande envoyée.</span></td>
+              <td><span class="ctx">X-28 état succès suppression</span></td>
+              <td><span class="lim">28 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.delete.submitted.body</span></td>
+              <td>
+                <span class="fr body"
+                  >Le bureau vérifie votre demande avant suppression. Référence {requestId}.</span
+                >
+              </td>
+              <td><span class="ctx">X-28 état succès suppression</span></td>
+              <td><span class="lim">92 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.delete.submitted.cta</span></td>
+              <td><span class="fr body">Retour au profil</span></td>
+              <td><span class="ctx">X-28 bouton succès</span></td>
+              <td><span class="lim">22 ch</span></td>
             </tr>
           </tbody>
         </table>
@@ -3163,10 +3284,22 @@
               <td><span class="lim">12 ch</span></td>
             </tr>
             <tr>
+              <td><span class="key">subscriber.visit.enroute.distance_live</span></td>
+              <td><span class="fr body">Suivi actif</span></td>
+              <td><span class="ctx">X-12 métrique distance sans estimation fake</span></td>
+              <td><span class="lim">16 ch</span></td>
+            </tr>
+            <tr>
               <td><span class="key">subscriber.visit.enroute.eta_label</span></td>
               <td><span class="fr body">Arrive dans</span></td>
               <td><span class="ctx">X-12 métrique ETA</span></td>
               <td><span class="lim">16 ch</span></td>
+            </tr>
+            <tr>
+              <td><span class="key">subscriber.visit.enroute.eta_live</span></td>
+              <td><span class="fr body">Créneau confirmé</span></td>
+              <td><span class="ctx">X-12 ETA sans estimation fake</span></td>
+              <td><span class="lim">20 ch</span></td>
             </tr>
             <tr>
               <td><span class="key">subscriber.visit.enroute.update_note</span></td>

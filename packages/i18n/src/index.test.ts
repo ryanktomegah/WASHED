@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import enMessages from './en.json' with { type: 'json' };
+import frMessages from './fr.json' with { type: 'json' };
 import {
   defaultLocale,
   formatVisitDate,
@@ -28,6 +30,15 @@ describe('Washed i18n', () => {
   it('returns the EN translation when present and falls back to FR otherwise', () => {
     expect(translate('subscriber.splash.tagline', 'en')).toBe('The washerwoman app for Lomé.');
     expect(translate('worker.login.greeting', 'en')).toBe('Bonjour.');
+  });
+
+  it('keeps closed-beta subscriber EN copy complete', () => {
+    const prefixes = ['subscriber.', 'push.sub.', 'sms.sub.'];
+    const missing = Object.keys(frMessages).filter(
+      (key) => prefixes.some((prefix) => key.startsWith(prefix)) && !(key in enMessages),
+    );
+
+    expect(missing).toEqual([]);
   });
 
   it('reads the active locale by default and updates when setActiveLocale is called', () => {
