@@ -94,7 +94,7 @@ import './screens/support/support.css';
 import './screens/worker-profile/workerProfile.css';
 import './screens/visits/visit.css';
 
-export const SUBSCRIBER_RESTORE_MIN_MS = 650;
+export const SUBSCRIBER_RESTORE_MIN_MS = 1500;
 export const SUBSCRIBER_RESTORE_FALLBACK_MS = 2000;
 
 export function AppShell(): ReactElement {

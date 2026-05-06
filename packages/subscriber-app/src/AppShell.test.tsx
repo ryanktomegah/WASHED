@@ -10,6 +10,8 @@ import { SUBSCRIBER_LANGUAGE_STORAGE_KEY } from './language/languageOptions.js';
 import { TOUR_STORAGE_KEY } from './screens/hub/useTourState.js';
 import { SUBSCRIBER_SUBSCRIPTION_STORAGE_KEY } from './subscription/SubscriberSubscriptionContext.js';
 
+const RESTORE_VISIBLE_TIMEOUT_MS = SUBSCRIBER_RESTORE_MIN_MS + 1000;
+
 describe('Subscriber app shell · launch preferences', () => {
   beforeEach(() => {
     window.location.hash = '#/hub';
@@ -58,7 +60,9 @@ describe('Subscriber app shell · launch preferences', () => {
 
     fireEvent.click(appearanceContinue);
 
-    expect(await screen.findByRole('heading', { name: 'Home' })).toBeVisible();
+    expect(
+      await screen.findByRole('heading', { name: 'Home' }, { timeout: RESTORE_VISIBLE_TIMEOUT_MS }),
+    ).toBeVisible();
     await waitFor(() =>
       expect(window.localStorage.getItem(SUBSCRIBER_APPEARANCE_STORAGE_KEY)).toBe('dark'),
     );
@@ -72,7 +76,9 @@ describe('Subscriber app shell · launch preferences', () => {
 
     expect(screen.getByRole('main')).toHaveAttribute('data-screen-id', 'X-00R');
     expect(screen.getByRole('status', { name: 'Restoring your session…' })).toBeInTheDocument();
-    expect(await screen.findByRole('heading', { name: 'Home' })).toBeVisible();
+    expect(
+      await screen.findByRole('heading', { name: 'Home' }, { timeout: RESTORE_VISIBLE_TIMEOUT_MS }),
+    ).toBeVisible();
     expect(screen.queryByRole('heading', { name: 'Choose language' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Choose appearance' })).not.toBeInTheDocument();
     await waitFor(() => expect(document.body).toHaveAttribute('data-color-mode', 'dark'));
@@ -80,6 +86,7 @@ describe('Subscriber app shell · launch preferences', () => {
 
   it('keeps the restore skeleton visible for the startup minimum', async () => {
     vi.useFakeTimers();
+    expect(SUBSCRIBER_RESTORE_MIN_MS).toBe(1500);
     window.localStorage.setItem(SUBSCRIBER_LANGUAGE_STORAGE_KEY, 'en');
     window.localStorage.setItem(SUBSCRIBER_APPEARANCE_STORAGE_KEY, 'dark');
 
@@ -113,7 +120,9 @@ describe('Subscriber app shell · launch preferences', () => {
     await waitFor(() => expect(document.body).toHaveAttribute('data-color-mode', 'light'));
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
-    expect(await screen.findByRole('heading', { name: 'Home' })).toBeVisible();
+    expect(
+      await screen.findByRole('heading', { name: 'Home' }, { timeout: RESTORE_VISIBLE_TIMEOUT_MS }),
+    ).toBeVisible();
     await waitFor(() =>
       expect(window.localStorage.getItem(SUBSCRIBER_APPEARANCE_STORAGE_KEY)).toBe('light'),
     );
@@ -135,7 +144,13 @@ describe('Subscriber app shell · launch preferences', () => {
 
     render(<AppShell />);
 
-    expect(await screen.findByRole('heading', { name: 'Accueil' })).toBeVisible();
+    expect(
+      await screen.findByRole(
+        'heading',
+        { name: 'Accueil' },
+        { timeout: RESTORE_VISIBLE_TIMEOUT_MS },
+      ),
+    ).toBeVisible();
     expect(
       screen.queryByRole('heading', { name: 'Bienvenue chez Washed.' }),
     ).not.toBeInTheDocument();
